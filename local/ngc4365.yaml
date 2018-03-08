@@ -1,0 +1,41 @@
+id: ngc4365
+name: "NGC 4365"
+other_names:
+    - "UGC 07488"
+    - "VCC 731"
+# Coordinate
+ra: 186.1178521
+dec: 7.3176728
+# Distance
+dist: 21.622  # Mpc
+z: 0.004146
+cz: 1243      # km/s
+# SDSS
+sdss:
+    link: http://skyserver.sdss.org/dr12/en/tools/explore/summary.aspx?ra=186.117852&dec=7.317673
+# HyperLeda
+hyperleda:
+    link: http://leda.univ-lyon1.fr/ledacat.cgi?PGC%20040375
+    vmax: 51.7
+    vmax_err: 29.0
+    vdisp: 250.3
+    vdisp_err: 2.6
+# Coverage
+coverage:
+    cgs: False
+    sdss: True
+    cfht: True
+    obey: True
+    galex: True
+    sluggs: True
+    atlas3d: True
+# Cluster or Group
+group:
+    name: virgo
+# Notes
+notes:
+    - "In Virgo subcluster B or W cloud; maybe behind Virgo"
+    - "Nuclear is bluer, elongated center on color map - Ferrarese+2006"
+    - "Have more GC than others at simiar luminosity, especially red - Peng+2006"
+    - "Kinematic distinctive core - Bender1988, Surma1992"
+    - "GC systems have several distinct kinematic substructures - Blom+2012"
