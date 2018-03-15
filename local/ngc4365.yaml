@@ -30,6 +30,15 @@ coverage:
     galex: True
     sluggs: True
     atlas3d: True
+    hst_wfpc2: True
+    hst_acs: True
+    vegas: True
+    kormendy09: True
+# Kormendy 2009
+kormendy09:
+    nser: 7.11
+    mu_v: 23.04   # mag/arcsec^2
+    re_v: 14.49   # kpc
 # Cluster or Group
 group:
     name: virgo
@@ -40,3 +49,16 @@ notes:
     - "Have more GC than others at simiar luminosity, especially red - Peng+2006"
     - "Kinematic distinctive core - Bender1988, Surma1992"
     - "GC systems have several distinct kinematic substructures - Blom+2012"
+# Reference
+reference:
+    - http://adsabs.harvard.edu/abs/2014MNRAS.439.2420B
+    - http://adsabs.harvard.edu/abs/2012MNRAS.427.2349C
+    - http://adsabs.harvard.edu/abs/2012MNRAS.426.1959B
+    - http://adsabs.harvard.edu/abs/2012MNRAS.420...37B
+    - http://adsabs.harvard.edu/abs/2005ApJ...634L..41K
+    - http://adsabs.harvard.edu/abs/2008MNRAS.385..647V
+    - http://adsabs.harvard.edu/abs/2004MNRAS.353....1S
+    - http://adsabs.harvard.edu/abs/2003ApJ...585..767L
+    - http://adsabs.harvard.edu/abs/2001ApJ...548L..33D
+    - http://adsabs.harvard.edu/abs/1995A%26A...298..405S
+    - http://adsabs.harvard.edu/abs/1994AJ....107.2017F
