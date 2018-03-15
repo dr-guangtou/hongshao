@@ -23,7 +23,8 @@ hyperleda:
 # Coverage
 coverage:
     cgs: False
-    sdss: True
+    sdss_phot: True
+    sdss_spec: False
     cfht: True
     obey: True
     galex: True

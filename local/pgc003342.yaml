@@ -1,0 +1,51 @@
+id: pgc003342
+name: "PGC 003342"
+other_names:
+    - "UGC 00579"
+    - "Abell 119 BCG"
+# Coordinate
+ra: 14.067146
+dec: -1.255370
+# Distance
+dist: 184.0  # Mpc
+z: 0.043364
+cz: 13081      # km/s
+# SDSS
+sdss:
+    link: http://skyserver.sdss.org/dr12/en/tools/explore/summary.aspx?ra=14.067146&dec=-1.255370
+    vdisp: 260.66
+    vdisp_err: 4.579
+# HyperLeda
+hyperleda:
+    link: http://leda.univ-lyon1.fr/ledacat.cgi?PGC00342&ob=ra
+# Coverage
+coverage:
+    cgs: False
+    sdss_phot: True
+    sdss_spec: True
+    cfht: True
+    obey: False
+    sami: True
+    galex: True
+    sluggs: False
+    atlas3d: False
+    m3g: True
+    wings: True
+# M3G
+m3g:
+  logms: 12.283
+  re: 24.5   # kpc
+  e: 0.25
+  vdisp: 270.0  # km/s
+  vdisp_err: 1.6 
+# Cluster or Group
+group:
+    name: "Abell 119"
+    reference:
+        - http://adsabs.harvard.edu/abs/2016ApJ...832...69O
+        - http://adsabs.harvard.edu/abs/2016ApJ...822...92L
+        - http://adsabs.harvard.edu/abs/2005MNRAS.364.1147P
+        - http://adsabs.harvard.edu/abs/1998AJ....115..418D
+# Notes
+notes:
+  - "Prolate rotation along minor axis to Re"

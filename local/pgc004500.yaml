@@ -1,0 +1,61 @@
+id: pgc004500
+name: "PGC 004500"
+other_names:
+    - "UGC 00797"
+    - "Abell 168 BCG"
+# Coordinate
+ra: 18.739958
+dec: 0.430808
+# Distance
+dist: 186.0  # Mpc
+z: 0.043841
+cz: 13195      # km/s
+# SDSS
+sdss:
+    link: http://skyserver.sdss.org/dr12/en/tools/explore/summary.aspx?ra=18.739958&dec=0.430808
+    vdisp: 252.95
+    vdisp_err: 5.157
+    mstar_pca_bc03: 11.698
+    mstar_gran_wide_dust: 11.721
+# HyperLeda
+hyperleda:
+    link: http://leda.univ-lyon1.fr/ledacat.cgi?PGC%20004500 
+    vdisp: 346.4
+    vdisp_err: 58.2
+# Coverage
+coverage:
+    cgs: False
+    sdss_phot: True
+    sdss_spec: True
+    cfht: True
+    obey: False
+    sami: True
+    galex: True
+    sluggs: False
+    atlas3d: False
+    m3g: True
+    wings: True
+# M3G
+m3g:
+  logms: 12.026
+  re: 13.2   # kpc
+  e: 0.11
+  vdisp: 256.5  # km/s
+  vdisp_err: 1.6 
+# Cluster or Group
+group:
+    name: "Abell 168"
+    note: 
+        - "Merging cluster"
+    reference:
+        - http://adsabs.harvard.edu/abs/2014MNRAS.443..485F
+        - http://adsabs.harvard.edu/abs/2004ApJ...614..692Y
+        - http://adsabs.harvard.edu/abs/2004ApJ...610L..81H
+        - http://adsabs.harvard.edu/abs/2004ApJ...600..141Y
+        - http://adsabs.harvard.edu/abs/1997AJ....114..455D
+# Notes
+notes:
+  - "Show kienmatic twist"
+  - "The position of this galaxy corresponds to the x-ray peak"
+  - "This galaxy is not detected in IRAS survey nor 4.85 and 1.5 GHz radio
+  continuum surveys"
