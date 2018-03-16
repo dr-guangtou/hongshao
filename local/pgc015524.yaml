@@ -49,6 +49,7 @@ group:
       - http://adsabs.harvard.edu/abs/2008A%26A...486...85C
       - http://adsabs.harvard.edu/abs/2008A%26A...479..335B
       - http://adsabs.harvard.edu/abs/2004ApJ...610..161M
+      - https://www.aanda.org/articles/aa/abs/2008/28/aa8709-07/aa8709-07.html
 # Notes
 notes:
   - "Misalignment between photometric and kinematic PA is around 60 deg."
