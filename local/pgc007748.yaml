@@ -1,0 +1,59 @@
+id: pgc007748
+name: "PGC 007748"
+other_names:
+    - "UGC 01525"
+    - "Abell 295 BCG"
+# Coordinate
+ra: 30.572007
+dec: -1.127838
+# Distance
+dist: 178.0  # Mpc
+z: 0.041854
+cz: 12539      # km/s
+# SDSS
+sdss:
+    link: http://skyserver.sdss.org/dr14/en/tools/explore/summary.aspx?ra=30.572007&dec=-1.127838
+    vdisp: 253.79
+    vdisp_err: 5.571
+    mstar_pca_bc03: 11.711
+    mstar_gran_wide_dust: 11.721
+# HyperLeda
+hyperleda:
+    link: http://leda.univ-lyon1.fr/ledacat.cgi?PGC%20007748
+# Coverage
+coverage:
+    cgs: False
+    sdss_phot: True
+    sdss_spec: True
+    cfht: True
+    obey: False
+    sami: False
+    galex: True
+    sluggs: False
+    atlas3d: False
+    m3g: True
+    wings: False
+    hst_wfpc2: True
+    hsc: True
+# M3G
+m3g:
+  logms: 12.072
+  re: 25.9   # kpc
+  e: 0.28
+  vdisp: 265.7  # km/s
+  vdisp_err: 1.2 
+# Cluster or Group
+group:
+    name: "Abell 295"
+    reference:
+        - http://adsabs.harvard.edu/abs/1999ApJS..125...35S
+        - http://adsabs.harvard.edu/abs/2004A%26A...425..367B
+        - http://adsabs.harvard.edu/abs/2011A%26A...534A.109P
+# Notes
+notes:
+  - "Prolate rotation along minor axis to Re"
+reference:
+  - http://adsabs.harvard.edu/abs/1996ApJ...465..534G
+  - http://adsabs.harvard.edu/abs/2003AJ....125..478L
+  - http://adsabs.harvard.edu/abs/2011ApJS..195...15D 
+  - http://adsabs.harvard.edu/abs/2014ApJ...797...82L

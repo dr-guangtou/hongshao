@@ -36,6 +36,7 @@ coverage:
     m3g: True
     wings: True
     hst_wfpc2: True
+    hsc: True
 # M3G
 m3g:
   logms: 12.026

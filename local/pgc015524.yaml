@@ -1,0 +1,62 @@
+id: pgc015524
+name: "PGC 015524"
+other_names:
+    - "MCG-02-12-039"
+    - "Abell 496 BCG"
+# Coordinate
+ra: 68.407682
+dec: -13.261935
+# Distance
+dist: 138.0  # Mpc
+z: 0.032641
+cz: 9672      # km/s
+# HyperLeda
+hyperleda:
+    link: http://leda.univ-lyon1.fr/ledacat.cgi?PGC%20015524
+    vdisp: 264.1
+    vdisp_err: 5.8
+    vmax: 15.0
+    vmax_err: 14.9
+# Coverage
+coverage:
+    cgs: False
+    sdss_phot: False
+    sdss_spec: False
+    cfht: True
+    obey: False
+    sami: False
+    galex: True
+    sluggs: False
+    atlas3d: False
+    m3g: True
+    wings: False
+    hst_wfpc2: True
+    hsc: True
+# M3G
+m3g:
+  logms: 12.233
+  re: 20.7   # kpc
+  e: 0.19
+  vdisp: 272.9  # km/s
+  vdisp_err: 1.4 
+# Cluster or Group
+group:
+    name: "Abell 496"
+    reference:
+      - http://adsabs.harvard.edu/abs/2014A%26A...570A.117G
+      - http://adsabs.harvard.edu/abs/2012MNRAS.420.3632R
+      - http://adsabs.harvard.edu/abs/2011A%26A...528A..36U 
+      - http://adsabs.harvard.edu/abs/2008A%26A...486...85C
+      - http://adsabs.harvard.edu/abs/2008A%26A...479..335B
+      - http://adsabs.harvard.edu/abs/2004ApJ...610..161M
+# Notes
+notes:
+  - "Misalignment between photometric and kinematic PA is around 60 deg."
+  - "A KDC is detected in the radial kinematic profiles."
+  - "With emission line in the central region"
+  - "The cooling flow accretion rate was calculated to be 136 M_sun_ yr^-1^ (Edge et al. 1992)"
+reference:
+  - http://adsabs.harvard.edu/abs/1995ApJ...438..539F
+  - http://adsabs.harvard.edu/abs/2008MNRAS.391.1009L
+  - http://adsabs.harvard.edu/abs/2011ApJS..195...15D
+  - http://adsabs.harvard.edu/abs/2011MNRAS.415.3013L
