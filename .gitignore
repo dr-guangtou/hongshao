@@ -80,6 +80,11 @@ celerybeat-schedule
 # dotenv
 .env
 
+# Derived data products and figures (regenerable from the raw TNG300 drop)
+/data/processed/
+/figures/
+scratch_*.py
+
 # virtualenv
 .venv
 venv/
