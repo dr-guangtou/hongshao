@@ -187,7 +187,14 @@ Columns (stellar & halo masses are `log10(Msun)`):
 | `logmstar_cog` (24) | curve of growth at `COG_RAD_KPC`, z=0.4 |
 | `flag`, `test` | profile quality flags |
 | `valid_mah`, `latest_snap`, `n_mah_pts` | MAH availability |
-| `use` | clean cut: good profile, `latest_snap ≥ 70`, `M0 ≥ 1e13`, finite CoG |
+| `mah_decline`, `mah_declined` | `1 − M(z=0.4)/M_peak`, and whether it exceeds 5% |
+| `use` | clean cut: good profile, not declined, `latest_snap ≥ 70`, `M0 ≥ 1e13`, finite CoG |
+
+**Decline cut.** ~99% of halos show small (few-%) snapshot-to-snapshot mass
+fluctuations, which are normal. We exclude only halos that have *turned over* —
+whose z=0.4 mass is more than `MAH_DECLINE_TOL = 5%` below their historical peak
+(stripping / backsplash / tracking loss). This removes ~700 halos (20.6%); the
+threshold is a tunable module constant.
 
 `COG_RAD_KPC`, `SMA_KPC`, units and the M0 caveat are stored in `tbl.meta`.
 

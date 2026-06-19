@@ -33,6 +33,10 @@ N_GAL = 3388
 PICKLE_MASS_UNIT = 1e10 / H
 # TNG cosmology (Planck 2015), for cosmic-time <-> redshift conversions
 TNG_COSMO = FlatLambdaCDM(H0=67.74, Om0=0.3089, Ob0=0.0486)
+# halos whose z=0.4 mass is more than this fraction below their historical peak
+# have turned over (stripping / tracking loss) and are excluded from analysis.
+# Per-step fluctuations of a few % are normal; this is a net-decline cut.
+MAH_DECLINE_TOL = 0.05
 
 # --- radial grids (from save_tng300_072_file_structure.md) ------------------
 # semi-major axes of the 7 fixed apertures in the `aper` array, kpc
@@ -102,6 +106,20 @@ def peak_history(entry) -> tuple[np.ndarray | None, np.ndarray | None]:
     snaps = arr[0][order]
     mass = np.maximum.accumulate(arr[1][order] * PICKLE_MASS_UNIT)
     return snaps, np.log10(mass)
+
+
+def mah_decline_fraction(entry) -> float:
+    """Fractional shortfall of the latest-snapshot mass below the peak.
+
+    ``1 - M_final/M_peak`` from the *raw* (non-running-max) history: 0 for a
+    still-rising halo, >0 if the main-branch mass has declined by z=0.4
+    (stripping, turnover, or merger-tree tracking loss). NaN for empty entries.
+    """
+    arr = np.asarray(entry, dtype=float)
+    if arr.size == 0 or arr.ndim != 2 or arr.shape[1] == 0:
+        return np.nan
+    m = arr[1][np.argsort(arr[0])]
+    return float(1.0 - m[-1] / m.max())
 
 
 def logmpeak_at_snapshot(snaps, log_mpeak, target_snap: int) -> float:
@@ -183,6 +201,8 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
         "latest_snap": np.full(n_gal, -1, dtype=int),
         "n_mah_pts": np.zeros(n_gal, dtype=int),
         "valid_mah": np.zeros(n_gal, dtype=bool),
+        "mah_decline": np.full(n_gal, np.nan),     # 1 - M(z=0.4)/M_peak
+        "mah_declined": np.zeros(n_gal, dtype=bool),
         "flag": np.zeros(n_gal, dtype=bool),       # valid profile measurement
         "test": np.zeros(n_gal, dtype=bool),       # shape measurement hit default bound
         "logmstar_aper": np.full((n_gal, 7), np.nan),   # at SMA_KPC, z=0.4
@@ -204,6 +224,9 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
             cols["n_mah_pts"][i] = len(snaps)
             cols["latest_snap"][i] = int(snaps[-1])
             cols["logm0_halo"][i] = lmp[-1]  # peak at the latest available snapshot
+            dec = mah_decline_fraction(mah[i])
+            cols["mah_decline"][i] = dec
+            cols["mah_declined"][i] = dec > MAH_DECLINE_TOL
             for z in anchor_z:
                 snap = ANCHORS[z][2]
                 key = f"logmpeak_z{z:g}".replace(".", "p")
@@ -233,9 +256,11 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
     tbl["dlogm_z2_z1"] = tbl["logmpeak_z1"] - tbl["logmpeak_z2"]
     tbl["dlogm_z1_z0p4"] = m0 - tbl["logmpeak_z1"]
 
-    # convenience: a clean analysis cut (good profile, reliable M0, above 1e13)
+    # convenience: a clean analysis cut (good profile, reliable & still-rising
+    # M0 above 1e13, finite CoG). Excludes halos that have turned over by z=0.4.
     tbl["use"] = (
         tbl["flag"] & tbl["valid_mah"]
+        & ~tbl["mah_declined"]
         & (tbl["latest_snap"] >= 70)
         & (tbl["logm0_halo"] >= 13.0)
         & np.isfinite(tbl["logmstar_cog"]).all(axis=1)
@@ -270,6 +295,8 @@ def qc_summary(tbl: Table) -> str:
         f"{np.isfinite(tbl['logmpeak_z2']).sum()}",
         f"z50 in [{np.nanmin(tbl['z50']):.2f}, {np.nanmax(tbl['z50']):.2f}] "
         f"median {np.nanmedian(tbl['z50']):.2f}",
+        f"MAH declined (>{MAH_DECLINE_TOL:.0%} below peak, excluded): "
+        f"{tbl['mah_declined'].sum()}",
         f"clean analysis cut 'use': {tbl['use'].sum()}",
     ]
     return "\n".join(lines)
