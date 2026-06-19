@@ -32,11 +32,18 @@ Cross-experiment plan. Mirrors the phase sequence in
   cross-match yet).
 
 ## Phase 4 — conditional emulator
-- [ ] `P(theta_prof | M0)` baseline vs `P(theta_prof | M0, theta_MAH)`; null /
-  shuffled controls; quantify information gain.
+- [x] **exp04_conditional_model** — `P(profile | M0)` vs `P(profile | M0, MAH)`,
+  5-fold CV linear, shuffle control. **Result:** assembly history improves
+  full-CoG prediction by 22.6% (0.152→0.118 dex; shuffle ~0%), shape by 7.3%;
+  gain grows with radius for absolute mass; profile painting works (early formers
+  more extended). First Ultimate-SHMR prototype.
 
-## Phase 5 — mock profile painting
+## Phase 5 — refinements & mock painting (choose next)
+- [ ] predict radial-DiffMAH params (generative, monotonic) instead of raw CoG.
+- [ ] add secondary halo properties (concentration / tidal field).
+- [ ] probabilistic emulator (scatter / GP / normalizing flow).
 - [ ] apply emulator to an N-body catalog; compare profile distributions.
+- [ ] redshift evolution once other-z profiles available.
 
 ## Open data gaps (not blocking Phase 1)
 - [ ] exact snap-72 halo mass (`mass_halo`) to define `M0` precisely.
