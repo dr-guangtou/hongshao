@@ -16,16 +16,23 @@ import pickle
 from pathlib import Path
 
 import numpy as np
+from astropy.cosmology import FlatLambdaCDM
 from astropy.table import Table
 
 # --- raw data location (the external drop; not in the repo) ------------------
 DEFAULT_DATA_DIR = Path("/Users/mac/Desktop/tng300_mah_mprof")
+# vendored 100-snapshot cosmic-time table (Gyr) from the diffmah NERSC portal;
+# value index == TNG 0-based snapshot number (verified against astropy ages).
+COSMIC_TIME_PATH = Path(__file__).resolve().parent.parent / \
+    "data" / "external" / "tng_cosmic_time.txt"
 
 # --- physical constants / units ---------------------------------------------
 H = 0.6774                       # TNG little-h (Planck 2015 cosmology)
 N_GAL = 3388
 # raw MAH masses are in 1e10 Msun/h; multiply by this to get Msun
 PICKLE_MASS_UNIT = 1e10 / H
+# TNG cosmology (Planck 2015), for cosmic-time <-> redshift conversions
+TNG_COSMO = FlatLambdaCDM(H0=67.74, Om0=0.3089, Ob0=0.0486)
 
 # --- radial grids (from save_tng300_072_file_structure.md) ------------------
 # semi-major axes of the 7 fixed apertures in the `aper` array, kpc
@@ -108,6 +115,34 @@ def logmpeak_at_snapshot(snaps, log_mpeak, target_snap: int) -> float:
     return float(np.interp(target_snap, snaps, log_mpeak))
 
 
+def load_cosmic_time(path: Path = COSMIC_TIME_PATH) -> np.ndarray:
+    """Cosmic time (Gyr) per TNG snapshot; ``t[snap]`` for 0-based snapshot."""
+    t = np.loadtxt(path)
+    assert t.shape == (100,), t.shape
+    return t
+
+
+def _time_to_redshift(cosmo=TNG_COSMO, zmax=20.5, n=4000):
+    """Return (ages_asc, z_asc) tables for np.interp(t_gyr) -> redshift."""
+    zg = np.linspace(0.0, zmax, n)
+    ages = cosmo.age(zg).value          # decreases with z
+    order = np.argsort(ages)            # ascending cosmic time
+    return ages[order], zg[order]
+
+
+def formation_times(snaps, log_mpeak, t_of_snap, fracs=(0.5, 0.75, 0.9)):
+    """Cosmic time (Gyr) when the peak mass first reaches ``frac * M0``.
+
+    M0 is the peak mass at the latest available snapshot. The peak history is
+    monotonic in time, so we interpolate the (increasing) ``log_mpeak`` against
+    cosmic time. A history that already exceeds ``frac*M0`` at its earliest
+    record clamps to that earliest time.
+    """
+    times = t_of_snap[snaps.astype(int)]      # ascending with snaps
+    return np.array([np.interp(log_mpeak[-1] + np.log10(f), log_mpeak, times)
+                     for f in fracs])
+
+
 def _finite_array(values, n):
     """Coerce a possibly object/None/scalar value to a length-n float array.
 
@@ -132,12 +167,15 @@ def _finite_array(values, n):
 def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Table:
     """Assemble the per-galaxy z=0.4 table (halo MAH summaries + stellar CoG).
 
-    Stellar masses are stored as log10(Msun). MAH summaries are anchor-based
-    (no z<->t conversion needed); formation-time summaries (z50/z75/z90) are
-    deliberately omitted until a verified full snapshot->redshift table exists.
+    Stellar masses are stored as log10(Msun). MAH summaries include anchor
+    halo masses, growth fractions, and formation times/redshifts (z50/z75/z90)
+    derived from the vendored TNG cosmic-time table.
     """
     data_dir = Path(data_dir)
     mah = load_mah(data_dir)
+    t_snap = load_cosmic_time()                  # Gyr per 0-based snapshot
+    ages_asc, z_asc = _time_to_redshift()        # for t_form -> z_form
+    fracs = (0.5, 0.75, 0.9)
 
     cols = {
         "index": np.arange(n_gal),
@@ -149,6 +187,10 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
         "test": np.zeros(n_gal, dtype=bool),       # shape measurement hit default bound
         "logmstar_aper": np.full((n_gal, 7), np.nan),   # at SMA_KPC, z=0.4
         "logmstar_cog": np.full((n_gal, 24), np.nan),   # at COG_RAD_KPC, z=0.4
+        "t50": np.full(n_gal, np.nan), "t75": np.full(n_gal, np.nan),
+        "t90": np.full(n_gal, np.nan),             # formation cosmic times (Gyr)
+        "z50": np.full(n_gal, np.nan), "z75": np.full(n_gal, np.nan),
+        "z90": np.full(n_gal, np.nan),             # formation redshifts
     }
     # anchor halo masses + growth fractions (relative to M0)
     anchor_z = sorted(ANCHORS)  # [0.4, 0.7, 1.0, 1.5, 2.0]
@@ -169,6 +211,10 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
                     cols[key][i] = lmp[-1]   # snap 72 not stored; latest ~= z=0.4
                 else:
                     cols[key][i] = logmpeak_at_snapshot(snaps, lmp, snap)
+            tf = formation_times(snaps, lmp, t_snap, fracs)
+            zf = np.interp(tf, ages_asc, z_asc)
+            cols["t50"][i], cols["t75"][i], cols["t90"][i] = tf
+            cols["z50"][i], cols["z75"][i], cols["z90"][i] = zf
 
         aper = load_aper(i, data_dir)["z0p4"]
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -201,7 +247,8 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
         mass_unit="log10(Msun)",
         h=H,
         note="logm0_halo = peak mass at latest available snapshot (~z=0.4); "
-             "snap 72 mass not in pickle.",
+             "snap 72 mass not in pickle. tXX/zXX = time/redshift when peak "
+             "mass first reached XX% of M0.",
     )
     return tbl
 
@@ -221,6 +268,8 @@ def qc_summary(tbl: Table) -> str:
         f"{(~np.isfinite(tbl['logmstar_cog']).all(axis=1)).sum()}",
         f"Mpeak(z=2) measured (history reaches snap 33): "
         f"{np.isfinite(tbl['logmpeak_z2']).sum()}",
+        f"z50 in [{np.nanmin(tbl['z50']):.2f}, {np.nanmax(tbl['z50']):.2f}] "
+        f"median {np.nanmedian(tbl['z50']):.2f}",
         f"clean analysis cut 'use': {tbl['use'].sum()}",
     ]
     return "\n".join(lines)
@@ -242,6 +291,11 @@ def _selftest(data_dir: Path):
     # anchor masses must not exceed M0 (mass grows with time)
     valid = tbl["valid_mah"] & np.isfinite(tbl["logmpeak_z1"])
     assert np.all(tbl["logmpeak_z1"][valid] <= tbl["logm0_halo"][valid] + 1e-6)
+    # formation order: t50 <= t75 <= t90 (later threshold reached later)
+    v = tbl["valid_mah"]
+    assert np.all(tbl["t50"][v] <= tbl["t75"][v] + 1e-6)
+    assert np.all(tbl["t75"][v] <= tbl["t90"][v] + 1e-6)
+    assert np.all((tbl["z50"][v] >= tbl["z90"][v] - 1e-6))  # z50 is earlier (higher z)
     print("selftest OK")
     print(qc_summary(tbl))
 

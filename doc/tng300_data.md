@@ -135,21 +135,30 @@ from the MAH pickle directly. (These files are optional for experiment 1.)
 
 ---
 
-## 6. Snapshot ↔ redshift
+## 6. Snapshot ↔ redshift / cosmic time
 
-The 5 profile redshifts map to integer TNG snapshots (verified against the
-official TNG specifications page):
+The pickle snapshot integers are **0-based TNG-native numbering** (snapshot `N`
+is TNG snapshot `N`); no index shift is needed. Verified facts:
 
-| z | 0.4 | 0.7 | 1.0 | 1.5 | 2.0 |
-|---|---|---|---|---|---|
-| snapshot | 72 | 59 | 50 | 40 | 33 |
+- Pickle snapshots span **1…71**; snapshot 0 and 72 never appear. The
+  observation epoch (snap 72 = z=0.4) is *not* in the MAH — the pickle holds
+  only progenitor snapshots.
+- The 5 profile redshifts map to integer TNG snapshots (official spec):
 
-Because MAH masses are indexed by snapshot number, **anchor halo masses
-`Mpeak(z)` are obtained by interpolating the peak history at these integer
-snapshots — no redshift↔time table is required.** A full per-snapshot redshift
-table (needed for formation-time summaries z50/z75/z90, and for cosmic-time
-conversions used by DiffMAH) is **not yet verified** and must be read from TNG
-snapshot headers or the API before those summaries are computed.
+  | z | 0.4 | 0.7 | 1.0 | 1.5 | 2.0 |
+  |---|---|---|---|---|---|
+  | snapshot | 72 | 59 | 50 | 40 | 33 |
+
+**Cosmic time** comes from the vendored file `data/external/tng_cosmic_time.txt`
+(100 values, Gyr, from the diffmah NERSC portal). Its human label "Snapshot 1"
+= TNG snapshot 0, so loaded as a numpy array `t`, **`t[snap]` gives the cosmic
+time of 0-based snapshot `snap` directly** — no offset. This was confirmed by
+matching `t` at snaps 72/59/50/40/33/99/0 to `astropy` ages for the TNG (Planck
+2015) cosmology to <1 Myr.
+
+Anchor halo masses `Mpeak(z)` are interpolated at the integer anchor snapshots.
+Formation times/redshifts (z50/z75/z90) are computed from `t[snap]` plus a
+`t → z` inversion of the TNG cosmology (`TNG_COSMO` in `tng_data.py`).
 
 ---
 
@@ -172,6 +181,8 @@ Columns (stellar & halo masses are `log10(Msun)`):
 | `logmpeak_z0p4 … z2` | `Mpeak` interpolated at snaps 72/59/50/40/33 |
 | `f_early`, `f_late` | `Mpeak(z=2)/M0`, `1 − Mpeak(z=1)/M0` |
 | `dlogm_z2_z1`, `dlogm_z1_z0p4` | inter-epoch halo growth |
+| `t50/t75/t90` | cosmic time (Gyr) peak mass first reached 50/75/90% of M0 |
+| `z50/z75/z90` | formation redshifts (from `t*` via TNG cosmology) |
 | `logmstar_aper` (7) | stellar mass in `SMA_KPC` apertures, z=0.4 |
 | `logmstar_cog` (24) | curve of growth at `COG_RAD_KPC`, z=0.4 |
 | `flag`, `test` | profile quality flags |
@@ -189,5 +200,6 @@ Columns (stellar & halo masses are `log10(Msun)`):
 2. **No `halo_id` cross-match** to the DiffMAH/Diffstar HDF5 files.
 3. **`map_tng100_hist_stellar.hdf5` is corrupted** (all zeros) — re-fetch if it
    is actually needed; not required for experiment 1.
-4. **No verified full snapshot→redshift table** — needed for z50/z75/z90 and
-   cosmic-time / DiffMAH work. Anchor-based MAH features do not need it.
+4. ~~No verified full snapshot→redshift table~~ — **resolved.** Cosmic times are
+   vendored in `data/external/tng_cosmic_time.txt` and verified; formation-time
+   summaries are now in the table.
