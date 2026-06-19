@@ -10,9 +10,11 @@ Cross-experiment plan. Mirrors the phase sequence in
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
 ## Phase 1 — exploratory diagnostics
-- [ ] **exp01_aperture_mah_corr** — partial-correlation map of stellar aperture
-  mass vs `Mpeak(z)` at fixed `M0` (directions A + F). Which radii remember
-  which epochs? Lowest-risk, ties to HSC results.
+- [x] **exp01_aperture_mah_corr** — partial-correlation map of stellar aperture
+  mass vs `Mpeak(z)` at fixed `M0` (directions A + F). **Result:** at fixed M0,
+  halo history cuts inner & outer stellar-mass scatter by ~20% (shuffle-confirmed
+  real); inner <10 kpc uniquely tracks early mass (Mpeak(z=2), r=0.46, falling
+  ~2× outward), recent growth (z≲1) dominates all radii. Positive → proceed.
 
 ## Phase 2 — profile compression
 - [ ] PCA of curves of growth (direction D): intrinsic dimensionality.
