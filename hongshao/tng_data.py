@@ -20,6 +20,8 @@ import numpy as np
 from astropy.cosmology import FlatLambdaCDM
 from astropy.table import Table
 
+from .profiles import fit_cog
+
 # --- raw data location (the external drop; not in the repo) ------------------
 # Override with the HONGSHAO_DATA_DIR env var so the repo isn't machine-bound.
 DEFAULT_DATA_DIR = Path(
@@ -186,12 +188,16 @@ def _finite_array(values, n):
 
 
 # --- dataset assembly --------------------------------------------------------
-def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Table:
+def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
+                  fit_profiles: bool = True) -> Table:
     """Assemble the per-galaxy z=0.4 table (halo MAH summaries + stellar CoG).
 
     Stellar masses are stored as log10(Msun). MAH summaries include anchor
     halo masses, growth fractions, and formation times/redshifts (z50/z75/z90)
-    derived from the vendored TNG cosmic-time table.
+    derived from the vendored TNG cosmic-time table. If ``fit_profiles`` (the
+    default), the radial-DiffMAH profile parameters (rdm_*) are fit to every
+    finite curve of growth and cached as columns (~4 min for the full sample;
+    pass False to skip).
     """
     data_dir = Path(data_dir)
     mah = load_mah(data_dir)
@@ -215,6 +221,13 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
         "t90": np.full(n_gal, np.nan),             # formation cosmic times (Gyr)
         "z50": np.full(n_gal, np.nan), "z75": np.full(n_gal, np.nan),
         "z90": np.full(n_gal, np.nan),             # formation redshifts
+        # radial-DiffMAH profile parameters (fit to the CoG; see profiles.py)
+        "rdm_logMstar0": np.full(n_gal, np.nan),
+        "rdm_beta_in": np.full(n_gal, np.nan),
+        "rdm_beta_out": np.full(n_gal, np.nan),
+        "rdm_R_c": np.full(n_gal, np.nan),
+        "rdm_Delta": np.full(n_gal, np.nan),
+        "rdm_rms": np.full(n_gal, np.nan),
     }
     # anchor halo masses + growth fractions (relative to M0)
     anchor_z = sorted(ANCHORS)  # [0.4, 0.7, 1.0, 1.5, 2.0]
@@ -247,6 +260,12 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> Tabl
         with np.errstate(divide="ignore", invalid="ignore"):
             cols["logmstar_aper"][i] = np.log10(_finite_array(aper["aper"], 7))
             cols["logmstar_cog"][i] = np.log10(_finite_array(aper["cog"], 24))
+
+        cogvec = cols["logmstar_cog"][i]
+        if fit_profiles and np.all(np.isfinite(cogvec)):
+            f = fit_cog(COG_RAD_KPC, cogvec)
+            for p in ("logMstar0", "beta_in", "beta_out", "R_c", "Delta", "rms"):
+                cols[f"rdm_{p}"][i] = f[p]
 
         z04 = load_prof(i, data_dir)["map_hist_z0p4"]
         cols["flag"][i] = bool(z04["flag"])
