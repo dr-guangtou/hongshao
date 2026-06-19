@@ -39,7 +39,11 @@ Cross-experiment plan. Mirrors the phase sequence in
   more extended). First Ultimate-SHMR prototype.
 
 ## Phase 5 — refinements & mock painting (choose next)
-- [ ] predict radial-DiffMAH params (generative, monotonic) instead of raw CoG.
+- [x] **exp05_generative_model** — predict radial-DiffMAH params → reconstruct
+  valid profiles. **Result:** generating via 5 params reaches 0.128 dex (vs 0.118
+  direct), history improves it 19.8% (shuffle ~0%); helps normalization most
+  (+13%). Paints ~45% of the true profile-shape diversity at fixed M0. Also
+  bounded the fit (identifiable params) and cached rdm_* in the dataset.
 - [ ] add secondary halo properties (concentration / tidal field).
 - [ ] probabilistic emulator (scatter / GP / normalizing flow).
 - [ ] apply emulator to an N-body catalog; compare profile distributions.

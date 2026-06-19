@@ -185,6 +185,7 @@ Columns (stellar & halo masses are `log10(Msun)`):
 | `z50/z75/z90` | formation redshifts (from `t*` via TNG cosmology) |
 | `logmstar_aper` (7) | stellar mass in `SMA_KPC` apertures, z=0.4 |
 | `logmstar_cog` (24) | curve of growth at `COG_RAD_KPC`, z=0.4 |
+| `rdm_*` | radial-DiffMAH profile fit (`logMstar0`, `beta_in`, `beta_out`, `R_c`, `Delta`, `rms`); see `hongshao/profiles.py`. Skip with `build_dataset(fit_profiles=False)` |
 | `flag`, `test` | profile quality flags |
 | `valid_mah`, `latest_snap`, `n_mah_pts` | MAH availability |
 | `mah_decline`, `mah_declined` | `1 − M(z=0.4)/M_peak`, and whether it exceeds 5% |
