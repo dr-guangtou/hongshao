@@ -57,6 +57,14 @@ doc/             # science context, data reference, todo.md, lessons.md
   `doc/todo.md` = cross-experiment roadmap; the Obsidian journal = chronological
   session log. No overlap.
 
+## Communication
+
+- The user is a professional astronomer, not a software engineer or project
+  manager. Explain plans, decisions, and trade-offs in plain language.
+- Avoid software/PM jargon and tool names the user wouldn't know (e.g. YAGNI,
+  CI/CD, DVC, Snakemake). If a term is genuinely important, define it in one
+  plain sentence instead of assuming it.
+
 ## Conventions
 
 - English only — in code, comments, commits, and docs.
