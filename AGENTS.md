@@ -26,6 +26,23 @@ Read those two before proposing analyses.
   deterministic fits. Residual scatter is a result, not a bug.
 - **Null models matter.** Compare against final-mass-only and shuffled-MAH
   controls before claiming an assembly signal.
+- **Expect irreducible scatter.** The MAH is not the whole story — secondary
+  halo properties (initial tidal/tensor field, concentration) carry independent
+  information. And the stellar profiles are single random 2-D projections of
+  triaxial galaxies, so orientation/shape add noise we cannot remove from this
+  dataset. Don't aim for zero residual scatter; the goal is a phenomenological
+  model that captures the assembly-driven part.
+
+## Figures
+
+- **Every experiment must produce at least one figure** demonstrating its
+  result, whenever feasible. Use publication-quality styling via
+  `hongshao.plotting.set_style()` (Okabe-Ito colorblind palette; `cividis` for
+  sequential heatmaps; sequential, not diverging, when all values share a sign).
+  Save PNG + PDF with `hongshao.plotting.save_fig()`. Follow the
+  scientific-visualization skill for presentation.
+- **Always surface new figures to the user for review** — point to the file
+  paths and display them; don't just save them silently.
 
 ## Repo layout
 

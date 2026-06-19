@@ -52,8 +52,23 @@ body, later growth builds the envelope — though the *dominant* axis at all rad
 is overall formation time (z≈0.7–1), with the inner early-time sensitivity as a
 clear second-order, physically meaningful signal.
 
-Figures: `figures/exp01_radius_epoch_map.png` (headline),
-`exp01_cog_epoch_map.png`, `exp01_scatter_reduction.png`.
+Figures: `figures/exp01_results.png` (headline — Panel A: correlation vs radius;
+Panel B: scatter reduction), `exp01_corr_matrix.png` (full zone × feature map).
+
+## Why ~20% and not more (expected)
+
+The residual scatter is not a failure — it is expected:
+
+- The main-branch MAH is only part of the halo information. Secondary properties
+  (initial tidal/tensor field, concentration) carry independent signal we did
+  not use here.
+- The profiles are single random 2-D projections of triaxial galaxies, so
+  viewing angle and intrinsic shape inject noise that *no* halo model can remove
+  from this dataset.
+
+So ~20% is a meaningful lower bound on the assembly signal accessible from the
+main-branch growth history alone. The aim is a phenomenological model that
+captures this part, not zero scatter.
 
 ## Caveats
 

@@ -27,6 +27,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from hongshao.tng_data import SMA_KPC, COG_RAD_KPC  # noqa: E402
 from hongshao.provenance import write_manifest       # noqa: E402
+from hongshao.plotting import set_style, save_fig, OKABE_ITO  # noqa: E402
+
+set_style()
 
 HERE = Path(__file__).resolve().parent
 OUTDIR = HERE / "outputs"
@@ -109,50 +112,26 @@ R_cog, P_cog = corr_matrix([f"{r:.0f}" for r in COG_RAD_KPC], cog_vals,
                            list(epoch_features), list(epoch_features.values()), logM0)
 
 
-# %% heatmap helper
-def heatmap(ax, M, P, row_labels, col_labels, title, ylabel):
-    vmax = np.nanmax(np.abs(M))
-    im = ax.imshow(M, cmap="RdBu_r", vmin=-vmax, vmax=vmax, aspect="auto")
-    ax.set_xticks(range(len(col_labels)))
-    ax.set_xticklabels(col_labels, rotation=45, ha="right", fontsize=8)
-    ax.set_yticks(range(len(row_labels)))
-    ax.set_yticklabels(row_labels, fontsize=8)
-    ax.set_title(title, fontsize=10)
-    ax.set_ylabel(ylabel, fontsize=9)
-    for i in range(M.shape[0]):
-        for j in range(M.shape[1]):
-            if np.isfinite(M[i, j]):
-                star = "*" if (np.isfinite(P[i, j]) and P[i, j] < 0.001) else ""
-                ax.text(j, i, f"{M[i, j]:+.2f}{star}", ha="center", va="center",
-                        fontsize=6, color="k")
-    return im
-
-
-# headline figure: radial zones x MAH features
-fig, ax = plt.subplots(figsize=(7.5, 4.8))
-im = heatmap(ax, R_zone, P_zone, zone_labels, list(mah_features),
-             "Partial corr. of zone stellar mass with halo history\n"
-             "(at fixed final halo mass M0; * = p<0.001)",
-             "radial zone [kpc]")
-fig.colorbar(im, ax=ax, label="partial Spearman r")
-ax.set_xlabel("halo assembly feature")
-fig.tight_layout()
-FIGDIR.mkdir(parents=True, exist_ok=True)
-fig.savefig(FIGDIR / "exp01_radius_epoch_map.png", dpi=140)
-
-# companion: cumulative CoG x epoch
-fig2, ax2 = plt.subplots(figsize=(6.5, 7))
-im2 = heatmap(ax2, R_cog, P_cog, [f"{r:.0f}" for r in COG_RAD_KPC],
-              list(epoch_features),
-              "Partial corr. of M*(<R) with Mpeak(z)\n(at fixed M0)",
-              "aperture radius R [kpc]")
-fig2.colorbar(im2, ax=ax2, label="partial Spearman r")
-ax2.set_xlabel("halo mass epoch")
-fig2.tight_layout()
-fig2.savefig(FIGDIR / "exp01_cog_epoch_map.png", dpi=140)
+# representative radius of each differential zone (kpc), for line plots
+zone_rad = np.array([SMA_KPC[0] / 2] +
+                    [(SMA_KPC[i] + SMA_KPC[i + 1]) / 2
+                     for i in range(len(SMA_KPC) - 1)])
+N = len(t)
 
 
 # %% does halo history reduce scatter at fixed M0?  (5-fold cross-validation)
+def cv_rmse(feature_cols, y, k=5, seed=0):
+    """Cross-validated RMSE of a linear fit. All inputs already finite."""
+    X = np.column_stack([np.ones(len(y))] + list(feature_cols))
+    n = len(y)
+    rng = np.random.default_rng(seed)
+    idx = rng.permutation(n)
+    pred = np.full(n, np.nan)
+    for fold in np.array_split(idx, k):
+        tr = np.setdiff1d(np.arange(n), fold)
+        beta, *_ = np.linalg.lstsq(X[tr], y[tr], rcond=None)
+        pred[fold] = X[fold] @ beta
+    return float(np.sqrt(np.mean((y - pred) ** 2)))
 def cv_rmse(feature_cols, y, k=5, seed=0):
     """Cross-validated RMSE of a linear fit. All inputs already finite."""
     X = np.column_stack([np.ones(len(y))] + list(feature_cols))
@@ -217,25 +196,69 @@ scatter[["target", "n", "rmse_M0", "rmse_M0+MAH",
          "pct_reduction_shuffled"]].pprint(max_width=-1)
 
 
-# %% scatter-reduction figure
-fig3, axes = plt.subplots(1, 2, figsize=(9, 4))
-for ax, row in zip(axes, scatter_rows):
-    labels = ["M0", "+Mpeak(z=1)", "+Mpeak(z=2)", "+z50", "+z90",
-              "+all", "+all (shuffled)"]
-    vals = [row["rmse_M0"], row["rmse_M0+Mpeak(z=1)"], row["rmse_M0+Mpeak(z=2)"],
-            row["rmse_M0+z50"], row["rmse_M0+z90"], row["rmse_M0+MAH"],
-            row["rmse_M0+MAH_shuffled"]]
-    colors = ["0.5", "C0", "C0", "C0", "C0", "C2", "C3"]
-    ax.bar(range(len(vals)), vals, color=colors)
-    ax.set_xticks(range(len(vals)))
-    ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
-    ax.set_ylabel("cross-validated RMSE [dex]", fontsize=9)
-    ax.set_title(row["target"], fontsize=10)
-    ax.set_ylim(0, max(vals) * 1.15)
-fig3.suptitle("Predicting stellar mass: halo mass alone vs. + assembly history",
-              fontsize=11)
-fig3.tight_layout()
-fig3.savefig(FIGDIR / "exp01_scatter_reduction.png", dpi=140)
+# %% FIGURE 1 (headline): physical signal (A) + predictive gain (B)
+fig, (axA, axB) = plt.subplots(1, 2, figsize=(9.2, 4.0))
+feat_idx = {name: i for i, name in enumerate(mah_features)}
+panelA = [("Mpeak(z=2)", "early growth (z=2)", OKABE_ITO[5], "o", "-"),
+          ("Mpeak(z=1)", "intermediate (z=1)", OKABE_ITO[2], "s", "--"),
+          ("Mpeak(z=0.7)", "recent growth (z=0.7)", OKABE_ITO[4], "^", "-."),
+          ("z50", "formation z50", OKABE_ITO[6], "D", ":")]
+for name, label, color, mk, ls in panelA:
+    axA.plot(zone_rad, R_zone[:, feat_idx[name]], color=color, marker=mk,
+             ls=ls, lw=1.6, ms=5, label=label)
+axA.set_xscale("log")
+axA.set_xlabel("projected radius of zone [kpc]")
+axA.set_ylabel(r"partial Spearman $r$  (at fixed $M_0$)")
+axA.set_title("Inner stars track early halo growth")
+axA.legend(title="halo mass at:", loc="lower left")
+axA.set_ylim(0, 0.72)
+axA.text(-0.13, 1.04, "A", transform=axA.transAxes, fontweight="bold", fontsize=12)
+
+groups = ["inner\n$M_*(<10\\,$kpc)", "outer\n$M_*(50$–$100\\,$kpc)"]
+m0_vals = [r["rmse_M0"] for r in scatter_rows]
+mah_vals = [r["rmse_M0+MAH"] for r in scatter_rows]
+shuf_vals = [r["rmse_M0+MAH_shuffled"] for r in scatter_rows]
+x = np.arange(2)
+w = 0.26
+axB.bar(x - w, m0_vals, w, label=r"$M_0$ only", color=OKABE_ITO[7])
+axB.bar(x, mah_vals, w, label=r"$M_0$ + halo history", color=OKABE_ITO[0])
+axB.bar(x + w, shuf_vals, w, label="+ history (shuffled)", color="0.7",
+        hatch="//", edgecolor="white")
+for i, r in enumerate(scatter_rows):
+    axB.annotate(f"$-${r['pct_reduction']:.0f}%", (x[i], mah_vals[i]),
+                 textcoords="offset points", xytext=(0, 3), ha="center",
+                 fontsize=9, color=OKABE_ITO[0], fontweight="bold")
+axB.set_xticks(x)
+axB.set_xticklabels(groups)
+axB.set_ylabel("cross-validated scatter [dex]")
+axB.set_title("Halo history shrinks the scatter")
+axB.legend(loc="upper left")
+axB.set_ylim(0, max(m0_vals) * 1.28)
+axB.text(-0.13, 1.04, "B", transform=axB.transAxes, fontweight="bold", fontsize=12)
+fig.suptitle(f"exp01 — TNG300 massive centrals at z = 0.4  (n = {N})", fontsize=11)
+fig.tight_layout()
+save_fig(fig, FIGDIR / "exp01_results")
+
+# %% FIGURE 2 (detail): full zone x halo-feature partial-correlation matrix
+figm, axm = plt.subplots(figsize=(6.8, 4.4))
+im = axm.imshow(R_zone, cmap="cividis", vmin=0, vmax=float(np.nanmax(R_zone)),
+                aspect="auto")
+axm.set_xticks(range(len(mah_features)))
+axm.set_xticklabels(list(mah_features), rotation=40, ha="right")
+axm.set_yticks(range(len(zone_labels)))
+axm.set_yticklabels(zone_labels)
+axm.set_xlabel("halo assembly feature")
+axm.set_ylabel("projected radial zone [kpc]")
+axm.set_title("Partial corr. of zone stellar mass with halo history\n"
+              fr"(controlling for $M_0$; n = {N}, all $p<10^{{-3}}$)")
+for i in range(R_zone.shape[0]):
+    for j in range(R_zone.shape[1]):
+        v = R_zone[i, j]
+        axm.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=7,
+                 color="white" if v < 0.45 else "black")
+figm.colorbar(im, ax=axm, label=r"partial Spearman $r$")
+figm.tight_layout()
+save_fig(figm, FIGDIR / "exp01_corr_matrix")
 
 
 # %% save outputs + provenance
