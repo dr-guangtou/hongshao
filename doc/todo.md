@@ -17,8 +17,12 @@ Cross-experiment plan. Mirrors the phase sequence in
   ~2× outward), recent growth (z≲1) dominates all radii. Positive → proceed.
 
 ## Phase 2 — profile compression
-- [ ] PCA of curves of growth (direction D): intrinsic dimensionality.
-- [ ] radial-DiffMAH CoG fits (direction C): compress each profile to ~5 params.
+- [x] **exp02_profile_pca** — PCA of curves of growth (direction D). **Result:**
+  profile shape is ~2-3 dimensional (PC1=93%, +PC2=99%); shape modes carry a
+  real assembly signal at fixed M0 (PC2 ↔ Mpeak(z=2) r=+0.28, PC3 ↔ z50 r=+0.23),
+  while PC1 = concentration tracks total mass. Confirms exp01 in a shape basis.
+- [ ] radial-DiffMAH CoG fits (direction C): compress each profile to ~5 params
+  (exp03); compare to PCA modes.
 - [ ] decide single- vs two-component representation.
 
 ## Phase 3 — MAH compression
