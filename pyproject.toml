@@ -1,0 +1,11 @@
+[project]
+name = "hongshao"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "astropy>=8.0.0",
+    "h5py>=3.16.0",
+    "matplotlib>=3.11.0",
+    "numpy>=2.4.6",
+    "scipy>=1.17.1",
+]
