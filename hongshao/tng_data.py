@@ -12,6 +12,7 @@ Run as a script to build the table:
 from __future__ import annotations
 
 import argparse
+import os
 import pickle
 from pathlib import Path
 
@@ -20,7 +21,10 @@ from astropy.cosmology import FlatLambdaCDM
 from astropy.table import Table
 
 # --- raw data location (the external drop; not in the repo) ------------------
-DEFAULT_DATA_DIR = Path("/Users/mac/Desktop/tng300_mah_mprof")
+# Override with the HONGSHAO_DATA_DIR env var so the repo isn't machine-bound.
+DEFAULT_DATA_DIR = Path(
+    os.environ.get("HONGSHAO_DATA_DIR", "/Users/mac/Desktop/tng300_mah_mprof")
+)
 # vendored 100-snapshot cosmic-time table (Gyr) from the diffmah NERSC portal;
 # value index == TNG 0-based snapshot number (verified against astropy ages).
 COSMIC_TIME_PATH = Path(__file__).resolve().parent.parent / \

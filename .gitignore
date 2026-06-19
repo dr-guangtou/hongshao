@@ -82,8 +82,13 @@ celerybeat-schedule
 
 # Derived data products and figures (regenerable from the raw TNG300 drop)
 /data/processed/
+/data/raw/
 /figures/
 scratch_*.py
+
+# Per-experiment artifacts: code + notes are committed, outputs are not
+experiments/*/figures/
+experiments/*/outputs/
 
 # virtualenv
 .venv
