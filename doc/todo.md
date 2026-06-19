@@ -21,9 +21,11 @@ Cross-experiment plan. Mirrors the phase sequence in
   profile shape is ~2-3 dimensional (PC1=93%, +PC2=99%); shape modes carry a
   real assembly signal at fixed M0 (PC2 ↔ Mpeak(z=2) r=+0.28, PC3 ↔ z50 r=+0.23),
   while PC1 = concentration tracks total mass. Confirms exp01 in a shape basis.
-- [ ] radial-DiffMAH CoG fits (direction C): compress each profile to ~5 params
-  (exp03); compare to PCA modes.
-- [ ] decide single- vs two-component representation.
+- [x] **exp03_radial_diffmah** — radial-DiffMAH CoG fits (direction C). **Result:**
+  5 interpretable params fit every CoG to ~0.005 dex (matches PCA-3); a single
+  sigmoid suffices. Assembly signal at fixed M0 lives mainly in transition width
+  Delta (r≈0.21 with Mpeak(z=1)/z50), slightly weaker than PCA's best direction.
+- [x] decide single- vs two-component representation → **single is enough** at z=0.4.
 
 ## Phase 3 — MAH compression
 - [ ] compare raw MAH summaries vs PCA-MAH (DiffMAH fits deferred; no halo_id
