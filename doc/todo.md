@@ -65,9 +65,27 @@ Cross-experiment plan. Mirrors the phase sequence in
   the noise, a 2nd transition is mildly favored/optional (coherent residual
   ≲0.011 dex). Suite graduated to `hongshao/metrics.py` + `tng_data.cog_sigma_dex`.
 
+### Decisions adopted from exp07
+- [x] **5 kpc inner cut** is the default radial-DiffMAH CoG fit (`COG_FIT_RMIN_KPC`);
+  the inner 2–5 kpc is marginally resolved and was the sole source of the coherent
+  residual. Dataset rebuilt: cached `rdm_rms` median 0.0060 → 0.0013 dex.
+
+## Phase 7 — probabilistic emulator
+- [x] **exp08_emulator** — conditional multivariate-Gaussian `P(profile | M0,
+  MAH-PCA(4))`, mean + full residual covariance, judged by the exp07 suite.
+  **Result:** (1) the emulator is well-calibrated (90%→0.91) and cuts CRPS +24%
+  vs M0-only (shuffle ~0) — a plain conditional Gaussian suffices, no GP/flow yet.
+  (2) **Predict the observable directly:** target A (aperture masses) ≫ target B
+  (predict rdm_* params → reconstruct); B only recovers the inner normalization
+  and is no better than M0-only in the outskirts (shape params aren't predictable
+  from halo features). Profile params are for compression, not halo→profile
+  prediction. (3) **Full covariance beats diagonal** by 1.4–2.0 nats (joint
+  log-score); the emulator reproduces the residual correlation (0.50) out of
+  sample. Adopt the direct aperture-mass full-covariance emulator (A) as baseline.
+
 ### Later
-- [ ] probabilistic emulator (scatter / GP / normalizing flow), judged by the
-  exp07 metrics.
+- [ ] heteroscedastic / non-Gaussian (normalizing-flow) emulator — only if a
+  target metric demands it (exp08's conditional Gaussian is already calibrated).
 - [ ] secondary halo properties — *test*, don't assume: MAH-derived ones
   (concentration, accretion rate) likely redundant with the MAH (exp06); only
   initial conditions / environment are independent (hard to get here).
