@@ -111,6 +111,26 @@ add back (correlated) scatter rather than trusting the point prediction.
 the full mass range, with the same coherent ≲0.01 dex residual S-shape in all
 three mass bins (not a feature of any single mass scale).
 
+**7. The residual S-shape is an inner (<5 kpc) effect, not a boundary
+artifact** (`fit_range_test.py`, figure `exp07_fit_range_test`). Refitting the
+single sigmoid over four radial windows:
+
+| fitting range | n_pts | median RMS [dex] | median reduced chi² |
+|---|---|---|---|
+| 2–148 kpc (full) | 24 | 0.0060 | 1.00 |
+| **5–148 kpc** | 20 | **0.0013** | 0.08 |
+| 2–100 kpc | 20 | 0.0050 | 0.72 |
+| **5–100 kpc** | 16 | **0.0011** | 0.05 |
+
+Cutting the **outer** range (2→100 kpc) barely changes the residual; cutting the
+**inner** points (start at ~5 kpc) collapses it ~4.6× and flattens the S-shape
+entirely. So the coherent residual lives almost entirely in the innermost
+2–5 kpc — TNG's marginally-resolved central region (softening ~1–2 kpc), where a
+single smooth sigmoid cannot match the steep core while also fitting the bulk.
+Beyond ~5 kpc the radial-DiffMAH describes the CoG to ~0.001 dex (reduced chi² ≪
+1). This also explains the earlier double-sigmoid preference: it was mostly
+absorbing the inner 2–5 kpc misfit, which a 5-kpc inner cut removes outright.
+
 ## Interpretation & caveats
 
 - `cog_sigma_dex` is isophote-modeling / azimuthal scatter, **not** Poisson
@@ -134,5 +154,11 @@ three mass bins (not a feature of any single mass scale).
   **AIC/BIC for model selection — computed in annulus space, never naively on
   the raw CoG.** The single sigmoid is adequate to the noise; a second transition
   is mildly favored and optional (5 interpretable params vs ~0.005 dex).
+- **Consider fitting the CoG from ~5 kpc outward.** The only coherent misfit (and
+  ~80% of the residual) lives in the innermost 2–5 kpc — the least-resolved part
+  of the profile. A 5-kpc inner cut makes the single sigmoid essentially exact
+  (RMS ~0.001 dex) and removes the motivation for a second component. This would
+  change the cached `rdm_*` fits (used by exp03/04/05), so it is flagged for a
+  decision rather than applied here.
 - Helpers live in `hongshao/metrics.py` (`crps_gaussian`, `gaussian_logscore`,
   `pit`, `interval_coverage`, `aic_bic`) and `hongshao/tng_data.cog_sigma_dex`.
