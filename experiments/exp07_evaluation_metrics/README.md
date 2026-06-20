@@ -37,8 +37,11 @@ curve of growth) are misleading.
 
 Driver: `run.py` (`EXP07_NMAX=300` for a sub-minute pass). Figures:
 `exp07_track1_recovery`, `exp07_track1_distribution`,
-`exp07_track2_fit_diagnostics`. Sample: n = 2545 (`use` cut); 2538 with finite
-aperture masses.
+`exp07_track2_fit_diagnostics`, and two per-object QA figures —
+`exp07_track1_residual_vs_true` (residual vs true mass with marginal
+histograms, per aperture) and `exp07_track2_cog_fits_by_mass` (measured vs
+fitted CoG and residual profile in 3 equal-count mass bins). Sample: n = 2545
+(`use` cut); 2538 with finite aperture masses.
 
 ## Key results
 
@@ -98,6 +101,15 @@ coherent (not random) residual is exactly the missing-component signature, and
 reconciles chi²≈1 (residuals are noise-*sized*) with BIC favoring two
 transitions (residuals are noise-sized but *structured*). The standard Sersic
 CoG is essentially never preferred.
+
+**6. Per-object QA (the two extra figures).** `residual_vs_true` shows the
+M0+history predictor's residual sloping *down* with true mass in every aperture
+(bias ≈ 0, scatter 0.12–0.14 dex): the conditional-mean predictor **regresses to
+the mean**, so its output is under-dispersed — a second reason the emulator must
+add back (correlated) scatter rather than trusting the point prediction.
+`cog_fits_by_mass` confirms the radial-DiffMAH fit tracks the measured CoG across
+the full mass range, with the same coherent ≲0.01 dex residual S-shape in all
+three mass bins (not a feature of any single mass scale).
 
 ## Interpretation & caveats
 

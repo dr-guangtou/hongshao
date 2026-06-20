@@ -424,6 +424,98 @@ fig3.suptitle(f"exp07 — profile-fit diagnostics (n={int(ok2.sum())})", fontsiz
 fig3.tight_layout()
 save_fig(fig3, FIGDIR / "exp07_track2_fit_diagnostics")
 
+
+# FIGURE 4 — predictor residual vs true stellar mass (scatter + marginal hists),
+# per aperture/annulus, for the M0+history predictor.
+def _binned_trend(xv, yv, nbin=10):
+    edges = np.quantile(xv, np.linspace(0, 1, nbin + 1))
+    cen, med, lo, hi = [], [], [], []
+    for a, b in zip(edges[:-1], edges[1:]):
+        mm = (xv >= a) & (xv <= b)
+        if mm.sum() >= 10:
+            cen.append(np.median(xv[mm])); med.append(np.median(yv[mm]))
+            lo.append(np.percentile(yv[mm], 16)); hi.append(np.percentile(yv[mm], 84))
+    return [np.asarray(v) for v in (cen, med, lo, hi)]
+
+
+apers4 = [0, 1, 2, 3]                              # <10, 10-30, 30-50, 50-100 kpc
+fig4 = plt.figure(figsize=(10.5, 9.0))
+gs_out = fig4.add_gridspec(2, 2, left=0.08, right=0.97, top=0.92, bottom=0.07,
+                           hspace=0.34, wspace=0.26)
+labels4 = ["I", "J", "K", "L"]
+for k, jt in enumerate(apers4):
+    sub = gs_out[k // 2, k % 2].subgridspec(2, 2, width_ratios=[4, 1],
+                                            height_ratios=[1, 4], hspace=0.04, wspace=0.04)
+    ax = fig4.add_subplot(sub[1, 0])
+    axtop = fig4.add_subplot(sub[0, 0], sharex=ax)
+    axrt = fig4.add_subplot(sub[1, 1], sharey=ax)
+    xv, yv = Y[:, jt], mu_f[:, jt] - Y[:, jt]      # true, predicted - true
+    ax.scatter(xv, yv, s=4, alpha=0.12, color=OKABE_ITO[0], edgecolors="none")
+    ax.axhline(0, color="k", lw=0.9)
+    cen, med, lo, hi = _binned_trend(xv, yv)
+    ax.fill_between(cen, lo, hi, color=OKABE_ITO[5], alpha=0.18)
+    ax.plot(cen, med, "-", color=OKABE_ITO[5], lw=1.8, label="binned median")
+    ax.set_xlabel(rf"true $\log M_*$  ({tnames[jt]} kpc)")
+    ax.set_ylabel(r"predicted $-$ true [dex]")
+    ax.set_ylim(-0.6, 0.6)
+    ax.text(0.03, 0.95, f"bias={np.mean(yv):+.3f}\nscatter={np.std(yv):.3f}",
+            transform=ax.transAxes, fontsize=8, va="top",
+            bbox=dict(boxstyle="round", fc="white", ec="0.7", alpha=0.85))
+    axtop.hist(xv, bins=40, color="0.6"); axtop.axis("off")
+    axrt.hist(yv, bins=40, orientation="horizontal", color="0.6"); axrt.axis("off")
+    axtop.text(-0.16, 0.7, labels4[k], transform=axtop.transAxes,
+               fontweight="bold", fontsize=12)
+fig4.suptitle(rf"exp07 — $M_0$+history predictor: residual vs true stellar mass "
+              rf"(n={Nf})", fontsize=11)
+save_fig(fig4, FIGDIR / "exp07_track1_residual_vs_true")
+
+# FIGURE 5 — radial-DiffMAH CoG fits in 3 equal-count mass bins (M* within 100 kpc)
+m100 = aper[:, 4]
+binnable = ok2 & np.isfinite(m100) & np.isfinite(resid_single).all(1)
+sorted_members = np.where(binnable)[0][np.argsort(m100[np.where(binnable)[0]])]
+thirds = np.array_split(sorted_members, 3)
+fitted_single = cog - resid_single                 # measured - residual = model CoG
+rng_show = np.random.default_rng(0)
+N_SHOW = 30
+fig5, ax5 = plt.subplots(2, 3, figsize=(13.5, 7.2), sharex=True,
+                         gridspec_kw={"height_ratios": [3, 2]})
+bin_colors = [OKABE_ITO[4], OKABE_ITO[0], OKABE_ITO[5]]
+labels5 = ["M", "N", "O"]
+for j, members in enumerate(thirds):
+    axc, axr = ax5[0, j], ax5[1, j]
+    lo, hi = m100[members].min(), m100[members].max()
+    show = (members if len(members) <= N_SHOW
+            else rng_show.choice(members, N_SHOW, replace=False))
+    for g in show:
+        axc.plot(R, cog[g], color="0.6", lw=0.5, alpha=0.45)
+        axc.plot(R, fitted_single[g], color=bin_colors[j], lw=0.6, alpha=0.6)
+        axr.plot(R, resid_single[g], color=bin_colors[j], lw=0.5, alpha=0.3)
+    axr.fill_between(R, np.percentile(resid_single[members], 16, 0),
+                     np.percentile(resid_single[members], 84, 0),
+                     color=bin_colors[j], alpha=0.18)
+    axr.plot(R, np.median(resid_single[members], 0), "-", color="k", lw=1.6,
+             label="bin median")
+    axr.axhline(0, color="k", lw=0.8, ls=":")
+    sig_med = np.nanmedian(sigma_dex[members], 0)
+    axr.plot(R, sig_med, ":", color="0.4", lw=1.0); axr.plot(R, -sig_med, ":", color="0.4", lw=1.0)
+    axc.set_xscale("log"); axr.set_ylim(-0.05, 0.05)
+    axc.set_title(rf"$\log M_*(<100)$: {lo:.2f}–{hi:.2f}"
+                  + f"\nN={len(members)} (showing {len(show)})", fontsize=9)
+    axr.set_xlabel("radius R [kpc]")
+    axc.text(-0.04, 1.12, labels5[j], transform=axc.transAxes,
+             fontweight="bold", fontsize=12)
+    if j == 0:
+        axc.set_ylabel(r"$\log_{10} M_*(<R)\,[M_\odot]$")
+        axr.set_ylabel(r"residual  data $-$ fit [dex]")
+        axc.plot([], [], color="0.6", lw=1.4, label="measured CoG")
+        axc.plot([], [], color=bin_colors[j], lw=1.4, label="radial-DiffMAH fit")
+        axc.legend(fontsize=7, loc="upper left")
+        axr.legend(fontsize=7, loc="lower left")
+fig5.suptitle("exp07 — radial-DiffMAH CoG fits across the mass range (equal-count "
+              "bins in $M_*(<100\\,$kpc$)$)", fontsize=11)
+fig5.tight_layout()
+save_fig(fig5, FIGDIR / "exp07_track2_cog_fits_by_mass")
+
 # %% save outputs
 OUTDIR.mkdir(parents=True, exist_ok=True)
 t1 = Table({"target": tnames, "rms_M0": rms_b, "rms_M0_hist": rms_f,
