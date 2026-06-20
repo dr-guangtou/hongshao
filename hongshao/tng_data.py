@@ -96,6 +96,51 @@ def load_mah(data_dir: Path = DEFAULT_DATA_DIR) -> list:
         return pickle.load(f)
 
 
+def cog_sigma_dex(index: int, data_dir: Path = DEFAULT_DATA_DIR) -> np.ndarray:
+    """Approximate per-point curve-of-growth uncertainty (dex), on the 24-point
+    ``COG_RAD_KPC`` grid. Needed for reduced chi-square of the profile fits.
+
+    The CoG is a cumulative integral of the isophote surface density, so we
+    propagate the isophote intensity error (``intens_err``) through an
+    elliptical-annulus cumulative sum (assuming independent isophote errors),
+    take the *fractional* error, and interpolate it onto the CoG grid. Because
+    the CoG is cumulative, the fractional error is largest where the enclosed
+    mass is small: ~0.013 dex at 2 kpc, falling to ~0.003 dex by 150 kpc. This
+    is comparable to the radial-DiffMAH fit residuals, so reduced chi-square is
+    order unity.
+
+    Caveats (see exp07): (1) this is isophote-modeling / azimuthal scatter, not
+    Poisson measurement noise; (2) a CoG reconstructed from the isophotes does
+    not exactly reproduce the stored CoG (different pipeline/grid), so only the
+    *fractional* error is trusted, not the absolute mass; (3) cumulative CoG
+    points are strongly correlated, so a chi-square that treats them as
+    independent overcounts the degrees of freedom. Returns NaNs if the isophote
+    profile is unusable.
+    """
+    pr = load_prof(index, data_dir)["map_hist_z0p4"]["prof"]
+    r = np.asarray(pr["r_kpc"], float)
+    intens = np.asarray(pr["intensity"], float)
+    intens_err = np.asarray(pr["intens_err"], float)
+    # a few galaxies store only (r, intensity, intens_err); fall back to circular
+    ellip = (np.asarray(pr["ellipticity"], float) if "ellipticity" in pr.colnames
+             else np.zeros_like(r))
+    m = (np.isfinite(r) & np.isfinite(intens) & np.isfinite(intens_err)
+         & np.isfinite(ellip) & (r > 0) & (intens > 0))
+    r, intens, intens_err, ellip = r[m], intens[m], intens_err[m], ellip[m]
+    if len(r) < 4:
+        return np.full(COG_RAD_KPC.shape, np.nan)
+    area = np.pi * r**2 * (1.0 - ellip)            # enclosed elliptical area
+    dA = np.diff(area)
+    mass = np.concatenate([[intens[0] * area[0]],
+                           intens[0] * area[0]
+                           + np.cumsum(0.5 * (intens[1:] + intens[:-1]) * dA)])
+    var_dm = dA**2 * 0.25 * (intens_err[1:]**2 + intens_err[:-1]**2)
+    var_mass = np.concatenate([[(area[0] * intens_err[0])**2],
+                               (area[0] * intens_err[0])**2 + np.cumsum(var_dm)])
+    frac_err = np.sqrt(var_mass) / np.maximum(mass, 1.0)
+    return np.interp(COG_RAD_KPC, r, frac_err) / np.log(10.0)
+
+
 # --- MAH peak history --------------------------------------------------------
 def peak_history(entry) -> tuple[np.ndarray | None, np.ndarray | None]:
     """Convert one raw pickle entry to a peak-mass history.

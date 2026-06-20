@@ -50,20 +50,20 @@ Cross-experiment plan. Mirrors the phase sequence in
   (+13%). Paints ~45% of the true profile-shape diversity at fixed M0. Also
   bounded the fit (identifiable params) and cached rdm_* in the dataset.
 
-### exp07 (NEXT) — evaluation metrics: how to judge fit/recovery quality
-Investigate the *best metrics* to evaluate model fitting and recovery, before
-building the probabilistic emulator. Two tracks:
-- **Predictors (PCA / regression recovery):** evaluate in **stellar mass within
-  apertures and annuli** (e.g. <10, 10–30, 30–50, 50–100, <100 kpc) — physical,
-  weakly correlated quantities — not just per-radius CoG dex. Add distributional
-  scores (CRPS / predictive log-likelihood, interval calibration) and
-  predicted-vs-true **covariance** match.
-- **Profile-model FITTING (the 5-param radial-DiffMAH to the CoG):** careful fit
-  diagnostics — **reduced chi² (needs per-point CoG uncertainties — flag),
-  AIC/BIC to compare models** (single vs double sigmoid; radial-DiffMAH vs
-  Einasto vs spline/PCA), and **the residual profile itself** (look for coherent
-  radial residuals indicating a missing component).
-- Deliverable: a recommended evaluation suite reused by exp08+.
+## Phase 6 — evaluation metrics
+- [x] **exp07_evaluation_metrics** — the metrics that judge fit/recovery quality.
+  **Result:** (1) score predictors in **aperture/annulus masses** not per-radius
+  CoG dex (the 24 CoG points are 93% correlated → double-counting); history cuts
+  scatter 19–30% across apertures (shuffle ~0%). (2) Use **CRPS + log-score +
+  interval calibration**, not RMS alone: history improves CRPS +24%, and the
+  Gaussian-scatter baseline is well-calibrated (90%→0.91) — the bar exp08 must
+  beat. (3) Residual scatter is **correlated across apertures** (mean |off-diag|
+  = 0.57) → the emulator must draw *correlated* scatter. (4) `cog_sigma_dex`
+  propagates `intens_err` → single-sigmoid **reduced chi² median = 1.00**. (5)
+  **AIC/BIC must be computed in decorrelated annulus space** (raw CoG over-rewards
+  complexity: double-sigmoid preference 94%→65%); single sigmoid is adequate to
+  the noise, a 2nd transition is mildly favored/optional (coherent residual
+  ≲0.011 dex). Suite graduated to `hongshao/metrics.py` + `tng_data.cog_sigma_dex`.
 
 ### Later
 - [ ] probabilistic emulator (scatter / GP / normalizing flow), judged by the
