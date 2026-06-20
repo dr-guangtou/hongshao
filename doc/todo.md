@@ -42,14 +42,35 @@ Cross-experiment plan. Mirrors the phase sequence in
   gain grows with radius for absolute mass; profile painting works (early formers
   more extended). First Ultimate-SHMR prototype.
 
-## Phase 5 — refinements & mock painting (choose next)
+## Phase 5 — refinements & mock painting
+
 - [x] **exp05_generative_model** — predict radial-DiffMAH params → reconstruct
   valid profiles. **Result:** generating via 5 params reaches 0.128 dex (vs 0.118
   direct), history improves it 19.8% (shuffle ~0%); helps normalization most
   (+13%). Paints ~45% of the true profile-shape diversity at fixed M0. Also
   bounded the fit (identifiable params) and cached rdm_* in the dataset.
-- [ ] add secondary halo properties (concentration / tidal field).
-- [ ] probabilistic emulator (scatter / GP / normalizing flow).
+
+### exp07 (NEXT) — evaluation metrics: how to judge fit/recovery quality
+Investigate the *best metrics* to evaluate model fitting and recovery, before
+building the probabilistic emulator. Two tracks:
+- **Predictors (PCA / regression recovery):** evaluate in **stellar mass within
+  apertures and annuli** (e.g. <10, 10–30, 30–50, 50–100, <100 kpc) — physical,
+  weakly correlated quantities — not just per-radius CoG dex. Add distributional
+  scores (CRPS / predictive log-likelihood, interval calibration) and
+  predicted-vs-true **covariance** match.
+- **Profile-model FITTING (the 5-param radial-DiffMAH to the CoG):** careful fit
+  diagnostics — **reduced chi² (needs per-point CoG uncertainties — flag),
+  AIC/BIC to compare models** (single vs double sigmoid; radial-DiffMAH vs
+  Einasto vs spline/PCA), and **the residual profile itself** (look for coherent
+  radial residuals indicating a missing component).
+- Deliverable: a recommended evaluation suite reused by exp08+.
+
+### Later
+- [ ] probabilistic emulator (scatter / GP / normalizing flow), judged by the
+  exp07 metrics.
+- [ ] secondary halo properties — *test*, don't assume: MAH-derived ones
+  (concentration, accretion rate) likely redundant with the MAH (exp06); only
+  initial conditions / environment are independent (hard to get here).
 - [ ] apply emulator to an N-body catalog; compare profile distributions.
 - [ ] redshift evolution once other-z profiles available.
 
