@@ -28,8 +28,12 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] decide single- vs two-component representation → **single is enough** at z=0.4.
 
 ## Phase 3 — MAH compression
-- [ ] compare raw MAH summaries vs PCA-MAH (DiffMAH fits deferred; no halo_id
-  cross-match yet).
+- [x] **exp06_mah_pca** — PCA of the full M0-normalized log-MAH (no DiffMAH).
+  **Result:** MAH is ~3-4 dimensional (PC1=73%, PC1-3=93%); MAH-PCA(4) matches
+  hand-picked summaries for profile prediction (+22.9% vs +22.6%, shuffle ~0%);
+  halo and galaxy PCs connect (MAH-PC2 timing → CoG-PC1 concentration r=0.46).
+  Compressibility: CoG 99.7% > Σ 97.4% > MAH 93.0% in 3 modes. Adopt MAH-PCA as
+  the principled halo representation.
 
 ## Phase 4 — conditional emulator
 - [x] **exp04_conditional_model** — `P(profile | M0)` vs `P(profile | M0, MAH)`,
