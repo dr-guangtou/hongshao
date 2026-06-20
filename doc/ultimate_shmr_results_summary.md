@@ -160,16 +160,22 @@ of the SHMR — the project's founding hypothesis.
 
 ## 5. Magnitudes in context
 
-The correlations are modest (partial r ≤ ~0.28; ~7% shape-scatter reduction) and
-this is *expected*, not a shortfall:
-- the main-branch MAH is only part of the halo information (secondary properties
-  such as concentration / tidal field are not yet included);
-- the profiles are single random projections of triaxial galaxies, injecting
+The correlations are modest (partial r ≤ ~0.28; ~7% shape-scatter reduction).
+What the residual scatter is — stated carefully, without over-claiming:
+- The profiles are single random projections of triaxial galaxies, injecting
   noise that no halo model can remove from this dataset.
+- Merger granularity and baryonic stochasticity are not captured by the smooth
+  main-branch MAH.
+- We have **no evidence** that obtainable "secondary" halo properties would
+  close the gap. The commonly-used ones (concentration, accretion rate) are
+  largely *determined by the MAH* — and exp06 shows that using the *full* MAH
+  plateaus at the same ~23% as a few summaries, so MAH-derived properties are
+  unlikely to add much. Genuinely independent information (initial conditions,
+  large-scale environment) could matter but is hard to obtain here.
 
-So the measured signal is a **lower bound** on the assembly information, and the
-~45% diversity recovered by the mean model sets a floor that a probabilistic
-model and secondary properties can push further.
+So the measured signal is a reasonable estimate of what the assembly history
+alone supplies; a probabilistic model can reproduce the *full* diversity as
+scatter, but it should not be assumed that more halo properties will shrink it.
 
 ## 6. Caveats and limitations
 
@@ -185,8 +191,10 @@ model and secondary properties can push further.
 - **Probabilistic emulator** — model the residual scatter so painted mocks have
   the *full* realistic diversity, not just the mean (directly motivated by
   exp05's ~45%).
-- **Secondary halo properties** (concentration / tidal field) — quantify how much
-  more they explain; needs the `halo_id` cross-match.
+- **Secondary halo properties** — worth a *test*, not an assumption: MAH-derived
+  ones (concentration, accretion rate) are likely redundant with the MAH we
+  already use (exp06); only genuinely independent information (initial conditions,
+  environment) could add signal, and it is hard to obtain here.
 - **Redshift evolution** — once profiles at other epochs are available.
 - **Mock painting on an N-body catalog** — the end-goal application.
 

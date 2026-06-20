@@ -26,12 +26,15 @@ Read those two before proposing analyses.
   deterministic fits. Residual scatter is a result, not a bug.
 - **Null models matter.** Compare against final-mass-only and shuffled-MAH
   controls before claiming an assembly signal.
-- **Expect irreducible scatter.** The MAH is not the whole story — secondary
-  halo properties (initial tidal/tensor field, concentration) carry independent
-  information. And the stellar profiles are single random 2-D projections of
-  triaxial galaxies, so orientation/shape add noise we cannot remove from this
-  dataset. Don't aim for zero residual scatter; the goal is a phenomenological
-  model that captures the assembly-driven part.
+- **Expect residual scatter; don't over-explain it.** Do not assume secondary
+  halo properties will reduce it without evidence. Mind the levels: concentration
+  and accretion rate are largely *determined by the MAH*, so once the MAH is
+  compressed they likely add little (exp06: using the full MAH plateaus at the
+  same ~23% as a few summaries). Genuinely independent information (initial
+  conditions, large-scale environment / tidal field) might help but is hard to
+  obtain here. The stellar profiles are also single random 2-D projections of
+  triaxial galaxies, adding noise we cannot remove from this dataset. Goal: a
+  phenomenological model capturing the assembly-driven part, not zero scatter.
 
 ## Figures
 
