@@ -49,6 +49,13 @@ MAH_DECLINE_TOL = 0.05
 SMA_KPC = np.asarray([10, 30, 50, 75, 100, 120, 150], dtype=float)
 # 24 radii of the curve-of-growth `cog` array, kpc
 COG_RAD_KPC = np.arange(2**0.25, 150**0.25, 0.1) ** 4
+# Inner radius (kpc) for the radial-DiffMAH CoG fit. The innermost ~2-5 kpc of
+# the stellar profile is only marginally resolved in TNG300-1 (softening
+# ~1-2 kpc) and is the sole source of the coherent single-sigmoid fit residual
+# (exp07: an inner 5 kpc cut collapses the residual ~4.6x and flattens the
+# S-shape). Fitting from 5 kpc outward makes the single-sigmoid fit essentially
+# exact, so the cached rdm_* params use this inner cut.
+COG_FIT_RMIN_KPC = 5.0
 
 # --- snapshot / redshift anchors --------------------------------------------
 # The profiles are stored at 5 redshifts. The integer TNG snapshot numbers are
@@ -242,7 +249,10 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
     derived from the vendored TNG cosmic-time table. If ``fit_profiles`` (the
     default), the radial-DiffMAH profile parameters (rdm_*) are fit to every
     finite curve of growth and cached as columns (~4 min for the full sample;
-    pass False to skip).
+    pass False to skip). The fit uses radii ``R >= COG_FIT_RMIN_KPC`` (5 kpc;
+    the inner core is marginally resolved, see exp07), so ``rdm_logMstar0`` is
+    the normalization at the innermost fitted radius and reconstructions should
+    use the same inner cut.
     """
     data_dir = Path(data_dir)
     mah = load_mah(data_dir)
@@ -266,7 +276,8 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
         "t90": np.full(n_gal, np.nan),             # formation cosmic times (Gyr)
         "z50": np.full(n_gal, np.nan), "z75": np.full(n_gal, np.nan),
         "z90": np.full(n_gal, np.nan),             # formation redshifts
-        # radial-DiffMAH profile parameters (fit to the CoG; see profiles.py)
+        # radial-DiffMAH profile parameters (fit to the CoG over R>=5 kpc; see
+        # profiles.py and COG_FIT_RMIN_KPC)
         "rdm_logMstar0": np.full(n_gal, np.nan),
         "rdm_beta_in": np.full(n_gal, np.nan),
         "rdm_beta_out": np.full(n_gal, np.nan),
@@ -308,7 +319,7 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
 
         cogvec = cols["logmstar_cog"][i]
         if fit_profiles and np.all(np.isfinite(cogvec)):
-            f = fit_cog(COG_RAD_KPC, cogvec)
+            f = fit_cog(COG_RAD_KPC, cogvec, r_min=COG_FIT_RMIN_KPC)
             for p in ("logMstar0", "beta_in", "beta_out", "R_c", "Delta", "rms"):
                 cols[f"rdm_{p}"][i] = f[p]
 
@@ -337,11 +348,12 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
     tbl.meta.update(
         sma_kpc=SMA_KPC.tolist(),
         cog_rad_kpc=COG_RAD_KPC.tolist(),
+        cog_fit_rmin_kpc=COG_FIT_RMIN_KPC,
         mass_unit="log10(Msun)",
         h=H,
         note="logm0_halo = peak mass at latest available snapshot (~z=0.4); "
              "snap 72 mass not in pickle. tXX/zXX = time/redshift when peak "
-             "mass first reached XX% of M0.",
+             "mass first reached XX% of M0. rdm_* fit over R>=cog_fit_rmin_kpc.",
     )
     return tbl
 
