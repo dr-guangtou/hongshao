@@ -55,14 +55,22 @@ _DBETA_MAX = 6.0
 _DELTA = (0.05, 3.0)
 
 
-def fit_cog(R, logM_cog):
+def fit_cog(R, logM_cog, r_min=0.0):
     """Fit the bounded radial-DiffMAH model to one curve of growth.
 
-    R: radii (kpc). logM_cog: log10 M*(<R). Returns physical params plus ``rms``
-    (dex) and ``success``.
+    R: radii (kpc). logM_cog: log10 M*(<R). ``r_min`` (kpc) drops the innermost
+    radii before fitting (e.g. the marginally-resolved core); 0 keeps all points.
+    Returns physical params plus ``rms`` (dex) and ``success``. ``logMstar0`` is
+    the normalization at the innermost *fitted* radius, so reconstruct with the
+    same ``R >= r_min`` grid.
     """
-    u = np.log(np.asarray(R, float))
-    y = np.asarray(logM_cog, float) * LN10                 # natural-log cumulative
+    R = np.asarray(R, float)
+    logM_cog = np.asarray(logM_cog, float)
+    if r_min > 0.0:
+        keep = R >= r_min
+        R, logM_cog = R[keep], logM_cog[keep]
+    u = np.log(R)
+    y = logM_cog * LN10                                    # natural-log cumulative
 
     bo0 = float(np.clip((y[-1] - y[-4]) / (u[-1] - u[-4]), 0.02, _BETA_OUT_MAX - 0.1))
     bi0 = float(np.clip((y[3] - y[0]) / (u[3] - u[0]), bo0 + 0.05, bo0 + _DBETA_MAX))
@@ -93,6 +101,11 @@ if __name__ == "__main__":  # self-check: recover known parameters
     assert fit["rms"] < 1e-3, fit
     for k, v in truth.items():
         assert abs(fit[k] - v) < 0.1 * abs(v) + 0.05, (k, fit[k], v)
+    # r_min drops the inner radii but recovers the same model
+    fit5 = fit_cog(R, lnM / LN10, r_min=5.0)
+    assert fit5["rms"] < 1e-3, fit5
+    for k, v in truth.items():
+        assert abs(fit5[k] - v) < 0.1 * abs(v) + 0.05, ("r_min", k, fit5[k], v)
     # vectorized reconstruction matches scalar
     c2 = cog_from_physical(R, np.full(3, 23.0 / LN10), *(np.full(3, truth[k])
                            for k in ("beta_in", "beta_out", "R_c", "Delta")))
