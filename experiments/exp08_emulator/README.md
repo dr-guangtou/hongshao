@@ -34,8 +34,10 @@ predicts the 5 radial-DiffMAH params and reconstructs them to the same masses.
   covariance; the residual covariance match. Controls: M0-only, shuffled-MAH.
 
 Driver: `run.py` (`EXP08_NMAX=400` for a sub-minute pass). Figures:
-`exp08_skill_calibration`, `exp08_covariance`, `exp08_painting`. Sample:
-n = 2534 (MAH-covered, finite targets & params).
+`exp08_skill_calibration`, `exp08_covariance`, `exp08_painting`, and
+`exp08_param_predictability` (predicted-vs-true and residual-vs-true for each
+radial-DiffMAH param — why B fails). Sample: n = 2534 (MAH-covered, finite
+targets & params).
 
 ## Key results
 
@@ -79,6 +81,18 @@ the conditional Ultimate-SHMR realized.
 
 ## Interpretation & caveats
 
+- **Why B fails, visually** (`exp08_param_predictability`): only the
+  normalization `rdm_logMstar0` tracks the 1:1 line (R²=0.67); the four shape
+  params collapse toward their mean (R² ≤ 0.22, residual-vs-true slope ≈ −1 =
+  pure regression to the mean). The radial-DiffMAH shape parameters are an
+  excellent *descriptive* basis but a poor *predictive* target: `R_c`/`Delta`
+  are partially degenerate, so each galaxy's value carries fitting noise
+  uncorrelated with anything physical, burying the (already modest) MAH→shape
+  signal. A stable orthogonal basis reflects it better — exp06's CoG-PC1
+  (concentration) ↔ MAH-PC2 (timing) at r=0.46, vs the best single radial-DiffMAH
+  shape param at r≈0.21 (exp03). So most of the MAH's influence is on profile
+  *amplitude/concentration* (captured directly by integrated masses), not on the
+  fine shape.
 - A vs B is a like-for-like comparison **within the linear-mean class**; a
   nonlinear param predictor might narrow B's gap, but A uses the same class, so
   the verdict (predict the observable directly) holds at this level.

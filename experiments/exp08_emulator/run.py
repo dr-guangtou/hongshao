@@ -312,6 +312,62 @@ axE.legend(fontsize=7)
 fig3.tight_layout()
 save_fig(fig3, FIGDIR / "exp08_painting")
 
+# %% FIGURE 4 — why B fails: predictability of each radial-DiffMAH param ------
+# Out-of-fold linear prediction of the 5 params from [M0, MAH-PCA(4)], shown as
+# predicted-vs-true (top) and residual-vs-true (bottom). The shape params
+# collapse toward their mean (regression to the mean) -> near-flat clouds.
+def cv_predict_raw(X, target, k=5, seed=0):
+    n = len(target)
+    Xd = np.column_stack([np.ones(n), X])
+    order = np.random.default_rng(seed).permutation(n)
+    pred = np.full_like(target, np.nan, dtype=float)
+    for fold in np.array_split(order, k):
+        tr = np.setdiff1d(np.arange(n), fold)
+        beta, *_ = np.linalg.lstsq(Xd[tr], target[tr], rcond=None)
+        pred[fold] = Xd[fold] @ beta
+    return pred
+
+
+P_pred = cv_predict_raw(X_full, P)
+plabels = [r"$\log M_{*,0}$ (norm.)", r"$\beta_{\rm in}$", r"$\beta_{\rm out}$",
+           r"$R_c$ [kpc]", r"$\Delta$"]
+fig4, ax4 = plt.subplots(2, 5, figsize=(15.0, 6.2))
+for j in range(5):
+    tv, pv = P[:, j], P_pred[:, j]
+    lo, hi = np.percentile(np.concatenate([tv, pv]), [1, 99])
+    r2 = 1.0 - np.sum((tv - pv) ** 2) / np.sum((tv - tv.mean()) ** 2)
+    a, b = ax4[0, j], ax4[1, j]
+    a.scatter(tv, pv, s=4, alpha=0.12, color=OKABE_ITO[0], edgecolors="none")
+    a.plot([lo, hi], [lo, hi], "k--", lw=1.2)
+    a.set_xlim(lo, hi); a.set_ylim(lo, hi)
+    a.set_title(plabels[j])
+    a.text(0.05, 0.93, f"$R^2$={r2:.2f}", transform=a.transAxes, fontsize=9,
+           va="top", bbox=dict(boxstyle="round", fc="white", ec="0.7", alpha=0.85))
+    resid = pv - tv
+    rlim = np.percentile(np.abs(resid), 98)
+    b.scatter(tv, resid, s=4, alpha=0.12, color=OKABE_ITO[5], edgecolors="none")
+    b.axhline(0, color="k", lw=0.9)
+    edges = np.quantile(tv, np.linspace(0, 1, 9))
+    cen, med = [], []
+    for aa, bb in zip(edges[:-1], edges[1:]):
+        m = (tv >= aa) & (tv <= bb)
+        if m.sum() >= 10:
+            cen.append(np.median(tv[m])); med.append(np.median(resid[m]))
+    b.plot(cen, med, "-", color="k", lw=1.8, label="binned median")
+    b.set_xlim(lo, hi); b.set_ylim(-rlim, rlim)
+    b.set_xlabel(f"true {plabels[j]}")
+    b.text(0.05, 0.93, f"scatter={np.std(resid):.3g}", transform=b.transAxes,
+           fontsize=8, va="top")
+ax4[0, 0].set_ylabel("predicted (out-of-fold)")
+ax4[1, 0].set_ylabel("predicted $-$ true")
+ax4[0, 0].text(-0.32, 1.06, "E", transform=ax4[0, 0].transAxes, fontweight="bold",
+               fontsize=12)
+fig4.suptitle(r"exp08 — predictability of the radial-DiffMAH parameters from "
+              r"$M_0$+history (n={}): only the normalization is predictable; the "
+              r"shape params are not".format(N), fontsize=11)
+fig4.tight_layout()
+save_fig(fig4, FIGDIR / "exp08_param_predictability")
+
 # %% save outputs ------------------------------------------------------------
 OUTDIR.mkdir(parents=True, exist_ok=True)
 summary = Table({
