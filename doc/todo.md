@@ -108,12 +108,22 @@ Cross-experiment plan. Mirrors the phase sequence in
   features. Library: `hongshao/diffmah.py`; params in
   `exp10_diffmah_fit/outputs/diffmah_params.csv`.
 
+## Phase 10 — portable emulator
+- [x] **exp11_portable_emulator** — rebuilt the exp08 conditional-Gaussian
+  emulator (linear mean + full residual covariance) on the cached portable
+  DiffMAH params (`dmah_*`, now in the dataset). **Result:** it **matches the
+  MAH-PCA(4) version** under the exp07 suite — identical calibration
+  (54/72/91/95), full-covariance gain +1.43 nats, reproduces the residual
+  correlation (0.52); CRPS 0.0882 vs 0.0849 (the same ~4% portability cost as
+  exp10). Probabilistic painting works from DiffMAH features. Adopt the portable
+  DiffMAH emulator as the working Ultimate-SHMR model.
+
 ### Next
-- [ ] **emulator on DiffMAH features** — rebuild the exp08 conditional-Gaussian
-  emulator with the portable DiffMAH params; confirm it matches the MAH-PCA
-  version under the exp07 suite.
 - [ ] **scatter modeling** — refine the residual covariance (heteroscedasticity,
-  non-Gaussianity) under the exp07 suite; the conditional-Gaussian mean is settled.
+  non-Gaussianity) under the exp07 suite; the conditional-Gaussian mean is settled
+  and the features are portable.
+- [ ] apply the emulator to an N-body / other-sim halo catalog with DiffMAH fits;
+  compare predicted profile distributions.
 
 ### Later
 - [ ] secondary halo properties — *test*, don't assume: MAH-derived ones
