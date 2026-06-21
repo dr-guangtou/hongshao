@@ -21,6 +21,7 @@ from astropy.cosmology import FlatLambdaCDM
 from astropy.table import Table
 
 from .profiles import fit_cog
+from .diffmah import fit_mah
 
 # --- raw data location (the external drop; not in the repo) ------------------
 # Override with the HONGSHAO_DATA_DIR env var so the repo isn't machine-bound.
@@ -56,6 +57,11 @@ COG_RAD_KPC = np.arange(2**0.25, 150**0.25, 0.1) ** 4
 # S-shape). Fitting from 5 kpc outward makes the single-sigmoid fit essentially
 # exact, so the cached rdm_* params use this inner cut.
 COG_FIT_RMIN_KPC = 5.0
+# Inner time (Gyr) for the portable DiffMAH fit to the MAH. The earlier history
+# is unresolved (the main progenitor crosses the particle limit); fitting from
+# 2 Gyr matches the DiffMAH paper's t>1 Gyr resolution cut in spirit and gives a
+# clean fit with no loss of profile-predictive power (see exp10).
+DMAH_FIT_TMIN_GYR = 2.0
 
 # --- snapshot / redshift anchors --------------------------------------------
 # The profiles are stored at 5 redshifts. The integer TNG snapshot numbers are
@@ -284,6 +290,13 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
         "rdm_R_c": np.full(n_gal, np.nan),
         "rdm_Delta": np.full(n_gal, np.nan),
         "rdm_rms": np.full(n_gal, np.nan),
+        # portable DiffMAH parameters (fit to the MAH over t>=2 Gyr; see
+        # diffmah.py and DMAH_FIT_TMIN_GYR). logmp ~ M0; logtc/early/late = shape.
+        "dmah_logmp": np.full(n_gal, np.nan),
+        "dmah_logtc": np.full(n_gal, np.nan),
+        "dmah_early": np.full(n_gal, np.nan),
+        "dmah_late": np.full(n_gal, np.nan),
+        "dmah_rms": np.full(n_gal, np.nan),
     }
     # anchor halo masses + growth fractions (relative to M0)
     anchor_z = sorted(ANCHORS)  # [0.4, 0.7, 1.0, 1.5, 2.0]
@@ -311,6 +324,10 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
             zf = np.interp(tf, ages_asc, z_asc)
             cols["t50"][i], cols["t75"][i], cols["t90"][i] = tf
             cols["z50"][i], cols["z75"][i], cols["z90"][i] = zf
+            fm = fit_mah(t_snap[snaps.astype(int)], lmp, t_snap[72],
+                         t_min=DMAH_FIT_TMIN_GYR)
+            for p in ("logmp", "logtc", "early", "late", "rms"):
+                cols[f"dmah_{p}"][i] = fm[p]
 
         aper = load_aper(i, data_dir)["z0p4"]
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -349,11 +366,13 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
         sma_kpc=SMA_KPC.tolist(),
         cog_rad_kpc=COG_RAD_KPC.tolist(),
         cog_fit_rmin_kpc=COG_FIT_RMIN_KPC,
+        dmah_fit_tmin_gyr=DMAH_FIT_TMIN_GYR,
         mass_unit="log10(Msun)",
         h=H,
         note="logm0_halo = peak mass at latest available snapshot (~z=0.4); "
              "snap 72 mass not in pickle. tXX/zXX = time/redshift when peak "
-             "mass first reached XX% of M0. rdm_* fit over R>=cog_fit_rmin_kpc.",
+             "mass first reached XX% of M0. rdm_* fit over R>=cog_fit_rmin_kpc; "
+             "dmah_* = DiffMAH fit over t>=dmah_fit_tmin_gyr (logmp~M0).",
     )
     return tbl
 
