@@ -62,8 +62,17 @@ other sims, or — in principle — observational MAH proxies), which MAH-PCA ca
 ## Interpretation & caveats
 
 - The `t ≥ 2 Gyr` cut is the MAH analog of the 5-kpc CoG cut: the early history is
-  unresolved, and it was the dominant source of fit residual (median RMS 0.094 →
-  0.063 when applied). It keeps the epochs that matter (z=2 is t≈3.3 Gyr).
+  unresolved (the steep early rise is partly the main progenitor crossing the
+  particle-resolution limit), and it was the dominant source of fit residual
+  (median RMS 0.094 → 0.063 when applied). This **follows the DiffMAH paper**,
+  which restricts fitting to *"t > 1 Gyr for the sake of ensuring good mass
+  resolution"*; the model's `early` index still represents the fast-accretion
+  regime *within* the fitted range. We checked t_min ∈ {1, 1.5, 2} Gyr: lowering
+  it toward the paper's 1 Gyr recovers more of the fast-growth phase but **worsens
+  the fit** (RMS 0.063 → 0.078) with **no change in predictive power** (feature
+  CRPS flat at ~0.088) — the z=0.4 profile signal is already in t ≥ 2 Gyr (which
+  keeps z=2, t≈3.3 Gyr, the epoch exp01 found matters for the inner galaxy). So
+  t ≥ 2 Gyr is the better choice here.
 - `logmp` ≈ M0 by construction; the *assembly* information is in
   `early`/`late`/`logtc`. The 4% gap vs MAH-PCA is the price of portability +
   smoothing, not a failure — DiffMAH recovers the bulk of the signal.
