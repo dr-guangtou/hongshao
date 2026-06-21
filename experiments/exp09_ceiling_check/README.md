@@ -29,7 +29,8 @@ Driver: `run.py` (`EXP09_NMAX=400` for a sub-minute pass). Figures:
 `exp09_ceiling_check` (per-aperture and overall CRPS bars) and
 `exp09_prediction_check` (truth-vs-predicted on top, truth-vs-residual on bottom,
 per aperture, with the linear and GBM binned-median trends overlaid — they sit on
-top of each other). Sample: n = 2534.
+top of each other), and `exp09_coefficients` (the best-fit linear coefficients vs
+radius). Sample: n = 2534.
 
 ## Key result
 
@@ -52,6 +53,33 @@ nothing.**
   genuine — there is simply no nonlinear structure to exploit.
 - The richer *analytic* form (poly-2) buys a marginal **+3.3%** — a whiff of
   low-order curvature/interaction, but small and not corroborated by the GBM.
+
+## The best-fit linear model and its radial trends
+
+The closed-form model is `log M*_k = b0 + b_M0·logM0 + Σ b_PCj·PCj` (PCs oriented
+so + = earlier-forming). Fit on the full sample, the coefficients show two clean,
+physical trends from the inner aperture to the outskirts (`exp09_coefficients`):
+
+| coeff | <10 | 10-30 | 30-50 | 50-100 |
+|---|---|---|---|---|
+| **logM0** (SHMR slope) | 0.55 | 0.70 | 0.90 | **1.05** |
+| PC1 (formation level) | 0.11 | 0.09 | 0.11 | 0.11 |
+| **PC2** (timing of buildup) | 0.06 | 0.30 | 0.35 | **0.34** |
+| PC3 | 0.08 | 0.06 | 0.11 | 0.13 |
+| PC4 | −0.03 | 0.11 | 0.16 | 0.17 |
+
+- **The SHMR slope `dlogM*/dlogM0` steepens monotonically outward, 0.55 → 1.05.**
+  Inner stellar mass is only weakly tied to halo mass (self-regulated in-situ
+  formation); the outskirts scale ~linearly with halo mass (the accreted envelope
+  tracks the halo). 
+- **The assembly dependence grows outward and is carried by PC2** (the
+  "timing of mass buildup" mode, exp06): ~negligible in the center, strong in the
+  outskirts (0.02 → ~0.12 dex per +1σ, standardized). PC1 (overall formation
+  level) is roughly flat. So *earlier-forming halos host more mass at fixed M0,
+  increasingly so toward the outskirts* — the coefficient-level version of exp01
+  ("inner remembers early/self-regulated, outskirts remember recent growth") and
+  exp04 ("history helps more with radius"). Coefficients saved to
+  `outputs/linear_coefficients.csv`.
 
 ## Interpretation & caveats
 

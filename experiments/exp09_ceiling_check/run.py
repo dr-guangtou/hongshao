@@ -56,6 +56,7 @@ if NMAX:
 logM0 = np.asarray(t["logm0_halo"], float)
 aper = np.asarray(t["logmstar_aper"], float)
 idx = np.asarray(t["index"])
+z50 = np.asarray(t["z50"], float)             # formation redshift, to orient the PCs
 
 # MAH-PCA(4) features (same construction as exp06/exp08)
 mah = load_mah(); tsnap = load_cosmic_time(); tgrid = np.linspace(2.2, 9.0, 18)
@@ -75,10 +76,15 @@ def _annulus(a_outer, a_inner):
 
 Y = np.column_stack([aper[:, 0], _annulus(aper[:, 1], aper[:, 0]),
                      _annulus(aper[:, 2], aper[:, 1]), _annulus(aper[:, 4], aper[:, 2])])
-g = np.isfinite(ms).all(1) & np.isfinite(Y).all(1) & np.isfinite(logM0)
+g = np.isfinite(ms).all(1) & np.isfinite(Y).all(1) & np.isfinite(logM0) & np.isfinite(z50)
 mu = ms[g].mean(0); _, _, Vt = np.linalg.svd(ms[g] - mu, full_matrices=False)
 pca = (ms[g] - mu) @ Vt[:4].T
-M0 = logM0[g]; Y = Y[g]; N = len(Y)
+M0 = logM0[g]; Y = Y[g]; z50 = z50[g]; N = len(Y)
+# orient each MAH-PC so positive = earlier formation (higher z50); sign flips do
+# not change any prediction/score, only make the coefficients sign-readable.
+for k in range(4):
+    if np.corrcoef(pca[:, k], z50)[0, 1] < 0:
+        pca[:, k] *= -1
 
 rng = np.random.default_rng(1)
 pca_shuf = pca.copy()
@@ -225,8 +231,50 @@ fig2.suptitle(f"exp09 — prediction check: truth vs predicted (top), residual (
 fig2.tight_layout()
 save_fig(fig2, FIGDIR / "exp09_prediction_check")
 
+# %% best-fit linear model + radial trends in its coefficients ----------------
+# log M*_k = b0 + b_M0*logM0 + b_PC1*PC1 + ... (PCs oriented: + = earlier-forming)
+Xc = np.column_stack([np.ones(N), M0, pca])
+coef = np.linalg.lstsq(Xc, Y, rcond=None)[0]            # (6, 4): feature x aperture
+fstd = np.concatenate([[1.0, M0.std()], pca.std(0)])    # feature std (for standardizing)
+feat = ["intercept", "logM0", "PC1", "PC2", "PC3", "PC4"]
+print("\n[best-fit linear model] raw coefficients (rows=feature, cols=aperture):")
+print(f"  {'feature':9s} " + " ".join(f"{n:>8s}" for n in TNAMES))
+for j, f in enumerate(feat):
+    print(f"  {f:9s} " + " ".join(f"{coef[j, a]:8.3f}" for a in range(4)))
+print("  SHMR slope dlogM*/dlogM0 steepens outward: "
+      + " -> ".join(f"{coef[1, a]:.2f}" for a in range(4)))
+
+fig3, (axS, axP) = plt.subplots(1, 2, figsize=(9.8, 4.0))
+xr = np.arange(4)
+axS.plot(xr, coef[1], "-o", color=OKABE_ITO[5], ms=6)
+axS.axhline(1.0, ls=":", color="0.6", lw=1)
+axS.set_xticks(xr); axS.set_xticklabels(TNAMES)
+axS.set_xlabel("aperture / annulus [kpc]")
+axS.set_ylabel(r"SHMR slope  $d\log M_*/d\log M_0$")
+axS.set_title("Halo-mass dependence steepens outward")
+axS.text(-0.13, 1.04, "A", transform=axS.transAxes, fontweight="bold", fontsize=12)
+
+for k, mk in zip(range(4), ["o", "s", "^", "D"]):
+    axP.plot(xr, coef[2 + k] * fstd[2 + k], "-" + mk, color=OKABE_ITO[k], ms=5,
+             label=f"PC{k+1}")
+axP.axhline(0, color="k", lw=0.8)
+axP.set_xticks(xr); axP.set_xticklabels(TNAMES)
+axP.set_xlabel("aperture / annulus [kpc]")
+axP.set_ylabel("assembly effect per +1σ  [dex]")
+axP.set_title("Assembly dependence grows outward (PC2 = timing)")
+axP.legend(fontsize=8)
+axP.text(-0.13, 1.04, "B", transform=axP.transAxes, fontweight="bold", fontsize=12)
+fig3.suptitle("exp09 — the best-fit linear model and its radial coefficient trends",
+              fontsize=11)
+fig3.tight_layout()
+save_fig(fig3, FIGDIR / "exp09_coefficients")
+
 # %% save outputs
 OUTDIR.mkdir(parents=True, exist_ok=True)
+ct = Table({"feature": feat})
+for a, nm in enumerate(TNAMES):
+    ct[nm] = coef[:, a]
+ct.write(OUTDIR / "linear_coefficients.csv", overwrite=True)
 st = Table({"model": names,
             "rms_mean": [results[n]["rms"].mean() for n in names],
             "crps_mean": overall})
