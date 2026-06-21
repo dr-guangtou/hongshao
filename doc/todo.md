@@ -132,6 +132,19 @@ Cross-experiment plan. Mirrors the phase sequence in
   unchanged. Pareto knee at complexity ~3–5. **Decision:** keep the linear
   closed form; `late²` is optional interpretive polish, not a structural change.
   The lever for real gains is *scatter*, not the mean shape.
+- [x] **exp13_outskirt_limit** — ceiling probe for the hardest annulus
+  `M*[50-100 kpc]`: feature richness (M0 / DiffMAH(4) / MAH-PCA(4,8) / raw
+  MAH(18)) × model (linear / PySR / GBM), CV CRPS+RMS+R². *Deliberately breaks
+  portability* to find the limit. **Result:** the MAH lifts R² 0.69→0.81 (CRPS
+  −22%) for the outskirts (bigger relative gain than the inner apertures), but
+  **DiffMAH(4) is already at the ceiling** — MAH-PCA / full raw-MAH beat it by
+  only +2.7% CRPS (R²→0.819) and GBM≈linear (no nonlinear structure). The limit
+  is R²≈0.82 / RMS≈0.175 dex; the residual ~43% of the variance is **intrinsic**
+  (projection/ICL/low-SB), not feature-limited. Shuffle control collapses below
+  the M0 floor (signal real). PySR on raw MAH keeps a *single epoch* (~7 Gyr,
+  z≈0.7) at R²=0.80 — the outskirts track recent halo mass. **Decision:** keep
+  the portable params; the outskirt lever is the scatter model, not richer
+  features.
 
 ### Next
 - [ ] **scatter modeling** — refine the residual covariance (heteroscedasticity,
