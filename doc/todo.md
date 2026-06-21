@@ -85,9 +85,25 @@ Cross-experiment plan. Mirrors the phase sequence in
   log-score); the emulator reproduces the residual correlation (0.50) out of
   sample. Adopt the direct aperture-mass full-covariance emulator (A) as baseline.
 
+## Phase 8 — model-family decision
+- [x] **exp09_ceiling_check** — is a richer-than-linear model worth pursuing?
+  Compared linear vs poly-2 (analytic) vs a gradient-boosted-trees ceiling on the
+  aperture masses (M0+MAH-PCA(4)), CV-CRPS. **Result:** the flexible GBM ceiling
+  does **not** beat linear (−0.6%, within noise; shuffle control collapses to
+  M0-only, so GBM is working); poly-2 adds a marginal +3.3%. The predictable
+  `M*(annulus | M0, MAH)` relation is essentially **linear** — keep the
+  closed-form equation; a nonlinear / symbolic-regression form is not justified
+  by accuracy. What remains is *scatter*, not a missing mean-shape term. (Adds
+  scikit-learn dependency, used only as the achievability ceiling.)
+
+### Next (decided from exp09)
+- [ ] **portable MAH features** — fit DiffMAH (arXiv:2105.05859, k≡3.5) to our
+  own MAH curves; use intrinsic per-halo params as features (N-body/observation
+  applicable), replacing the TNG-sample-defined MAH-PCA basis; verify ≈ MAH-PCA(4).
+- [ ] **scatter modeling** — refine the residual covariance (heteroscedasticity,
+  non-Gaussianity) under the exp07 suite; the conditional-Gaussian mean is settled.
+
 ### Later
-- [ ] heteroscedastic / non-Gaussian (normalizing-flow) emulator — only if a
-  target metric demands it (exp08's conditional Gaussian is already calibrated).
 - [ ] secondary halo properties — *test*, don't assume: MAH-derived ones
   (concentration, accretion rate) likely redundant with the MAH (exp06); only
   initial conditions / environment are independent (hard to get here).
