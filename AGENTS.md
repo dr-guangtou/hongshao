@@ -46,6 +46,14 @@ Read those two before proposing analyses.
   scientific-visualization skill for presentation.
 - **Always surface new figures to the user for review** — point to the file
   paths and display them; don't just save them silently.
+- **Always visualize fits and evaluations directly, not just summary metrics.**
+  For any model fit or prediction check, produce an intuitive per-object
+  visualization (e.g. measured-vs-model curves and residual profiles, by mass
+  bin; truth-vs-predicted and residual-vs-truth) in addition to aggregate scores.
+  Median RMS / CRPS hide problems that the eye catches instantly — e.g. the
+  DiffMAH early-growth coverage issue (exp10) was obvious in the by-mass fit
+  figure but invisible in the median RMS. Visual inspection is a first-class
+  evaluation step, not an afterthought.
 
 ## Repo layout
 

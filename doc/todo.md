@@ -96,10 +96,22 @@ Cross-experiment plan. Mirrors the phase sequence in
   by accuracy. What remains is *scatter*, not a missing mean-shape term. (Adds
   scikit-learn dependency, used only as the achievability ceiling.)
 
-### Next (decided from exp09)
-- [ ] **portable MAH features** — fit DiffMAH (arXiv:2105.05859, k≡3.5) to our
-  own MAH curves; use intrinsic per-halo params as features (N-body/observation
-  applicable), replacing the TNG-sample-defined MAH-PCA basis; verify ≈ MAH-PCA(4).
+## Phase 9 — portable MAH parameterization
+- [x] **exp10_diffmah_fit** — fit DiffMAH (arXiv:2105.05859, k≡3.5) to our own
+  MAH curves; four intrinsic per-halo params (logmp, logtc, early, late), anchored
+  at z=0.4, fit over t≥2 Gyr (the MAH analog of the 5-kpc CoG cut; early history
+  unresolved). **Result:** median fit RMS 0.063 dex (MAH is wigglier than the CoG
+  — mergers/bursts a smooth model can't capture; cf. exp06 93% vs 99.7%
+  compressibility). The portable DiffMAH params carry **~88% of the MAH-PCA(4)
+  assembly signal** (aperture CRPS 0.0882 vs 0.0849; M0-only 0.1117) — the 4% gap
+  is the price of smoothing + portability. Adopt DiffMAH params as the portable
+  features. Library: `hongshao/diffmah.py`; params in
+  `exp10_diffmah_fit/outputs/diffmah_params.csv`.
+
+### Next
+- [ ] **emulator on DiffMAH features** — rebuild the exp08 conditional-Gaussian
+  emulator with the portable DiffMAH params; confirm it matches the MAH-PCA
+  version under the exp07 suite.
 - [ ] **scatter modeling** — refine the residual covariance (heteroscedasticity,
   non-Gaussianity) under the exp07 suite; the conditional-Gaussian mean is settled.
 
