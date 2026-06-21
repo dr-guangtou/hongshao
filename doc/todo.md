@@ -118,6 +118,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   exp10). Probabilistic painting works from DiffMAH features. Adopt the portable
   DiffMAH emulator as the working Ultimate-SHMR model.
 
+## Phase 11 — symbolic regression for the mean (interpretability)
+- [x] **exp12_symbolic_regression** — PySR search (polynomial ops only) for a
+  parsimonious nonlinear term in the emulator mean. Discovery on the **linear
+  residuals** (sharp test: residuals are orthogonal to the linear features, so
+  PySR can only find missed nonlinearity) + on the full target (readable form).
+  **Result:** the relation is essentially linear (confirms exp09 symbolically).
+  The residual nonlinearity is small and lives in the **late-time accretion
+  index** `late`: PySR independently picks **`late²`** for the outskirts
+  (10–100 kpc) and **`logtc·late`** for the core (<10 kpc), coefficients
+  positive + stable across all folds. One term/aperture: CRPS 0.0883 → 0.0865
+  (**+2.1%**); the dense 14-term poly-2 ceiling is only +4.6%; calibration
+  unchanged. Pareto knee at complexity ~3–5. **Decision:** keep the linear
+  closed form; `late²` is optional interpretive polish, not a structural change.
+  The lever for real gains is *scatter*, not the mean shape.
+
 ### Next
 - [ ] **scatter modeling** — refine the residual covariance (heteroscedasticity,
   non-Gaussianity) under the exp07 suite; the conditional-Gaussian mean is settled
