@@ -81,18 +81,25 @@ the conditional Ultimate-SHMR realized.
 
 ## Interpretation & caveats
 
-- **Why B fails, visually** (`exp08_param_predictability`): only the
-  normalization `rdm_logMstar0` tracks the 1:1 line (R²=0.67); the four shape
-  params collapse toward their mean (R² ≤ 0.22, residual-vs-true slope ≈ −1 =
-  pure regression to the mean). The radial-DiffMAH shape parameters are an
-  excellent *descriptive* basis but a poor *predictive* target: `R_c`/`Delta`
-  are partially degenerate, so each galaxy's value carries fitting noise
-  uncorrelated with anything physical, burying the (already modest) MAH→shape
-  signal. A stable orthogonal basis reflects it better — exp06's CoG-PC1
-  (concentration) ↔ MAH-PC2 (timing) at r=0.46, vs the best single radial-DiffMAH
-  shape param at r≈0.21 (exp03). So most of the MAH's influence is on profile
-  *amplitude/concentration* (captured directly by integrated masses), not on the
-  fine shape.
+- **Why B fails — it's the coordinate system, not a lack of shape signal**
+  (`exp08_param_predictability`): only the normalization `rdm_logMstar0` tracks
+  the 1:1 line (R²=0.67); the four shape params collapse toward their mean
+  (R² ≤ 0.22, residual-vs-true slope ≈ −1). This is **not** because the profile
+  shape lacks MAH information — the concentration `log M(<10)/M(<100)` is
+  predictable (MAH adds +0.17 R², ~24% of the at-fixed-M0 variance; r≈0.45,
+  consistent with exp02/06 and exp04's 7.3% shape gain). It is because the
+  radial-DiffMAH shape params are a **degenerate, nonlinear coordinate system**
+  (β_in↔R_c = −0.54) that scrambles that signal: the predictable concentration
+  needs a *coordinated* change across β_in/β_out/R_c that independent linear fits
+  can't produce, so the predicted params regress to the mean. Predict the
+  observable masses (A) — whose ratios *are* concentration — and the signal is
+  recovered; the params bury it. Fixing `Delta` DiffMAH-style (k≡3.5 analog)
+  removes only one degeneracy axis and does **not** recover it (tested: fit still
+  0.0019 dex, R_c R² 0.14→0.19, reconstruction CRPS 0.111→0.110 unchanged). So:
+  the MAH influences both profile *amplitude* (≈49% of at-fixed-M0 variance) and
+  *shape/concentration* (≈24%, real and moderate); capture both by predicting the
+  integrated masses or any aligned basis (concentration, PCA modes), not the
+  radial-DiffMAH shape params.
 - A vs B is a like-for-like comparison **within the linear-mean class**; a
   nonlinear param predictor might narrow B's gap, but A uses the same class, so
   the verdict (predict the observable directly) holds at this level.

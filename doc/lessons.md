@@ -18,6 +18,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 - **CoG / aperture arrays can be object-dtype with `None` bins** (~1/484). Coerce
   to NaN and mask; don't assume clean float arrays.
 
+## Analysis / interpretation
+
+- **Don't conflate "a parameter is unpredictable" with "the signal is weak."**
+  In exp08 the radial-DiffMAH shape params predict poorly from the MAH (R²≤0.22),
+  and I wrote that "the MAH's influence on shape is weak." Wrong: a direct
+  decomposition shows the MAH explains ~24% of the at-fixed-M0 variance in
+  *concentration* (`log M(<10)/M(<100)`, R²+0.17, r≈0.45 — matching exp02/06).
+  The shape signal is real and moderate; the radial-DiffMAH params are a
+  degenerate, nonlinear *coordinate system* (β_in↔R_c=−0.54) that buries it.
+  Lesson: when a parametric target predicts poorly, test the predictability of
+  the *observable* it encodes (aperture masses, ratios, PCA modes) before
+  concluding the signal is absent. Fixing one param (Δ, DiffMAH-style) doesn't
+  fix a multi-axis degeneracy.
+
 ## Workflow
 
 - Background `uv run` commands buffer stdout through pipes; redirect to a file

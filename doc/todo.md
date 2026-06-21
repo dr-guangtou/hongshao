@@ -77,9 +77,11 @@ Cross-experiment plan. Mirrors the phase sequence in
   vs M0-only (shuffle ~0) — a plain conditional Gaussian suffices, no GP/flow yet.
   (2) **Predict the observable directly:** target A (aperture masses) ≫ target B
   (predict rdm_* params → reconstruct); B only recovers the inner normalization
-  and is no better than M0-only in the outskirts (shape params aren't predictable
-  from halo features). Profile params are for compression, not halo→profile
-  prediction. (3) **Full covariance beats diagonal** by 1.4–2.0 nats (joint
+  and is no better than M0-only in the outskirts. NB (corrected): this is a
+  *coordinate-system* problem, not a lack of shape signal — the MAH explains ~24%
+  of the at-fixed-M0 variance in concentration (r≈0.45), but the degenerate
+  radial-DiffMAH params bury it (fixing Δ DiffMAH-style doesn't recover it).
+  Predict the observable masses (or an aligned basis: concentration, PCA modes). (3) **Full covariance beats diagonal** by 1.4–2.0 nats (joint
   log-score); the emulator reproduces the residual correlation (0.50) out of
   sample. Adopt the direct aperture-mass full-covariance emulator (A) as baseline.
 
