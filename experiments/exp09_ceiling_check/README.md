@@ -25,8 +25,11 @@ a richer analytic form (e.g. found by symbolic regression) should capture?
     achievability ceiling.
   - **GBM (shuffled MAH)** — control; must collapse to the M0-only level.
 
-Driver: `run.py` (`EXP09_NMAX=400` for a sub-minute pass). Figure:
-`exp09_ceiling_check`. Sample: n = 2534.
+Driver: `run.py` (`EXP09_NMAX=400` for a sub-minute pass). Figures:
+`exp09_ceiling_check` (per-aperture and overall CRPS bars) and
+`exp09_prediction_check` (truth-vs-predicted on top, truth-vs-residual on bottom,
+per aperture, with the linear and GBM binned-median trends overlaid — they sit on
+top of each other). Sample: n = 2534.
 
 ## Key result
 

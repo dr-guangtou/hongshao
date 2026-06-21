@@ -128,14 +128,14 @@ def cv_score(make_model, X, k=5, seed=0):
             sig[fold, j] = (Y[tr, j] - m.predict(X[tr])).std()
     rms = np.sqrt(np.mean((Y - pred) ** 2, 0))
     crps = crps_gaussian(Y, pred, sig).mean(0)
-    return rms, crps
+    return rms, crps, pred
 
 
 results = {}
 print(f"\n{'model':22s} {'RMS(mean)':>10s} {'CRPS(mean)':>11s}   per-aperture CRPS")
 for name, (mk, X, _) in MODELS.items():
-    rms, crps = cv_score(mk, X)
-    results[name] = dict(rms=rms, crps=crps)
+    rms, crps, pred = cv_score(mk, X)
+    results[name] = dict(rms=rms, crps=crps, pred=pred)
     print(f"  {name:20s} {rms.mean():10.4f} {crps.mean():11.4f}   "
           + " ".join(f"{c:.3f}" for c in crps))
 
@@ -180,6 +180,50 @@ fig.suptitle(f"exp09 — ceiling check: how much does nonlinearity add? (n={N})"
              fontsize=11)
 fig.tight_layout()
 save_fig(fig, FIGDIR / "exp09_ceiling_check")
+
+# %% FIGURE 2 — direct prediction check: truth vs predicted (top) and
+# truth vs (predicted - truth) (bottom), per aperture, linear vs GBM ceiling.
+def _binned(xv, yv, nbin=10):
+    edges = np.quantile(xv, np.linspace(0, 1, nbin + 1))
+    cen, med = [], []
+    for a, bb in zip(edges[:-1], edges[1:]):
+        m = (xv >= a) & (xv <= bb)
+        if m.sum() >= 15:
+            cen.append(np.median(xv[m])); med.append(np.median(yv[m]))
+    return np.asarray(cen), np.asarray(med)
+
+
+pred_lin = results["linear (M0+MAH)"]["pred"]
+pred_gbm = results["GBM (M0+MAH)"]["pred"]
+fig2, ax2 = plt.subplots(2, 4, figsize=(15.0, 6.6))
+for j in range(4):
+    tv = Y[:, j]
+    lo, hi = np.percentile(tv, [1, 99])
+    a, b = ax2[0, j], ax2[1, j]
+    # top: truth vs predicted (linear scatter + both binned-median trends)
+    a.scatter(tv, pred_lin[:, j], s=4, alpha=0.10, color=OKABE_ITO[0], edgecolors="none")
+    a.plot([lo, hi], [lo, hi], "k--", lw=1.1)
+    for pred, c, ls, lab in [(pred_lin, OKABE_ITO[0], "-", "linear"),
+                             (pred_gbm, OKABE_ITO[5], "--", "GBM")]:
+        cen, med = _binned(tv, pred[:, j]); a.plot(cen, med, ls, color=c, lw=1.8, label=lab)
+    a.set_xlim(lo, hi); a.set_ylim(lo, hi)
+    a.set_title(f"{TNAMES[j]} kpc   (RMS lin={results['linear (M0+MAH)']['rms'][j]:.3f}, "
+                f"GBM={results['GBM (M0+MAH)']['rms'][j]:.3f})", fontsize=8)
+    if j == 0:
+        a.set_ylabel("predicted $\\log M_*$"); a.legend(fontsize=7, loc="upper left")
+    # bottom: truth vs (predicted - truth)
+    b.scatter(tv, pred_lin[:, j] - tv, s=4, alpha=0.10, color=OKABE_ITO[0], edgecolors="none")
+    b.axhline(0, color="k", lw=1.0)
+    for pred, c, ls in [(pred_lin, OKABE_ITO[0], "-"), (pred_gbm, OKABE_ITO[5], "--")]:
+        cen, med = _binned(tv, pred[:, j] - tv); b.plot(cen, med, ls, color=c, lw=1.8)
+    b.set_xlim(lo, hi); b.set_ylim(-0.6, 0.6)
+    b.set_xlabel(f"true $\\log M_*$ ({TNAMES[j]} kpc)")
+    if j == 0:
+        b.set_ylabel("predicted $-$ true [dex]")
+fig2.suptitle(f"exp09 — prediction check: truth vs predicted (top), residual (bottom); "
+              f"linear vs GBM ceiling overlap (n={N})", fontsize=11)
+fig2.tight_layout()
+save_fig(fig2, FIGDIR / "exp09_prediction_check")
 
 # %% save outputs
 OUTDIR.mkdir(parents=True, exist_ok=True)
