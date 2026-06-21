@@ -56,7 +56,10 @@ print(f"exp10: fitting DiffMAH (k={MAH_K}) to {N} MAHs; anchor t0={T0:.2f} Gyr (
 
 # %% fit DiffMAH to every MAH
 keys = ["logmp", "logtc", "early", "late", "rms"]
-fits = {k: np.full(N, np.nan) for k in keys}
+# fit at two inner-time cuts: 1 Gyr (the DiffMAH-paper value) and 2 Gyr (ours);
+# both saved for completeness. The figures/feature-check use the 2 Gyr default.
+fits_by_tmin = {1.0: {k: np.full(N, np.nan) for k in keys},
+                2.0: {k: np.full(N, np.nan) for k in keys}}
 mah_t = [None] * N                               # cache (t, log_mpeak) for plotting
 for i in range(N):
     sn, lmp = peak_history(mah[int(idx[i])])
@@ -64,9 +67,11 @@ for i in range(N):
         continue
     tt = t_snap[sn.astype(int)]
     mah_t[i] = (tt, lmp)
-    f = fit_mah(tt, lmp, T0, t_min=T_MIN)
-    for k in keys:
-        fits[k][i] = f[k]
+    for tmin, store in fits_by_tmin.items():
+        f = fit_mah(tt, lmp, T0, t_min=tmin)
+        for k in keys:
+            store[k][i] = f[k]
+fits = fits_by_tmin[T_MIN]                        # default fit set for figures
 rms = fits["rms"]
 print(f"DiffMAH fit RMS [dex]: median={np.nanmedian(rms):.4f}  "
       f"90th={np.nanpercentile(rms, 90):.4f}  frac<0.05={(rms < 0.05).mean():.2f}")
@@ -222,15 +227,46 @@ ax3.legend(fontsize=8, loc="center left", bbox_to_anchor=(1.0, 0.5))
 fig3.tight_layout()
 save_fig(fig3, FIGDIR / "exp10_feature_check")
 
-# %% save outputs (the portable per-halo feature table)
+# %% DiffMAH vs PCA: how well does each *describe* the MAH curve? --------------
+# Reconstruction RMS over the 2.2-9.0 Gyr grid. PCA is the optimal *linear* basis
+# (minimizes MSE for given #modes); DiffMAH is a constrained 4-param parametric
+# form (one of which, logmp, is the M0 normalization the PCA gets for free).
+logt0 = np.log10(T0)
+model_abs = log_mah(np.log10(tg), fits["logmp"][g], fits["logtc"][g],
+                    fits["early"][g], fits["late"][g], logt0)        # (Ng, 18)
+rms_dmah = np.sqrt(np.mean((model_abs - (ms[g] + M0g[:, None])) ** 2, axis=1))
+ks = np.arange(1, 7)
+rms_pca = {kk: np.sqrt(np.mean(
+    (ms[g] - (mu + (ms[g] - mu) @ Vt[:kk].T @ Vt[:kk])) ** 2, axis=1)) for kk in ks}
+print(f"\n[DiffMAH vs PCA] median MAH reconstruction RMS [dex], {tg[0]:.1f}-{tg[-1]:.1f} Gyr:")
+print(f"  DiffMAH (4 params): {np.median(rms_dmah):.4f}")
+print("  PCA modes: " + "  ".join(f"{kk}:{np.median(rms_pca[kk]):.4f}" for kk in ks))
+
+fig4, ax4 = plt.subplots(figsize=(5.8, 4.0))
+ax4.plot(ks, [np.median(rms_pca[kk]) for kk in ks], "-o", color=OKABE_ITO[0],
+         ms=5, label="MAH-PCA ($k$ modes)")
+ax4.axhline(np.median(rms_dmah), color=OKABE_ITO[5], ls="--", lw=1.6,
+            label="DiffMAH (4 params)")
+ax4.set_xlabel("number of shape components")
+ax4.set_ylabel("median MAH reconstruction RMS [dex]")
+ax4.set_title("DiffMAH vs PCA: MAH description quality")
+ax4.legend()
+fig4.tight_layout()
+save_fig(fig4, FIGDIR / "exp10_vs_pca")
+
+# %% save outputs (portable per-halo feature tables, both inner-time cuts) -----
 OUTDIR.mkdir(parents=True, exist_ok=True)
-pt = Table({"index": idx})
-for k in ["logmp", "logtc", "early", "late", "rms"]:
-    pt[f"dmah_{k}"] = fits[k]
-pt.write(OUTDIR / "diffmah_params.csv", overwrite=True)
+for tmin, store in fits_by_tmin.items():
+    pt = Table({"index": idx})
+    for k in keys:
+        pt[f"dmah_{k}"] = store[k]
+    pt.write(OUTDIR / f"diffmah_params_tmin{tmin:g}gyr.csv", overwrite=True)
 write_manifest(OUTDIR, params={
-    "n": int(N), "mah_k": MAH_K, "t0_gyr": T0,
+    "n": int(N), "mah_k": MAH_K, "t0_gyr": T0, "t_min_default": T_MIN,
     "median_rms_dex": float(np.nanmedian(rms)),
+    "recon_rms_diffmah": float(np.median(rms_dmah)),
+    "recon_rms_pca3": float(np.median(rms_pca[3])),
+    "recon_rms_pca4": float(np.median(rms_pca[4])),
     "crps_diffmah": float(crps_by["DiffMAH (4 params)"].mean()),
     "crps_mahpca": float(crps_by["M0 + MAH-PCA(4)"].mean()),
     "crps_m0": float(crps_by["M0 only"].mean())})

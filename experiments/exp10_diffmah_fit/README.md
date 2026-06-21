@@ -32,8 +32,10 @@ stellar profile?
 Driver: `run.py` (`EXP10_NMAX=400` for a sub-minute pass). Figures:
 `exp10_fit_quality` (best/median/worst example fits + RMS histogram),
 `exp10_fits_by_mass` (individual MAHs + fits and residuals in 3 mass bins —
-the MAH analog of the CoG-by-mass figure), `exp10_feature_check`. Sample:
-n = 2545; per-halo params saved to `outputs/diffmah_params.csv`.
+the MAH analog of the CoG-by-mass figure), `exp10_feature_check`, and
+`exp10_vs_pca` (DiffMAH vs PCA description quality). Sample: n = 2545; per-halo
+params saved at both inner-time cuts: `outputs/diffmah_params_tmin1gyr.csv` and
+`outputs/diffmah_params_tmin2gyr.csv` (the 2 Gyr set is the default).
 
 ## Key results
 
@@ -58,6 +60,24 @@ approximation (it discards the ~0.06 dex of MAH wiggle, some of which correlates
 with the profile) plus using four numbers instead of M0 + four PCs. But it is
 **portable**: the same emulator can run on any halo with a DiffMAH fit (N-body,
 other sims, or — in principle — observational MAH proxies), which MAH-PCA cannot.
+
+**3. DiffMAH vs PCA — worse *description*, equal *prediction*, better
+*portability*** (`exp10_vs_pca`). As a pure compression of the MAH curve, DiffMAH
+is **worse** than PCA: its 4-param reconstruction RMS (0.064 dex over 2.2–9.0 Gyr)
+matches only **PCA with 2 modes** (0.066), while PCA-3/4 do better (0.050 / 0.038)
+— PCA is the optimal *linear* basis, DiffMAH a constrained parametric form that
+can't follow every wiggle.
+
+| | reconstruction RMS [dex] | aperture-mass CRPS [dex] |
+|---|---|---|
+| DiffMAH (4 params) | 0.064 (≈ PCA-2) | 0.0882 |
+| MAH-PCA(4) | 0.038 | 0.0849 |
+
+But the MAH structure PCA captures beyond DiffMAH is **profile-irrelevant**: for
+predicting the stellar masses the two are essentially equal (CRPS 0.088 vs 0.085).
+So PCA wins at description, ties at prediction, and DiffMAH wins where it counts
+for the project — **portability and physical interpretability** (intrinsic
+per-halo accretion indices vs an abstract, sample-defined basis).
 
 ## Interpretation & caveats
 
