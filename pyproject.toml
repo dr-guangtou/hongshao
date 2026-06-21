@@ -7,6 +7,7 @@ dependencies = [
     "h5py>=3.16.0",
     "matplotlib>=3.11.0",
     "numpy>=2.4.6",
+    "pysr>=1.5.10",
     "scikit-learn>=1.9.0",
     "scipy>=1.17.1",
 ]

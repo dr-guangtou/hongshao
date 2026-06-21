@@ -32,6 +32,36 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   concluding the signal is absent. Fixing one param (Δ, DiffMAH-style) doesn't
   fix a multi-axis degeneracy.
 
+## Symbolic regression (PySR, exp12)
+
+- **Don't compare a sparse SR pick against the full linear model — it's an
+  unfair test.** PySR's `model_selection="best"` minimizes a complexity-vs-loss
+  score, so its "best" equation often *drops* genuinely useful linear features
+  (e.g. it kept only `logmp` + `late` for an aperture, dropping `logtc`/`early`),
+  making "symbolic vs linear" measure PySR's pruning, not the value of a
+  nonlinear term. Fix: always keep the full linear core and test the
+  *incremental* value of the discovered nonlinear term (`linear + correction`).
+- **To find what a linear model misses, run SR on its residuals, not the raw
+  target.** OLS residuals are orthogonal to the linear features, so SR can only
+  surface *nonlinear* structure (or nothing). On the raw target, SR wastes its
+  complexity budget rediscovering the dominant linear term (`logmp`) and the
+  small nonlinearity never surfaces.
+- **Restricting SR to `{+,-,*,square}` keeps every equation polynomial**, so it
+  reduces to *sparse selection over polynomial cross-terms*: each equation
+  expands to a few monomials that plug straight into the existing
+  linear-Gaussian emulator (reusing all of exp07/exp11 — CRPS, calibration,
+  covariance). Far cleaner than refitting arbitrary nonlinear constants per fold.
+- **Validate the SR finding with a residual-vs-feature figure, not just CRPS.**
+  The +2% CRPS gain was easy to dismiss as noise; the convex U-shape of the
+  linear residual vs `late` made the `late²` term obviously real (AGENTS.md
+  visualize-don't-trust-metrics mandate, again decisive).
+- Small-subsample SR can mislead on *which* term wins (n=397 picked `logtc·late`
+  everywhere; full n=2539 picked `late²` for the outskirts). Validate the
+  pipeline small but read the *physics* off the full sample.
+- PySR's first import triggers a one-time Julia backend install + precompile
+  (~3–5 min); afterwards a full run (8 deterministic serial fits, n=2539) is
+  ~100 s.
+
 ## Workflow
 
 - Background `uv run` commands buffer stdout through pipes; redirect to a file
