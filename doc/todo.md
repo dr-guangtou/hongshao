@@ -176,10 +176,23 @@ Cross-experiment plan. Mirrors the phase sequence in
   the emulator generatively (sample N(mu,Sigma)), report reliability diagrams.
   Graduation unblocked.
 
+### Adopted model (decision)
+- **Default mean = linear on `DiffMAH(4) + c_200c`** (exp16/17/18). `c_200c` is
+  portable and adds +5% CRPS; `acc_rate`/3D shape add nothing. The degree-2
+  nonlinearity is real but diffuse (exp17).
+- **Optional richer mean = the BIC-preferred 7-extra-term degree-2 poly**
+  (`logmp²`, `logtc·late`, `early²`, `late·c200c`, `late²`, `logmp·early`,
+  `logmp·late` on top of the linear terms; exp17 `poly2_check`) — expose as an
+  option at graduation, not the default.
+- Scatter = heteroscedastic full covariance (exp14).
+
 ### Next
+- [ ] **fold `c_200c` into the heteroscedastic emulator (exp14)** — does it also
+  sharpen the scatter model / conditional calibration, not just the mean?
 - [ ] **graduate the emulator into `hongshao/`** — a single fit/predict/sample
-  module (linear mean + heteroscedastic full covariance), validated, with a
-  self-check. Expose a `sample()` path (exp15: the model must be used generatively).
+  module: linear mean on `DiffMAH + c_200c` (default) OR the 7-term degree-2 poly
+  (option), + heteroscedastic full covariance, validated, with a self-check.
+  Expose a `sample()` path (exp15: the model must be used generatively).
 - [ ] apply the emulator to an N-body / other-sim halo catalog with DiffMAH fits;
   compare predicted profile distributions (the portability test).
 
