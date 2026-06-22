@@ -212,7 +212,18 @@ Cross-experiment plan. Mirrors the phase sequence in
   (R²(c|DiffMAH)=0.25), partial corr +0.29..+0.36 with the annuli at fixed MAH
   (positive at all radii, strongest in the core). `c_200c` is portable (N-body
   available), so **adopt DiffMAH + c_200c** as the portable feature set.
-- [ ] **more secondary properties** — same test for `acc_rate`, 3D shape
-  (`c_to_a_3d`, `b_to_a_3d`); does `c_200c` also help the scatter model (exp14)?
+- [x] **exp17_c200c_nonlinear** — nonlinear limit of `c_200c` (linear/poly-2/GBM/
+  PySR on DiffMAH+c_200c). It enters **mostly linearly** (GBM ≈ linear, +0.3%);
+  a modest degree-2 bonus exists (poly-2 best, 0.0808 = +3.7% beyond linear+c200c,
+  +8.4% over DiffMAH-only; trees can't beat it). PySR names the interpretable
+  terms: `c_200c²` (10–50 kpc) and `late·c_200c` (50–100 kpc). Limit of `c_200c`
+  ≈ +8% over DiffMAH; nothing beyond degree-2.
+- [x] **exp18_secondary_more** — `acc_rate` + 3D shape, same test. **Only `c_200c`
+  helps.** `acc_rate` is MAH-redundant (+0.9% on DiffMAH, ~0 on MAH-PCA; most
+  MAH-determined, R²=0.35); 3D shape is MAH-independent (R²≈0) but carries no
+  stellar-mass info (gains ~0). "All 4" ≈ `c_200c` alone. Secondary-property axis
+  exhausted: ceiling is DiffMAH + `c_200c`.
+- [ ] does `c_200c` also help the **scatter** model (exp14) / shrink exp15's
+  regression-to-mean by raising R²?
 - [ ] **projection-scatter budget** — quantify projection vs intrinsic halo-to-halo
   scatter per annulus from the 3 projections (refines exp13/14/15's "intrinsic" floor).
