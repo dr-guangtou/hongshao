@@ -187,8 +187,12 @@ Cross-experiment plan. Mirrors the phase sequence in
 - Scatter = heteroscedastic full covariance (exp14).
 
 ### Next
-- [ ] **fold `c_200c` into the heteroscedastic emulator (exp14)** — does it also
-  sharpen the scatter model / conditional calibration, not just the mean?
+- [x] **exp19_emulator_c200c** — folded `c_200c` into the heteroscedastic
+  emulator. It improves the **mean** (CRPS 0.0873→0.0832, +4.7%; joint NLL
+  −3.349→−3.432, +0.08 nats) but **not the scatter** (adding it to the
+  log-variance = +0.001 nats; `late` stays the scatter driver, +0.16..+0.22/σ vs
+  c200c ~+0.03). Conditional calibration 0.018→0.010, marginal unchanged. Working
+  emulator = linear mean on DiffMAH+c_200c + heteroscedastic full covariance.
 - [ ] **graduate the emulator into `hongshao/`** — a single fit/predict/sample
   module: linear mean on `DiffMAH + c_200c` (default) OR the 7-term degree-2 poly
   (option), + heteroscedastic full covariance, validated, with a self-check.
