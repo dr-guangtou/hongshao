@@ -106,6 +106,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the shrinkage is irreducible. For generative use, SAMPLE from the predictive —
   the mean-only point estimate is under-dispersed and misses the tails.
 
+## Secondary properties (exp16)
+
+- **"It correlates with formation time" does NOT imply "it's redundant with the
+  MAH."** We expected `c_200c` to add nothing once the DiffMAH params were in the
+  model (it correlates r=0.58 with z50). Wrong: it adds +5% CRPS on DiffMAH and
+  +2.7% even on the full MAH-PCA(4), and is only ~25% MAH-determined. A feature's
+  correlation with the MAH bounds neither its independent information nor its
+  incremental predictive value — measure the incremental value directly (with a
+  shuffle control), don't infer redundancy from a marginal correlation.
+- **Test a secondary feature on top of the *richest* representation you have**, not
+  just the portable one. `c_200c` on top of DiffMAH(4) conflates two things
+  (independent info + DiffMAH smoothing loss); adding it on top of MAH-PCA(4)
+  isolates the genuinely-independent part (+2.7%).
+
 ## Workflow
 
 - Background `uv run` commands buffer stdout through pipes; redirect to a file

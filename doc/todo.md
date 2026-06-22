@@ -205,7 +205,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   per-galaxy SubhaloID, or 3D positions. Use our own `dmah_*` fits meanwhile.
 
 ## New analyses unlocked by the aperture table
-- [ ] **secondary-property test** — do `c_200c` / 3D shape / `acc_rate` reduce the
-  residual scatter beyond the MAH? (the "test, don't assume" item below, now data-ready)
+- [x] **exp16_secondary_c200c** — does halo concentration help beyond the MAH?
+  **Yes (overturns the prior).** `c_200c` improves CV CRPS +5.0% on portable
+  DiffMAH(4) (0.0882→0.0839) and **+2.7% even on top of MAH-PCA(4)** (0.0850→
+  0.0827); shuffle control collapses (real). It is only ~25% MAH-determined
+  (R²(c|DiffMAH)=0.25), partial corr +0.29..+0.36 with the annuli at fixed MAH
+  (positive at all radii, strongest in the core). `c_200c` is portable (N-body
+  available), so **adopt DiffMAH + c_200c** as the portable feature set.
+- [ ] **more secondary properties** — same test for `acc_rate`, 3D shape
+  (`c_to_a_3d`, `b_to_a_3d`); does `c_200c` also help the scatter model (exp14)?
 - [ ] **projection-scatter budget** — quantify projection vs intrinsic halo-to-halo
   scatter per annulus from the 3 projections (refines exp13/14/15's "intrinsic" floor).
