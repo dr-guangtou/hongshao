@@ -56,3 +56,47 @@ cross-term. Nothing beyond degree-2.**
 - The `late·c_200c` term echoes exp12/exp14: `late` (recent accretion) keeps
   surfacing as the axis that modulates the outskirts — now in interaction with
   concentration.
+
+## Addendum — the poly-2 form, and is the gain justified? (`poly2_check.py`)
+
+**The fitted form** (standardized; coef = dex per 1σ of the term). The dominant
+degree-2 terms per aperture:
+
+| aperture | dominant degree-2 terms |
+|---|---|
+| <10 | `logtc·late` +0.045, `logmp·early` −0.025, `logmp·late` −0.015 |
+| 10–30 | `late²` +0.037, `logmp²` −0.029, `late·c200c` +0.021, `c200c²` −0.019 |
+| 30–50 | `logmp²` −0.048, `late²` +0.042, `late·c200c` +0.036, `c200c²` −0.021 |
+| 50–100 | `logmp²` −0.051, `late·c200c` +0.033, `late²` +0.031, `c200c²` −0.017 |
+
+These are the same physical terms seen before: `logmp²` (SHMR-slope curvature —
+the relation flattens at high halo mass), `late²` (exp12), `late·c200c` (exp17
+PySR), `c200c²` (concentration curvature), `logtc·late` (exp12 core term).
+
+**Is it justified?** Yes — by two independent criteria — but it is *diffuse*, not
+one elegant term:
+- **Cross-validation (primary).** 10-seed 5-fold CV: linear 0.0841±0.0001 →
+  poly-2 0.0807±0.0002, improvement **+4.1% ± 0.2%, positive in 10/10 splits**.
+  CV penalizes degrees of freedom that don't generalize, so an out-of-fold
+  improvement *is* the justification — the extra terms are real, not overfit.
+- **BIC (which penalizes parameters).** A parsimonious 7-extra-term model has the
+  lowest summed BIC (−10029), below both linear (−9321) and full 15-term poly-2
+  (−9951). So an information criterion favors adding ~7 degree-2 terms but **not**
+  all 15 — the full poly-2 is mildly over-parameterized. (Caveat: per-aperture
+  BIC treats the correlated annuli as independent; the CV result is the cleaner
+  test.)
+- **The downside — the gain is diffuse.** Forward selection shows the +3.7%
+  builds up gradually over ~7 terms (~+0.2–0.5% each: `logmp²`, `logtc·late`,
+  `early²`, `late·c200c`, `late²`, `logmp·early`, `logmp·late`), not from one
+  dominant cross-term. So there is no single clean closed-form correction;
+  capturing the full degree-2 gain costs ~7 extra fitted coefficients per
+  aperture, which for a *portable, observation-constrainable* model means more
+  sample-dependence and less transparency.
+
+**Verdict.** The poly-2 improvement is real and statistically robust (not a DOF
+artifact), and BIC even prefers a 7-term subset over the linear model. But
+because the gain is diffuse and modest (+3.7% on top of the +5% that `c_200c`
+already gives linearly), the **linear `DiffMAH + c_200c`** remains the right
+working model for portability/interpretability; the degree-2 terms are optional
+polish, best added as the BIC-preferred subset (led by `logmp²` and the
+`late`/`c_200c` curvature) rather than a full poly-2.
