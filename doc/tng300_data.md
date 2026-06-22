@@ -146,6 +146,12 @@ five 3D halo properties, `logmstar_aper_proj` (n, 3, 6) on
 `projections=(xy,xz,yz)` × `aper6_sma_kpc=[10,30,50,75,100,150]`, and the
 per-projection `ellipticity_proj`/`pa_proj`/`r20_proj`/`r50_proj`/`r80_proj`.
 
+> **Which masses to model.** The 2-D `logmstar_aper_proj` are physically more
+> accurate (no perfect-ellipse assumption — relevant during mergers), but the
+> **CoG-derived `logmstar_cog`/`logmstar_aper` remain the modeling target**:
+> they are what an observer measures, the difference is small, and the end goal
+> is to reproduce the CoG. Use `*_aper_proj` for cross-checks only (see AGENTS.md).
+
 ---
 
 ## 4. Profile `.npy` — `save_tng300_072_hist_prof/`
