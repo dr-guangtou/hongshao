@@ -190,6 +190,22 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [ ] apply emulator to an N-body catalog; compare profile distributions.
 - [ ] redshift evolution once other-z profiles available.
 
-## Open data gaps (not blocking Phase 1)
-- [ ] exact snap-72 halo mass (`mass_halo`) to define `M0` precisely.
-- [ ] `halo_id` cross-match to DiffMAH/Diffstar HDF5 files.
+## Data layer updates
+- [x] **aperture-mass table merged** (`galaxies_tng300_072_hmc_13_aperture_mass.txt`,
+  via `gal_num`==`index`; `tng_data.load_aperture_extras`). Adds the **exact z=0.4
+  halo mass** (`logmh_z0p4`; matches the old proxy to +0.004 dex median),
+  **secondary halo properties** (`c_200c`, 3D shape, `acc_rate`), and **3 sky
+  projections** of aperture masses/galaxy shapes (`logmstar_aper_proj`, `*_proj`).
+  Projection scatter is small (≈0.007 dex @100 kpc cumulative, ≈0.037 dex @50–100
+  annulus, vs ≈0.17 dex total) → the outskirt residual is mostly genuine
+  halo-to-halo variation, not projection. `catgrp_id` (FoF GroupID) stored.
+- [ ] exact snap-72 halo mass — **resolved** (`logmh_z0p4`).
+- [ ] **DiffMAH/Diffstar cross-match**: blocked on an id-system mismatch —
+  `catgrp_id` (GroupID) ≠ catalog `halo_id` (SubhaloID). Need `GroupFirstSub`,
+  per-galaxy SubhaloID, or 3D positions. Use our own `dmah_*` fits meanwhile.
+
+## New analyses unlocked by the aperture table
+- [ ] **secondary-property test** — do `c_200c` / 3D shape / `acc_rate` reduce the
+  residual scatter beyond the MAH? (the "test, don't assume" item below, now data-ready)
+- [ ] **projection-scatter budget** — quantify projection vs intrinsic halo-to-halo
+  scatter per annulus from the 3 projections (refines exp13/14/15's "intrinsic" floor).

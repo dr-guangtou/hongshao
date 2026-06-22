@@ -50,6 +50,20 @@ MAH_DECLINE_TOL = 0.05
 SMA_KPC = np.asarray([10, 30, 50, 75, 100, 120, 150], dtype=float)
 # 24 radii of the curve-of-growth `cog` array, kpc
 COG_RAD_KPC = np.arange(2**0.25, 150**0.25, 0.1) ** 4
+
+# --- extra per-halo table (galaxies_tng300_072_hmc_13_aperture_mass.txt) -----
+# A pickled astropy QTable with 3388 galaxies x 3 sky projections (10164 rows).
+# It is keyed by `gal_num` (== our `index`, the MAH-pickle row) and adds the
+# exact z=0.4 halo mass, secondary halo properties, and per-projection aperture
+# masses / galaxy shapes. (It also carries `catgrp_id` = the TNG FoF GroupID,
+# kept for a future match to the official DiffMAH SubhaloID catalog.)
+APER_TABLE_NAME = "galaxies_tng300_072_hmc_13_aperture_mass.txt"
+APER6_SMA_KPC = np.asarray([10, 30, 50, 75, 100, 150], dtype=float)  # this file's 6 apertures
+PROJECTIONS = ("xy", "xz", "yz")                                     # sky-projection order
+# 3D / projection-independent halo properties (one value per halo)
+HALO_PROP_COLS = ("c_200c", "c_to_a_3d", "b_to_a_3d", "v_sigma_3d", "acc_rate")
+# 2D / projection-dependent galaxy shape & size (one value per projection)
+GAL_SHAPE_COLS = ("ellipticity", "PA", "r_20_gal", "r_50_gal", "r_80_gal")
 # Inner radius (kpc) for the radial-DiffMAH CoG fit. The innermost ~2-5 kpc of
 # the stellar profile is only marginally resolved in TNG300-1 (softening
 # ~1-2 kpc) and is the sole source of the coherent single-sigmoid fit residual
@@ -107,6 +121,72 @@ def load_mah(data_dir: Path = DEFAULT_DATA_DIR) -> list:
     """Load the MAH pickle: list of 3388 ``(2, N)`` arrays (snap, mass)."""
     with open(Path(data_dir) / "galaxies_tng300_072_mah_hmc.txt", "rb") as f:
         return pickle.load(f)
+
+
+def load_aperture_extras(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL) -> dict:
+    """Merge the per-projection aperture-mass table into per-galaxy arrays.
+
+    Reads the pickled QTable ``APER_TABLE_NAME`` (3388 galaxies x 3 projections)
+    and reshapes it onto the ``index``/``gal_num`` axis (0..n_gal-1). Returns a
+    dict of analysis-ready columns:
+
+    - ``mass_halo`` (Msun) and ``logmh_z0p4`` = log10 of it: the *exact* z=0.4
+      halo mass (snap 72), which the MAH pickle did not contain.
+    - ``catgrp_id`` (int, -1 if missing): the TNG FoF GroupID (kept for a later
+      match to the official DiffMAH catalog, which is keyed by SubhaloID).
+    - the projection-independent 3D halo properties in ``HALO_PROP_COLS``.
+    - ``logmstar_aper_proj`` (n_gal, 3, 6): log10 aperture stellar mass at the
+      six ``APER6_SMA_KPC`` radii for each of the three ``PROJECTIONS``.
+    - per-projection galaxy shapes/sizes (``*_proj``, shape (n_gal, 3)).
+
+    Masked / non-positive entries become NaN. Halo-level values are constant
+    across a galaxy's three projection rows.
+    """
+    with open(Path(data_dir) / APER_TABLE_NAME, "rb") as f:
+        tab = pickle.load(f)
+
+    def fcol(name):
+        return np.ma.filled(np.ma.asarray(tab[name], dtype=float), np.nan)
+
+    gal = np.asarray(tab["gal_num"]).astype(int)
+    pidx = {p: i for i, p in enumerate(PROJECTIONS)}
+    pj = np.array([pidx.get(str(p), -1) for p in np.asarray(tab["proj"])])
+    in_range = (gal >= 0) & (gal < n_gal) & (pj >= 0)
+
+    out = {
+        "mass_halo": np.full(n_gal, np.nan),
+        "logmh_z0p4": np.full(n_gal, np.nan),
+        "catgrp_id": np.full(n_gal, -1, dtype=int),
+        "logmstar_aper_proj": np.full((n_gal, 3, len(APER6_SMA_KPC)), np.nan),
+    }
+    for c in HALO_PROP_COLS:
+        out[c] = np.full(n_gal, np.nan)
+    shape_name = {"ellipticity": "ellipticity_proj", "PA": "pa_proj",
+                  "r_20_gal": "r20_proj", "r_50_gal": "r50_proj", "r_80_gal": "r80_proj"}
+    for c in GAL_SHAPE_COLS:
+        out[shape_name[c]] = np.full((n_gal, 3), np.nan)
+
+    g = gal[in_range]
+    p = pj[in_range]
+    # halo-level (projection-independent): last write per galaxy wins (constant)
+    mh = fcol("mass_halo")[in_range]
+    out["mass_halo"][g] = mh
+    cid = fcol("catgrp_id")
+    fin = np.isfinite(cid) & (gal >= 0) & (gal < n_gal)
+    out["catgrp_id"][gal[fin]] = cid[fin].astype(int)
+    for c in HALO_PROP_COLS:
+        out[c][g] = fcol(c)[in_range]
+    # projection-dependent aperture masses (log10, drop non-positive)
+    for k, r in enumerate(APER6_SMA_KPC):
+        v = fcol(f"aper_{int(r)}_gal")[in_range]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            out["logmstar_aper_proj"][g, p, k] = np.log10(np.where(v > 0, v, np.nan))
+    for c in GAL_SHAPE_COLS:
+        out[shape_name[c]][g, p] = fcol(c)[in_range]
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        out["logmh_z0p4"] = np.log10(np.where(out["mass_halo"] > 0, out["mass_halo"], np.nan))
+    return out
 
 
 def cog_sigma_dex(index: int, data_dir: Path = DEFAULT_DATA_DIR) -> np.ndarray:
@@ -344,6 +424,10 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
         cols["flag"][i] = bool(z04["flag"])
         cols["test"][i] = bool(z04["test"])
 
+    # merge the per-projection aperture table (exact z=0.4 halo mass, secondary
+    # halo properties, 3 sky projections) by index == gal_num.
+    cols.update(load_aperture_extras(data_dir, n_gal))
+
     tbl = Table(cols)
     # growth summaries (directions doc: f_early, f_late, inter-epoch growth)
     m0 = tbl["logm0_halo"]
@@ -367,12 +451,21 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
         cog_rad_kpc=COG_RAD_KPC.tolist(),
         cog_fit_rmin_kpc=COG_FIT_RMIN_KPC,
         dmah_fit_tmin_gyr=DMAH_FIT_TMIN_GYR,
+        aper6_sma_kpc=APER6_SMA_KPC.tolist(),
+        projections=list(PROJECTIONS),
         mass_unit="log10(Msun)",
         h=H,
         note="logm0_halo = peak mass at latest available snapshot (~z=0.4); "
              "snap 72 mass not in pickle. tXX/zXX = time/redshift when peak "
              "mass first reached XX% of M0. rdm_* fit over R>=cog_fit_rmin_kpc; "
-             "dmah_* = DiffMAH fit over t>=dmah_fit_tmin_gyr (logmp~M0).",
+             "dmah_* = DiffMAH fit over t>=dmah_fit_tmin_gyr (logmp~M0). "
+             "logmh_z0p4 = log10 of the EXACT z=0.4 halo mass (mass_halo, Msun) "
+             "from the aperture table; prefer it over logm0_halo as M0. "
+             "logmstar_aper_proj[gal, proj, r] = log10 aperture M* on "
+             "projections=(xy,xz,yz), radii=aper6_sma_kpc; *_proj cols likewise "
+             "per projection. c_200c/c_to_a_3d/b_to_a_3d/v_sigma_3d/acc_rate are "
+             "3D (projection-independent). catgrp_id = TNG FoF GroupID (for a "
+             "future match to the official DiffMAH SubhaloID catalog).",
     )
     return tbl
 
@@ -422,6 +515,17 @@ def _selftest(data_dir: Path):
     assert np.all(tbl["t50"][v] <= tbl["t75"][v] + 1e-6)
     assert np.all(tbl["t75"][v] <= tbl["t90"][v] + 1e-6)
     assert np.all((tbl["z50"][v] >= tbl["z90"][v] - 1e-6))  # z50 is earlier (higher z)
+    # aperture-table merge: the new xy projection must reproduce the old npy
+    # aperture masses at the shared radii (10,30,50,75,100,150 -> old idx 0-4,6)
+    assert tbl["logmstar_aper_proj"].shape == (60, 3, 6)
+    xy = tbl["logmstar_aper_proj"][:, 0, :]
+    old = np.asarray(tbl["logmstar_aper"])[:, [0, 1, 2, 3, 4, 6]]
+    m = np.isfinite(xy) & np.isfinite(old)
+    assert np.allclose(xy[m], old[m], atol=1e-3), np.nanmax(np.abs(xy - old))
+    # exact z=0.4 halo mass is present and consistent with the MAH peak proxy
+    vm = np.isfinite(tbl["logmh_z0p4"]) & np.isfinite(tbl["logm0_halo"])
+    assert vm.sum() > 50 and np.nanmedian(np.abs(tbl["logmh_z0p4"][vm] - tbl["logm0_halo"][vm])) < 0.3
+    assert (tbl["catgrp_id"] >= 0).sum() > 50
     print("selftest OK")
     print(qc_summary(tbl))
 

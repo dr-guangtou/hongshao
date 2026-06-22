@@ -17,6 +17,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   all-zero bytes, not HDF5. Check magic bytes / load before relying on a file.
 - **CoG / aperture arrays can be object-dtype with `None` bins** (~1/484). Coerce
   to NaN and mask; don't assume clean float arrays.
+- **A 100% id "match" can still be wrong — check the *id system*, not just overlap.**
+  `catgrp_id` (TNG FoF GroupID, 0…4831) matched 3388/3388 into the DiffMAH
+  `halo_id` (global SubhaloID, 0…288404) simply because every small integer
+  exists in both — but it read *satellites* (`halo_id=1` is a satellite of group
+  0, not GroupID 1's central). Always validate a cross-match by a physical
+  quantity (here: the matched `logmp_fit` had r≈0 and was ~2 dex off the known
+  halo mass). GroupID ≠ SubhaloID; mapping between them needs `GroupFirstSub`.
+- **The aperture table's `xy` projection reproduces the old npy aperture masses
+  exactly** — that's the verification that `gal_num` == our `index`. Match a new
+  table to an old one on a shared quantity before trusting the key.
 
 ## Analysis / interpretation
 

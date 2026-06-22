@@ -95,6 +95,14 @@ doc/             # science context, data reference, todo.md, lessons.md
 
 ## Conventions
 
+- **Primary observable = CoG-derived masses.** Always model the
+  aperture/annulus/outskirt stellar masses derived from the 1-D curve of growth
+  (`logmstar_cog` / `logmstar_aper`, from X–Y isophote analysis). This is the
+  observation-relevant quantity, and the end goal is to reproduce the CoG. The
+  direct 2-D `logmstar_aper_proj` masses are physically more accurate (no
+  perfect-ellipse assumption, matters during mergers) but are for
+  **cross-checks only** — the difference is small. Do not switch the modeling
+  target to `*_aper_proj`.
 - English only — in code, comments, commits, and docs.
 - Python: `snake_case` everywhere, never camelCase. Use `uv` for dependencies,
   `ruff` for lint/format.
