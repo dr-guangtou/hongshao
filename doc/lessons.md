@@ -106,6 +106,32 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the shrinkage is irreducible. For generative use, SAMPLE from the predictive —
   the mean-only point estimate is under-dispersed and misses the tails.
 
+## Secondary properties (exp16)
+
+- **"It correlates with formation time" does NOT imply "it's redundant with the
+  MAH."** We expected `c_200c` to add nothing once the DiffMAH params were in the
+  model (it correlates r=0.58 with z50). Wrong: it adds +5% CRPS on DiffMAH and
+  +2.7% even on the full MAH-PCA(4), and is only ~25% MAH-determined. A feature's
+  correlation with the MAH bounds neither its independent information nor its
+  incremental predictive value — measure the incremental value directly (with a
+  shuffle control), don't infer redundancy from a marginal correlation.
+- **Test a secondary feature on top of the *richest* representation you have**, not
+  just the portable one. `c_200c` on top of DiffMAH(4) conflates two things
+  (independent info + DiffMAH smoothing loss); adding it on top of MAH-PCA(4)
+  isolates the genuinely-independent part (+2.7%). This split is exactly what
+  separated the useful property from the redundant one (exp18): `acc_rate` helps
+  on DiffMAH (+0.9%) but vanishes on MAH-PCA (it's MAH detail); `c_200c` survives.
+- **"MAH-independent" ≠ "useful" (exp18).** Two orthogonal questions: (1) is the
+  property determined by the MAH? [R²(P|MAH)] and (2) does it carry leftover info
+  about the target? [partial corr]. 3D halo shape is MAH-independent (R²≈0) yet
+  irrelevant to stellar mass (partial corr ≈0.07); `acc_rate` is the opposite
+  (MAH-determined, R²=0.35). Only `c_200c` scores on both. Always plot both axes.
+- **GBM (trees) is not always the best "ceiling" (exp17).** For a smooth,
+  low-dimensional (~5 features), modest-sample relation, an explicit poly-2 beat
+  the gradient-boosted-trees ceiling (0.0808 vs 0.0837), and a *more* flexible GBM
+  only overfit. Use an analytic poly-2 alongside GBM when probing the nonlinear
+  limit; "flexible model" doesn't guarantee "best approximator" at this scale.
+
 ## Workflow
 
 - Background `uv run` commands buffer stdout through pipes; redirect to a file

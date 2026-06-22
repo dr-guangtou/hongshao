@@ -176,10 +176,23 @@ Cross-experiment plan. Mirrors the phase sequence in
   the emulator generatively (sample N(mu,Sigma)), report reliability diagrams.
   Graduation unblocked.
 
+### Adopted model (decision)
+- **Default mean = linear on `DiffMAH(4) + c_200c`** (exp16/17/18). `c_200c` is
+  portable and adds +5% CRPS; `acc_rate`/3D shape add nothing. The degree-2
+  nonlinearity is real but diffuse (exp17).
+- **Optional richer mean = the BIC-preferred 7-extra-term degree-2 poly**
+  (`logmp²`, `logtc·late`, `early²`, `late·c200c`, `late²`, `logmp·early`,
+  `logmp·late` on top of the linear terms; exp17 `poly2_check`) — expose as an
+  option at graduation, not the default.
+- Scatter = heteroscedastic full covariance (exp14).
+
 ### Next
+- [ ] **fold `c_200c` into the heteroscedastic emulator (exp14)** — does it also
+  sharpen the scatter model / conditional calibration, not just the mean?
 - [ ] **graduate the emulator into `hongshao/`** — a single fit/predict/sample
-  module (linear mean + heteroscedastic full covariance), validated, with a
-  self-check. Expose a `sample()` path (exp15: the model must be used generatively).
+  module: linear mean on `DiffMAH + c_200c` (default) OR the 7-term degree-2 poly
+  (option), + heteroscedastic full covariance, validated, with a self-check.
+  Expose a `sample()` path (exp15: the model must be used generatively).
 - [ ] apply the emulator to an N-body / other-sim halo catalog with DiffMAH fits;
   compare predicted profile distributions (the portability test).
 
@@ -205,7 +218,25 @@ Cross-experiment plan. Mirrors the phase sequence in
   per-galaxy SubhaloID, or 3D positions. Use our own `dmah_*` fits meanwhile.
 
 ## New analyses unlocked by the aperture table
-- [ ] **secondary-property test** — do `c_200c` / 3D shape / `acc_rate` reduce the
-  residual scatter beyond the MAH? (the "test, don't assume" item below, now data-ready)
+- [x] **exp16_secondary_c200c** — does halo concentration help beyond the MAH?
+  **Yes (overturns the prior).** `c_200c` improves CV CRPS +5.0% on portable
+  DiffMAH(4) (0.0882→0.0839) and **+2.7% even on top of MAH-PCA(4)** (0.0850→
+  0.0827); shuffle control collapses (real). It is only ~25% MAH-determined
+  (R²(c|DiffMAH)=0.25), partial corr +0.29..+0.36 with the annuli at fixed MAH
+  (positive at all radii, strongest in the core). `c_200c` is portable (N-body
+  available), so **adopt DiffMAH + c_200c** as the portable feature set.
+- [x] **exp17_c200c_nonlinear** — nonlinear limit of `c_200c` (linear/poly-2/GBM/
+  PySR on DiffMAH+c_200c). It enters **mostly linearly** (GBM ≈ linear, +0.3%);
+  a modest degree-2 bonus exists (poly-2 best, 0.0808 = +3.7% beyond linear+c200c,
+  +8.4% over DiffMAH-only; trees can't beat it). PySR names the interpretable
+  terms: `c_200c²` (10–50 kpc) and `late·c_200c` (50–100 kpc). Limit of `c_200c`
+  ≈ +8% over DiffMAH; nothing beyond degree-2.
+- [x] **exp18_secondary_more** — `acc_rate` + 3D shape, same test. **Only `c_200c`
+  helps.** `acc_rate` is MAH-redundant (+0.9% on DiffMAH, ~0 on MAH-PCA; most
+  MAH-determined, R²=0.35); 3D shape is MAH-independent (R²≈0) but carries no
+  stellar-mass info (gains ~0). "All 4" ≈ `c_200c` alone. Secondary-property axis
+  exhausted: ceiling is DiffMAH + `c_200c`.
+- [ ] does `c_200c` also help the **scatter** model (exp14) / shrink exp15's
+  regression-to-mean by raising R²?
 - [ ] **projection-scatter budget** — quantify projection vs intrinsic halo-to-halo
   scatter per annulus from the 3 projections (refines exp13/14/15's "intrinsic" floor).

@@ -26,13 +26,15 @@ Read those two before proposing analyses.
   deterministic fits. Residual scatter is a result, not a bug.
 - **Null models matter.** Compare against final-mass-only and shuffled-MAH
   controls before claiming an assembly signal.
-- **Expect residual scatter; don't over-explain it.** Do not assume secondary
-  halo properties will reduce it without evidence. Mind the levels: concentration
-  and accretion rate are largely *determined by the MAH*, so once the MAH is
-  compressed they likely add little (exp06: using the full MAH plateaus at the
-  same ~23% as a few summaries). Genuinely independent information (initial
-  conditions, large-scale environment / tidal field) might help but is hard to
-  obtain here. The stellar profiles are also single random 2-D projections of
+- **Expect residual scatter; don't over-explain it — but test, don't assume.**
+  Do not assume secondary halo properties will reduce it without evidence, and do
+  not assume they *won't* either. We expected concentration to be redundant with
+  the MAH; exp16 showed otherwise — `c_200c` is only ~25% MAH-determined and adds
+  a real, independent +2.7% CRPS even on top of the full MAH-PCA(4) (+5% on the
+  portable DiffMAH), and it is itself portable. So: measure each secondary
+  property's incremental value (with a shuffle control), don't reason about it
+  from "it correlates with formation time." Genuinely independent information
+  (concentration, and possibly initial conditions / environment) can help. The stellar profiles are also single random 2-D projections of
   triaxial galaxies, adding noise we cannot remove from this dataset. Goal: a
   phenomenological model capturing the assembly-driven part, not zero scatter.
 
