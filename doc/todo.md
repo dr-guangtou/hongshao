@@ -162,9 +162,24 @@ Cross-experiment plan. Mirrors the phase sequence in
   **Decision:** adopt Sigma(X)=D(X) R D(X). The Ultimate-SHMR emulator is now
   specified: linear mean + heteroscedastic full covariance on portable DiffMAH.
 
+## Phase 13 — outskirt-bias diagnostic
+- [x] **exp15_outskirt_bias** — investigate the +0.2-0.4 dex over-prediction at
+  the low-mass end of M*[50-100] seen in exp13's truth-vs-pred figure.
+  **Result:** it is **regression to the mean, not a defect.** The residual-vs-true
+  slope is exactly -(1-R^2) (measured -0.190 vs theory -0.190); binned by
+  *predicted* value the reliability slope is +0.999 with <0.06 dex deviation, so
+  the mean is unbiased in feature space (a nonlinear mean doesn't change it). The
+  data is clean (no annulus floor). The low tail is the high-late, high-scatter
+  population (exp14). Mean-only predictions are under-dispersed (std 0.371 vs
+  0.412) and recover only 5% of the bottom-decile tail; **sampling from the
+  predictive recovers it (9% vs true 10%).** **Decision:** no model change; use
+  the emulator generatively (sample N(mu,Sigma)), report reliability diagrams.
+  Graduation unblocked.
+
 ### Next
-- [ ] **graduate the emulator into `hongshao/`** — a single fit/predict module
-  (linear mean + heteroscedastic full covariance), validated, with a self-check.
+- [ ] **graduate the emulator into `hongshao/`** — a single fit/predict/sample
+  module (linear mean + heteroscedastic full covariance), validated, with a
+  self-check. Expose a `sample()` path (exp15: the model must be used generatively).
 - [ ] apply the emulator to an N-body / other-sim halo catalog with DiffMAH fits;
   compare predicted profile distributions (the portability test).
 

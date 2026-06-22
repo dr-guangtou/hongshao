@@ -85,6 +85,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 - `late` (recent-accretion index) is the single axis that governs the outskirts:
   it carries the mean nonlinearity (exp12 late^2) *and* the excess scatter
   (exp14). Recent accretion both boosts and destabilizes the outer envelope.
+- **A predictor unbiased in X looks biased when you bin residuals by the noisy
+  truth Y** (exp15). E[pred - Y | Y] has slope exactly -(1-R^2) — regression to
+  the mean — present for the mean OR sampled predictions, because the truth on
+  the x-axis contains the noise being conditioned on. The +0.3 dex low-end "bias"
+  that looked alarming was this artifact (measured slope matched -(1-R^2) to
+  three decimals). Diagnose with a *reliability diagram* (bin by PREDICTED, plot
+  mean true): slope 1.0 -> the mean is fine. The only cure is more explained
+  variance (raise R^2), not a better functional form; when R^2 is at its ceiling
+  the shrinkage is irreducible. For generative use, SAMPLE from the predictive —
+  the mean-only point estimate is under-dispersed and misses the tails.
 
 ## Workflow
 
