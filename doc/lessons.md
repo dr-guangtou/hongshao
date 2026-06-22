@@ -62,6 +62,30 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   (~3–5 min); afterwards a full run (8 deterministic serial fits, n=2539) is
   ~100 s.
 
+## Scatter / calibration (exp14)
+
+- **Marginal calibration can be fine while conditional calibration is badly
+  off.** The homoscedastic emulator's overall interval coverage matched nominal
+  (so marginal CRPS barely moved), yet split by predicted noisiness it covered
+  ~80% of clean halos and ~60% of noisy ones inside the 68% interval. Always
+  check coverage *within noisiness/feature bins*, not just the aggregate — a
+  conditional density model lives or dies on per-object honesty.
+- **Heteroscedasticity ≠ sharpness.** Modeling feature-dependent variance gave
+  almost no marginal-CRPS gain (+1.1%) but +0.24 nats joint log-score and a ~10×
+  smaller conditional-coverage gap. Judge a scatter model by the joint score and
+  conditional calibration, not marginal CRPS.
+- **Fit the log-variance by Gaussian MLE, not by regressing log(resid^2).** The
+  latter is biased (E[log r^2] = log sigma^2 - 1.27 for a Gaussian). Minimizing
+  0.5*sum[s + r^2 e^{-s}] with s = log-variance (closed-form gradient, L-BFGS) is
+  exact, ~instant, and easy to regularize (ridge the slopes, not the intercept).
+- **Diagnose tails with PIT before adding a fancy likelihood.** Once the variance
+  was made halo-dependent the PIT was flat (no U-shape) — the Gaussian was
+  adequate and a Student-t/flow would have been wasted complexity. The defect was
+  heteroscedasticity, not non-Gaussian tails.
+- `late` (recent-accretion index) is the single axis that governs the outskirts:
+  it carries the mean nonlinearity (exp12 late^2) *and* the excess scatter
+  (exp14). Recent accretion both boosts and destabilizes the outer envelope.
+
 ## Workflow
 
 - Background `uv run` commands buffer stdout through pipes; redirect to a file

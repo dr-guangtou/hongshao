@@ -146,12 +146,27 @@ Cross-experiment plan. Mirrors the phase sequence in
   the portable params; the outskirt lever is the scatter model, not richer
   features.
 
+## Phase 12 — scatter model
+- [x] **exp14_scatter_model** — heteroscedastic residual covariance for the
+  emulator: per-aperture log-linear sigma_j(X)=exp(gamma_j.[1,X]) (Gaussian MLE,
+  ridge on slopes) + fixed correlation R, so Sigma(X)=D(X) R D(X). **Result:**
+  the scatter is strongly heteroscedastic, driven by **`late`** (recent
+  accretion; +0.16..+0.22 per sigma for the outer annuli; predicted sigma spans
+  3.5-5.8x). Modeling it barely changes marginal CRPS (0.0883->0.0873) but
+  improves the **joint NLL +0.24 nats** and fixes **conditional calibration**:
+  the homoscedastic model over-covers clean halos (0.78-0.82) and under-covers
+  noisy ones (0.60-0.64); heteroscedastic is flat ~0.68 (coverage gap
+  0.19->0.02, ~10x). PIT shows the Gaussian is adequate once the variance is
+  halo-dependent (no heavy tails -> no Student-t needed). `late` is *both* where
+  the mean nonlinearity lives (exp12 late^2) and where the scatter concentrates.
+  **Decision:** adopt Sigma(X)=D(X) R D(X). The Ultimate-SHMR emulator is now
+  specified: linear mean + heteroscedastic full covariance on portable DiffMAH.
+
 ### Next
-- [ ] **scatter modeling** — refine the residual covariance (heteroscedasticity,
-  non-Gaussianity) under the exp07 suite; the conditional-Gaussian mean is settled
-  and the features are portable.
+- [ ] **graduate the emulator into `hongshao/`** — a single fit/predict module
+  (linear mean + heteroscedastic full covariance), validated, with a self-check.
 - [ ] apply the emulator to an N-body / other-sim halo catalog with DiffMAH fits;
-  compare predicted profile distributions.
+  compare predicted profile distributions (the portability test).
 
 ### Later
 - [ ] secondary halo properties — *test*, don't assume: MAH-derived ones
