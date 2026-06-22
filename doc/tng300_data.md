@@ -21,6 +21,7 @@ of 1-D stellar mass profiles.
 | File / dir | What it is |
 |---|---|
 | `galaxies_tng300_072_mah_hmc.txt` | **Pickle** (not text) — list of 3,388 main-branch MAHs. |
+| `galaxies_tng300_072_hmc_13_aperture_mass.txt` | **Pickle** (QTable, not text) — 3,388 galaxies × 3 projections: exact z=0.4 halo mass, secondary halo properties, per-projection aperture masses + galaxy shapes. See §3b. |
 | `save_tng300_072_hist_aper_dir/` | 3,388 `.npy` — aperture masses + curves of growth (CoG). |
 | `save_tng300_072_hist_prof/` | 3,388 `.npy` — isophote profile tables + quality flags. |
 | `diffmah/diffmah_tng.h5` | Public DiffMAH fits for the full TNG halo set (288,405 halos). |
@@ -67,8 +68,14 @@ table (`tab2['mass_halo']`) **which is not in this drop**. We therefore define
 
 For the 3,249 galaxies reaching snap 71 this is an excellent approximation. For
 the 132 truncated ones (especially ~92 that fall below `10^13 Msun`) it
-underestimates the true z=0.4 mass — these are excluded by the `use` cut. **To
-fix this properly we need the snapshot-72 halo masses (`mass_halo`).**
+underestimates the true z=0.4 mass — these are excluded by the `use` cut.
+
+> **Resolved (2026-06-22).** The aperture-mass table (§3b) supplies the exact
+> snapshot-72 halo mass `mass_halo`. The table now carries `logmh_z0p4 =
+> log10(mass_halo)`; over the `use` sample it differs from the `logm0_halo`
+> proxy by only **+0.004 dex (median), 0.020 dex scatter** — confirming the
+> proxy was excellent, and providing the exact value going forward. Prefer
+> `logmh_z0p4` as M0.
 
 ---
 
@@ -93,6 +100,51 @@ Five redshift keys: `z0p4, z0p7, z1, z1p5, z2`. Each holds:
 
 These aperture masses (especially the 50–100 kpc range) are the core
 galaxy-side observable for the first experiment.
+
+---
+
+## 3b. Per-projection aperture-mass table — `galaxies_tng300_072_hmc_13_aperture_mass.txt`
+
+A pickled astropy **QTable**, **10,164 rows = 3,388 galaxies × 3 sky
+projections** (`proj` ∈ {`xy`, `xz`, `yz`}). Keyed by `gal_num` (**== our
+`index`**, verified: its `xy` aperture masses reproduce the §3 npy masses
+exactly). Loaded and merged by `tng_data.load_aperture_extras()`.
+
+```python
+import pickle
+with open(".../galaxies_tng300_072_hmc_13_aperture_mass.txt", "rb") as f:
+    t = pickle.load(f)          # QTable, 10164 rows
+```
+
+Columns (masses are **linear Msun**):
+
+| column | meaning |
+|---|---|
+| `gal_num` | drop index 0…3387 (== our `index`) |
+| `proj` | sky projection: `xy` / `xz` / `yz` |
+| `catgrp_id` | TNG FoF **GroupID** (constant over a galaxy's 3 rows) — see §5 |
+| `mass_halo` | **exact z=0.4 halo mass** (Msun) — resolves the §2 M0 gap |
+| `aper_{10,30,50,75,100,150}_gal` | aperture stellar mass (Msun), 6 radii — **per projection** |
+| `c_200c` | halo concentration (3D, projection-independent) |
+| `c_to_a_3d`, `b_to_a_3d` | 3D halo axis ratios |
+| `v_sigma_3d` | 3D velocity dispersion |
+| `acc_rate` | halo accretion rate |
+| `ellipticity`, `PA` | projected galaxy shape (per projection) |
+| `r_20_gal`, `r_50_gal`, `r_80_gal` | projected 20/50/80% light radii (per projection) |
+
+**What it adds.** (1) the exact M0; (2) **secondary halo properties**
+(`c_200c`, 3D shape, `acc_rate`) to *test* whether they reduce residual scatter
+beyond the MAH; (3) **3 projections**, which directly measure the projection
+contribution to scatter — found to be small (≈0.007 dex at the 100 kpc
+cumulative aperture, ≈0.037 dex for the 50–100 kpc annulus, vs the ≈0.17 dex
+total outskirt residual), i.e. the outskirt scatter is **mostly genuine
+halo-to-halo variation, not projection** (caveat: 3 orthogonal axes undersample
+orientation). It does **not** carry the DiffMAH parameters (§5).
+
+In the assembled table these become: `mass_halo`/`logmh_z0p4`, `catgrp_id`, the
+five 3D halo properties, `logmstar_aper_proj` (n, 3, 6) on
+`projections=(xy,xz,yz)` × `aper6_sma_kpc=[10,30,50,75,100,150]`, and the
+per-projection `ellipticity_proj`/`pa_proj`/`r20_proj`/`r50_proj`/`r80_proj`.
 
 ---
 
@@ -127,11 +179,21 @@ Public products from the DiffMAH (arXiv:2105.05859) and Diffstar
 - `tng_diffstar_fits_default.h5` (288,405): Diffstar SFH parameters in
   unbounded form (`u_lgmcrit`, `u_lgy_at_mcrit`, `u_qt`, …), keyed by `halo_id`.
 
-**Cross-match gap:** these are keyed by `halo_id`, but our 3,388 galaxies are
-identified only by their `0…3387` drop index — **there is no `halo_id` in the
-npy/pickle data**. Linking our sample to the DiffMAH/Diffstar fits needs a
-subhalo/halo ID mapping we do not yet have. Until then, halo-side features come
-from the MAH pickle directly. (These files are optional for experiment 1.)
+**Cross-match gap (id-system mismatch).** Both files are keyed by `halo_id` =
+the global TNG **SubhaloID** (0…288404, sorted = row index; `halo_id=0` is the
+most massive group's *central*, `halo_id=1` its first *satellite*, …). The
+aperture table's `catgrp_id` is the TNG FoF **GroupID** (mass-ranked, 0…4831).
+These are **different numbering systems**, so equating the integers
+(`catgrp_id == halo_id`) cross-matches the *wrong* objects (it lands on
+satellites — e.g. our `catgrp_id=1` central is at `halo_id=29051`, not
+`halo_id=1`). A by-mass match of our galaxies to the catalog's centrals
+(`upid==-1`) is only approximate (r≈0.96; ranks shift because our 3,388 are a
+subset of ~3,727 massive centrals). **An exact match needs the TNG
+`GroupFirstSub` array (GroupID → central SubhaloID), the SubhaloID of each
+galaxy, or 3D positions** (the catalog has `x,y,z`). Until then we use our own
+DiffMAH fits (`dmah_*`, exp10) and keep `catgrp_id` in the table for the
+eventual match. (`log_mah_sim` in the catalog sits ~0.2 dex below the pickle
+peak history for the same halo — a mass-*definition* difference, same shape.)
 
 ---
 
@@ -183,8 +245,13 @@ Columns (stellar & halo masses are `log10(Msun)`):
 | `dlogm_z2_z1`, `dlogm_z1_z0p4` | inter-epoch halo growth |
 | `t50/t75/t90` | cosmic time (Gyr) peak mass first reached 50/75/90% of M0 |
 | `z50/z75/z90` | formation redshifts (from `t*` via TNG cosmology) |
-| `logmstar_aper` (7) | stellar mass in `SMA_KPC` apertures, z=0.4 |
+| `logmstar_aper` (7) | stellar mass in `SMA_KPC` apertures, z=0.4 (= `xy` projection) |
 | `logmstar_cog` (24) | curve of growth at `COG_RAD_KPC`, z=0.4 |
+| `mass_halo`, `logmh_z0p4` | **exact** z=0.4 halo mass (Msun; and its log10) — §3b. Prefer `logmh_z0p4` as M0 |
+| `catgrp_id` | TNG FoF GroupID (int, -1 if missing); for the future DiffMAH match — §5 |
+| `c_200c`, `c_to_a_3d`, `b_to_a_3d`, `v_sigma_3d`, `acc_rate` | secondary 3D halo properties (projection-independent) — §3b |
+| `logmstar_aper_proj` (3, 6) | log10 aperture M* on `projections × aper6_sma_kpc` — §3b |
+| `ellipticity_proj`, `pa_proj`, `r20_proj`, `r50_proj`, `r80_proj` (3) | projected galaxy shape/size per projection — §3b |
 | `rdm_*` | radial-DiffMAH profile fit (`logMstar0`, `beta_in`, `beta_out`, `R_c`, `Delta`, `rms`); see `hongshao/profiles.py`. Fit over `R ≥ COG_FIT_RMIN_KPC` (5 kpc; inner core marginally resolved — exp07), so `rdm_logMstar0` is the normalization at the innermost fitted radius and reconstructions must use the same inner cut. Skip with `build_dataset(fit_profiles=False)` |
 | `flag`, `test` | profile quality flags |
 | `valid_mah`, `latest_snap`, `n_mah_pts` | MAH availability |
@@ -203,9 +270,13 @@ threshold is a tunable module constant.
 
 ## 8. Known issues / TODO before / during experiment 1
 
-1. **Missing snap-72 halo mass (`mass_halo`)** — request from data producer to
-   define M0 exactly for all galaxies (currently approximated by snap-71 peak).
-2. **No `halo_id` cross-match** to the DiffMAH/Diffstar HDF5 files.
+1. ~~**Missing snap-72 halo mass (`mass_halo`)**~~ — **resolved (§3b).** The
+   aperture table supplies the exact z=0.4 mass (`logmh_z0p4`); it matches the
+   snap-71 peak proxy to +0.004 dex (median) over the `use` sample.
+2. **DiffMAH/Diffstar cross-match is an id-system mismatch, not a missing id**
+   (§5): `catgrp_id` (GroupID) ≠ `halo_id` (SubhaloID). Need `GroupFirstSub`,
+   per-galaxy SubhaloID, or 3D positions for an exact link. We use our own
+   `dmah_*` fits meanwhile.
 3. **`map_tng100_hist_stellar.hdf5` is corrupted** (all zeros) — re-fetch if it
    is actually needed; not required for experiment 1.
 4. ~~No verified full snapshot→redshift table~~ — **resolved.** Cosmic times are
