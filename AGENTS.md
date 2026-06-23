@@ -14,6 +14,22 @@ the goal and `doc/` for the scientific source of truth:
 
 Read those two before proposing analyses.
 
+## Scope — what HongShao is and isn't
+
+HongShao predicts **central-galaxy stellar masses and profiles from halos** (the
+Ultimate SHMR), and nothing downstream of that. In scope: the halo→galaxy map —
+features (DiffMAH + `c_200c`), the mean/scatter emulator (`hongshao/emulator.py`),
+its generative sampling, and a thin, physically-labeled **deformation layer**
+(`hongshao/forward.py`) that lets an external analysis tune the relation. That
+deformation layer is the **hand-off boundary**: it outputs (deformed) stellar
+masses/profiles for a halo catalog, full stop.
+
+Out of scope (do NOT build here): weak-lensing or clustering predictions,
+summary-statistic estimators, likelihoods, or samplers. Those need particle
+data / pre-computed catalogs and a separate emulator each, and belong in a
+distinct inference repo that *consumes* HongShao's predictions. Keep HongShao a
+clean, portable SHMR library — don't let it grow into an inference framework.
+
 ## How to work here
 
 - **Research mindset.** Expect exploration, false starts, and throwaway code.
