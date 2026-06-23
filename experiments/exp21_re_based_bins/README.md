@@ -56,6 +56,26 @@ Richer-MAH test — mean CV CRPS [dex] and gain over DiffMAH:
   features, so PCA's compression regularizes the CV fit (raw-MAH overfits
   slightly). Both sit at the ~1% ceiling.
 
+## Value over a plain current-mass SHMR
+**Yes — the emulator beats a `M_halo(z=0.4)`-only relation at every radius,
+including the hard outskirts, and roughly halves the scatter a plain SHMR
+leaves there.** Per-bin CV CRPS [dex] and R² (variance explained):
+
+| outskirt bin | M0 only | DiffMAH(4) | DiffMAH+c_200c | CRPS gain | R² |
+|---|---|---|---|---|---|
+| kpc 50–100 | 0.128 | 0.098 | **0.093** | **+27%** | 0.52 → 0.74 |
+| Re 6–9 | 0.106 | 0.079 | **0.074** | **+30%** | 0.56 → 0.78 |
+| Re 4–6 | 0.106 | 0.078 | **0.073** | **+31%** | 0.51 → 0.75 |
+
+- Across **all** bins the gain is **+22% to +36%** CRPS over M0-only (largest in
+  the core, but the outskirts gain ~+27–31%). In variance terms, DiffMAH+c_200c
+  **removes ~½ of the residual scatter** a current-mass SHMR leaves in the
+  outskirts (50–100 kpc: 48% unexplained → 26%).
+- **Assembly history does the bulk of it**: M0→DiffMAH is +23–25%, and `c_200c`
+  adds a further ~4–5 points (+27–31% total). So "the outskirts are hard" is
+  relative to a *good* model — they are far better predicted than the textbook
+  current-mass SHMR allows.
+
 ## Decision
 - **Keep DiffMAH(4) + c_200c as the feature set** — it is portable *and* at the
   MAH information ceiling for the profile, outskirts included. Do not adopt

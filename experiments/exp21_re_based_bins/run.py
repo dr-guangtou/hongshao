@@ -237,6 +237,26 @@ for name in ("MAH-PCA(8)+c200c", "raw-MAH(18)+c200c"):
 print("  (exp13: for the kpc 50-100 bin, richer MAH added only +0.9% — DiffMAH at ceiling)")
 
 
+# %% ---- (3) value over a plain current-halo-mass SHMR -----------------------
+# How much does assembly history (DiffMAH) + concentration (c_200c) buy over a
+# simple M_halo(z=0.4) -> M* relation, especially in the outskirts?
+BASE_SETS = {"M0 only": M0[g][:, None], "DiffMAH(4)": dmah[g], "DiffMAH(4)+c200c": X_dmc}
+print("\n[3] information gained over a plain M_halo(z=0.4)->M* relation (CV CRPS [dex] / R^2):")
+base_res = {}
+for tag, Yt, names in [("Re", Y_re, RE_NAMES), ("kpc", Y_kpc, KPC_NAMES)]:
+    bc = {nm: feature_cv(Yt, X) for nm, X in BASE_SETS.items()}
+    base_res[tag] = bc
+    m0c = bc["M0 only"][0]
+    print(f"  -- {tag} bins --")
+    for nm in BASE_SETS:
+        c, r = bc[nm]
+        print(f"    {nm:16s} " + "  ".join(f"{names[j]}={c[j]:.3f}/{r[j]:+.2f}"
+                                           for j in range(len(names))))
+    dmc = bc["DiffMAH(4)+c200c"][0]
+    print("    CRPS gain over M0-only: " + "  ".join(
+        f"{names[j]}={100*(m0c[j]-dmc[j])/m0c[j]:+.0f}%" for j in range(len(names))))
+
+
 # %% ---- FIGURE ---------------------------------------------------------------
 fig, (axA, axB, axC) = plt.subplots(1, 3, figsize=(14.5, 4.3))
 medRe = np.median(Re_g)
@@ -267,6 +287,20 @@ fig.suptitle(f"exp21 — Re-based emulator (n={N}); 6 bins, mean CRPS {crps_re.m
 fig.tight_layout()
 save_fig(fig, FIGDIR / "exp21_re_emulator")
 
+# FIGURE 2: value of assembly info over a plain current-mass SHMR
+fig2, axes = plt.subplots(1, 2, figsize=(13.0, 4.3))
+for ax, tag, names in [(axes[0], "Re", RE_NAMES), (axes[1], "kpc", KPC_NAMES)]:
+    bc = base_res[tag]; xx = np.arange(len(names)); w = 0.26
+    for i, nm in enumerate(BASE_SETS):
+        ax.bar(xx + (i - 1) * w, bc[nm][0], w, color=OKABE_ITO[[7, 1, 2][i]], label=nm)
+    ax.set_xticks(xx); ax.set_xticklabels(names, rotation=30, fontsize=7, ha="right")
+    ax.set_ylabel("CV CRPS [dex]"); ax.set_xlabel(f"{tag}-based bin")
+    ax.set_title(f"{tag} bins"); ax.legend(fontsize=7)
+fig2.suptitle("exp21 — outskirt prediction beats a plain M_halo(z=0.4) SHMR; "
+              "DiffMAH+c_200c removes much of the M0-only scatter", fontsize=10)
+fig2.tight_layout()
+save_fig(fig2, FIGDIR / "exp21_baseline_value")
+
 
 # %% ---- save outputs --------------------------------------------------------
 OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -285,7 +319,16 @@ write_manifest(OUTDIR, params={
     "crps_kpc_same_sample": float(crps_kpc.mean()),
     "mahpca_gain_pct": float(100 * (base.mean() - fc["MAH-PCA(8)+c200c"][0].mean()) / base.mean()),
     "rawmah_gain_pct": float(100 * (base.mean() - fc["raw-MAH(18)+c200c"][0].mean()) / base.mean()),
-    "rawmah_gain_outer_two": (base[-2:] - fc["raw-MAH(18)+c200c"][0][-2:]).tolist()})
+    "rawmah_gain_outer_two": (base[-2:] - fc["raw-MAH(18)+c200c"][0][-2:]).tolist(),
+    "outskirt_value_over_M0only": {
+        "Re_6-9Re": {"m0_crps": float(base_res["Re"]["M0 only"][0][-1]),
+                     "dmc_crps": float(base_res["Re"]["DiffMAH(4)+c200c"][0][-1]),
+                     "m0_r2": float(base_res["Re"]["M0 only"][1][-1]),
+                     "dmc_r2": float(base_res["Re"]["DiffMAH(4)+c200c"][1][-1])},
+        "kpc_50-100": {"m0_crps": float(base_res["kpc"]["M0 only"][0][3]),
+                       "dmc_crps": float(base_res["kpc"]["DiffMAH(4)+c200c"][0][3]),
+                       "m0_r2": float(base_res["kpc"]["M0 only"][1][3]),
+                       "dmc_r2": float(base_res["kpc"]["DiffMAH(4)+c200c"][1][3])}}})
 print(f"\nwrote figure -> {FIGDIR}\nwrote outputs -> {OUTDIR}")
 print(f"\n[verdict] Re emulator (6 bins): CRPS {crps_re.mean():.4f}, NLL {nll_re:+.3f}; "
       f"richer MAH over DiffMAH: PCA "
