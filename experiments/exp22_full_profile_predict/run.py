@@ -56,16 +56,22 @@ t = Table.read(TABLE); t = t[t["use"]]
 if NMAX:
     t = t[:NMAX]
 cog = np.asarray(t["logmstar_cog"], float)             # log10 M(<R), (N,24)
+aper = np.asarray(t["logmstar_aper"], float)           # 7 fixed kpc apertures (truth targets)
 dmah = np.column_stack([np.asarray(t[c], float) for c in
                         ("dmah_logmp", "dmah_logtc", "dmah_early", "dmah_late")])
 c200 = np.asarray(t["c_200c"], float)
 rad = COG_RAD_KPC[:-1]                                  # 23 radii (last = anchor)
 NR = len(rad)
 
+
+def _ann(a_o, a_i):
+    return np.log10(np.clip(10.0 ** a_o - 10.0 ** a_i, 1.0, None))
+
+
 logMtot = cog[:, -1]                                    # log M(<148 kpc) = profile anchor
 shape = (cog - logMtot[:, None])[:, :-1]               # (N,23) CoG shape, total divided out
 g = np.isfinite(cog).all(1) & np.isfinite(dmah).all(1) & np.isfinite(c200)
-shape, cog, logMtot = shape[g], cog[g], logMtot[g]
+shape, cog, logMtot, aper = shape[g], cog[g], logMtot[g], aper[g]
 X = np.column_stack([dmah[g], c200[g]])
 N = len(X)
 cog_true = cog[:, :NR]                                  # true CoG at the 23 radii
@@ -114,7 +120,9 @@ def cv(k=5, seed=0):
     order = np.random.default_rng(seed).permutation(N)
     MU = np.full((N, NR), np.nan); SIG = np.full((N, NR), np.nan)         # full model
     MUb = np.full((N, NR), np.nan); SIGb = np.full((N, NR), np.nan)       # baseline
+    MUr = np.full((N, NR), np.nan)                                        # repr (true theta)
     PRED = np.full((N, K), np.nan); TRUE = np.full((N, K), np.nan)        # PC scores (oof)
+    DIR = np.full((N, 4), np.nan)                                         # direct apertures
     for fold in np.array_split(order, k):
         tr = np.setdiff1d(np.arange(N), fold)
         sh_tr = shape[tr]; mu_sh = sh_tr.mean(0)
@@ -129,13 +137,33 @@ def cv(k=5, seed=0):
         A = np.column_stack([np.ones(NR), V.T])                           # (23,K+1)
         MU[fold] = mu_te @ A.T + mu_sh
         SIG[fold] = np.sqrt(np.einsum("rk,nkl,rl->nr", A, Sig_te, A))
+        # representation-only: reconstruct from the TRUE compressed vector (no halo)
+        MUr[fold] = np.column_stack([logMtot[fold], S_te]) @ A.T + mu_sh
         # baseline: predict logMtot only, assume mean shape + its full scatter
         MUb[fold] = mu_te[:, 0:1] + mu_sh[None, :]
         SIGb[fold] = np.sqrt(sig_te[:, 0:1] ** 2 + sh_tr.var(0)[None, :])
-    return MU, SIG, MUb, SIGb, PRED, TRUE
+        # direct emulator: predict the 4 apertures straight from X (graduated approach)
+        DIR[fold] = fit_predict(X[tr], _apertures(cog[tr]), X[fold])[0]
+    return MU, SIG, MUb, SIGb, MUr, PRED, TRUE, DIR
 
 
-MU, SIG, MUb, SIGb, PRED, TRUE = cv()
+# %% ---- derived aperture/outskirt masses (the graduated-emulator targets) ----
+APER_KPC = np.array([10.0, 30.0, 50.0, 100.0])
+ANAMES = ["<10", "10-30", "30-50", "50-100"]
+
+
+def _apertures(cog_curve):
+    """The 4 graduated targets [<10, 10-30, 30-50, 50-100] from a log CoG (N,24/23)."""
+    rr = COG_RAD_KPC[:cog_curve.shape[1]]
+    m = np.array([[10.0 ** np.interp(rk, rr, c) for rk in APER_KPC] for c in cog_curve])
+    Y = np.empty((len(cog_curve), 4))
+    Y[:, 0] = np.log10(m[:, 0])
+    for k in range(1, 4):
+        Y[:, k] = np.log10(np.clip(m[:, k] - m[:, k - 1], 1.0, None))
+    return Y
+
+
+MU, SIG, MUb, SIGb, MUr, PRED, TRUE, DIR = cv()
 crps_full = crps_gaussian(cog_true, MU, SIG).mean(0)             # per radius (23,)
 crps_base = crps_gaussian(cog_true, MUb, SIGb).mean(0)
 rms_full = np.sqrt(((MU - cog_true) ** 2).mean(0))
@@ -146,10 +174,42 @@ print(f"\n[profile prediction] mean per-radius CRPS: full {crps_full.mean():.4f}
       f"({100*(crps_base.mean()-crps_full.mean())/crps_base.mean():+.1f}%)")
 print(f"  reconstruction RMS (mean over radii) = {rms_full.mean():.4f} dex; "
       f"overall coverage 50/68/90/95 = {'/'.join(f'{c:.2f}' for c in cov_full)}")
-print(f"  per-PC out-of-fold R^2 (halo-predictability of each shape mode): "
+print("  per-PC out-of-fold R^2 (halo-predictability of each shape mode): "
       + "  ".join(f"PC{k+1}={r2_pc[k]:+.2f}" for k in range(K)))
 print(f"  -> total mass is strongly predicted; shape modes only weakly "
       f"(value of predicting shape = {100*(crps_base.mean()-crps_full.mean())/crps_base.mean():+.1f}% per-radius CRPS)")
+
+
+# %% ---- (2) derive the graduated apertures from the reconstructed CoG --------
+# The user's question: compute the 4 graduated targets from the reconstructed
+# profile and look for bias. Three reconstructions: TRUE CoG (truth), the
+# halo-PREDICTED CoG (profile route), and the TRUE compressed vector (the K-mode
+# representation, no halo) to separate compression bias from prediction bias.
+Atrue = _apertures(cog_true)
+Apred = _apertures(MU)
+Arepr = _apertures(MUr)
+# consistency: CoG-derived truth vs the actual logmstar_aper targets (exp19)
+Areal = np.column_stack([aper[:, 0], _ann(aper[:, 1], aper[:, 0]),
+                         _ann(aper[:, 2], aper[:, 1]), _ann(aper[:, 4], aper[:, 2])])
+print(f"\n[2] derived aperture/outskirt masses — bias check "
+      f"(CoG-derived vs logmstar_aper RMS = {np.sqrt(((Atrue-Areal)**2).mean()):.3f} dex)")
+print(f"  {'aperture':9s} {'repr bias':>9s} {'pred bias':>9s} {'pred slope':>10s} "
+      f"{'direct slope':>12s} {'-(1-R2)':>8s} {'pred RMS':>8s} {'direct RMS':>10s}")
+slopes = np.zeros((4, 2))
+for j in range(4):
+    bias_repr = float(np.mean(Arepr[:, j] - Atrue[:, j]))
+    bias_pred = float(np.mean(Apred[:, j] - Atrue[:, j]))
+    sl_pred = float(np.polyfit(Atrue[:, j], Apred[:, j] - Atrue[:, j], 1)[0])
+    sl_dir = float(np.polyfit(Atrue[:, j], DIR[:, j] - Atrue[:, j], 1)[0])
+    r2 = 1.0 - np.mean((Apred[:, j] - Atrue[:, j]) ** 2) / Atrue[:, j].var()
+    rms_pred = float(np.sqrt(np.mean((Apred[:, j] - Atrue[:, j]) ** 2)))
+    rms_dir = float(np.sqrt(np.mean((DIR[:, j] - Atrue[:, j]) ** 2)))
+    slopes[j] = [sl_pred, sl_dir]
+    print(f"  {ANAMES[j]:9s} {bias_repr:+9.4f} {bias_pred:+9.4f} {sl_pred:+10.3f} "
+          f"{sl_dir:+12.3f} {-(1-r2):+8.3f} {rms_pred:8.4f} {rms_dir:10.4f}")
+print("  repr bias ~0 => compression unbiased; pred slope ~ -(1-R2) ~ direct slope")
+print("  => the 'bias' is regression to the mean (exp15), NOT a reconstruction defect, "
+      "and it is the SAME as the direct emulator. Use the model generatively (sample).")
 
 
 # %% ---- FIGURE --------------------------------------------------------------
@@ -189,6 +249,39 @@ fig.tight_layout()
 save_fig(fig, FIGDIR / "exp22_full_profile")
 
 
+# FIGURE 2: derived-aperture bias = regression to the mean (not a recon defect)
+def _binmed(xv, yv, nb=10):
+    e = np.quantile(xv, np.linspace(0, 1, nb + 1)); cen, med = [], []
+    for a, b in zip(e[:-1], e[1:]):
+        m = (xv >= a) & (xv <= b)
+        if m.sum() >= 15:
+            cen.append(np.median(xv[m])); med.append(np.median(yv[m]))
+    return np.array(cen), np.array(med)
+
+
+fig2, ax2 = plt.subplots(1, 4, figsize=(15.0, 3.9), sharey=True)
+for j in range(4):
+    a = ax2[j]; yt = Atrue[:, j]; lo, hi = np.percentile(yt, [2, 98])
+    a.axhline(0, color="0.6", lw=0.8)
+    for Yd, c, lab in [(Apred, OKABE_ITO[2], "profile route"),
+                       (DIR, OKABE_ITO[5], "direct emulator"),
+                       (Arepr, OKABE_ITO[0], "representation (true θ)")]:
+        cen, med = _binmed(yt, Yd[:, j] - yt)
+        a.plot(cen, med, "-o", color=c, ms=3, lw=1.3, label=lab)
+    r2 = 1.0 - np.mean((Apred[:, j] - yt) ** 2) / yt.var(); ybar = yt.mean()
+    xx = np.linspace(lo, hi, 40)
+    a.plot(xx, -(1 - r2) * (xx - ybar), "k--", lw=1.2, label=r"$-(1-R^2)(y-\bar y)$")
+    a.set_xlim(lo, hi); a.set_ylim(-0.45, 0.45)
+    a.set_title(f"{ANAMES[j]} kpc"); a.set_xlabel("true log mass")
+    if j == 0:
+        a.set_ylabel("derived $-$ true [dex]"); a.legend(fontsize=6.5)
+fig2.suptitle("exp22 — derived-aperture bias is regression to the mean (slope "
+              r"$-(1-R^2)$), same as the direct emulator; compression is unbiased "
+              "(green≈orange, blue flat)", fontsize=10)
+fig2.tight_layout()
+save_fig(fig2, FIGDIR / "exp22_aperture_bias")
+
+
 # %% ---- save outputs --------------------------------------------------------
 OUTDIR.mkdir(parents=True, exist_ok=True)
 st = Table({"R_kpc": rad, "crps_full": crps_full.tolist(),
@@ -199,7 +292,12 @@ write_manifest(OUTDIR, params={
     "crps_full_mean": float(crps_full.mean()), "crps_base_mean": float(crps_base.mean()),
     "shape_value_pct": float(100 * (crps_base.mean() - crps_full.mean()) / crps_base.mean()),
     "recon_rms_mean": float(rms_full.mean()),
-    "coverage": cov_full.tolist(), "r2_per_pc": r2_pc.tolist()})
+    "coverage": cov_full.tolist(), "r2_per_pc": r2_pc.tolist(),
+    "cog_vs_aper_rms": float(np.sqrt(((Atrue - Areal) ** 2).mean())),
+    "aperture_repr_bias": [float(np.mean(Arepr[:, j] - Atrue[:, j])) for j in range(4)],
+    "aperture_pred_bias": [float(np.mean(Apred[:, j] - Atrue[:, j])) for j in range(4)],
+    "aperture_regression_slope_profile": slopes[:, 0].tolist(),
+    "aperture_regression_slope_direct": slopes[:, 1].tolist()})
 print(f"\nwrote figure -> {FIGDIR}\nwrote outputs -> {OUTDIR}")
 print(f"\n[verdict] full-profile emulator: per-radius CRPS {crps_full.mean():.4f} "
       f"(vs {crps_base.mean():.4f} for mass+mean-shape); recon RMS {rms_full.mean():.3f} dex; "

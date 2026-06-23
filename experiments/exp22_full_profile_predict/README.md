@@ -45,6 +45,39 @@ is largely intrinsic.** (n=2539, K=3)
   since PC1 ≈ profile concentration and `c_200c` ≈ halo concentration. The
   higher modes are essentially intrinsic.
 
+## Derived-aperture bias check (does the reconstruction bias the graduated targets?)
+Deriving the four graduated targets (`<10`, `10–30`, `30–50`, `50–100` kpc) from
+the reconstructed CoG and comparing to truth (CoG-derived apertures match the
+real `logmstar_aper` to **0.003 dex**, so the derivation is sound):
+
+| aperture | repr bias | pred bias | reg-to-mean slope (profile) | (direct) | −(1−R²) |
+|---|---|---|---|---|---|
+| <10 | +0.000 | +0.000 | −0.289 | −0.291 | −0.292 |
+| 10–30 | −0.000 | +0.018 | −0.281 | −0.262 | −0.264 |
+| 30–50 | −0.002 | +0.020 | −0.225 | −0.210 | −0.206 |
+| 50–100 | +0.002 | +0.022 | −0.180 | −0.174 | −0.170 |
+
+- **The mass-dependent tilt is regression to the mean, not a reconstruction
+  defect.** The residual-vs-true slope ≈ −(1−R²) (exp15), and is **steepest in
+  the core (−0.29)** — exactly the inner-region deviation visible for the extreme
+  example galaxies in `exp22_full_profile.png` Panel B. The core regresses most
+  because its mass is the *least* tightly halo-determined relative to its
+  variance (R²≈0.71 vs 0.83 in the outskirts). It is **identical to the direct
+  (graduated) emulator** (slopes match to ~0.02), so the profile route adds no
+  bias of its own here.
+- **The PCA compression is unbiased.** Reconstructing from the *true* compressed
+  vector gives ≤0.002 dex aperture bias at every radius — the K=3 representation
+  does not distort the derived masses.
+- **One real, small artifact of the profile route:** a **+0.02 dex offset in the
+  *annuli*** (not the `<10` cumulative), from differencing a predicted
+  *cumulative* log-profile (a nonlinear `10^outer − 10^inner` step). The direct
+  emulator, which predicts each annulus directly, avoids it. So: if annular /
+  outskirt masses are the quantity of interest, predict them directly (the
+  graduated emulator); the profile route is for the cumulative CoG.
+- **Cure for the tilt:** it is not fixable in the mean — use the model
+  generatively (sample the predictive CoG), per exp15. The sampled population is
+  unbiased; the point estimate is a conditional mean and *must* regress.
+
 ## Decision
 - **The PCA-route full-profile emulator works** — a viable richer target than a
   few apertures, well-calibrated, with analytic per-radius uncertainties. Keep
