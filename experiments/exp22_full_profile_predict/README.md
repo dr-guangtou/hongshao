@@ -78,6 +78,24 @@ real `logmstar_aper` to **0.003 dex**, so the derivation is sound):
   generatively (sample the predictive CoG), per exp15. The sampled population is
   unbiased; the point estimate is a conditional mean and *must* regress.
 
+## Generative demonstration (why the bias is not a problem)
+`exp22_generative.png` (the 50–100 kpc outskirt) shows the three facts together:
+- **A — bin by TRUE:** the residual-vs-true slope follows −(1−R²). This appears
+  for *any* predictor with scatter (you are conditioning on the noisy truth) — it
+  is regression to the mean, not a model defect.
+- **B — bin by PREDICTED:** `E[true | predicted]` sits on the 1:1 line — the mean
+  is **unbiased in feature space**, so there is nothing to "correct".
+- **C — population:** the conditional mean is **under-dispersed** (std 0.37 vs the
+  true 0.41); drawing one sample per galaxy from the predictive
+  `N(mean, σ(X))` **restores the population exactly** (sampled std 0.41, matching
+  tails). For any population-level use (SMF, lensing-selected stacks) the
+  generative model is unbiased.
+- **Caveat surfaced here:** sample the **direct** outskirt predictor, not a
+  differenced cumulative profile — sampling the CoG and forming `10^M_out −
+  10^M_in` over-disperses the annulus (std 0.80 vs 0.41), the same nonlinearity
+  behind the +0.02 dex annulus offset above. Cumulative quantities sample
+  cleanly; annuli should be predicted (and sampled) directly.
+
 ## Decision
 - **The PCA-route full-profile emulator works** — a viable richer target than a
   few apertures, well-calibrated, with analytic per-radius uncertainties. Keep

@@ -122,7 +122,10 @@ def cv(k=5, seed=0):
     MUb = np.full((N, NR), np.nan); SIGb = np.full((N, NR), np.nan)       # baseline
     MUr = np.full((N, NR), np.nan)                                        # repr (true theta)
     PRED = np.full((N, K), np.nan); TRUE = np.full((N, K), np.nan)        # PC scores (oof)
-    DIR = np.full((N, 4), np.nan)                                         # direct apertures
+    DIR = np.full((N, 4), np.nan)                                         # direct apertures (mean)
+    DIR_SIG = np.full((N, 4), np.nan)                                     # direct heteroscedastic sigma
+    SAMP = np.full((N, 4), np.nan)                                        # one generative draw (direct)
+    rng_s = np.random.default_rng(123)
     for fold in np.array_split(order, k):
         tr = np.setdiff1d(np.arange(N), fold)
         sh_tr = shape[tr]; mu_sh = sh_tr.mean(0)
@@ -142,9 +145,14 @@ def cv(k=5, seed=0):
         # baseline: predict logMtot only, assume mean shape + its full scatter
         MUb[fold] = mu_te[:, 0:1] + mu_sh[None, :]
         SIGb[fold] = np.sqrt(sig_te[:, 0:1] ** 2 + sh_tr.var(0)[None, :])
-        # direct emulator: predict the 4 apertures straight from X (graduated approach)
-        DIR[fold] = fit_predict(X[tr], _apertures(cog[tr]), X[fold])[0]
-    return MU, SIG, MUb, SIGb, MUr, PRED, TRUE, DIR
+        # direct emulator: predict the 4 apertures straight from X (graduated approach),
+        # and sample it generatively (mean + heteroscedastic sigma) for the population demo.
+        # NB: we sample the *direct* annulus, not a differenced cumulative profile -- the
+        # latter over-disperses (10^M_out - 10^M_in amplifies the per-radius scatter).
+        md, sd, _ = fit_predict(X[tr], _apertures(cog[tr]), X[fold])
+        DIR[fold] = md; DIR_SIG[fold] = sd
+        SAMP[fold] = md + sd * rng_s.standard_normal((len(fold), 4))
+    return MU, SIG, MUb, SIGb, MUr, PRED, TRUE, DIR, DIR_SIG, SAMP
 
 
 # %% ---- derived aperture/outskirt masses (the graduated-emulator targets) ----
@@ -163,7 +171,7 @@ def _apertures(cog_curve):
     return Y
 
 
-MU, SIG, MUb, SIGb, MUr, PRED, TRUE, DIR = cv()
+MU, SIG, MUb, SIGb, MUr, PRED, TRUE, DIR, DIR_SIG, SAMP = cv()
 crps_full = crps_gaussian(cog_true, MU, SIG).mean(0)             # per radius (23,)
 crps_base = crps_gaussian(cog_true, MUb, SIGb).mean(0)
 rms_full = np.sqrt(((MU - cog_true) ** 2).mean(0))
@@ -280,6 +288,43 @@ fig2.suptitle("exp22 — derived-aperture bias is regression to the mean (slope 
               "(green≈orange, blue flat)", fontsize=10)
 fig2.tight_layout()
 save_fig(fig2, FIGDIR / "exp22_aperture_bias")
+
+
+# FIGURE 3: the regression-to-mean "bias" vs the generative resolution (50-100 kpc)
+j = 3
+yt, yp, ys = Atrue[:, j], DIR[:, j], SAMP[:, j]      # direct emulator: clean (un-differenced) outskirt
+r2 = 1.0 - np.mean((yp - yt) ** 2) / yt.var(); ybar = yt.mean()
+lo, hi = np.percentile(yt, [2, 98])
+fig3, (a1, a2, a3) = plt.subplots(1, 3, figsize=(14.0, 4.2))
+a1.scatter(yt, yp - yt, s=4, alpha=0.08, color=OKABE_ITO[0], edgecolors="none")
+cen, med = _binmed(yt, yp - yt)
+a1.plot(cen, med, "-o", color=OKABE_ITO[0], lw=2, ms=4, label="binned median")
+xx = np.linspace(lo, hi, 40)
+a1.plot(xx, -(1 - r2) * (xx - ybar), "k--", lw=1.6, label=r"$-(1-R^2)(y-\bar y)$")
+a1.axhline(0, color="0.6", lw=0.8); a1.set_xlim(lo, hi); a1.set_ylim(-0.5, 0.5)
+a1.set_xlabel(r"true $\log M_*[50\!-\!100]$"); a1.set_ylabel("mean pred $-$ true [dex]")
+a1.set_title("A. Bin by TRUE: regression to the mean"); a1.legend(fontsize=8)
+
+a2.plot([lo, hi], [lo, hi], "k--", lw=1.2, label="1:1 (unbiased)")
+cen, med = _binmed(yp, yt)
+a2.plot(cen, med, "-o", color=OKABE_ITO[2], lw=2, ms=4, label="mean true in bin")
+a2.set_xlim(lo, hi); a2.set_ylim(lo, hi)
+a2.set_xlabel(r"predicted $\log M_*[50\!-\!100]$"); a2.set_ylabel("mean true in bin")
+a2.set_title("B. Bin by PREDICTED: mean is unbiased"); a2.legend(fontsize=8)
+
+bins = np.linspace(lo, hi, 32)
+a3.hist(yt, bins=bins, density=True, histtype="step", lw=2.2, color="k",
+        label=f"true (std {yt.std():.2f})")
+a3.hist(yp, bins=bins, density=True, histtype="step", lw=2.0, color=OKABE_ITO[7],
+        label=f"mean-only (std {yp.std():.2f})")
+a3.hist(ys, bins=bins, density=True, histtype="stepfilled", alpha=0.35, color=OKABE_ITO[2],
+        label=f"sampled (std {ys.std():.2f})")
+a3.set_xlabel(r"$\log M_*[50\!-\!100]$"); a3.set_ylabel("density")
+a3.set_title("C. Generative: sampling restores the population"); a3.legend(fontsize=8)
+fig3.suptitle("exp22 — the apparent bias is regression to the mean (A); the mean is unbiased "
+              "in feature space (B); the generative model reproduces the population (C)", fontsize=10)
+fig3.tight_layout()
+save_fig(fig3, FIGDIR / "exp22_generative")
 
 
 # %% ---- save outputs --------------------------------------------------------
