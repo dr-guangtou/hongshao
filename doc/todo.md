@@ -260,14 +260,18 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ## Model-target extensions (post-graduation; independent of the frozen emulator)
 - [x] **exp21_re_based_bins** — aperture/outskirt masses in **Re units** instead
-  of fixed kpc. Define Re = half-mass radius within 120 kpc from the CoG; five
-  bins `<0.5/0.5-1/1-2/2-4 Re` + `4Re-120kpc` (median Re=11.1 kpc, so 120 kpc≈11
-  Re). Same emulator approach (local n-bin CV; library untouched). **Result:**
-  Re masses are as predictable as kpc (mean CRPS 0.0751, well-calibrated); the
-  `c_200c` gain is comparable/slightly stronger (+5.6% vs +4.7%, strongest in the
-  core); the in-situ body (<4 Re, R²=0.75–0.86) is cleanly separated from the
-  stochastic accreted envelope (`4Re-120kpc`, R²=0.37). Keep as an alternative
-  target, not a replacement.
+  of fixed kpc. Re = half-mass radius within 120 kpc from the CoG; six bins
+  `<0.5/0.5-1/1-2/2-4/4-6/6-9 Re` (median Re≈10 kpc). Same emulator approach
+  (local n-bin CV; library untouched). **Results:** (1) the 6-bin Re emulator is
+  well-calibrated (mean CRPS 0.0701) — but `6-9 Re` costs a **19% mass-correlated
+  selection** (9 Re > 148 kpc CoG limit for large galaxies) and probes past the
+  120 kpc observational limit, so keep Re-binning as an exploration, not the
+  default. (2) **A richer MAH does NOT help the outskirts:** MAH-PCA(8)+c200c
+  +1.0%, raw-MAH(18)+c200c +0.6% over DiffMAH(4)+c200c, flat-to-core-weighted
+  (NOT rising outward; `6-9Re` gains ~0). Confirms/extends exp13 to the Re frame
+  — DiffMAH(4) is at the MAH ceiling at every radius; the outskirt residual is
+  intrinsic, not feature-limited. **Keep DiffMAH+c_200c** (portable AND at the
+  ceiling).
 - [ ] **predict the *whole* profile, not a few masses** (Option 1, next). The
   compression is already done — exp02 (CoG PCA, 2–3 modes → 0.01 dex) and exp03
   (5-number radial-DiffMAH, `rdm_*` cached → 0.005 dex). What's missing: train the
