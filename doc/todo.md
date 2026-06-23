@@ -193,10 +193,18 @@ Cross-experiment plan. Mirrors the phase sequence in
   log-variance = +0.001 nats; `late` stays the scatter driver, +0.16..+0.22/σ vs
   c200c ~+0.03). Conditional calibration 0.018→0.010, marginal unchanged. Working
   emulator = linear mean on DiffMAH+c_200c + heteroscedastic full covariance.
-- [ ] **graduate the emulator into `hongshao/`** — a single fit/predict/sample
-  module: linear mean on `DiffMAH + c_200c` (default) OR the 7-term degree-2 poly
-  (option), + heteroscedastic full covariance, validated, with a self-check.
-  Expose a `sample()` path (exp15: the model must be used generatively).
+- [x] **exp20 — graduate the emulator into `hongshao/emulator.py`** — one
+  `fit`/`predict`/`sample` module: linear mean on `DiffMAH + c_200c` (default,
+  54 free params) OR the 7-term degree-2 poly (option), + heteroscedastic full
+  covariance, generative `sample()`. Self-check reproduces exp19 (CRPS 0.0832,
+  joint NLL −3.432, cond gap 0.010; poly2 mean 0.0800).
+- [x] **exp20 — deformation layer (`hongshao/forward.py`)** — a 5-knob,
+  physically-labeled deformation of the frozen emulator for *external* inference
+  (`d0`, `d_slope`, `d_out`, `f_ab`, `s`); `Deform()` = identity = TNG baseline.
+  Predicts deformed stellar masses/profiles with no re-fit. **Scope decision:**
+  HongShao stops here — it predicts masses/profiles only; lensing/clustering/
+  likelihood/sampler machinery lives in a *separate* inference repo (see AGENTS.md
+  "Scope"). The deformer is the hand-off boundary.
 - [ ] apply the emulator to an N-body / other-sim halo catalog with DiffMAH fits;
   compare predicted profile distributions (the portability test).
 
