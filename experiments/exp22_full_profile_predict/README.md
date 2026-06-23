@@ -96,6 +96,35 @@ real `logmstar_aper` to **0.003 dex**, so the derivation is sound):
   behind the +0.02 dex annulus offset above. Cumulative quantities sample
   cleanly; annuli should be predicted (and sampled) directly.
 
+## Density profile vs CoG (Q2 — `density_profile.py`)
+The CoG `M(<R)` is an integral, so it is smooth and its large-R value is just the
+total mass. The 1-D **density** profile `Σ(R) = dM/dA` (here derived by
+differencing the noiseless-sim CoG) keeps local structure. PCA-ing the density
+shape vs the CoG shape on the *same* galaxies:
+
+| representation | value of predicting shape | PC1 R² | PC2 R² | recon (own units) |
+|---|---|---|---|---|
+| CoG `M(<R)` | +10.0% | 0.39 | 0.33 | 0.118 dex |
+| **density `Σ(R)`** | **+15.7%** | **0.54** | 0.13 | 0.166 dex |
+
+- **The density profile is more halo-predictable.** Predicting its shape buys
+  +15.7% (vs +10.0% for the CoG), and its dominant mode is much more
+  halo-tied (**PC1 R²=0.54 vs 0.39**). The density concentrates the predictable
+  signal in one mode (the inner↔outer concentration contrast, naturally linked to
+  `c_200c`); the CoG smears it across PC1+PC2.
+- **The big difference is in the outskirts.** Per-radius (figure Panel B), the
+  CoG's shape value falls to ~0 beyond ~50 kpc — the cumulative mass there is
+  pinned to the total, so it carries no extra shape info. The **density keeps
+  rising to ~30%** at large R: the *local outskirt density* is meaningfully
+  halo-predictable in a way the enclosed mass completely hides. For
+  envelope/ICL/outskirt science, model the **density** profile, not the CoG.
+- **Caveat:** the density's absolute per-radius CRPS is larger (it is a
+  derivative — more dynamic range / noisier), so only the *relative* gain and the
+  per-mode R² are comparable across the two. Deriving `Σ` by differencing only
+  works because the simulation is noiseless; on real, noisy outskirt data this
+  differencing would amplify noise (exactly the user's premise that the sim
+  profiles are reliable).
+
 ## Decision
 - **The PCA-route full-profile emulator works** — a viable richer target than a
   few apertures, well-calibrated, with analytic per-radius uncertainties. Keep
@@ -108,7 +137,11 @@ real `logmstar_aper` to **0.003 dex**, so the derivation is sound):
   largely intrinsic) — there is no large hidden halo-predictable signal in the
   profile shape.
 - Independent experiment; `hongshao/emulator.py` and `forward.py` unchanged.
+- **Prefer the density profile `Σ(R)` over the CoG for shape modeling** (Q2): it
+  is more halo-predictable (PC1 R² 0.54 vs 0.39) and, unlike the cumulative CoG,
+  keeps real halo-predictable structure in the outskirts (~30% shape value at
+  large R vs ~0 for the CoG). Use the CoG only when the cumulative mass itself is
+  the observable.
 - Next options: the **parametric (radial-DiffMAH `rdm_*`, exp03) route** as a
-  physical-parameter alternative to PCA; predicting the profile in **Re units**
-  (exp21); or feeding the reconstructed CoG's per-radius uncertainty into the
-  forward model.
+  physical-parameter alternative to PCA; the density profile in **Re units**
+  (exp21); or feeding the predictive profile uncertainty into the forward model.
