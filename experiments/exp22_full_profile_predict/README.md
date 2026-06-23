@@ -171,6 +171,45 @@ reliable (the rate is merger-noisy) → fit `M(t)`, *differentiate the smooth
 model*. DiffMAH's `late` parameter already is a denoised recent-accretion rate,
 so we never differentiate raw data.
 
+**Refinement — is the *recent* accretion poorly constrained? (`diffmah_recent_uncertainty.py`).**
+Yes, and it is the **time-domain twin of the galaxy outskirt**: the recently
+accreted mass `M(t0)−M(t0−Δt)` is a small increment on a large cumulative — the
+same near-cancellation. Under a fixed 0.02-dex cumulative perturbation, the rate
+slopes (`early`/`late`) bootstrap **~4× softer than the final mass `logmp`**, and
+the fractional uncertainty of `dM/dt` rises **~3× from early to recent times**.
+So fitting the cumulative does leave the recent rate the least-constrained piece.
+Two honest caveats: (1) the effect is *moderate* (3–4×, not the ~10× of the
+stellar annulus) because these halos are still accreting at z=0.4 — the recent
+rate is not as suppressed as the outskirt stellar density; (2) **this softening
+does not limit the outskirt prediction** — exp13 showed the raw MAH (which keeps
+the full recent history) does *not* beat DiffMAH for `M*[50–100]`, so the outskirt
+residual is intrinsic, and DiffMAH's `late` already carries the part that matters
+(it is the outskirt *scatter* driver, exp19). The user's intuition is right about
+the mechanism; the data says it is not the bottleneck.
+
+## How many PCs? Does >3 help the predictor? (`pca_n_components.py`)
+**No — the predictor plateaus by K≈3, with direct evidence.** Sweeping K=1..8
+separates two different curves:
+
+| K | CoG recon RMS | CoG value% | R²(Kth PC) | density recon RMS | density value% | R²(Kth PC) |
+|---|---|---|---|---|---|---|
+| 1 | 0.027 | 9.4 | 0.39 | 0.094 | 13.7 | 0.54 |
+| 2 | 0.010 | 10.0 | 0.33 | 0.063 | 15.6 | 0.13 |
+| **3** | 0.005 | **10.0** | 0.05 | 0.049 | **15.7** | 0.06 |
+| 4 | 0.003 | 10.0 | 0.02 | 0.039 | 15.7 | 0.04 |
+| 6 | 0.0015 | 10.0 | −0.00 | 0.028 | 15.8 | 0.02 |
+| 8 | 0.0009 | 10.0 | 0.00 | 0.021 | 15.8 | 0.00 |
+
+- **Compression keeps improving with K** (recon RMS falls monotonically — more
+  modes describe the profile better, as exp02 found). But the **predictor's
+  value-of-shape and CRPS flatten by K≈2–3.**
+- The reason is in the last column: **PC4 and beyond have R²≈0** — they are not
+  halo-predictable. Adding them to the target just means predicting their
+  population mean (≈0), which contributes nothing. All the halo-predictable
+  profile-shape information lives in **2–3 modes** (concentration + one or two
+  redistribution modes); the rest is galaxy-by-galaxy noise the halo cannot
+  reach. K=3 is the right default.
+
 ## Decision
 - **The PCA-route full-profile emulator works** — a viable richer target than a
   few apertures, well-calibrated, with analytic per-radius uncertainties. Keep
