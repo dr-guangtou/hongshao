@@ -127,26 +127,49 @@ shape vs the CoG shape on the *same* galaxies:
 
 ### Is the density predictor "better" than the graduated emulator? Depends on the target.
 Scored on the **graduated emulator's own metric** (the 4 aperture/annulus masses),
-RMS [dex]:
+RMS [dex]. The density route integrates **outward from R=0**, starting from a
+predicted central mass `M(<2)` — the resolution-limited center is still real and
+counts toward the larger apertures:
 
 | aperture | direct emulator | from CoG | from density |
 |---|---|---|---|
-| <10 | 0.116 | 0.116 | 0.189 |
+| <10 | 0.116 | 0.116 | 0.117 |
 | 10–30 | 0.155 | 0.156 | 0.155 |
 | 30–50 | 0.171 | 0.169 | 0.171 |
 | 50–100 | 0.172 | 0.170 | 0.172 |
 
-- **On aperture masses the density predictor is NOT better** — comparable on the
-  annuli, *worse* on `<10` (integrating `Σ` from 2 kpc misses the central mass),
-  and only the direct emulator gives clean, calibrated annulus uncertainties (the
-  Q1 differencing instability hits the profile routes). Aperture masses are
-  **total-mass-dominated**, so the density's shape advantage washes out.
+- **On aperture masses all three routes are equivalent** (once the central mass
+  is counted) — aperture masses are **total-mass-dominated**, so the density's
+  shape advantage neither helps nor hurts here. The density predictor is *not*
+  better on apertures, but it is not worse either.
+- Only the direct emulator gives clean, *calibrated* annulus **uncertainties** —
+  the Q1 differencing instability bites when you *sample* an annulus from a
+  cumulative profile (not for the mean), so for annulus error bars predict the
+  annulus directly.
 - **The density predictor wins only on its own product** — the density profile,
   where its shape is markedly more halo-predictable (PC1 R² 0.54 vs 0.39) and it
   uniquely captures outskirt-density structure. The two are **complementary**:
-  graduated emulator → clean aperture masses; density predictor → the full
-  profile and the outskirt density. "Better" is target-dependent, with evidence
-  on both sides.
+  graduated emulator → clean aperture masses + uncertainties; density predictor →
+  the full profile and the outskirt density. "Better" is target-dependent.
+- **Integration direction matters (the mirror of Q1):** build the cumulative by
+  integrating the density *outward from the center* (stable); both the inward
+  integration from the total and the outward-from-2-kpc-with-no-center are
+  unstable/biased for the small inner cumulative — the same near-cancellation as
+  differencing.
+
+### Aside — does DiffMAH suffer the same issue? (`diffmah_rate_check.py`)
+DiffMAH fits the **cumulative** peak-mass history `log M(t)`, so getting the
+accretion rate means differentiating it — the same operation that blew up the
+annuli. **It does not blow up**, because DiffMAH is a smooth 4-parameter analytic
+fit: the noise is removed at the *fit* step, so its derivative is clean
+(`exp22_diffmah_rate.png`, Panel B). Finite-differencing the *raw* peak-mass
+history is jumpy and plunges to zero whenever growth is flat — the exact
+near-cancellation of Q1. The unifying principle: **model whichever quantity is
+reliable, get the other by the stable operation.** Stellar profile: the density
+is reliable → predict `Σ`, *integrate* to the CoG. Halo MAH: the cumulative is
+reliable (the rate is merger-noisy) → fit `M(t)`, *differentiate the smooth
+model*. DiffMAH's `late` parameter already is a denoised recent-accretion rate,
+so we never differentiate raw data.
 
 ## Decision
 - **The PCA-route full-profile emulator works** — a viable richer target than a

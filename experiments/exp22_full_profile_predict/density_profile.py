@@ -118,6 +118,7 @@ def run_target(shp, anchor, k=5, seed=0):
     MU = np.full((N, nr), np.nan); SIG = np.full((N, nr), np.nan)
     MUb = np.full((N, nr), np.nan); SIGb = np.full((N, nr), np.nan)
     PRED = np.full((N, K), np.nan); TRUE = np.full((N, K), np.nan)
+    ANCHOR = np.full(N, np.nan)
     modes = np.zeros((K, nr)); mean_shape = np.zeros(nr)
     for fold in np.array_split(order, k):
         tr = np.setdiff1d(np.arange(N), fold)
@@ -128,7 +129,7 @@ def run_target(shp, anchor, k=5, seed=0):
         S_tr = (shp[tr] - mu_sh) @ V.T; S_te = (shp[fold] - mu_sh) @ V.T
         Ytr = np.column_stack([anchor[tr], S_tr])
         mu_te, sig_te, Sig_te = fit_predict(X[tr], Ytr, X[fold])
-        PRED[fold] = mu_te[:, 1:]; TRUE[fold] = S_te
+        PRED[fold] = mu_te[:, 1:]; TRUE[fold] = S_te; ANCHOR[fold] = mu_te[:, 0]
         A = np.column_stack([np.ones(nr), V.T])
         MU[fold] = mu_te @ A.T + mu_sh
         SIG[fold] = np.sqrt(np.einsum("rk,nkl,rl->nr", A, Sig_te, A))
@@ -140,7 +141,7 @@ def run_target(shp, anchor, k=5, seed=0):
     r2 = 1.0 - ((TRUE - PRED) ** 2).mean(0) / TRUE.var(0)
     rms = float(np.sqrt(((MU - truth) ** 2).mean()))
     return dict(crps_full=crps_full, crps_base=crps_base, r2=r2, rms=rms, cov=cov,
-                modes=modes, mean_shape=mean_shape, MU=MU,
+                modes=modes, mean_shape=mean_shape, MU=MU, ANCHOR=ANCHOR,
                 value=100 * (crps_base.mean() - crps_full.mean()) / crps_base.mean())
 
 
@@ -175,8 +176,24 @@ def _apers(Mcum4):
 Mt = np.column_stack([[10.0 ** np.interp(rk, R, c) for c in cogm] for rk in APER_KPC])
 Mc = np.column_stack([[10.0 ** np.interp(rk, COG_RAD_KPC[:-1], m) for m in COGR["MU"]]
                       for rk in APER_KPC])
-cum_den = np.cumsum(10.0 ** DEN["MU"] * dA[None, :], axis=1)          # M(<R[1:]) from density
-Md = np.column_stack([[np.interp(rk, R[1:], cp) for cp in cum_den] for rk in APER_KPC])
+
+
+def cv_predict1(yt, k=5, seed=0):
+    """5-fold CV mean prediction of a single scalar target from X."""
+    order = np.random.default_rng(seed).permutation(N); out = np.full(N, np.nan)
+    for fold in np.array_split(order, k):
+        tr = np.setdiff1d(np.arange(N), fold)
+        out[fold] = fit_predict(X[tr], yt[tr][:, None], X[fold])[0][:, 0]
+    return out
+
+
+# density -> cumulative: integrate OUTWARD from R=0, starting from the central mass
+# M(<2) (predicted from the halo, since the resolution-limited center is still real
+# and counts toward the larger apertures), then add the density shells.
+shells = 10.0 ** DEN["MU"] * dA[None, :]                              # (N,23) shell masses
+M2_pred = 10.0 ** cv_predict1(cogm[:, 0])                            # predicted M(<2 kpc)
+M_edges = M2_pred[:, None] + np.cumsum(shells, axis=1)              # M(<R[1:]), center included
+Md = np.column_stack([[np.interp(rk, R[1:], me) for me in M_edges] for rk in APER_KPC])
 Ytrue, Ycog_ap, Yden_ap = _apers(Mt), _apers(Mc), _apers(Md)
 
 
@@ -198,8 +215,10 @@ for j in range(4):
     r_cog = np.sqrt(np.mean((Ycog_ap[:, j] - Ytrue[:, j]) ** 2))
     r_den = np.sqrt(np.mean((Yden_ap[:, j] - Ytrue[:, j]) ** 2))
     print(f"  {ANAMES[j]:9s} {r_dir:8.4f} {r_cog:9.4f} {r_den:13.4f} {crps_dir[j]:12.4f}")
-print("  => apertures are total-mass-dominated; the density's shape edge washes out here. "
-      "For aperture masses the DIRECT (graduated) emulator is as good and cleaner (no differencing).")
+print("  => with the central mass counted, all three routes are comparable on aperture masses "
+      "(total-mass-dominated; the density's shape edge neither helps nor hurts). The density's\n"
+      "     advantage is the profile itself; the direct emulator still gives the cleanest aperture "
+      "uncertainties (Q1 differencing only bites when sampling annuli from a cumulative).")
 
 
 # %% ---- FIGURE --------------------------------------------------------------
