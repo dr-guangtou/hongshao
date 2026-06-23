@@ -272,9 +272,16 @@ Cross-experiment plan. Mirrors the phase sequence in
   — DiffMAH(4) is at the MAH ceiling at every radius; the outskirt residual is
   intrinsic, not feature-limited. **Keep DiffMAH+c_200c** (portable AND at the
   ceiling).
-- [ ] **predict the *whole* profile, not a few masses** (Option 1, next). The
-  compression is already done — exp02 (CoG PCA, 2–3 modes → 0.01 dex) and exp03
-  (5-number radial-DiffMAH, `rdm_*` cached → 0.005 dex). What's missing: train the
-  emulator to predict those PCA scores / `rdm_*` params from `DiffMAH + c_200c`
-  (correlated, heteroscedastic), then evaluate the *reconstructed* CoG (per-radius
-  CRPS/calibration). Independent experiment; do not alter the graduated emulator.
+- [x] **exp22_full_profile_predict** — predict the *whole* CoG (Option 1). Compress
+  each CoG to `[logMtot, PC1, PC2, PC3]` (exp02 shape PCA, fit in-fold), predict the
+  4-vector from `DiffMAH+c_200c` with the heteroscedastic emulator, reconstruct the
+  per-radius CoG **analytically** (linear → Gaussian per radius). **Result:** the
+  full profile is predictable and well-calibrated (recon RMS 0.116 dex — dominated
+  by the total-mass SHMR scatter; coverage on the line). Predicting *shape* adds
+  **+10% per-radius CRPS** over a mass+mean-shape baseline, peaking ~17% at ~10-20
+  kpc; almost all of it is PC1=concentration (R²=0.39, via `c_200c`), PC2 0.33,
+  PC3 0.05. Beyond total mass + concentration the shape is largely intrinsic.
+- [ ] (optional follow-ons) the **parametric `rdm_*` (radial-DiffMAH, exp03)**
+  route as a physical-parameter alternative to PCA; full-profile prediction in
+  **Re units**; feed the reconstructed per-radius CoG uncertainty to the forward
+  model. Independent experiments; do not alter the graduated emulator.
