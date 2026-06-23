@@ -205,14 +205,17 @@ Cross-experiment plan. Mirrors the phase sequence in
   HongShao stops here — it predicts masses/profiles only; lensing/clustering/
   likelihood/sampler machinery lives in a *separate* inference repo (see AGENTS.md
   "Scope"). The deformer is the hand-off boundary.
-- [ ] apply the emulator to an N-body / other-sim halo catalog with DiffMAH fits;
-  compare predicted profile distributions (the portability test).
+- [ ] **portability test (useful future work; skip for now).** Apply the emulator
+  to an external N-body halo catalog and compare predicted profile distributions.
+  Gated: the one external sim we have provides DiffMAH params but **no `c_200c`**
+  (and no stellar profiles — it is gravity-only, so there are no galaxies to
+  compare against). Needs a sim with `c_200c` measured + a hydro/painted galaxy
+  reference, or the blocked DiffMAH cross-match resolved.
 
 ### Later
-- [ ] secondary halo properties — *test*, don't assume: MAH-derived ones
-  (concentration, accretion rate) likely redundant with the MAH (exp06); only
-  initial conditions / environment are independent (hard to get here).
-- [ ] apply emulator to an N-body catalog; compare profile distributions.
+- [x] secondary halo properties — *test*, don't assume. **Done (exp16/17/18):**
+  ceiling is `DiffMAH + c_200c`; `c_200c` is only ~25% MAH-determined and adds
+  real independent skill, `acc_rate` is MAH-redundant, 3D shape carries no M* info.
 - [ ] redshift evolution once other-z profiles available.
 
 ## Data layer updates
@@ -224,7 +227,7 @@ Cross-experiment plan. Mirrors the phase sequence in
   Projection scatter is small (≈0.007 dex @100 kpc cumulative, ≈0.037 dex @50–100
   annulus, vs ≈0.17 dex total) → the outskirt residual is mostly genuine
   halo-to-halo variation, not projection. `catgrp_id` (FoF GroupID) stored.
-- [ ] exact snap-72 halo mass — **resolved** (`logmh_z0p4`).
+- [x] exact snap-72 halo mass — **resolved** (`logmh_z0p4`).
 - [ ] **DiffMAH/Diffstar cross-match**: blocked on an id-system mismatch —
   `catgrp_id` (GroupID) ≠ catalog `halo_id` (SubhaloID). Need `GroupFirstSub`,
   per-galaxy SubhaloID, or 3D positions. Use our own `dmah_*` fits meanwhile.
@@ -248,7 +251,30 @@ Cross-experiment plan. Mirrors the phase sequence in
   MAH-determined, R²=0.35); 3D shape is MAH-independent (R²≈0) but carries no
   stellar-mass info (gains ~0). "All 4" ≈ `c_200c` alone. Secondary-property axis
   exhausted: ceiling is DiffMAH + `c_200c`.
-- [ ] does `c_200c` also help the **scatter** model (exp14) / shrink exp15's
-  regression-to-mean by raising R²?
+- [x] does `c_200c` also help the **scatter** model? **Answered (exp19): no.** It
+  improves the mean (+4.7% CRPS) but not the scatter (+0.001 nats; `late` stays the
+  driver). The mean's higher R² modestly shrinks exp15's regression-to-mean slope
+  (slope = −(1−R²)).
 - [ ] **projection-scatter budget** — quantify projection vs intrinsic halo-to-halo
   scatter per annulus from the 3 projections (refines exp13/14/15's "intrinsic" floor).
+
+## Model-target extensions (post-graduation; independent of the frozen emulator)
+- [x] **exp21_re_based_bins** — aperture/outskirt masses in **Re units** instead
+  of fixed kpc. Re = half-mass radius within 120 kpc from the CoG; six bins
+  `<0.5/0.5-1/1-2/2-4/4-6/6-9 Re` (median Re≈10 kpc). Same emulator approach
+  (local n-bin CV; library untouched). **Results:** (1) the 6-bin Re emulator is
+  well-calibrated (mean CRPS 0.0701) — but `6-9 Re` costs a **19% mass-correlated
+  selection** (9 Re > 148 kpc CoG limit for large galaxies) and probes past the
+  120 kpc observational limit, so keep Re-binning as an exploration, not the
+  default. (2) **A richer MAH does NOT help the outskirts:** MAH-PCA(8)+c200c
+  +1.0%, raw-MAH(18)+c200c +0.6% over DiffMAH(4)+c200c, flat-to-core-weighted
+  (NOT rising outward; `6-9Re` gains ~0). Confirms/extends exp13 to the Re frame
+  — DiffMAH(4) is at the MAH ceiling at every radius; the outskirt residual is
+  intrinsic, not feature-limited. **Keep DiffMAH+c_200c** (portable AND at the
+  ceiling).
+- [ ] **predict the *whole* profile, not a few masses** (Option 1, next). The
+  compression is already done — exp02 (CoG PCA, 2–3 modes → 0.01 dex) and exp03
+  (5-number radial-DiffMAH, `rdm_*` cached → 0.005 dex). What's missing: train the
+  emulator to predict those PCA scores / `rdm_*` params from `DiffMAH + c_200c`
+  (correlated, heteroscedastic), then evaluate the *reconstructed* CoG (per-radius
+  CRPS/calibration). Independent experiment; do not alter the graduated emulator.
