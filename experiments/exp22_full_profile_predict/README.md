@@ -125,6 +125,29 @@ shape vs the CoG shape on the *same* galaxies:
   differencing would amplify noise (exactly the user's premise that the sim
   profiles are reliable).
 
+### Is the density predictor "better" than the graduated emulator? Depends on the target.
+Scored on the **graduated emulator's own metric** (the 4 aperture/annulus masses),
+RMS [dex]:
+
+| aperture | direct emulator | from CoG | from density |
+|---|---|---|---|
+| <10 | 0.116 | 0.116 | 0.189 |
+| 10–30 | 0.155 | 0.156 | 0.155 |
+| 30–50 | 0.171 | 0.169 | 0.171 |
+| 50–100 | 0.172 | 0.170 | 0.172 |
+
+- **On aperture masses the density predictor is NOT better** — comparable on the
+  annuli, *worse* on `<10` (integrating `Σ` from 2 kpc misses the central mass),
+  and only the direct emulator gives clean, calibrated annulus uncertainties (the
+  Q1 differencing instability hits the profile routes). Aperture masses are
+  **total-mass-dominated**, so the density's shape advantage washes out.
+- **The density predictor wins only on its own product** — the density profile,
+  where its shape is markedly more halo-predictable (PC1 R² 0.54 vs 0.39) and it
+  uniquely captures outskirt-density structure. The two are **complementary**:
+  graduated emulator → clean aperture masses; density predictor → the full
+  profile and the outskirt density. "Better" is target-dependent, with evidence
+  on both sides.
+
 ## Decision
 - **The PCA-route full-profile emulator works** — a viable richer target than a
   few apertures, well-calibrated, with analytic per-radius uncertainties. Keep

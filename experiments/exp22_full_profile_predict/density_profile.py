@@ -67,6 +67,7 @@ den_shape = logSig - logMtot[:, None]                  # (N,23) density shape
 g = (np.isfinite(cog).all(1) & np.isfinite(dmah).all(1) & np.isfinite(c200)
      & np.all(dM > 0, axis=1))
 cog_shape, den_shape, logMtot = cog_shape[g], den_shape[g], logMtot[g]
+cogm = cog[g]                                          # masked full CoG (for aperture truth)
 X = np.column_stack([dmah[g], c200[g]])
 N = len(X)
 print(f"exp22b: density-vs-CoG profile PCA on n={N}, K={K} modes")
@@ -139,7 +140,7 @@ def run_target(shp, anchor, k=5, seed=0):
     r2 = 1.0 - ((TRUE - PRED) ** 2).mean(0) / TRUE.var(0)
     rms = float(np.sqrt(((MU - truth) ** 2).mean()))
     return dict(crps_full=crps_full, crps_base=crps_base, r2=r2, rms=rms, cov=cov,
-                modes=modes, mean_shape=mean_shape,
+                modes=modes, mean_shape=mean_shape, MU=MU,
                 value=100 * (crps_base.mean() - crps_full.mean()) / crps_base.mean())
 
 
@@ -154,6 +155,51 @@ for lab, r, unit in [("CoG  M(<R)", COGR, "cumulative"), ("density Sigma(R)", DE
 print(f"\n[compare] value of predicting shape: CoG {COGR['value']:+.1f}%  "
       f"vs density {DEN['value']:+.1f}%   |   PC1 R^2: CoG {COGR['r2'][0]:+.2f}  "
       f"vs density {DEN['r2'][0]:+.2f}")
+
+
+# %% ---- aperture-mass metric: same comparison on the graduated emulator's turf
+# Derive the 4 graduated targets from each predicted profile and from a DIRECT
+# emulator, score on the same metric. Apertures are dominated by total mass, so
+# the density's shape edge should wash out here (and the direct emulator avoids
+# the differencing instability of Q1).
+APER_KPC = np.array([10.0, 30.0, 50.0, 100.0]); ANAMES = ["<10", "10-30", "30-50", "50-100"]
+
+
+def _apers(Mcum4):
+    Y = np.empty((len(Mcum4), 4)); Y[:, 0] = np.log10(np.clip(Mcum4[:, 0], 1.0, None))
+    for k in range(1, 4):
+        Y[:, k] = np.log10(np.clip(Mcum4[:, k] - Mcum4[:, k - 1], 1.0, None))
+    return Y
+
+
+Mt = np.column_stack([[10.0 ** np.interp(rk, R, c) for c in cogm] for rk in APER_KPC])
+Mc = np.column_stack([[10.0 ** np.interp(rk, COG_RAD_KPC[:-1], m) for m in COGR["MU"]]
+                      for rk in APER_KPC])
+cum_den = np.cumsum(10.0 ** DEN["MU"] * dA[None, :], axis=1)          # M(<R[1:]) from density
+Md = np.column_stack([[np.interp(rk, R[1:], cp) for cp in cum_den] for rk in APER_KPC])
+Ytrue, Ycog_ap, Yden_ap = _apers(Mt), _apers(Mc), _apers(Md)
+
+
+def cv_direct_aper(Yap, k=5, seed=0):
+    order = np.random.default_rng(seed).permutation(N)
+    MUd = np.full((N, 4), np.nan); SGd = np.full((N, 4), np.nan)
+    for fold in np.array_split(order, k):
+        tr = np.setdiff1d(np.arange(N), fold)
+        MUd[fold], SGd[fold], _ = fit_predict(X[tr], Yap[tr], X[fold])
+    return MUd, SGd
+
+
+MUdir, SIGdir = cv_direct_aper(Ytrue)
+crps_dir = crps_gaussian(Ytrue, MUdir, SIGdir).mean(0)
+print("\n[aperture metric] RMS [dex] of the 4 graduated targets (mean accuracy):")
+print(f"  {'aperture':9s} {'direct':>8s} {'from CoG':>9s} {'from density':>13s} {'direct CRPS':>12s}")
+for j in range(4):
+    r_dir = np.sqrt(np.mean((MUdir[:, j] - Ytrue[:, j]) ** 2))
+    r_cog = np.sqrt(np.mean((Ycog_ap[:, j] - Ytrue[:, j]) ** 2))
+    r_den = np.sqrt(np.mean((Yden_ap[:, j] - Ytrue[:, j]) ** 2))
+    print(f"  {ANAMES[j]:9s} {r_dir:8.4f} {r_cog:9.4f} {r_den:13.4f} {crps_dir[j]:12.4f}")
+print("  => apertures are total-mass-dominated; the density's shape edge washes out here. "
+      "For aperture masses the DIRECT (graduated) emulator is as good and cleaner (no differencing).")
 
 
 # %% ---- FIGURE --------------------------------------------------------------
