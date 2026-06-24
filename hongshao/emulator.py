@@ -41,19 +41,23 @@ _POLY2_TERMS = [(0, 0), (1, 3), (2, 2), (3, 4), (3, 3), (0, 2), (0, 3)]
 
 @dataclass
 class Emulator:
-    """A fitted emulator. Carry it around; ``predict``/``sample`` are methods."""
+    """A fitted emulator over ``T`` targets. ``predict``/``sample`` are methods.
+
+    Target-count agnostic: ``T`` is whatever ``fit`` was given (4 kpc bins, 6 Re
+    bins, or a compressed profile vector ``[anchor, PCs]`` — see profile_emulator).
+    """
     mean: str                 # "linear" or "poly2"
-    mu_x: np.ndarray          # (5,) feature means (standardization)
-    sd_x: np.ndarray          # (5,) feature stds
-    beta: np.ndarray          # (4, P) mean coefficients per bin
-    gamma: np.ndarray         # (4, 6) log-variance coefficients per bin
-    corr: np.ndarray          # (4, 4) fixed residual correlation R
+    mu_x: np.ndarray          # (F,) feature means (standardization)
+    sd_x: np.ndarray          # (F,) feature stds
+    beta: np.ndarray          # (T, P) mean coefficients per target
+    gamma: np.ndarray         # (T, F+1) log-variance coefficients per target
+    corr: np.ndarray          # (T, T) fixed residual correlation R
 
     def predict(self, X):
         """Predictive mean, marginal sigma, and full covariance for halos ``X``.
 
-        ``X``: (N, 5) ``[logmp, logtc, early, late, c200c]``. Returns
-        ``(mu, sigma, cov)`` with shapes (N, 4), (N, 4), (N, 4, 4), where
+        ``X``: (N, F) ``[logmp, logtc, early, late, c200c]``. Returns
+        ``(mu, sigma, cov)`` with shapes (N, T), (N, T), (N, T, T), where
         ``cov[i] = diag(sigma[i]) @ R @ diag(sigma[i])``.
         """
         Xs = (np.atleast_2d(np.asarray(X, float)) - self.mu_x) / self.sd_x
@@ -66,13 +70,13 @@ class Emulator:
     def sample(self, X, size=1, rng=None):
         """Draw ``size`` correlated, heteroscedastic profiles per halo.
 
-        Returns (size, N, 4). This is the generative path (exp15): the spread
+        Returns (size, N, T). This is the generative path (exp15): the spread
         of these draws reproduces the population; the mean alone does not.
         """
         rng = np.random.default_rng(rng)
         mu, sigma, _ = self.predict(X)
         chol = np.linalg.cholesky(self.corr)                 # R = L L^T, shared
-        z = rng.standard_normal((size, len(mu), 4))
+        z = rng.standard_normal((size, len(mu), mu.shape[1]))
         return mu[None] + sigma[None] * (z @ chol.T)
 
 
@@ -92,11 +96,12 @@ def fit(X, Y, mean="linear", ridge=2.0):
     mean_design = _mean_design(Xs, mean)
     var_design = np.column_stack([np.ones(len(Xs)), Xs])
 
-    beta = np.empty((4, mean_design.shape[1]))
-    gamma = np.empty((4, var_design.shape[1]))
+    nb = Y.shape[1]
+    beta = np.empty((nb, mean_design.shape[1]))
+    gamma = np.empty((nb, var_design.shape[1]))
     resid = np.empty_like(Y)
     sig = np.empty_like(Y)
-    for j in range(4):
+    for j in range(nb):
         beta[j], *_ = np.linalg.lstsq(mean_design, Y[:, j], rcond=None)
         resid[:, j] = Y[:, j] - mean_design @ beta[j]
         gamma[j] = _fit_logvar(resid[:, j], Xs, ridge)
@@ -107,7 +112,7 @@ def fit(X, Y, mean="linear", ridge=2.0):
 
 def _mean_design(Xs, mean):
     """[1, features, (poly-2 terms)] from standardized features ``Xs`` (N, 5)."""
-    cols = [np.ones(len(Xs))] + [Xs[:, i] for i in range(5)]
+    cols = [np.ones(len(Xs))] + [Xs[:, i] for i in range(Xs.shape[1])]
     if mean == "poly2":
         cols += [Xs[:, i] * Xs[:, k] for i, k in _POLY2_TERMS]
     return np.column_stack(cols)
@@ -141,11 +146,11 @@ def _fit_logvar(r, Z, ridge):
 # --------------------------------------------------------------------------- #
 def _cv_oof(X, Y, mean, k=5, seed=0):
     """Out-of-fold (mu, sigma, cov) from k-fold CV — the honest scores."""
-    n = len(Y)
+    n, nb = Y.shape
     order = np.random.default_rng(seed).permutation(n)
-    mu = np.empty((n, 4))
-    sigma = np.empty((n, 4))
-    cov = np.empty((n, 4, 4))
+    mu = np.empty((n, nb))
+    sigma = np.empty((n, nb))
+    cov = np.empty((n, nb, nb))
     for fold in np.array_split(order, k):
         tr = np.setdiff1d(np.arange(n), fold)
         emu = fit(X[tr], Y[tr], mean=mean)
@@ -158,15 +163,15 @@ def _joint_nll(Y, mu, cov):
     out = np.empty(len(Y))
     for i in range(len(Y)):
         _, logdet = np.linalg.slogdet(cov[i])
-        out[i] = 0.5 * (4 * np.log(2 * np.pi) + logdet
+        out[i] = 0.5 * (Y.shape[1] * np.log(2 * np.pi) + logdet
                         + resid[i] @ np.linalg.solve(cov[i], resid[i]))
     return float(out.mean())
 
 
 def _cond_cov_gap(Y, mu, sigma):
-    """Mean |68%-coverage(high sigma) - coverage(low sigma)| over the 4 bins."""
+    """Mean |68%-coverage(high sigma) - coverage(low sigma)| over the bins."""
     gaps = []
-    for j in range(4):
+    for j in range(Y.shape[1]):
         s = sigma[:, j]
         edges = np.quantile(s, [1 / 3, 2 / 3])
         bins = np.digitize(s, edges)

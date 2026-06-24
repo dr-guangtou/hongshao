@@ -272,9 +272,42 @@ Cross-experiment plan. Mirrors the phase sequence in
   — DiffMAH(4) is at the MAH ceiling at every radius; the outskirt residual is
   intrinsic, not feature-limited. **Keep DiffMAH+c_200c** (portable AND at the
   ceiling).
-- [ ] **predict the *whole* profile, not a few masses** (Option 1, next). The
-  compression is already done — exp02 (CoG PCA, 2–3 modes → 0.01 dex) and exp03
-  (5-number radial-DiffMAH, `rdm_*` cached → 0.005 dex). What's missing: train the
-  emulator to predict those PCA scores / `rdm_*` params from `DiffMAH + c_200c`
-  (correlated, heteroscedastic), then evaluate the *reconstructed* CoG (per-radius
-  CRPS/calibration). Independent experiment; do not alter the graduated emulator.
+- [x] **exp22_full_profile_predict** — predict the *whole* CoG (Option 1). Compress
+  each CoG to `[logMtot, PC1, PC2, PC3]` (exp02 shape PCA, fit in-fold), predict the
+  4-vector from `DiffMAH+c_200c` with the heteroscedastic emulator, reconstruct the
+  per-radius CoG **analytically** (linear → Gaussian per radius). **Result:** the
+  full profile is predictable and well-calibrated (recon RMS 0.116 dex — dominated
+  by the total-mass SHMR scatter; coverage on the line). Predicting *shape* adds
+  **+10% per-radius CRPS** over a mass+mean-shape baseline, peaking ~17% at ~10-20
+  kpc; almost all of it is PC1=concentration (R²=0.39, via `c_200c`), PC2 0.33,
+  PC3 0.05. Beyond total mass + concentration the shape is largely intrinsic.
+  - **exp22b (`density_profile.py`)** — PCA the 1-D **density** profile `Σ(R)`
+    (differenced from the CoG) instead of the cumulative CoG. **The density is
+    more halo-predictable:** value of predicting shape +15.7% vs +10.0%, PC1
+    R²=0.54 vs 0.39, and — unlike the CoG — it keeps ~30% shape value in the
+    **outskirts** (>50 kpc) where the cumulative mass carries none. For
+    envelope/ICL modeling, predict `Σ(R)`, not `M(<R)`.
+  - **generative demo (`exp22_generative.png`)** — the derived-aperture "bias" is
+    regression to the mean (slope −(1−R²)), the mean is unbiased in feature space,
+    and sampling the predictive restores the population (std 0.41=0.41); the
+    point estimate is under-dispersed by construction.
+- [x] **exp23 — graduate all four prediction modes into the library.** Generalized
+  `hongshao/emulator.py` to **N targets** (was hardcoded 4; exp19 still reproduced
+  exactly) and added `hongshao/profile_emulator.py`: `ProfileEmulator`
+  (fit/predict/sample of a full 1-D profile via PCA→core emulator→linear
+  reconstruction) + target builders `aperture_targets` (kpc), `re_targets` (Re),
+  `density_from_cog`, and `integrate_density` (stable outward CoG integration). One
+  self-check reproduces all four: (1) kpc CRPS 0.0832, (2) Re 6-bin CRPS 0.0703
+  calibrated, (3) CoG profile recon RMS 0.118 / PC1 R²=0.39, (4) density PC1
+  R²=0.54. All four share the one heteroscedastic core; library only.
+- [x] **exp23 — generalize the deformer (`hongshao/forward.py`).** The 5-knob
+  deformation now spans all four modes: `forward`/`sample` are target-agnostic
+  (`norm_weight`/`outer_weight` default to all-bins / last-bin, so any-T aperture
+  emulator works), and `forward_profile` deforms a `ProfileEmulator` — `d0` a
+  uniform profile shift, `d_out` an inner↔outer redistribution (pure shape, built
+  by projecting an outer-radius weight onto the PCA modes), `f_ab` the
+  assembly-bias amplitude, `s` the scatter. `Deform()` reproduces every mode
+  exactly. Self-check covers T=4, T=6, and the profile path.
+- [ ] (optional follow-ons) the **parametric `rdm_*` (radial-DiffMAH, exp03)**
+  route as a physical-parameter alternative to PCA; the **density profile in Re
+  units**; feed the predictive profile uncertainty to the forward model.
