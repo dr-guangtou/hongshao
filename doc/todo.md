@@ -327,5 +327,13 @@ Cross-experiment plan. Mirrors the phase sequence in
   (consistent with exp24 — more/finer profile parameters don't buy a stronger halo
   connection; the shape residual is intrinsic). If revisited, use *identifiable*
   derived descriptors (R50, R80/R20, outer mass fraction), not raw Sérsic params.
+- [x] **exp25_deposition_kernel** — physics-inspired forward toy: build a galaxy's
+  1-D profile directly from its *actual* MAH. Each halo-mass increment deposits
+  `eps(z)·dM_h` of stars as a centred, mass-normalized 2-D Gaussian of width
+  `σ=f·R_200c` (so amplitude isn't free; recent stars land at large R). Closed-form
+  CoG. On TNG300's most massive galaxy: const-eps fails (0.234 dex, too extended);
+  `eps∝(1+z)^2.5` + `σ=f·R_200c` reproduces it to **0.055 dex with 2 params**.
+  Feasible proof-of-concept; next would be fitting `(f,β)` across the population.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
-  predictive profile uncertainty to the forward model.
+  predictive profile uncertainty to the forward model; **exp25 follow-up** —
+  population fit of the deposition `(f, β)`, are they universal or assembly-dependent?
