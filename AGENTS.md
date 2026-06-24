@@ -18,9 +18,12 @@ Read those two before proposing analyses.
 
 HongShao predicts **central-galaxy stellar masses and profiles from halos** (the
 Ultimate SHMR), and nothing downstream of that. In scope: the halo→galaxy map —
-features (DiffMAH + `c_200c`), the mean/scatter emulator (`hongshao/emulator.py`),
-its generative sampling, and a thin, physically-labeled **deformation layer**
-(`hongshao/forward.py`) that lets an external analysis tune the relation. That
+features (DiffMAH + `c_200c`), the N-target mean/scatter emulator
+(`hongshao/emulator.py`) with generative sampling, the **profile/target layer**
+(`hongshao/profile_emulator.py`) that graduates all four prediction modes (kpc
+apertures, Re apertures, the cumulative CoG, and the 1-D density profile) through
+that one core, and a thin, physically-labeled **deformation layer**
+(`hongshao/forward.py`) that lets an external analysis tune the relation. The
 deformation layer is the **hand-off boundary**: it outputs (deformed) stellar
 masses/profiles for a halo catalog, full stop.
 

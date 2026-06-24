@@ -291,7 +291,15 @@ Cross-experiment plan. Mirrors the phase sequence in
     regression to the mean (slope −(1−R²)), the mean is unbiased in feature space,
     and sampling the predictive restores the population (std 0.41=0.41); the
     point estimate is under-dispersed by construction.
+- [x] **exp23 — graduate all four prediction modes into the library.** Generalized
+  `hongshao/emulator.py` to **N targets** (was hardcoded 4; exp19 still reproduced
+  exactly) and added `hongshao/profile_emulator.py`: `ProfileEmulator`
+  (fit/predict/sample of a full 1-D profile via PCA→core emulator→linear
+  reconstruction) + target builders `aperture_targets` (kpc), `re_targets` (Re),
+  `density_from_cog`, and `integrate_density` (stable outward CoG integration). One
+  self-check reproduces all four: (1) kpc CRPS 0.0832, (2) Re 6-bin CRPS 0.0703
+  calibrated, (3) CoG profile recon RMS 0.118 / PC1 R²=0.39, (4) density PC1
+  R²=0.54. All four share the one heteroscedastic core; library only.
 - [ ] (optional follow-ons) the **parametric `rdm_*` (radial-DiffMAH, exp03)**
   route as a physical-parameter alternative to PCA; the **density profile in Re
   units**; feed the predictive profile uncertainty to the forward model.
-  Independent experiments; do not alter the graduated emulator.
