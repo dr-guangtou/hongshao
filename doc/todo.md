@@ -308,6 +308,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   by projecting an outer-radius weight onto the PCA modes), `f_ab` the
   assembly-bias amplitude, `s` the scatter. `Deform()` reproduces every mode
   exactly. Self-check covers T=4, T=6, and the profile path.
-- [ ] (optional follow-ons) the **parametric `rdm_*` (radial-DiffMAH, exp03)**
-  route as a physical-parameter alternative to PCA; the **density profile in Re
-  units**; feed the predictive profile uncertainty to the forward model.
+- [x] **exp24_rdm_c200c** — does `c_200c` predict the RDM shape parameters the
+  MAH couldn't? **Hypothesis refuted.** `c_200c` helps only the normalization
+  (`logMstar0` R² 0.61→0.65, partial r +0.33 — the total-mass effect); the shape
+  params (`beta_in`, `beta_out`, `R_c`) stay weakly predictable and gain ≈0 from
+  `c_200c` (≤0.006 R², partial r ≤0.08). The exp03/04/05 "weak halo→shape-param
+  connection" verdict stands, now extended to DiffMAH+c_200c. Reconstruction ties
+  the PCA route (CRPS 0.0605, recon RMS 0.108 dex on R≥5 kpc) because the profile
+  is normalization-dominated and the shape signal hides in a degenerate
+  combination. Concentration sets *how much* mass, not *how it's distributed*.
+- [ ] (optional follow-ons) the **density profile in Re units**; feed the
+  predictive profile uncertainty to the forward model.
