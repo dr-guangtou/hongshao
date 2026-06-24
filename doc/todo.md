@@ -300,6 +300,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   self-check reproduces all four: (1) kpc CRPS 0.0832, (2) Re 6-bin CRPS 0.0703
   calibrated, (3) CoG profile recon RMS 0.118 / PC1 R²=0.39, (4) density PC1
   R²=0.54. All four share the one heteroscedastic core; library only.
+- [x] **exp23 — generalize the deformer (`hongshao/forward.py`).** The 5-knob
+  deformation now spans all four modes: `forward`/`sample` are target-agnostic
+  (`norm_weight`/`outer_weight` default to all-bins / last-bin, so any-T aperture
+  emulator works), and `forward_profile` deforms a `ProfileEmulator` — `d0` a
+  uniform profile shift, `d_out` an inner↔outer redistribution (pure shape, built
+  by projecting an outer-radius weight onto the PCA modes), `f_ab` the
+  assembly-bias amplitude, `s` the scatter. `Deform()` reproduces every mode
+  exactly. Self-check covers T=4, T=6, and the profile path.
 - [ ] (optional follow-ons) the **parametric `rdm_*` (radial-DiffMAH, exp03)**
   route as a physical-parameter alternative to PCA; the **density profile in Re
   units**; feed the predictive profile uncertainty to the forward model.
