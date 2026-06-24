@@ -317,5 +317,15 @@ Cross-experiment plan. Mirrors the phase sequence in
   the PCA route (CRPS 0.0605, recon RMS 0.108 dex on R≥5 kpc) because the profile
   is normalization-dominated and the shape signal hides in a degenerate
   combination. Concentration sets *how much* mass, not *how it's distributed*.
+- [~] **2-Sérsic on the density profile (prototyped, not pursued).** A 6-param
+  2-Sérsic (cumulative-to-CoG, multi-start, ordered Re1<Re2) fits the profiles
+  excellently (median 0.0008 dex, better than RDM/PCA) but the parameters are
+  **degenerate / non-identifiable**: `n` hits bounds in ~¼ of galaxies, components
+  merge or swap, masses jump between similar galaxies. 6 params is too many for an
+  intrinsically ~2–3D profile (exp02), so a low halo→param correlation would be
+  confounded by fit non-uniqueness, not physics. **Decision: not worth pursuing**
+  (consistent with exp24 — more/finer profile parameters don't buy a stronger halo
+  connection; the shape residual is intrinsic). If revisited, use *identifiable*
+  derived descriptors (R50, R80/R20, outer mass fraction), not raw Sérsic params.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
   predictive profile uncertainty to the forward model.
