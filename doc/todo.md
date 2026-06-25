@@ -328,12 +328,15 @@ Cross-experiment plan. Mirrors the phase sequence in
   connection; the shape residual is intrinsic). If revisited, use *identifiable*
   derived descriptors (R50, R80/R20, outer mass fraction), not raw Sérsic params.
 - [x] **exp25_deposition_kernel** — physics-inspired forward toy: build a galaxy's
-  1-D profile directly from its *actual* MAH. Each halo-mass increment deposits
-  `eps(z)·dM_h` of stars as a centred, mass-normalized 2-D Gaussian of width
-  `σ=f·R_200c` (so amplitude isn't free; recent stars land at large R). Closed-form
-  CoG. On TNG300's most massive galaxy: const-eps fails (0.234 dex, too extended);
-  `eps∝(1+z)^2.5` + `σ=f·R_200c` reproduces it to **0.055 dex with 2 params**.
-  Feasible proof-of-concept; next would be fitting `(f,β)` across the population.
+  1-D profile directly from its *actual* MAH (no in-situ/ex-situ labels). Each
+  halo-mass increment deposits `ε(z)·dM_h` of stars as a centred, mass-normalized
+  2-D Gaussian of width `σ(t)` (amplitude not free; closed-form CoG). On TNG300's
+  most massive galaxy: width `σ(t)=σ_0(t/t_obs)^g` (tested vs `R_200c`-tied —
+  equally good, so R_200c dropped) + **two-epoch quenching efficiency** (steep
+  early `b_early≈8.7` until `z_c≈5`, then shallow `b_late≈1.1`) reproduces the BCG
+  to **0.008 dex** (vs 0.028 for a single power-law). Caveat: ε>1 at the 2 earliest
+  epochs (2.8% of M*; capping at f_b keeps 0.007). Next: population fit — are the
+  params universal, and does `z_c` scale with halo mass?
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
   predictive profile uncertainty to the forward model; **exp25 follow-up** —
   population fit of the deposition `(f, β)`, are they universal or assembly-dependent?
