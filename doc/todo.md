@@ -361,5 +361,22 @@ Cross-experiment plan. Mirrors the phase sequence in
   null z_c trend are robust but the efficiency-slope *interpretation* is not.
   Suggested follow-on (parked): hierarchical/mixed-effects fit (partial pooling) to
   put proper uncertainties on the population mean/scatter/mass-slope of each param.
+- [~] **exp26 — differential stellar-density profiles (in progress, branch
+  `exp26_differential_profiles`).** Tests the exp25 centred-Gaussian deposition
+  assumption against the *measured* z-evolution: the drop has surface-density
+  profiles at 5 epochs (z=0.4/0.7/1.0/1.5/2.0 = snaps 72/59/50/40/33; flag=True for
+  3380/3388 at every z). Built & stored `ΔΣ(R)=Σ(later)−Σ(earlier)` for the 4
+  adjacent pairs (n=2545). **Result: the added mass is NOT a centred Gaussian** —
+  growth is **inside-out and multiplicative**, `Σ_low/Σ_high ∝ R^b` with the
+  fractional growth `ΔlogΣ` rising ~linearly in `logR` (long-baseline z=2→0.4
+  b=+0.85; outer 60 kpc grows ~22× vs inner 8 kpc ~3.8×; only ~3% show a central-
+  density drop). A Gaussian piles mass at R=0; reality flattens/extends the profile.
+  Implication: replace the centred-Gaussian primitive with a multiplicative power-
+  law amplification (or an outer-weighted/shell deposit). Caveats: 5 epochs only,
+  z≤2, adjacent-pair ΔΣ noisy (use stacked median / long baseline), ellipticity
+  normalization, inner <6 kpc marginally resolved.
+- [ ] (parked, exp26 follow-ons) revisit the deposition kernel with an outer-
+  weighted / multiplicative-flattening primitive; match the 3388 to the
+  DiffMAH/DiffStar 288k-halo catalog (`catgrp_id`↔`halo_id`) to use the real SFH.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
   predictive profile uncertainty to the forward model.
