@@ -70,6 +70,27 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   population-level version of a trend directly (does adding a `z_c(M_h)` slope to
   the shared fit lower the loss? here: ΔRMS −0.0003, no) — it is stronger than a
   correlation over per-galaxy point estimates.
+- **Difference in log/fractional space, not linear, when the profile is steep
+  (exp26).** Differencing two measured surface-density profiles `ΔΣ=Σ_low−Σ_high`
+  at fixed radius is dominated by the steep, marginally-resolved core: a tiny
+  size shift makes a huge linear `ΔΣ` there, so the "added mass" looked mostly
+  negative and noise-classified ~40–80% of galaxies as "core-drop". Switching to
+  `Δlog Σ` (fractional growth) gave a clean, robust signal: growth rises with R
+  (inside-out), `Σ_low/Σ_high ∝ R^b`, and only ~3% truly drop their core. When an
+  observable spans orders of magnitude, the fractional change is the robust thing
+  to characterise; the linear difference inherits the dynamic range as noise.
+- **Small Δt differentials are noise; stack or use the long baseline (exp26).**
+  Per-galaxy `ΔΣ`/`Δlog Σ` between *adjacent* snapshots (small Δt, similar Σ) is
+  noise-dominated — per-galaxy slope fits scattered around zero. The population
+  *stacked* (per-radius median) profile and the long baseline (z=2→0.4) gave the
+  real trend. Fit the stacked profile, not the median of per-object fits, when the
+  per-object signal is below the noise.
+- **Check the sign convention with a known-sign case (exp26).** A swapped
+  `(earlier, later)` tuple in the pair list silently flipped every adjacent-pair
+  differential (growth read as decline); only the long-baseline call, written in
+  the right order, looked correct — which is what exposed the bug. A galaxy that
+  grows must have `Σ(later) > Σ(earlier)`: assert the obvious-sign case before
+  trusting the subtle ones.
 - **Don't conflate "a parameter is unpredictable" with "the signal is weak."**
   In exp08 the radial-DiffMAH shape params predict poorly from the MAH (R²≤0.22),
   and I wrote that "the MAH's influence on shape is weak." Wrong: a direct
