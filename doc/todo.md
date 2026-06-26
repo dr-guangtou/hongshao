@@ -375,8 +375,20 @@ Cross-experiment plan. Mirrors the phase sequence in
   law amplification (or an outer-weighted/shell deposit). Caveats: 5 epochs only,
   z≤2, adjacent-pair ΔΣ noisy (use stacked median / long baseline), ellipticity
   normalization, inner <6 kpc marginally resolved.
-- [ ] (parked, exp26 follow-ons) revisit the deposition kernel with an outer-
-  weighted / multiplicative-flattening primitive; match the 3388 to the
-  DiffMAH/DiffStar 288k-halo catalog (`catgrp_id`↔`halo_id`) to use the real SFH.
+- [x] **exp27 — TNG-API cross-match to DiffMAH/DiffStar (branch
+  `exp27_tng_api_crossmatch`).** Bridge is **position, not group ID**: the
+  `diffmah_tng.h5` `x/y/z` arrays are the main-progenitor positions with **column
+  index == snapshot number**, so column 72 (cMpc/h) == our snap-72 `SubhaloPos`
+  (ckpc/h ÷1000) *exactly* when our subhalo is a z=0 main progenitor. Pulled all
+  3388 MPBs from the API (30 min, 0 fail), KDTree-matched at 1 ckpc/h:
+  **3154/3388 matched (93.1%)**, 234 off-main-branch (no z=0 descendant → no
+  DiffMAH row). Input `logMh(z=0.4)`≡official M200c snap72 to +0.000 dex.
+  Outputs `crossmatch.fits` (+DiffMAH/DiffStar params) and `official_mah.npz`.
+- [ ] **exp27 next — summed-accreted-mass MAH** from `…/sublink/full.hdf5` (the
+  de-biased MAH; replaces the running-max Mpeak DiffMAH was fit to). Heavy:
+  biggest full tree ≈300 MB/290k rows → stream-walk the matched subset, don't
+  cache every tree.
+- [ ] (parked, exp26 follow-on) revisit the deposition kernel with an outer-
+  weighted / multiplicative-flattening primitive, now feedable by the real SFH.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
   predictive profile uncertainty to the forward model.
