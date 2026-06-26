@@ -327,5 +327,39 @@ Cross-experiment plan. Mirrors the phase sequence in
   (consistent with exp24 — more/finer profile parameters don't buy a stronger halo
   connection; the shape residual is intrinsic). If revisited, use *identifiable*
   derived descriptors (R50, R80/R20, outer mass fraction), not raw Sérsic params.
+- [x] **exp25_deposition_kernel** — physics-inspired forward toy: build a galaxy's
+  1-D profile directly from its *actual* MAH (no in-situ/ex-situ labels). Each
+  halo-mass increment deposits `ε(z)·dM_h` of stars as a centred, mass-normalized
+  2-D Gaussian of width `σ(t)` (amplitude not free; closed-form CoG). On TNG300's
+  most massive galaxy: width `σ(t)=σ_0(t/t_obs)^g` (tested vs `R_200c`-tied —
+  equally good, so R_200c dropped) + **two-epoch quenching efficiency** (steep
+  early `b_early≈8.7` until `z_c≈5`, then shallow `b_late≈1.1`) reproduces the BCG
+  to **0.008 dex** (vs 0.028 for a single power-law). Caveat: ε>1 at the 2 earliest
+  epochs (2.8% of M*; capping at f_b keeps 0.007).
+- [x] **exp25 phase 2 — population fit** (`population_fit.py`, n=2540). The forward
+  map generalizes: the toy reconstructs *every* clean galaxy's CoG to median
+  **0.0045 dex** (5-param), and **0.022 dex** with a reduced model (shape frozen at
+  the population median `g=1.67, b_early=3.62, b_late=1.15`; only `σ_0, z_c` free).
+  The shape params are **~universal** (|r(logMₕ)|≤0.08 for all five). **Headline:
+  `z_c` does NOT scale with halo mass** — slope −0.55/dex but **r=−0.09** (r²<0.01,
+  opposite the predicted sign); also uncorrelated with `M*` (r=0.01) and `z50`
+  (r=0.07). The quenching-mass prediction is **refuted**; the phase-1 single-galaxy
+  `z_c≈5` was a degenerate steep-burst solution (relaxes to ~1.8 under the ε≤1 cap).
+  Method: cap ε≤1 (NOT f_b — f_b distorts low-mass halos differentially and would
+  fake a trend). Toy's value = interpretable forward MAH→profile map, not a new
+  predictor or quenching clock.
+- [x] **exp25 phase 3 — TRUE population fit** (one *shared* kernel for all 2540
+  galaxies, vectorized; Phase 2 was 2540 independent fits). A single universal
+  parameter set reconstructs every profile to median **~0.08 dex** (global A 5p
+  0.083; B with σ₀=f(R50) 0.080), below the emulator's 0.116. Cost-of-universality
+  ladder: free 0.0045 → reduced 0.022 → global 0.080 (≈×4/step). **(1)** A
+  population-level `z_c(logMₕ)` slope changes RMS by −0.0003 → quenching-mass trend
+  refuted in its strongest form. **(2)** σ₀–R50 is shallow (slope 0.33): width set
+  by cosmic time, not final size. **(3)** The shared optimum **inverts** the
+  per-galaxy steep-early shape to steep-late (b_early≈0.2<b_late≈4, g≈2.4; robust,
+  3/4 starts) — a `(g,b_early,b_late)` degeneracy, so reconstruction accuracy & the
+  null z_c trend are robust but the efficiency-slope *interpretation* is not.
+  Suggested follow-on (parked): hierarchical/mixed-effects fit (partial pooling) to
+  put proper uncertainties on the population mean/scatter/mass-slope of each param.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
   predictive profile uncertainty to the forward model.
