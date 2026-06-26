@@ -30,6 +30,46 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Analysis / interpretation
 
+- **A "physical" constraint that scales with the target can fake a trend (exp25
+  population fit).** Capping the deposition efficiency at the baryon fraction
+  `f_b=0.157` seemed the obviously-physical bound. But via the SHMR, low-mass
+  halos are ε-richer, so an `f_b` cap bites them *differentially* — it inverts
+  `b_early<b_late`, destroys the two-epoch structure, and could manufacture a
+  `z_c(Mₕ)` slope out of a mass-dependent distortion. The correct bound was the
+  mass-blind hard limit `ε≤1` (can't form more stars than accreted mass).
+  **Before enforcing a constraint, check whether it couples to the very axis you
+  are testing the trend along; if so it can create or hide the effect.** I caught
+  this only by looking at `b_early` vs `b_late` (not just RMS) on a *mass-stratified*
+  validation subsample — the first-N rows were the most massive (the table is
+  mass-ordered) and hid it.
+- **With n in the thousands, p-values certify trends that don't exist (exp25).**
+  `z_c` vs `logMₕ` had p=9e-6 — and r=−0.09, r²<0.01, the *opposite* sign to the
+  prediction. n=2540 makes a physically-negligible slope "highly significant."
+  Report the effect size (r, slope-over-range vs scatter), not the p-value, and
+  cross-check on an independent estimator before claiming a relation. Here the
+  honest verdict was a *null*: the quenching redshift carries no halo-mass signal.
+- **A degenerate per-object parameter becomes identifiable only as a population
+  constraint (exp25).** Per galaxy, `z_c`/`b_early` trade off and `b_late` rails at
+  its bounds (identifiable in 1790/2540). Freezing the ~universal shape params at
+  their population medians and re-fitting only the identifiable `(σ_0, z_c)` (the
+  "reduced model") is the honest population statement, and it agreed with the
+  full-fit identifiable subset. Don't read a population trend off a parameter that
+  is non-identifiable on a single object — constrain it collectively first.
+- **Per-galaxy fits are not a population fit, and the two can disagree on the
+  interpretation (exp25 phase 3).** Fitting every galaxy independently (5 params ×
+  2540) is exploration; a true population model shares parameters. The shared-kernel
+  fit (minimize mean RMS over the whole sample at once) *inverted* the per-galaxy
+  "steep early growth" (`b_early>b_late`) to steep-late (`b_early≈0.2<b_late≈4`),
+  robustly (3/4 diverse starts to the same lower optimum). Cause: `(g, b_early,
+  b_late)` are degenerate — "concentrated early" can be built by small early widths
+  OR by slow width-growth + late efficiency. **Lesson:** the median of per-galaxy
+  best-fits ≠ the joint population optimum, and a parameter's *physical
+  interpretation* can flip between them even when the reconstruction is equally
+  good. Report what is robust (reconstruction accuracy, the null mass-trend), and
+  flag the degenerate parts as phenomenology, not inferred history. Test the
+  population-level version of a trend directly (does adding a `z_c(M_h)` slope to
+  the shared fit lower the loss? here: ΔRMS −0.0003, no) — it is stronger than a
+  correlation over per-galaxy point estimates.
 - **Don't conflate "a parameter is unpredictable" with "the signal is weak."**
   In exp08 the radial-DiffMAH shape params predict poorly from the MAH (R²≤0.22),
   and I wrote that "the MAH's influence on shape is weak." Wrong: a direct
