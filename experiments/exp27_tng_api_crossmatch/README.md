@@ -75,7 +75,16 @@ law, `k = 3.5` fixed) but different anchor `t0` — **do not confuse them**:
 `diffmah_consistency.py` reconciles them and writes **`outputs/diffmah_combined.fits`**
 (`own_*`, `official_*`, a `diffmah_source` ∈ {official, own, none}, and recommended
 columns = official-preferred / own-fallback). Sources: **official 3154, own 221,
-none 13**.
+none 13**. The 13 `none` have **no official fit either** (all unmatched) and
+near-empty local trees (12/13 have ≤3 MAH points) — nothing to fall back to, so
+they stay flagged.
+
+**What MAH does DiffMAH fit?** (paper-verified) Hearin+2021 fits the **main-branch
+peak mass** `M_peak(t)` = *"the largest mass the main progenitor halo has ever
+attained up until time t"* (running cumulative max), **not** a summed-accreted
+mass. So both flavours here are main-branch-Mpeak fits; the planned
+summed-accreted MAH is a *departure* from the DiffMAH definition (see
+`doc/mah_definitions_research.md`).
 
 **Unit gotcha (fixed):** the DiffMAH catalog stores log masses in **Msun/h**; our
 M200c is in Msun. The raw mismatch was a flat −0.169 dex (= log₁₀ h) — once

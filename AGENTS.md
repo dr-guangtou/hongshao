@@ -43,6 +43,11 @@ clean, portable SHMR library — don't let it grow into an inference framework.
 - **Measure, don't guess.** Never estimate numbers (scatter, variance
   explained, fit quality) — benchmark on the real data. Validate on a small
   subsample (sub-minute) before running on all 3388 halos.
+- **Masses are h-free (Msun) by default.** All halo and stellar masses in this
+  repo are log10(M / Msun), little-h divided out (`PICKLE_MASS_UNIT = 1e10/H`).
+  External catalogs often differ: the official DiffMAH catalog (`diffmah_tng.h5`)
+  is in **Msun/h** — add +log10(1/h) = +0.169 dex on ingest (see exp27). Always
+  reconcile little-h before trusting a ~0.17 dex mass discrepancy.
 - **Probabilistic framing.** Models are `P(theta_prof | M0, theta_MAH)`, not
   deterministic fits. Residual scatter is a result, not a bug.
 - **Null models matter.** Compare against final-mass-only and shuffled-MAH
