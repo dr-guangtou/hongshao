@@ -227,7 +227,25 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   only overfit. Use an analytic poly-2 alongside GBM when probing the nonlinear
   limit; "flexible model" doesn't guarantee "best approximator" at this scale.
 
+- **A cumulative profile barely constrains the deposit *shape* (exp29).** exp25 fit
+  the z=0.4 curve of growth to 0.008 dex with a centred Gaussian; the multi-epoch
+  *differential* (`Δlog Σ` between epochs) is the discriminating test. Fit the thing
+  that actually depends on the unknown (here the per-epoch added mass), not an
+  integral that washes it out — and don't read a good single-epoch fit as
+  validating the primitive.
+- **Don't confuse a cumulative/differential statement with a primitive one
+  (exp29).** exp26 "the added mass peaks at large R, not a centred Gaussian" is
+  about the *summed* growth; the forward model that reproduces it deposits **centred
+  Gaussians whose width σ(t) grows with cosmic time** — late wide clumps make the
+  cumulative added mass outer-weighted (b≈0.8) with every primitive centred.
+  Outer-weighting `p>0` is then redundant with `g` and overshoots into undershoot.
+- **When comparing model vs data slopes, fit both over the *same valid radii*
+  (exp29).** A model with a clipped floor (Σ→0 at large R, high z) produces a
+  spurious huge `b` where the data have no signal; restricting the model's slope fit
+  to the data's flagged radii changed model long-baseline `b` from 6.6 to 0.8.
+
 ## Workflow
 
 - Background `uv run` commands buffer stdout through pipes; redirect to a file
   and read that, or block on the process, rather than polling a pipe.
+- `np.trapz` is gone in NumPy 2 — use `np.trapezoid`.
