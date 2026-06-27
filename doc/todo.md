@@ -384,10 +384,17 @@ Cross-experiment plan. Mirrors the phase sequence in
   **3154/3388 matched (93.1%)**, 234 off-main-branch (no z=0 descendant → no
   DiffMAH row). Input `logMh(z=0.4)`≡official M200c snap72 to +0.000 dex.
   Outputs `crossmatch.fits` (+DiffMAH/DiffStar params) and `official_mah.npz`.
-- [ ] **exp27 next — summed-accreted-mass MAH** from `…/sublink/full.hdf5` (the
-  de-biased MAH; replaces the running-max Mpeak DiffMAH was fit to). Heavy:
-  biggest full tree ≈300 MB/290k rows → stream-walk the matched subset, don't
-  cache every tree.
+- [~] **exp28 — summed-accreted-mass MAH (branch `exp28_summed_accreted_mah`).**
+  Built `M_sum(z)` = Σ exclusive `SubhaloMass` over all SubLink-tree progenitors
+  per snapshot, from `…/sublink/full.hdf5` (trees in `/Users/mac/work/tng`, NOT
+  Dropbox). Two example halos (logMh≈13.5, clean + declining): summed-accreted is
+  smooth, +0.07–0.27 dex above the main-branch Mpeak, recovers the real progenitor
+  where the main branch drops out. **Lit review (`doc/summed_accreted_mah.md`):
+  `M_sum(z)` is NOT a standard named quantity, captures merger-accreted-only
+  (excludes ~40% smooth accretion, Genel+2010), is resolution-dependent → not a
+  drop-in `M200c`.** Next: (a) infall-peak-sum variant (monotonic, USMF-grounded);
+  (b) mass-threshold robustness; (c) scale to the matched subset — biggest full
+  tree ≈300 MB/290k rows → stream-walk, don't cache every tree.
 - [ ] (parked, exp26 follow-on) revisit the deposition kernel with an outer-
   weighted / multiplicative-flattening primitive, now feedable by the real SFH.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
