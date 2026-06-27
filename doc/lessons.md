@@ -4,6 +4,12 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Data handling (TNG300 drop)
 
+- **DiffMAH was fit to SubhaloMass, not M200c (exp28 refines exp27).** Per-halo,
+  the catalog `log_mah_sim` equals the tree main-branch **SubhaloMass** Mpeak to
+  <0.005 dex; vs M200c it differs ~0.05–0.07 dex. exp27's "≡ M200c" held only at the
+  sample median (where SubhaloMass≈M200c). Put tree-derived MAHs on SubhaloMass to
+  compare with DiffMAH. Also: the DiffMAH *fit* carries a real ~0.1–0.17 dex residual
+  vs its own data at z=0.4 (z=0-anchored rolling power law overshoots near z=0.4).
 - **DiffMAH catalog bridge = position, not group ID (exp27).** `diffmah_tng.h5`
   is keyed by a z=0 row index (`halo_id`), but its `x/y/z` arrays are the
   main-progenitor-branch positions with **array column == TNG snapshot number**
