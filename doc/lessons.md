@@ -14,6 +14,18 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   match: a z=0.4 subhalo with no surviving z=0 main-branch descendant (merged)
   simply has no DiffMAH row, and that shows as a clean *second* distance mode
   (16–122 ckpc/h), so the 1-ckpc/h tolerance is unambiguous — flag, don't force.
+- **DiffMAH catalog masses are Msun/h, not Msun (exp27).** `diffmah_tng.h5`
+  `log_mah_*`/`logmp_*` are log10(M / [Msun/h]); our M200c is Msun. The raw gap is
+  a flat −0.169 dex (= log10 h) that masquerades as a physics offset — it inflated
+  the own-vs-official curve RMS from 0.078 to 0.221 dex. Add +log10(1/h)=+0.169
+  before comparing; then DiffMAH `log_mah_sim` ≡ M200c to −0.008 dex (same mass
+  def). Always reconcile little-h before believing a ~0.17 dex mass discrepancy.
+- **Compare DiffMAH fits by reconstructed CURVE, not raw params (exp27).** The
+  four params are degenerate: own-vs-official `early` scatters 1.1, `logtc` 0.5
+  (ours even rails its bounds because the z=0.4-limited fit can't see the
+  transition), yet the reconstructed M(t) agree to 0.078 dex. So normalization /
+  M(t) are interchangeable across flavours, but never feed mixed-flavour raw
+  `(logtc, early, late)` into one model — pick one flavour per model.
 - **Use stdlib `urllib`, not `requests`, in the `uv` venv (exp27).** The project
   venv has no `requests`; `urllib.request` + `ThreadPoolExecutor` pulls 3388 TNG
   MPB files at 1.9 gal/s (10 workers) with retry/backoff — no new dependency. The

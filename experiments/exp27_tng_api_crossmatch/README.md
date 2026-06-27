@@ -58,8 +58,43 @@ bridge end-to-end: input `logMh(z=0.4)` ≡ official `log M₂₀₀c` at snap 7
 - `outputs/official_mah.npz` — snapshot-aligned (3388×100) main-branch histories:
   `log_m200c`, `log_mstar_inrad`, `log_msubhalo` (official SUBFIND, log₁₀ M⊙),
   plus `diffmah_log_mah_{sim,fit}` for matched rows and `cosmic_time_gyr`.
+- `outputs/diffmah_combined.fits` — both DiffMAH flavours per galaxy (`own_*`,
+  `official_*`) + `diffmah_source` + recommended official/own-fallback columns.
 - `outputs/mpb_cache/{sid}.hdf5` — the raw MPB pulls (≈ 440 MB).
-- `figures/crossmatch_qa.{png,pdf}`.
+- `figures/crossmatch_qa.{png,pdf}`, `figures/diffmah_own_vs_official.{png,pdf}`.
+
+## Two DiffMAH flavours & the combined catalog
+We now hold **two** DiffMAH fits per galaxy, same model (Hearin+2021 rolling power
+law, `k = 3.5` fixed) but different anchor `t0` — **do not confuse them**:
+
+| flavour | source | anchor `t0` | `logmp` means | coverage |
+|---|---|---|---|---|
+| **own** | `hongshao.diffmah`, `data/processed/tng300_072_z0p4.fits` (`dmah_*`) | t(snap 72) = 9.39 Gyr | peak mass **at z=0.4** | 3375/3388 (13 too few MAH pts) |
+| **official** | `diffmah_tng.h5` via the cross-match (`logmp_fit`, …) | 13.80 Gyr | peak mass **at z=0** | 3154 matched |
+
+`diffmah_consistency.py` reconciles them and writes **`outputs/diffmah_combined.fits`**
+(`own_*`, `official_*`, a `diffmah_source` ∈ {official, own, none}, and recommended
+columns = official-preferred / own-fallback). Sources: **official 3154, own 221,
+none 13**.
+
+**Unit gotcha (fixed):** the DiffMAH catalog stores log masses in **Msun/h**; our
+M200c is in Msun. The raw mismatch was a flat −0.169 dex (= log₁₀ h) — once
+corrected, `diffmah log_mah_sim ≡ M200c` to −0.008 dex, i.e. **the official fit is
+to the same M200c we use**, just h-ful. `crossmatch.py` now adds +log₁₀(1/h) so all
+masses in `crossmatch.fits` / `official_mah.npz` / `diffmah_combined.fits` are Msun.
+
+**Consistency (3154 common):**
+- Reconstructed MAH **curves agree to 0.078 dex** (median, over z ≥ 0.4; 69 % < 0.10
+  dex). z=0.4 **normalization agrees to −0.032 dex** (median, scatter 0.115).
+- **Raw shape params are unbiased but individually degenerate** (`early` scatter
+  1.1, `logtc` 0.5, `late` 0.7; our z=0.4-limited fit even rails `logtc` against its
+  bounds). Different `(logtc, early, late)` triples reproduce the same curve.
+
+**Practical rule:** for anything needing **M(t) or the normalization** (profile
+prediction, halo mass), official and own are interchangeable → use official by
+default, own for the 221 fallback (combined catalog already does this). But do
+**not** feed mixed-flavour raw `(logtc, early, late)` into one ML model — pick a
+single flavour per model, since the two are degenerate re-parametrisations.
 
 ## Next
 Build the **summed-accreted-mass MAH** from `…/sublink/full.hdf5` (the de-biased
@@ -73,5 +108,6 @@ every full tree to disk.
 uv run python experiments/exp27_tng_api_crossmatch/fetch_mpb.py --workers 10
 uv run python experiments/exp27_tng_api_crossmatch/crossmatch.py
 PYTHONPATH=. uv run python experiments/exp27_tng_api_crossmatch/qa.py
+PYTHONPATH=. uv run python experiments/exp27_tng_api_crossmatch/diffmah_consistency.py
 ```
 Needs the TNG API key at `~/.tng_api_key` (line `TNG_API_KEY=…`, outside the repo).

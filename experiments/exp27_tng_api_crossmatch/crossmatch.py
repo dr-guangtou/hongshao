@@ -44,6 +44,9 @@ COSMIC_TIME = ROOT / "data" / "external" / "tng_cosmic_time.txt"
 
 H = 0.6774                       # TNG little-h
 MASS_UNIT = 1e10 / H             # raw (1e10 Msun/h) -> Msun
+# The DiffMAH catalog stores log masses in Msun/h; add this to get log10(Msun),
+# so every mass in our outputs is h-free (matches hongshao's Msun convention).
+LOG_INV_H = -np.log10(H)         # +0.1693 dex
 SNAP_Z04 = 72                    # the z=0.4 snapshot == diffmah column index
 MATCH_TOL_CMPC = 1e-3            # 1 ckpc/h: "exact" position match
 N_SNAP = 100                     # TNG full snapshot grid 0..99
@@ -94,9 +97,11 @@ def main() -> None:
         dm_pos = np.vstack([f["x"][:, SNAP_Z04], f["y"][:, SNAP_Z04],
                             f["z"][:, SNAP_Z04]]).T          # (N_halo, 3) cMpc/h
         dm = {c: f[c][:] for c in DIFFMAH_COLS}
+        dm["logmp_fit"] = dm["logmp_fit"] + LOG_INV_H        # Msun/h -> Msun
+        dm["logmp_sim"] = dm["logmp_sim"] + LOG_INV_H
         dm["diffmah_loss"] = f["loss"][:]
-        dm_log_mah_sim = f["log_mah_sim"][:]                 # (N_halo, 100)
-        dm_log_mah_fit = f["log_mah_fit"][:]
+        dm_log_mah_sim = f["log_mah_sim"][:] + LOG_INV_H     # (N_halo, 100), Msun
+        dm_log_mah_fit = f["log_mah_fit"][:] + LOG_INV_H
     tree = cKDTree(dm_pos)
 
     dist = np.full(n, np.nan)
