@@ -395,6 +395,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   drop-in `M200c`.** Next: (a) infall-peak-sum variant (monotonic, USMF-grounded);
   (b) mass-threshold robustness; (c) scale to the matched subset — biggest full
   tree ≈300 MB/290k rows → stream-walk, don't cache every tree.
+- [~] **Full-tree fetch campaign (`scripts/fetch_full_trees.py`).** Cost measured
+  (exp28): the full-tree API generates each tree server-side, ~30–100 s, **serial
+  only** (concurrency → 503), so all 3154 ≈ **2–3 days**; disk ~40 GB if kept, ~0 if
+  streamed; bulk download is 1.5 TB (off the table). Utility fetches in resumable
+  chunks (most-massive-first) to `/Users/mac/work/tng/full_trees/` with a worklist +
+  `PROGRESS.md` + `fetch_log.csv`. **Chunk 1 = the 10 most massive.** To continue:
+  `uv run python scripts/fetch_full_trees.py --next N` ("grab the next chunk").
+  Parked for now (laptop / travel).
 - [ ] (parked, exp26 follow-on) revisit the deposition kernel with an outer-
   weighted / multiplicative-flattening primitive, now feedable by the real SFH.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
