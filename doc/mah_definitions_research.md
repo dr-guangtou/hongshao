@@ -7,6 +7,20 @@ interrupted by a spend limit, so the 25 gathered claims below were vetted by han
 against the cited primary sources and established knowledge; a few specific numbers
 (flagged) still warrant independent confirmation.*
 
+## What MAH does DiffMAH actually fit? (paper-verified, exp27)
+**Main-branch peak mass — not summed-accreted.** Hearin et al. 2021 (DiffMAH,
+arXiv:2105.05859) fit `M_peak(t)`, defined verbatim as *"the largest mass the main
+progenitor halo has ever attained up until the time t"* — a single
+most-massive-progenitor branch, made non-decreasing by the running cumulative
+maximum (so a real mass-loss episode shows as a flat plateau, not a fit to summed
+accretion). Masses are quoted *"assuming h=1"* (i.e. Msun/h — matches our
+empirical −0.169 dex offset, exp27). The TNG300-1 catalog (`diffmah_tng.h5`) is
+this same construction. **Consequence for us:** both our own and the official
+DiffMAH are main-branch-Mpeak fits; the **summed-accreted-mass MAH we plan to
+build is a deliberate *departure* from the DiffMAH definition**, not a DiffMAH
+variant. If we later fit the rolling-power-law *form* to a summed-accreted curve,
+label it "DiffMAH-form fit to summed-accreted MAH", never "the DiffMAH fit".
+
 ## TL;DR for our pipeline
 1. **We already apply the literature's #1 fix.** `peak_history()` builds the MAH
    with `np.maximum.accumulate` → the kernel input is the **running-max `Mpeak`**,
