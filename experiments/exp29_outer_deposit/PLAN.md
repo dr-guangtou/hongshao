@@ -92,9 +92,22 @@ Find the fewest parameters that approach the ceiling.
   0.032. **~5–6 params/galaxy reach ~0.04 dex.** The 2-knot (old two-epoch) reaches
   0.046 *when fit jointly* — vs 0.34 frozen-from-z=0.4: the fraction was never too
   rigid, a single epoch just can't constrain it. `emulator_param.py`.
-- **Open (the forward-emulator crux):** the per-galaxy fits need the profiles to fit
-  f. A pure MAH→profile forward model needs f **predictable from the MAH /
-  population** (is f ~universal, or f(t, Mh, MAH-shape)?), or a completion mode
-  (observe ≥2–3 epochs, fit f). → **Phase 4 population** is the next gate.
+- **Phase 4 — a universal forward emulator works, at ~0.11 dex (n=150, 75/75
+  train/test; `population.py`).** One shared K=4-knot fraction f(t) + power-law width
+  maps each galaxy's dip-free MAH → its 5-epoch CoG (total pinned to z=0.4 M*),
+  held-out **test 0.112 dex** mean (per-epoch 0.089/0.100/0.105/0.138/0.127; high-z
+  worst). Comparable to the single-epoch data-driven emulator (0.116) and exp25
+  Phase-3 universal kernel (0.080).
+  - **But the fraction is NOT universal and NOT halo-predictable.** Per-galaxy log-f
+    knots scatter ±0.5–0.75 dex with **r(logMh)≈r(logM*)≈0**; logMh-conditioning
+    helps +0.007 dex (nil). Width ties weakly to logMh (σ₀ r=0.22, g r=0.15). So the
+    cost of universality (per-galaxy 0.048 → shared 0.11) is **genuine
+    galaxy-to-galaxy timing scatter orthogonal to halo/stellar mass** — the scatter
+    in *when* stars accrue relative to halo growth.
+  - **Decision:** a forward emulator exists (~0.11 dex). To beat it we must predict
+    the per-galaxy fraction from richer inputs (R50 for width; MAH-shape / formation
+    time for f), else ~0.11 is the floor (intrinsic SHMR-timing scatter). → Phase 4d.
+- **Completion mode** (observe ≥2–3 epochs, fit f) reaches the ~0.04 ceiling
+  regardless — that path is already validated (Phase 1 hold-out).
 - **Deferred:** Σ-profile check (does CoG-matching give acceptable Σ, or need the
   exponential kernel); DiffMAH-param regression flavour.
