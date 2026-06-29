@@ -37,6 +37,18 @@ def deposit_sigma(dMstar: np.ndarray, sigma: np.ndarray, p: float, Rgrid: np.nda
             * np.exp(-Rgrid[:, None] ** 2 / (2.0 * sigma[None, :] ** 2))).sum(1)
 
 
+def deposit_sigma_sersic(dMstar: np.ndarray, scale: np.ndarray, n: float, Rgrid: np.ndarray) -> np.ndarray:
+    """Sum of mass-normalized **Sersic** deposits -> surface density Sigma(R).
+
+    Sigma_i(R) = dM_i / (2 pi a_i^2 n Gamma(2n)) * exp(-(R/a_i)^{1/n}).
+    The deposit's *wing* steepness is set by n: n=0.5 is a Gaussian (a=sigma*sqrt2),
+    n=1 an exponential, n=4 de Vaucouleurs. A Gaussian (n=0.5) wing decays as
+    exp(-R^2) — too steep to build the extended outskirts of a real Sigma profile;
+    n>0.5 gives the shallower wing the multi-epoch profiles require (exp29)."""
+    norm = 2.0 * np.pi * scale ** 2 * n * gamma(2.0 * n)
+    return ((dMstar / norm)[None, :] * np.exp(-(Rgrid[:, None] / scale[None, :]) ** (1.0 / n))).sum(1)
+
+
 def width_t(sigma0: float, g: float, t: np.ndarray, t_obs: float) -> np.ndarray:
     """Deposition width sigma(t) = sigma_0 (t/t_obs)^g (cosmic time, no R_200c)."""
     return sigma0 * (t / t_obs) ** g
@@ -64,7 +76,11 @@ def demo() -> None:
     for p in (1.0, 4.0):
         peak = R[np.argmax(deposit_sigma(dM, s, p, R))]
         assert abs(peak - s[0] * np.sqrt(p)) < 0.1 * s[0], (p, peak)
-    print("deposit.demo OK: p=0 Gaussian, mass-conserving, Sigma peak at sigma*sqrt(p)")
+    # Sersic n=0.5 == centred Gaussian with sigma = a/sqrt(2)
+    a = np.array([s[0] * np.sqrt(2.0)])
+    assert np.allclose(deposit_sigma_sersic(dM, a, 0.5, R), deposit_sigma(dM, s, 0.0, R), rtol=1e-6)
+    print("deposit.demo OK: p=0 Gaussian, mass-conserving, Sigma peak at sigma*sqrt(p); "
+          "Sersic n=0.5 == Gaussian")
 
 
 if __name__ == "__main__":

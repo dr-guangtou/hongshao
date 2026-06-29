@@ -63,6 +63,27 @@ EFF_MEDIAN = (3.6, 1.15, 2.4)                  # exp25 population-median two-epo
 S0_FIXED = 60.0                                # b(z) depends on g & p, not the overall size s0
 
 
+# %% ---- dip-free MAH from the official DiffMAH fit curve --------------------
+def dipfree_mah(gi, _cache={}):
+    """Smooth DiffMAH-fit MAH for galaxy index ``gi``: per-deposit snap/t/z/dMh.
+
+    Same physical quantity as the dippy ``peak_history`` (main-branch SubhaloMass
+    Mpeak, h-free Msun) but monotonic by construction. None if unavailable."""
+    if "mz" not in _cache:
+        _cache["mz"] = np.load(OFFICIAL); _cache["zt"] = _time_to_redshift()
+    mz = _cache["mz"]; hit = np.where(mz["index"] == gi)[0]
+    if hit.size == 0:
+        return None
+    lm = mz["diffmah_log_mah_fit"][int(hit[0])]; m = np.isfinite(lm)
+    snap = np.arange(lm.size)[m]; tg = mz["cosmic_time_gyr"][m]; lm = lm[m]
+    if 72 not in snap:
+        return None
+    ta, za = _cache["zt"]
+    return dict(snap_full=snap, logMh_full=lm, snap=snap[1:], t=tg[1:],
+                z=np.interp(tg[1:], ta, za), dMh=np.clip(np.diff(10.0 ** lm), 0.0, None),
+                t_obs=float(tg[snap == 72][0]))
+
+
 # %% ---- load the population once (dip-free MAH + cached 5-epoch profiles) ----
 def load_population():
     t = Table.read(TABLE); cog = np.asarray(t["logmstar_cog"], float)

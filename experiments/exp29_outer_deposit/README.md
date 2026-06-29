@@ -1,6 +1,26 @@
-# exp29 — dip-free MAH + the deposition primitive: a centred Gaussian already wins
+# exp29 — dip-free MAH + the deposition kernel, toward a multi-epoch emulator
 
-## Question
+> **STATUS / CORRECTION (supersedes the "centred Gaussian wins" headline below).**
+> The slope-`b` result in `run.py` matched only the *tilt* of the inter-epoch
+> growth. Fitting the **full** profile / CoG at multiple epochs told a richer story:
+> - The centred Gaussian reproduces a *single-epoch* CoG to 0.005 dex but **not the
+>   surface-density profile** (it cliffs at large R; `profile_fit.py`), and a frozen
+>   single-epoch fit **mispredicts higher-z CoGs** (0.34 dex at z=2, dominated by a
+>   mass-growth error; `cog_extrapolate.py`). Free Sérsic was tried and rejected
+>   (bad math, steepens the core).
+> - **Multi-epoch IS tractable** once the deposit *fraction* is freed: a convex NNLS
+>   fit reaches **0.032 dex** jointly across 5 CoGs and **generalizes** (held-out
+>   epoch 0.038 dex; `capacity_test.py`), and a **compact ~5–6-param emulator**
+>   reaches ~0.040 dex (`emulator_param.py`). The blocker was never the kernel or a
+>   rigid fraction — one epoch just can't constrain the fraction.
+>
+> See **`PLAN.md`** for the full multi-epoch emulator plan + decision log. The
+> sections below are the original (primitive / dip-free-MAH) investigation, kept for
+> the record; the slope headline is superseded.
+
+---
+
+## (original) Question
 The 2026-06-27 handover asked to return to the exp25/26 deposition kernel with two
 changes: (1) feed it a **dip-free MAH** (the old main-branch `peak_history` has
 merger-tree drop-outs), and (2) replace the **centred-Gaussian** deposit with a
