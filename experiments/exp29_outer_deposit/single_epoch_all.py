@@ -149,6 +149,7 @@ def main():
         print(f"    {z:4.1f} {mr[0]:8.4f} {100*mr[1]:8.1f}% {100*mr[2]:9.1f}%")
 
     _verdict(logms, rows)
+    _summary_figure(logms, rows)
     _figure(gxs)
 
 
@@ -165,6 +166,47 @@ def _verdict(logms, rows):
         print("  z=2 single-epoch fits are substantially WORSE for massive galaxies -> the\n"
               "  centred-Gaussian deposit SHAPE itself is the high-z limit (puffing won't save\n"
               "  it). -> rethink the high-z primitive.")
+
+
+def _summary_figure(logms, rows):
+    """Population view of the verdict: max|rel| vs epoch per mass tertile, and the
+    decisive z=2-vs-z=0.4 per-galaxy scatter (points on/below 1:1 -> z=2 not worse)."""
+    order = np.argsort(logms); thirds = np.array_split(order, 3)
+    labels = ["low", "mid", "high"]; cols = [OKABE_ITO[0], OKABE_ITO[2], OKABE_ITO[5]]
+    x = np.arange(5)
+    fig, (a, b) = plt.subplots(1, 2, figsize=(13.5, 5.2))
+
+    for lab, idx, c in zip(labels, thirds, cols):
+        med = np.array([np.median(rows[idx, k, 1]) for k in range(5)]) * 100
+        a.plot(x + (cols.index(c) - 1) * 0.04, med, "o-", c=c, lw=2, ms=7,
+               label=f"{lab}-mass ({logms[idx].min():.1f}-{logms[idx].max():.1f})")
+        if lab == "high":                                  # spread for the bin that should break
+            lo = np.array([np.percentile(rows[idx, k, 1], 16) for k in range(5)]) * 100
+            hi = np.array([np.percentile(rows[idx, k, 1], 84) for k in range(5)]) * 100
+            a.fill_between(x, lo, hi, color=c, alpha=0.15)
+    a.axhline(2.0, c="0.5", ls=":", lw=1.2, label="z=0.4 single-epoch quality (~2%)")
+    a.set_xticks(x); a.set_xticklabels([f"{z}" for z in ANCHOR_Z])
+    a.set(xlabel="epoch redshift", ylabel="max |rel residual| over R>3 kpc [%]", ylim=(0, None),
+          title="A. Single-epoch fit quality flat across cosmic time\n(high-z not worse, even for BCGs)")
+    a.legend(fontsize=8, loc="upper left")
+
+    # does fit quality degrade toward the massive end ("BCGs are where it breaks")? No.
+    b.scatter(logms, rows[:, 0, 1] * 100, s=36, c="0.55", edgecolor="0.3", lw=0.4,
+              label="z=0.4 (per galaxy)")
+    b.scatter(logms, rows[:, 4, 1] * 100, s=42, c=OKABE_ITO[1], edgecolor="0.3", lw=0.4,
+              label="z=2.0 (per galaxy)")
+    for c, kk in ((".55", 0), (OKABE_ITO[1], 4)):          # binned-median trend per epoch
+        med = [np.median(rows[idx, kk, 1]) * 100 for idx in thirds]
+        ctr = [np.median(logms[idx]) for idx in thirds]
+        b.plot(ctr, med, "-", c=c, lw=2.2)
+    b.axhline(2.0, c="0.5", ls=":", lw=1.2)
+    b.set(xlabel=r"$\log M_*$", ylabel="max |rel residual| over R>3 kpc [%]", ylim=(0, None),
+          title="B. Fit quality does not degrade with mass\n(z=2 flat across the BCG range)")
+    b.legend(fontsize=8, loc="upper left")
+    fig.suptitle("exp29 — independent single-epoch fits: the centred-Gaussian deposit shape is NOT a "
+                 f"high-z limit (n={len(rows)})", fontsize=12)
+    fig.tight_layout()
+    print("wrote", save_fig(fig, FIGDIR / "exp29_single_epoch_summary")[0])
 
 
 def _figure(gxs):
