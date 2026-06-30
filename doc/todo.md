@@ -403,7 +403,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   `PROGRESS.md` + `fetch_log.csv`. **Chunk 1 = the 10 most massive.** To continue:
   `uv run python scripts/fetch_full_trees.py --next N` ("grab the next chunk").
   Parked for now (laptop / travel).
-- [ ] (parked, exp26 follow-on) revisit the deposition kernel with an outer-
-  weighted / multiplicative-flattening primitive, now feedable by the real SFH.
+- [x] **exp29 — deposition kernel on a dip-free MAH; primitive question answered
+  (branch `exp29-outer-deposit-kernel`).** (1) Dip-free MAH = official **DiffMAH fit
+  curve** (`official_mah.npz`, monotonic, all galaxies) replaces dippy
+  `peak_history`. (2) Generalized deposit `deposit.py` (`p`: 0=Gaussian, >0=shell).
+  Tested on the **stacked multi-epoch differential** `b(z)` (n=2399, exp26 cache,
+  fit over valid radii). **Result: the CENTRED Gaussian (p=0) with σ(t)=σ₀(t/t_obs)^
+  0.55 reproduces the whole inside-out trend** (data b 0.13/0.14/0.27/0.33/0.82 →
+  model 0.11/0.13/0.28/0.31/0.82, mean |Δb|=0.012); **outer-weighting p>0
+  monotonically undershoots** (long-baseline 0.82→0.53→0.31). σ(t), not deposit
+  off-centredness, is the inside-out mechanism — exp26's "not a Gaussian" was about a
+  *single* deposit. The multi-epoch data pin g≈0.55 (the z=0.4 CoG alone couldn't).
+- [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
+  Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
+- [ ] **(next) width set by the accretion *event*** (merger mass-ratio /
+  smooth-vs-clumpy), the only way to capture late-merger core rebuilding that a pure
+  σ(t) time→radius rule cannot — exp25's flagged structural limitation, untouched by `p`.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
   predictive profile uncertainty to the forward model.
