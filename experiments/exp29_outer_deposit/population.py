@@ -43,6 +43,7 @@ def load_pop(n_max=300):
     t = Table.read(TABLE); cog = np.asarray(t["logmstar_cog"], float)
     idx = np.asarray(t["index"]); use = np.asarray(t["use"])
     logmh_tab = np.asarray(t["logmh_z0p4"], float)
+    r50_tab = np.nanmedian(np.asarray(t["r50_proj"], float), axis=1)   # kpc, over 3 projections
     ok = np.isfinite(cog).all(1) & use
     order = np.argsort(np.where(ok, cog[:, -1], -np.inf))[::-1]
     mz = np.load(OFFICIAL); matched = {int(g) for g, m in zip(mz["index"], mz["matched"]) if m}
@@ -57,9 +58,15 @@ def load_pop(n_max=300):
         keep = mah["snap"] <= 72                  # snap/t/dMh already aligned by dipfree_mah
         snaps, tt, dMh = mah["snap"][keep], mah["t"][keep], mah["dMh"][keep]
         gate = np.array([(snaps <= sk) for sk in EPOCH_SNAP])            # (5, N)
+        # halo formation time t50 and early-assembly fraction fz2 from the dip-free MAH
+        mk = mah["snap_full"] <= 72
+        Mh, tf = 10.0 ** mah["logMh_full"][mk], mah["t_full"][mk]
+        t50 = float(np.interp(0.5 * Mh[-1], Mh, tf))
+        fz2 = float(10.0 ** (np.interp(33, mah["snap_full"], mah["logMh_full"]) - np.log10(Mh[-1])))
         gals.append(dict(snaps=snaps, t=tt, lt=np.log10(tt), dMh=dMh, gate=gate,
                          t_obs=mah["t_obs"], Mstar_tot=10.0 ** logC[0, -1], logC=logC,
-                         logMh=float(logmh_tab[i]), logMstar=float(logC[0, -1])))
+                         logMh=float(logmh_tab[i]), logMstar=float(logC[0, -1]),
+                         logR50=float(np.log10(r50_tab[i])), t50=t50, fz2=fz2))
         if len(gals) >= n_max:
             break
     return gals

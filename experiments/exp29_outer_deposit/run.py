@@ -79,7 +79,7 @@ def dipfree_mah(gi, _cache={}):
     if 72 not in snap:
         return None
     ta, za = _cache["zt"]
-    return dict(snap_full=snap, logMh_full=lm, snap=snap[1:], t=tg[1:],
+    return dict(snap_full=snap, logMh_full=lm, t_full=tg, snap=snap[1:], t=tg[1:],
                 z=np.interp(tg[1:], ta, za), dMh=np.clip(np.diff(10.0 ** lm), 0.0, None),
                 t_obs=float(tg[snap == 72][0]))
 

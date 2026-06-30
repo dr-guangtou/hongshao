@@ -109,5 +109,20 @@ Find the fewest parameters that approach the ceiling.
     time for f), else ~0.11 is the floor (intrinsic SHMR-timing scatter). → Phase 4d.
 - **Completion mode** (observe ≥2–3 epochs, fit f) reaches the ~0.04 ceiling
   regardless — that path is already validated (Phase 1 hold-out).
+- **Phase 4d — conditioning helps: forward floor 0.11 → 0.092 dex (n=200; `phase4d.py`).**
+  Conditioning the shared model on **R50** (→ width) and **halo formation time t50**
+  (→ fraction): U 0.111 → W(R50) 0.105 → F(t50) 0.100 → **WF(both) 0.092** test;
+  per-epoch the gain is largest at low z (z=0.4: 0.088→0.062). Remaining gap to the
+  per-galaxy ceiling (0.048) is scatter not captured by these observables.
+  - **Methodological note:** per-galaxy param regression R²≤0.05 (params are
+    degenerate, so param-space correlations understate the signal), yet the *direct
+    forward fit* still improves — fit the forward RMS, not the parameters.
+  - Figures: `exp29_p4_forward_qa` (universal model vs TNG, test galaxies),
+    `exp29_p4_rms_summary` (RMS by epoch across all models + ceilings),
+    `exp29_p4_param_predictors` (weak param↔observable ties). Results cached in
+    `outputs/p4d_cache.npz` (rerun figures with no `--refit`).
+- **Next candidates:** (a) richer fraction predictors / a learned MAH-shape →
+  fraction map to push below 0.092; (b) the Σ-profile check (does CoG-matching give
+  acceptable Σ, or need the exponential kernel); (c) scale to the full ~2400.
 - **Deferred:** Σ-profile check (does CoG-matching give acceptable Σ, or need the
   exponential kernel); DiffMAH-param regression flavour.
