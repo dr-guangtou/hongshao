@@ -435,9 +435,15 @@ Cross-experiment plan. Mirrors the phase sequence in
   needs an explicit extra DOF, and `R50`-doubling sets the puff-law magnitude.
 - [ ] **(next) build the puff-up deposition model** (`PUFF_MODEL_PLAN.md`): width
   grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward
-  (target: early-mass `R50` ~doubles z=2→0.4, more for BCGs; keep `g≈1.7`). CoG stays
-  linear in masses → NNLS inner solve survives. Test: does multi-epoch z=0.4 recover
-  from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
+  (target in fixed kpc apertures: pre-z2 mass-fraction inside 5 kpc drops 0.64→0.44,
+  inside 10 kpc 0.76→0.66, z=2→0.4, more for BCGs; keep `g≈1.7`, ONE efficiency `f`).
+  CoG stays linear in masses → NNLS inner solve survives. **Key design point**: puff-up
+  = let only the WIDTH depend on observation time `t_k` (mass `f(t_i)` frozen = one
+  consistent history); contrast a looser "all params z-dependent" fit, which also lets
+  the deposited mass at `t_i` change with `t_k` (mass not conserved across epochs, not
+  a forward model). Optional first step: run the loose z-dependent-param fit as a
+  feasibility ceiling, then tighten to frozen-mass puff-up. Test: does multi-epoch
+  z=0.4 recover from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /

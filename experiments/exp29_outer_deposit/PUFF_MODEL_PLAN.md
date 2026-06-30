@@ -49,12 +49,14 @@ The independent per-epoch fits already tell us what puffing must deliver:
 - **`g ≈ 1.7` is epoch-stable** (every epoch; matches exp25's per-galaxy `g≈1.67`).
   The width-growth-with-cosmic-time *shape* is a shared invariant — keep it; puffing
   is an extra DOF on top, not a replacement.
-- **The early-formed mass must extend ~2× with time.** `R50` of the pre-z=2 stellar
-  mass (robust: at z=2 it equals the data `R50`, since 100% of the mass is pre-z=2)
-  grows **3.0 → 6.1 kpc (all)** and **3.0 → 8.2 kpc (high-mass third)** from z=2 to
-  z=0.4 — a **1.8× (≈2.7× for BCGs)** size increase of the *same* early mass. That
-  is the target magnitude for the puffing law over this interval (massive galaxies
-  need more).
+- **The early-formed mass de-concentrates with time (stated in fixed physical-kpc
+  apertures, not R50 — R50 is observationally fragile).** The fraction of the pre-z=2
+  stellar mass inside a fixed **5 kpc** aperture falls **0.64 → 0.44** from z=2 to
+  z=0.4 (inside **10 kpc**: 0.76 → 0.66); mass beyond **30 kpc is unchanged (~0.92)**.
+  Massive galaxies de-concentrate more (inside 10 kpc: **0.71 → 0.56**). This is
+  robust — at z=2 the pre-z=2 mass is 100% of the galaxy, so the z=2 value equals the
+  measured CoG. The redistribution is entirely in the inner ≲10 kpc; that fixed-kpc
+  inner-fraction drop is the target the puffing law must reproduce (more for BCGs).
 - **Single-epoch fits fake it via the efficiency, not the width.** Individual pre-z=2
   deposit widths barely move (mass-wtd 7.5→8.4 kpc); the `R50` growth comes from the
   efficiency re-spreading early mass onto later/wider pre-z=2 deposits (`b_early`
