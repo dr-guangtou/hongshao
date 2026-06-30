@@ -414,6 +414,45 @@ Cross-experiment plan. Mirrors the phase sequence in
   monotonically undershoots** (long-baseline 0.82→0.53→0.31). σ(t), not deposit
   off-centredness, is the inside-out mechanism — exp26's "not a Gaussian" was about a
   *single* deposit. The multi-epoch data pin g≈0.55 (the z=0.4 CoG alone couldn't).
+- [x] **exp29 — independent single-epoch fits to every snapshot
+  (`single_epoch_all.py`, branch `exp29-single-epoch-highz`).** Settles whether the
+  centred-Gaussian deposit *shape* has a fundamental high-z limit. Per galaxy, per
+  epoch z_k∈{0.4,0.7,1.0,1.5,2.0}: fit the kernel to **that epoch's CoG alone**
+  (deposits up to t(z_k), normalization pinned to the 148-kpc aperture). Honest
+  metric: linear M*, relative residual, max/90th-pct over R>3 kpc. **Result (n=60):
+  the Gaussian shape is NOT the limit** — every epoch, every mass tertile fits to
+  ≤1.4% max-rel; high-mass z=2 (0.9%) ≈ z=0.4 (0.7%); the BCG's z=2 is its *best*
+  fit (0.3%). → The multi-epoch tension is a **consistency** problem, not a shape
+  one → **build the puff-up model** (PUFF_MODEL_PLAN.md, now un-parked).
+- [x] **exp29 — single-epoch best-fit parameter trends (`param_trends.py`).** Mined
+  the cached per-epoch fits for patterns. **(1)** `g≈1.7` is epoch-stable (matches
+  exp25) — the spatial-kernel shape is a shared invariant. **(2)** The efficiency
+  rotates: `b_early` 3.2→5.8 toward high z. **(3)** Robust puff-up calibration: the
+  `R50` of the pre-z=2 mass (anchored — at z=2 it equals the data `R50`) grows
+  **3.0→6.1 kpc (all), 3.0→8.2 kpc (high-mass)** from z=2 to z=0.4 → the same early
+  mass must extend **~1.8× (≈2.7× for BCGs)**. The single-epoch fits realize this via
+  the efficiency (a per-epoch freedom the joint fit lacks) → confirms the joint model
+  needs an explicit extra DOF, and `R50`-doubling sets the puff-law magnitude.
+- [x] **exp29 — loose redshift-dependent-parameter joint fit (`loose_zdep.py`).**
+  Each kernel param a polynomial in observation z (const/linear/quad), fit jointly,
+  vs the independent ceiling. **Result (n=60): epoch-avg max|rel| fixed 10.2% →
+  linear 4.8% → quad 4.5%, ceiling 0.7%.** z-dependence ~halves the error (reasonable
+  multi-epoch fit) but plateaus ~6× above the ceiling — quad≈linear, middle epochs
+  (z=0.7/1.0) hardest — because the degenerate per-epoch params don't lie on a
+  low-order z-curve. So generic z-floating ≠ single-epoch quality; need *structured*
+  DOF. **Benchmark for the puff-up model to beat: ~4.5% epoch-avg.**
+- [ ] **(next) build the puff-up deposition model** (`PUFF_MODEL_PLAN.md`): width
+  grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward
+  (must beat the loose-zdep ~4.5% benchmark, ideally toward the 0.7% ceiling)
+  (target in fixed kpc apertures: pre-z2 mass-fraction inside 5 kpc drops 0.64→0.44,
+  inside 10 kpc 0.76→0.66, z=2→0.4, more for BCGs; keep `g≈1.7`, ONE efficiency `f`).
+  CoG stays linear in masses → NNLS inner solve survives. **Key design point**: puff-up
+  = let only the WIDTH depend on observation time `t_k` (mass `f(t_i)` frozen = one
+  consistent history); contrast a looser "all params z-dependent" fit, which also lets
+  the deposited mass at `t_i` change with `t_k` (mass not conserved across epochs, not
+  a forward model). Optional first step: run the loose z-dependent-param fit as a
+  feasibility ceiling, then tighten to frozen-mass puff-up. Test: does multi-epoch
+  z=0.4 recover from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /

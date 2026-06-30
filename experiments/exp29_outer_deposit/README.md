@@ -13,6 +13,12 @@
 >   epoch 0.038 dex; `capacity_test.py`), and a **compact ~5–6-param emulator**
 >   reaches ~0.040 dex (`emulator_param.py`). The blocker was never the kernel or a
 >   rigid fraction — one epoch just can't constrain the fraction.
+> - **The deposit *shape* is not the high-z limit** (`single_epoch_all.py`). Fitting
+>   the centred Gaussian to *each epoch's CoG independently* reaches **≤1.4% max-rel
+>   at every epoch and mass tertile**, with high-mass z=2 (0.9%) as good as z=0.4
+>   (0.7%) — the BCG's z=2 is its *best* fit (0.3%). So the multi-epoch tension
+>   (z=0.4 degrades to 19% jointly) is a **consistency** problem, not a shape one →
+>   build the puff-up model (`PUFF_MODEL_PLAN.md`, un-parked).
 >
 > See **`PLAN.md`** for the full multi-epoch emulator plan + decision log. The
 > sections below are the original (primitive / dip-free-MAH) investigation, kept for
@@ -125,6 +131,23 @@ primitive question: **keep the centred Gaussian.**
 - `deposit.py` — the generalized-gamma deposition primitive (pure math, reusable;
   `demo()` self-check: p=0 = Gaussian, mass-conserving, Σ peaks at σ√p).
 - `run.py` — dip-free MAH loader, stacked multi-epoch differential fit, figures.
+- `single_epoch_all.py` — independent single-epoch fits to every snapshot
+  (z=0.4..2.0): is the centred-Gaussian *shape* a high-z limit? (No.) Honest linear
+  max/90th-pct relative metric, aperture pinned at 148 kpc; caches best-fit params to
+  `outputs/single_epoch_params.npz`; `demo` self-check.
+- `loose_zdep.py` — joint multi-epoch fit with each kernel param a **polynomial in
+  the observation epoch z** (constant/linear/quad), vs the independent ceiling. n=60:
+  epoch-avg max|rel| **fixed 10.2% → linear 4.8% → quad 4.5%**, ceiling **0.7%**.
+  z-dependence ~halves the error but **plateaus ~6× above the ceiling** (quad≈linear,
+  middle epochs hardest) — the degenerate per-epoch params don't lie on a low-order
+  z-curve, so parsimonious z-trends can't reach single-epoch quality. Motivates a
+  *structured* DOF (puff-up) over generic z-floating. `demo` self-check.
+- `param_trends.py` — patterns in those best-fit params. **`g≈1.7` is epoch-stable**
+  (a shared spatial kernel); the **efficiency rotates** (`b_early` 3.2→5.8 to high z);
+  and the robust puff-up calibration — the **`R50` of the pre-z=2 mass grows ~1.8×
+  (≈2.7× for BCGs)** from z=2 to z=0.4 (anchored: at z=2 it equals the data `R50`),
+  realized in single-epoch fits via the efficiency, a freedom the joint fit lacks.
+  Sets the magnitude for the puff-up law. `demo` self-check.
 - `figures/exp29_centred_gaussian_wins.*` — (A) dip-free MAH, (B) stacked Δlog Σ
   data vs Gaussian model, (C) `b(z)` data vs model p=0/2/4, (D) why σ(t) does it.
 - `outputs/manifest.json` — best `g`, the `b(z)` tables.

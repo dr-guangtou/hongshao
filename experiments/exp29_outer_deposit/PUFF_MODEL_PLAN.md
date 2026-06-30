@@ -1,9 +1,13 @@
-# exp29 — PARKED design: the "puff-up" deposition model (deferred)
+# exp29 — the "puff-up" deposition model (UN-PARKED — build it)
 
-> **Status: PARKED (2026-06-30).** Deliberately deferred — it adds a degree of
-> freedom we don't want yet. This document is the full design so a future session
-> can pick it up cold. First do the NEXT-SESSION diagnostic below; it decides
-> whether puffing is even the right fix.
+> **Status: UN-PARKED (2026-06-30).** The NEXT-SESSION diagnostic (below) ran:
+> `single_epoch_all.py` fit the centred-Gaussian kernel to each epoch's CoG
+> independently. **The deposit shape is NOT the limit** — every epoch, every
+> mass tertile fits to ≤1.4% max-rel; high-mass z=2 (0.9%) ≈ z=0.4 (0.7%); the
+> BCG's z=2 is its *best* fit (0.3% max-rel). So the multi-epoch failure is a
+> **consistency** problem (a fixed-width additive deposit can't redistribute
+> early-compact mass), exactly what puffing addresses. **Build this model.** The
+> design below is ready; start at "Test plan".
 
 ## Why this exists — the structural finding it would solve
 `single_vs_multi.py` showed the current cumulative-**additive, fixed-width**
@@ -39,6 +43,27 @@ The capacity test fixed each deposit's width at its deposition time. Puffing mak
 width depend on the **observation** time `t_k`, a structurally new freedom never tested.
 The SAME early deposits then supply the compact high-z profile (small `σ_i(t_high)`)
 **and** the extended z=0.4 envelope (large `σ_i(t_obs)`), dissolving the tension.
+
+## Calibration from the single-epoch param trends (`param_trends.py`)
+The independent per-epoch fits already tell us what puffing must deliver:
+- **`g ≈ 1.7` is epoch-stable** (every epoch; matches exp25's per-galaxy `g≈1.67`).
+  The width-growth-with-cosmic-time *shape* is a shared invariant — keep it; puffing
+  is an extra DOF on top, not a replacement.
+- **The early-formed mass de-concentrates with time (stated in fixed physical-kpc
+  apertures, not R50 — R50 is observationally fragile).** The fraction of the pre-z=2
+  stellar mass inside a fixed **5 kpc** aperture falls **0.64 → 0.44** from z=2 to
+  z=0.4 (inside **10 kpc**: 0.76 → 0.66); mass beyond **30 kpc is unchanged (~0.92)**.
+  Massive galaxies de-concentrate more (inside 10 kpc: **0.71 → 0.56**). This is
+  robust — at z=2 the pre-z=2 mass is 100% of the galaxy, so the z=2 value equals the
+  measured CoG. The redistribution is entirely in the inner ≲10 kpc; that fixed-kpc
+  inner-fraction drop is the target the puffing law must reproduce (more for BCGs).
+- **Single-epoch fits fake it via the efficiency, not the width.** Individual pre-z=2
+  deposit widths barely move (mass-wtd 7.5→8.4 kpc); the `R50` growth comes from the
+  efficiency re-spreading early mass onto later/wider pre-z=2 deposits (`b_early`
+  drops 5.8→3.2 from z=2 to z=0.4). A *joint* fit can't do this — `f(t_i)` is one
+  fixed function across epochs — which is exactly why multi-epoch fails and exactly
+  the freedom puffing restores: let `σ_i(t_k)` grow so the *same* early mass is
+  compact at z=2 and extended at z=0.4.
 
 ## Tractability — the convex inner solve survives
 Given the puffing-law params (and `σ_{i,0}`), every `σ_i(t_k)` is fixed, so the CoG is
