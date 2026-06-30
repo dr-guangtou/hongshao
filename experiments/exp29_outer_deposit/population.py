@@ -43,7 +43,9 @@ def load_pop(n_max=300):
     t = Table.read(TABLE); cog = np.asarray(t["logmstar_cog"], float)
     idx = np.asarray(t["index"]); use = np.asarray(t["use"])
     logmh_tab = np.asarray(t["logmh_z0p4"], float)
-    r50_tab = np.nanmedian(np.asarray(t["r50_proj"], float), axis=1)   # kpc, over 3 projections
+    r50_tab = np.nanmedian(np.asarray(t["r50_proj"], float), axis=1)   # kpc, over 3 projections (ILLEGAL: galaxy size)
+    # halo-only secondaries (legal N-body inputs)
+    sec = {k: np.asarray(t[k], float) for k in ["c_200c", "acc_rate", "f_early", "f_late", "z50"]}
     ok = np.isfinite(cog).all(1) & use
     order = np.argsort(np.where(ok, cog[:, -1], -np.inf))[::-1]
     mz = np.load(OFFICIAL); matched = {int(g) for g, m in zip(mz["index"], mz["matched"]) if m}
@@ -66,7 +68,10 @@ def load_pop(n_max=300):
         gals.append(dict(snaps=snaps, t=tt, lt=np.log10(tt), dMh=dMh, gate=gate,
                          t_obs=mah["t_obs"], Mstar_tot=10.0 ** logC[0, -1], logC=logC,
                          logMh=float(logmh_tab[i]), logMstar=float(logC[0, -1]),
-                         logR50=float(np.log10(r50_tab[i])), t50=t50, fz2=fz2))
+                         logR50=float(np.log10(r50_tab[i])), t50=t50, fz2=fz2,
+                         c200c=float(sec["c_200c"][i]), acc_rate=float(sec["acc_rate"][i]),
+                         f_early=float(sec["f_early"][i]), f_late=float(sec["f_late"][i]),
+                         z50=float(sec["z50"][i])))
         if len(gals) >= n_max:
             break
     return gals

@@ -121,8 +121,24 @@ Find the fewest parameters that approach the ceiling.
     `exp29_p4_rms_summary` (RMS by epoch across all models + ceilings),
     `exp29_p4_param_predictors` (weak param↔observable ties). Results cached in
     `outputs/p4d_cache.npz` (rerun figures with no `--refit`).
-- **Next candidates:** (a) richer fraction predictors / a learned MAH-shape →
-  fraction map to push below 0.092; (b) the Σ-profile check (does CoG-matching give
-  acceptable Σ, or need the exponential kernel); (c) scale to the full ~2400.
+- **Phase 4e — LEGAL halo-only forward (n=200; `phase4e.py`). CRITICAL re-scope.**
+  Phase 4d's R50 (galaxy size) and M*(z=0.4) pin are stellar/galaxy quantities, NOT
+  available on a fresh N-body run — illegal emulator inputs. Re-done with halo-only
+  inputs: width ← `c_200c` (concentration, replaces R50), fraction ← `t50`. Test:
+  U 0.111 → Lc 0.106 → Lf 0.100 → **L both legal 0.097** (vs illegal WF 0.092 —
+  R50 added almost nothing over halo concentration). The amplitude M*(z=0.4) is a
+  **separable SHMR** (logM*=5.71+0.44·logMh, test scatter **0.086 dex** from logMh
+  alone). So the honest end-to-end halo→profile forward emulator ≈ **shape 0.097
+  (MAH+c200c+t50) ⊕ amplitude 0.086 (SHMR) ≈ ~0.13 dex**.
+- **QA (`qa_diag.py`):** metric = per-galaxy RMS over 5 epochs × 24 CoG radii of
+  log10(model/data) of M*(<R), median over galaxies. Shared-WF **train 0.090 ≈ test
+  0.095** (not overfitting); per-galaxy ceiling 0.048. Figures `exp29_qa_rms_hist`
+  (train≈test vs per-galaxy ceiling) and `exp29_qa_train_vs_pergal` (per-galaxy fits
+  track the data; the universal model misses the high-z amplitude for massive BCGs).
+- **Known minor issue:** the Gaussian deposits leak ~8% mass beyond the 148 kpc
+  aperture → model CoG at 148 kpc is ~0.035 dex low (pin normalization to the
+  aperture to fix).
+- **Next candidates:** (a) push the high-z BCG amplitude (the dominant residual);
+  (b) Σ-profile check / exponential kernel; (c) full ~2400 + the end-to-end SHMR.
 - **Deferred:** Σ-profile check (does CoG-matching give acceptable Σ, or need the
   exponential kernel); DiffMAH-param regression flavour.
