@@ -135,6 +135,13 @@ primitive question: **keep the centred Gaussian.**
   (z=0.4..2.0): is the centred-Gaussian *shape* a high-z limit? (No.) Honest linear
   max/90th-pct relative metric, aperture pinned at 148 kpc; caches best-fit params to
   `outputs/single_epoch_params.npz`; `demo` self-check.
+- `puff_fit.py` — the **puff-up model**: one consistent history (mass frozen), only
+  widths migrate post-deposition, `σ_i(t_k) = σ₀(t_i/t_obs)^g · (t_k/t_i)^q` (ratio)
+  or `√(σ_{i,0}² + κ(t_k−t_i))` (diffusion), fit jointly (6 params). n=60: epoch-avg
+  max|rel| **no-puff 9.1% → ratio 7.1% → diff 7.7%**, vs loose-zdep ~4.5%, ceiling
+  0.7%. **Puffing helps but does NOT beat the looser z-dependent fit** (diffusion
+  nearly inert, κ→0) → with mass frozen, width migration is a weaker lever than
+  epoch-dependent mass distribution. `demo` self-check.
 - `loose_zdep.py` — joint multi-epoch fit with each kernel param a **polynomial in
   the observation epoch z** (constant/linear/quad), vs the independent ceiling. n=60:
   epoch-avg max|rel| **fixed 10.2% → linear 4.8% → quad 4.5%**, ceiling **0.7%**.

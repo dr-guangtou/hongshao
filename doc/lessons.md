@@ -286,6 +286,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **The physically-appealing DOF is not always the most effective one — let
+  performance decide (exp29).** The puff-up model (one consistent history, mass
+  frozen, only widths migrate) was the "principled" fix, but it underperformed: n=60
+  epoch-avg max|rel| no-puff 9.1% → ratio-law puff 7.1% → diffusion-law 7.7%, vs the
+  looser z-dependent-parameter fit at ~4.5%. Width migration with frozen mass is a
+  *weaker* lever than letting the deposit mass-distribution (efficiency) vary with
+  epoch — consistent with the param-trends finding that single-epoch fits
+  de-concentrate early mass via the efficiency, not the width. The diffusion law
+  (σ²+=κΔt) was nearly inert (κ→0). Don't pre-commit to the elegant constraint;
+  benchmark it against the looser model and keep whatever fits.
 
 ## Workflow
 

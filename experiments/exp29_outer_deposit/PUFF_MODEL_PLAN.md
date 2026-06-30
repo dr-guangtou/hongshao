@@ -1,13 +1,22 @@
-# exp29 — the "puff-up" deposition model (UN-PARKED — build it)
+# exp29 — the "puff-up" deposition model (BUILT — underperforms; see RESULT)
 
-> **Status: UN-PARKED (2026-06-30).** The NEXT-SESSION diagnostic (below) ran:
-> `single_epoch_all.py` fit the centred-Gaussian kernel to each epoch's CoG
-> independently. **The deposit shape is NOT the limit** — every epoch, every
-> mass tertile fits to ≤1.4% max-rel; high-mass z=2 (0.9%) ≈ z=0.4 (0.7%); the
-> BCG's z=2 is its *best* fit (0.3% max-rel). So the multi-epoch failure is a
-> **consistency** problem (a fixed-width additive deposit can't redistribute
-> early-compact mass), exactly what puffing addresses. **Build this model.** The
-> design below is ready; start at "Test plan".
+> **Status: BUILT & TESTED (2026-06-30) — does NOT win.** `puff_fit.py` fit the
+> puff-up model jointly to all 5 epochs with one consistent history (mass frozen,
+> only widths migrate), for two puffing laws. **Result (n=60, epoch-avg median
+> max|rel|): no-puff 9.1% → ratio-law 7.1% → diff-law 7.7%, vs loose-zdep ~4.5%
+> and the 0.7% ceiling.** Puffing helps (9.1→7.1%) but does NOT clear the looser
+> z-dependent-parameter fit; the diffusion law is nearly inert (κ→0). Empirically,
+> **with the mass frozen, post-deposition width migration is a weaker lever than
+> letting the deposit mass-distribution (efficiency) vary with epoch** — the
+> "consistency via puffing" premise below is only partly right. Per "let
+> performance decide", the next lever is mass-distribution flexibility (a
+> parsimonious z-dependent efficiency / hybrid), or the untested halo-driven
+> puffing law. The design below is kept for the record.
+>
+> **(superseded premise)** The diagnostic that un-parked this — `single_epoch_all.py`
+> showed the deposit *shape* is not the high-z limit (≤1.4% max-rel at every epoch),
+> so the multi-epoch failure is a consistency problem — still holds; puffing just
+> isn't the most effective way to buy that consistency.
 
 ## Why this exists — the structural finding it would solve
 `single_vs_multi.py` showed the current cumulative-**additive, fixed-width**

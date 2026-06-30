@@ -441,18 +441,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   (z=0.7/1.0) hardest — because the degenerate per-epoch params don't lie on a
   low-order z-curve. So generic z-floating ≠ single-epoch quality; need *structured*
   DOF. **Benchmark for the puff-up model to beat: ~4.5% epoch-avg.**
-- [ ] **(next) build the puff-up deposition model** (`PUFF_MODEL_PLAN.md`): width
-  grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward
-  (must beat the loose-zdep ~4.5% benchmark, ideally toward the 0.7% ceiling)
-  (target in fixed kpc apertures: pre-z2 mass-fraction inside 5 kpc drops 0.64→0.44,
-  inside 10 kpc 0.76→0.66, z=2→0.4, more for BCGs; keep `g≈1.7`, ONE efficiency `f`).
-  CoG stays linear in masses → NNLS inner solve survives. **Key design point**: puff-up
-  = let only the WIDTH depend on observation time `t_k` (mass `f(t_i)` frozen = one
-  consistent history); contrast a looser "all params z-dependent" fit, which also lets
-  the deposited mass at `t_i` change with `t_k` (mass not conserved across epochs, not
-  a forward model). Optional first step: run the loose z-dependent-param fit as a
-  feasibility ceiling, then tighten to frozen-mass puff-up. Test: does multi-epoch
-  z=0.4 recover from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
+- [x] **exp29 — built & tested the puff-up deposition model (`puff_fit.py`).** One
+  consistent history (mass frozen), only widths migrate post-deposition: ratio law
+  `σ₀(t_i/t_obs)^g (t_k/t_i)^q` and diffusion law `√(σ_{i,0}²+κ(t_k−t_i))`, fit jointly
+  (6 params) vs no-puff / loose-zdep / ceiling. **Result (n=60, epoch-avg max|rel|):
+  no-puff 9.1% → ratio 7.1% → diff 7.7%, loose-zdep ~4.5%, ceiling 0.7%.** Puffing
+  helps but does NOT clear the looser z-dependent fit; diffusion nearly inert (κ→0).
+  → with mass frozen, width migration is a weaker lever than epoch-dependent mass
+  distribution. (Matches param-trends: single-epoch fits de-concentrate early mass via
+  the efficiency, not the width.)
+- [ ] **(next, DECISION POINT) close the multi-epoch model.** Options: (a) a
+  parsimonious **z-dependent efficiency** (the lever loose-zdep actually used — e.g.
+  `b_early` linear in z, others fixed) — head-to-head vs puff at equal DOF; (b) a
+  **hybrid** (mild z-efficiency + ratio puffing); (c) the untested **halo-driven**
+  puffing law `σ ∝ (M_h(t_k)/M_h(t_i))^p`; (d) accept the loose-zdep ~4.5% as the
+  working emulator. Pick based on the user's steer + performance.
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /
