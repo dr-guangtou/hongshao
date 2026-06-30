@@ -103,6 +103,14 @@ centred-deposit* model at single-epoch fidelity.
   shape catalog and drop the single-consistent-history requirement.
 - Figure `exp29_single_vs_multi_z0p4`.
 
+## >>> NEXT SESSION (parked 2026-06-30)
+The "puff-up" fix (time-growing post-deposition width) is designed and **parked** in
+`PUFF_MODEL_PLAN.md`. **Do FIRST:** independent single-epoch fits to every snapshot
+(especially **z=2**) to test whether the centred-Gaussian deposit has a *fundamental*
+limit for high-z massive galaxies — that decides whether puffing (multi-epoch
+consistency) is the right fix or the deposit *shape* must change. Full spec at the
+bottom of `PUFF_MODEL_PLAN.md`.
+
 ## Status / decision log
 - **Phase 1 — GATE 1 PASSED (n=20).** Free per-step fraction (NNLS) + power-law
   width fits all 5 CoGs jointly to **0.032 dex** median (spline width 0.028 — width
