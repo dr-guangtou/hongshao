@@ -81,6 +81,28 @@ Find the fewest parameters that approach the ceiling.
   flexibility for a working emulator.
 - A `ponytail:` note on any deliberate cap (deposit grid coarseness, kernel choice).
 
+## STRUCTURAL FINDING (single vs multi-epoch; `single_vs_multi.py`)
+The single-epoch z=0.4 fit is **genuinely excellent** — median log-RMS **0.004**,
+median **max relative error 2.1%** (the impression was right, not a metric artifact).
+Fitting the SAME model to all 5 epochs jointly degrades the z=0.4 fit to log-RMS
+**0.034 / 19%** — an 8–9× hit. The multi-epoch fit cannot put enough mass at large R
+at z=0.4 (orange falls 15–20% below the data outskirts) while keeping the compact
+high-z epochs. This persists with the free-fraction NNLS + flexible widths (capacity
+z=0.4 ≈ 0.030), so it is **structural, not a fraction/width or optimizer issue**:
+the 5 CoGs are not mutually consistent with a single *cumulative-additive
+centred-deposit* model at single-epoch fidelity.
+- **Root cause (hypothesis):** the model can only ADD deposits at a fixed width; it
+  cannot REDISTRIBUTE mass already laid down. Real massive galaxies puff their
+  early-compact mass outward (mergers/relaxation; exp25/exp26 flagged the inner
+  density even dropping). To fit z=0.4's extended envelope the early mass must move
+  out — which an additive model cannot do without breaking the high-z epochs.
+- **Fundamental fix candidates:** (a) let a deposit's width GROW after it is laid
+  down ("puffing" — σ_i(t) increasing), so early mass migrates outward by z=0.4;
+  (b) model the profile as a per-epoch TRANSFORMATION of the previous epoch (e.g.
+  multiplicative radial remapping), not a pure sum; (c) accept per-epoch fits as a
+  shape catalog and drop the single-consistent-history requirement.
+- Figure `exp29_single_vs_multi_z0p4`.
+
 ## Status / decision log
 - **Phase 1 — GATE 1 PASSED (n=20).** Free per-step fraction (NNLS) + power-law
   width fits all 5 CoGs jointly to **0.032 dex** median (spline width 0.028 — width
