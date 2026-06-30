@@ -142,6 +142,12 @@ primitive question: **keep the centred Gaussian.**
   0.7%. **Puffing helps but does NOT beat the looser z-dependent fit** (diffusion
   nearly inert, κ→0) → with mass frozen, width migration is a weaker lever than
   epoch-dependent mass distribution. `demo` self-check.
+- `model_compare.py` — radial comparison of the four models (independent / loose-quad /
+  puff-ratio / puff-diff): per-galaxy CoG + residual panels and **median
+  relative-residual profiles vs R, per epoch x 3 mass bins**. Shows *where* each model
+  fails: loose-quad overshoots the inner ~3-6 kpc at high z; the puff laws misplace mass
+  at intermediate radii (10-50 kpc), worst for BCGs; puff-diff distorts the high-z BCG
+  CoG outright. Only the independent ceiling is flat ~0 everywhere. `demo` self-check.
 - `loose_zdep.py` — joint multi-epoch fit with each kernel param a **polynomial in
   the observation epoch z** (constant/linear/quad), vs the independent ceiling. n=60:
   epoch-avg max|rel| **fixed 10.2% → linear 4.8% → quad 4.5%**, ceiling **0.7%**.
