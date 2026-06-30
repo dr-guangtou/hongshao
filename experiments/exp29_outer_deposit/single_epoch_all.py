@@ -45,9 +45,24 @@ from hongshao.plotting import set_style, save_fig, OKABE_ITO                    
 
 set_style()
 FIGDIR = HERE / "figures"
+OUTDIR = HERE / "outputs"
 R = COG_RAD_KPC
 R_IN = 3.0                                          # exclude inner <=3 kpc (TNG softening)
 EVAL = R > R_IN
+
+
+def anchor_times():
+    """Universal cosmic time [Gyr] at the 5 anchor snaps (same for every galaxy)."""
+    mah = dipfree_mah(pick_galaxies(1)[0][1])
+    return np.array([float(mah["t_full"][mah["snap_full"] == sa][0]) for sa in ANCHOR_SNAP])
+
+
+def _save_params(gis, logms, rows, pars):
+    """Persist the per-galaxy single-epoch fits so param_trends.py can analyze them."""
+    OUTDIR.mkdir(parents=True, exist_ok=True)
+    np.savez(OUTDIR / "single_epoch_params.npz", index=gis, logms=logms, metrics=rows,
+             params=pars, anchor_t=anchor_times(), anchor_z=np.array(ANCHOR_Z))
+    print(f"\nwrote {OUTDIR / 'single_epoch_params.npz'}  (params {pars.shape})")
 
 
 def model_cog_epoch(q, mah, k):
@@ -84,7 +99,7 @@ def fit_epoch(mah, data_k, k):
                          options=dict(maxiter=6000, xatol=1e-4, fatol=1e-9))
             if best is None or r.fun < best.fun:
                 best = r
-    return _pin(model_cog_epoch(best.x, mah, k), data_k)
+    return _pin(model_cog_epoch(best.x, mah, k), data_k), best.x
 
 
 def metrics(model, data):
@@ -102,25 +117,26 @@ def fit_galaxy(gi):
     mah = dipfree_mah(gi)
     if mah is None:
         return None
-    models, mets = [], []
+    models, mets, pars = [], [], []
     for k in range(5):
         data_k = 10.0 ** logC[k]
-        m = fit_epoch(mah, data_k, k)
-        models.append(m)
-        mets.append(metrics(m, data_k))
-    return logC, np.array(models), np.array(mets)        # mets: (5, 3) = log-RMS,max,90th
+        m, px = fit_epoch(mah, data_k, k)
+        models.append(m); mets.append(metrics(m, data_k)); pars.append(px)
+    # mets: (5,3)=log-RMS,max,90th ; pars: (5,5)=log10 s0, g, b_early, b_late, z_c
+    return logC, np.array(models), np.array(mets), np.array(pars)
 
 
 def main():
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 60
     gxs = pick_galaxies(n)
-    logms, rows = [], []                                  # rows: (n_gal, 5, 3)
+    logms, gis, rows, pars = [], [], [], []               # rows:(n,5,3) pars:(n,5,5)
     for logm, gi in gxs:
         out = fit_galaxy(gi)
         if out is None:
             continue
-        logms.append(logm); rows.append(out[2])
-    logms = np.array(logms); rows = np.array(rows)        # (n, 5, 3)
+        logms.append(logm); gis.append(gi); rows.append(out[2]); pars.append(out[3])
+    logms = np.array(logms); rows = np.array(rows); pars = np.array(pars)
+    _save_params(np.array(gis), logms, rows, pars)
     print(f"exp29 — independent single-epoch fits, all 5 epochs (n={len(rows)} galaxies)")
     print("  metric: LINEAR M*, relative residual, R>3 kpc, aperture pinned at 148 kpc\n")
 
@@ -218,7 +234,7 @@ def _figure(gxs):
         out = fit_galaxy(gi)
         if out is None:
             continue
-        logC, models, mets = out
+        logC, models, mets, _ = out
         aC, aR = axes[0, col], axes[1, col]
         for k, z in enumerate(ANCHOR_Z):
             c = cmap(k / 4); data = 10.0 ** logC[k]
@@ -244,7 +260,8 @@ def demo():
     gxs = pick_galaxies(2)
     out = fit_galaxy(gxs[0][1])
     assert out is not None
-    logC, models, mets = out
+    logC, models, mets, pars = out
+    assert pars.shape == (5, 5), pars.shape
     for k in range(5):
         data = 10.0 ** logC[k]
         assert abs(models[k][-1] / data[-1] - 1.0) < 1e-6, "aperture not pinned"

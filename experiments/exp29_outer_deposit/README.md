@@ -133,7 +133,14 @@ primitive question: **keep the centred Gaussian.**
 - `run.py` — dip-free MAH loader, stacked multi-epoch differential fit, figures.
 - `single_epoch_all.py` — independent single-epoch fits to every snapshot
   (z=0.4..2.0): is the centred-Gaussian *shape* a high-z limit? (No.) Honest linear
-  max/90th-pct relative metric, aperture pinned at 148 kpc; `demo` self-check.
+  max/90th-pct relative metric, aperture pinned at 148 kpc; caches best-fit params to
+  `outputs/single_epoch_params.npz`; `demo` self-check.
+- `param_trends.py` — patterns in those best-fit params. **`g≈1.7` is epoch-stable**
+  (a shared spatial kernel); the **efficiency rotates** (`b_early` 3.2→5.8 to high z);
+  and the robust puff-up calibration — the **`R50` of the pre-z=2 mass grows ~1.8×
+  (≈2.7× for BCGs)** from z=2 to z=0.4 (anchored: at z=2 it equals the data `R50`),
+  realized in single-epoch fits via the efficiency, a freedom the joint fit lacks.
+  Sets the magnitude for the puff-up law. `demo` self-check.
 - `figures/exp29_centred_gaussian_wins.*` — (A) dip-free MAH, (B) stacked Δlog Σ
   data vs Gaussian model, (C) `b(z)` data vs model p=0/2/4, (D) why σ(t) does it.
 - `outputs/manifest.json` — best `g`, the `b(z)` tables.

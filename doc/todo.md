@@ -424,10 +424,20 @@ Cross-experiment plan. Mirrors the phase sequence in
   ≤1.4% max-rel; high-mass z=2 (0.9%) ≈ z=0.4 (0.7%); the BCG's z=2 is its *best*
   fit (0.3%). → The multi-epoch tension is a **consistency** problem, not a shape
   one → **build the puff-up model** (PUFF_MODEL_PLAN.md, now un-parked).
+- [x] **exp29 — single-epoch best-fit parameter trends (`param_trends.py`).** Mined
+  the cached per-epoch fits for patterns. **(1)** `g≈1.7` is epoch-stable (matches
+  exp25) — the spatial-kernel shape is a shared invariant. **(2)** The efficiency
+  rotates: `b_early` 3.2→5.8 toward high z. **(3)** Robust puff-up calibration: the
+  `R50` of the pre-z=2 mass (anchored — at z=2 it equals the data `R50`) grows
+  **3.0→6.1 kpc (all), 3.0→8.2 kpc (high-mass)** from z=2 to z=0.4 → the same early
+  mass must extend **~1.8× (≈2.7× for BCGs)**. The single-epoch fits realize this via
+  the efficiency (a per-epoch freedom the joint fit lacks) → confirms the joint model
+  needs an explicit extra DOF, and `R50`-doubling sets the puff-law magnitude.
 - [ ] **(next) build the puff-up deposition model** (`PUFF_MODEL_PLAN.md`): width
-  grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward;
-  CoG stays linear in masses → NNLS inner solve survives. Test: does multi-epoch
-  z=0.4 recover from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
+  grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward
+  (target: early-mass `R50` ~doubles z=2→0.4, more for BCGs; keep `g≈1.7`). CoG stays
+  linear in masses → NNLS inner solve survives. Test: does multi-epoch z=0.4 recover
+  from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /

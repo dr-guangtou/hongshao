@@ -262,6 +262,21 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   epoch, but the honest linear metric (max|rel|, 90th|rel|, inner ≤3 kpc softening
   excluded) is what makes "z=2 is as easy as z=0.4" a defensible claim rather than an
   averaged-away one.
+- **Read parameter trends through degeneracy-robust *derived* quantities, anchored
+  where they're constrained (exp29).** The fitted width law `σ(t)=σ₀(t/t_obs)^g` is
+  anchored at `t_obs=t(z=0.4)`, so `σ₀` inflates for high-z fits (extrapolation) and
+  a single-deposit width `σ(t_ref)` even gave the *wrong-signed* puff conclusion. The
+  mass-weighted half-mass radius of the early-formed (pre-z=2) mass is robust — and
+  it's anchored at z=2 where that mass is 100% of the galaxy, so `R50_early(z=2)` =
+  the data `R50`. That flipped the verdict: early mass must extend ~1.8× (≈2.7× for
+  BCGs) by z=0.4. Don't read raw degenerate params; build a derived quantity that an
+  independent anchor pins.
+- **A single-epoch fit can fake a missing DOF through a *different* knob; the joint
+  fit can't (exp29).** The independent fits made early mass more extended at z=0.4 by
+  re-spreading it via the per-epoch efficiency `f(t_i)`, not by widening deposits —
+  freedom a joint fit lacks (`f` is one fixed function). So "each epoch fits great"
+  does not imply "one model fits all epochs"; the param *trend* across epochs is what
+  reveals the DOF the joint model is missing.
 
 ## Workflow
 

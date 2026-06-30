@@ -44,6 +44,25 @@ width depend on the **observation** time `t_k`, a structurally new freedom never
 The SAME early deposits then supply the compact high-z profile (small `σ_i(t_high)`)
 **and** the extended z=0.4 envelope (large `σ_i(t_obs)`), dissolving the tension.
 
+## Calibration from the single-epoch param trends (`param_trends.py`)
+The independent per-epoch fits already tell us what puffing must deliver:
+- **`g ≈ 1.7` is epoch-stable** (every epoch; matches exp25's per-galaxy `g≈1.67`).
+  The width-growth-with-cosmic-time *shape* is a shared invariant — keep it; puffing
+  is an extra DOF on top, not a replacement.
+- **The early-formed mass must extend ~2× with time.** `R50` of the pre-z=2 stellar
+  mass (robust: at z=2 it equals the data `R50`, since 100% of the mass is pre-z=2)
+  grows **3.0 → 6.1 kpc (all)** and **3.0 → 8.2 kpc (high-mass third)** from z=2 to
+  z=0.4 — a **1.8× (≈2.7× for BCGs)** size increase of the *same* early mass. That
+  is the target magnitude for the puffing law over this interval (massive galaxies
+  need more).
+- **Single-epoch fits fake it via the efficiency, not the width.** Individual pre-z=2
+  deposit widths barely move (mass-wtd 7.5→8.4 kpc); the `R50` growth comes from the
+  efficiency re-spreading early mass onto later/wider pre-z=2 deposits (`b_early`
+  drops 5.8→3.2 from z=2 to z=0.4). A *joint* fit can't do this — `f(t_i)` is one
+  fixed function across epochs — which is exactly why multi-epoch fails and exactly
+  the freedom puffing restores: let `σ_i(t_k)` grow so the *same* early mass is
+  compact at z=2 and extended at z=0.4.
+
 ## Tractability — the convex inner solve survives
 Given the puffing-law params (and `σ_{i,0}`), every `σ_i(t_k)` is fixed, so the CoG is
 still **linear in the masses** `dM*_i` → the joint multi-epoch fit stays a non-negative
