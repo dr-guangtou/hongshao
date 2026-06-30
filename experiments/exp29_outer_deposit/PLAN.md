@@ -138,7 +138,21 @@ Find the fewest parameters that approach the ceiling.
 - **Known minor issue:** the Gaussian deposits leak ~8% mass beyond the 148 kpc
   aperture → model CoG at 148 kpc is ~0.035 dex low (pin normalization to the
   aperture to fix).
-- **Next candidates:** (a) push the high-z BCG amplitude (the dominant residual);
-  (b) Σ-profile check / exponential kernel; (c) full ~2400 + the end-to-end SHMR.
+- **Metric caveat (important; `best5_qa.py`).** The averaged log-RMS understates
+  per-galaxy error: even the 5 *best* per-galaxy fits (log-RMS 0.021–0.026) carry
+  **max relative errors of 21–38%** locally. It's the *averaging over 120
+  radius×epoch points* that hides it (log error ≈ relative error, so not a
+  log-vs-linear issue). The stacked relative-residual map shows the errors are
+  **structured, not noise**: z=0.4 good (≲5%); **z≥1.5 an S-shape — model
+  under-predicts the centre (−6 to −14%), over-predicts mid R (+10 to +13%),
+  under-predicts the outskirts** (the centred-Gaussian can't hold the compact
+  high-z shape — same lesson as the Σ-profile cliff); inner ≤3 kpc large (softening
+  + flat core). Figures `exp29_best5_linear`, `exp29_residual_map`.
+  - **Evaluation upgrade needed:** report radius×epoch-resolved relative residuals +
+    percentiles (max / 90th), exclude or downweight inner ≤3 kpc — not a single mean.
+- **Next candidates:** (a) the high-z profile *shape* is the real target (the
+  centred Gaussian over-spreads high-z mass into mid R) — revisit the kernel for the
+  compact high-z regime; (b) the aperture-leak normalization fix; (c) full ~2400 +
+  end-to-end SHMR.
 - **Deferred:** Σ-profile check (does CoG-matching give acceptable Σ, or need the
   exponential kernel); DiffMAH-param regression flavour.
