@@ -1,9 +1,13 @@
-# exp29 — PARKED design: the "puff-up" deposition model (deferred)
+# exp29 — the "puff-up" deposition model (UN-PARKED — build it)
 
-> **Status: PARKED (2026-06-30).** Deliberately deferred — it adds a degree of
-> freedom we don't want yet. This document is the full design so a future session
-> can pick it up cold. First do the NEXT-SESSION diagnostic below; it decides
-> whether puffing is even the right fix.
+> **Status: UN-PARKED (2026-06-30).** The NEXT-SESSION diagnostic (below) ran:
+> `single_epoch_all.py` fit the centred-Gaussian kernel to each epoch's CoG
+> independently. **The deposit shape is NOT the limit** — every epoch, every
+> mass tertile fits to ≤1.4% max-rel; high-mass z=2 (0.9%) ≈ z=0.4 (0.7%); the
+> BCG's z=2 is its *best* fit (0.3% max-rel). So the multi-epoch failure is a
+> **consistency** problem (a fixed-width additive deposit can't redistribute
+> early-compact mass), exactly what puffing addresses. **Build this model.** The
+> design below is ready; start at "Test plan".
 
 ## Why this exists — the structural finding it would solve
 `single_vs_multi.py` showed the current cumulative-**additive, fixed-width**

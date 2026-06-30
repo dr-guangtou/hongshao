@@ -13,6 +13,12 @@
 >   epoch 0.038 dex; `capacity_test.py`), and a **compact ~5–6-param emulator**
 >   reaches ~0.040 dex (`emulator_param.py`). The blocker was never the kernel or a
 >   rigid fraction — one epoch just can't constrain the fraction.
+> - **The deposit *shape* is not the high-z limit** (`single_epoch_all.py`). Fitting
+>   the centred Gaussian to *each epoch's CoG independently* reaches **≤1.4% max-rel
+>   at every epoch and mass tertile**, with high-mass z=2 (0.9%) as good as z=0.4
+>   (0.7%) — the BCG's z=2 is its *best* fit (0.3%). So the multi-epoch tension
+>   (z=0.4 degrades to 19% jointly) is a **consistency** problem, not a shape one →
+>   build the puff-up model (`PUFF_MODEL_PLAN.md`, un-parked).
 >
 > See **`PLAN.md`** for the full multi-epoch emulator plan + decision log. The
 > sections below are the original (primitive / dip-free-MAH) investigation, kept for
@@ -125,6 +131,9 @@ primitive question: **keep the centred Gaussian.**
 - `deposit.py` — the generalized-gamma deposition primitive (pure math, reusable;
   `demo()` self-check: p=0 = Gaussian, mass-conserving, Σ peaks at σ√p).
 - `run.py` — dip-free MAH loader, stacked multi-epoch differential fit, figures.
+- `single_epoch_all.py` — independent single-epoch fits to every snapshot
+  (z=0.4..2.0): is the centred-Gaussian *shape* a high-z limit? (No.) Honest linear
+  max/90th-pct relative metric, aperture pinned at 148 kpc; `demo` self-check.
 - `figures/exp29_centred_gaussian_wins.*` — (A) dip-free MAH, (B) stacked Δlog Σ
   data vs Gaussian model, (C) `b(z)` data vs model p=0/2/4, (D) why σ(t) does it.
 - `outputs/manifest.json` — best `g`, the `b(z)` tables.

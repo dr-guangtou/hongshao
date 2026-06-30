@@ -414,6 +414,20 @@ Cross-experiment plan. Mirrors the phase sequence in
   monotonically undershoots** (long-baseline 0.82→0.53→0.31). σ(t), not deposit
   off-centredness, is the inside-out mechanism — exp26's "not a Gaussian" was about a
   *single* deposit. The multi-epoch data pin g≈0.55 (the z=0.4 CoG alone couldn't).
+- [x] **exp29 — independent single-epoch fits to every snapshot
+  (`single_epoch_all.py`, branch `exp29-single-epoch-highz`).** Settles whether the
+  centred-Gaussian deposit *shape* has a fundamental high-z limit. Per galaxy, per
+  epoch z_k∈{0.4,0.7,1.0,1.5,2.0}: fit the kernel to **that epoch's CoG alone**
+  (deposits up to t(z_k), normalization pinned to the 148-kpc aperture). Honest
+  metric: linear M*, relative residual, max/90th-pct over R>3 kpc. **Result (n=60):
+  the Gaussian shape is NOT the limit** — every epoch, every mass tertile fits to
+  ≤1.4% max-rel; high-mass z=2 (0.9%) ≈ z=0.4 (0.7%); the BCG's z=2 is its *best*
+  fit (0.3%). → The multi-epoch tension is a **consistency** problem, not a shape
+  one → **build the puff-up model** (PUFF_MODEL_PLAN.md, now un-parked).
+- [ ] **(next) build the puff-up deposition model** (`PUFF_MODEL_PLAN.md`): width
+  grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward;
+  CoG stays linear in masses → NNLS inner solve survives. Test: does multi-epoch
+  z=0.4 recover from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /

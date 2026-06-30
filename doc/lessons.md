@@ -243,6 +243,25 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   (exp29).** A model with a clipped floor (Σ→0 at large R, high z) produces a
   spurious huge `b` where the data have no signal; restricting the model's slope fit
   to the data's flagged radii changed model long-baseline `b` from 6.6 to 0.8.
+- **Isolate "is the *shape* the limit?" with an independent single-epoch fit per
+  epoch (exp29).** The centred-Gaussian deposit fits *every* epoch's CoG to <1%
+  max-rel **including z=2 for the most massive galaxies** (high-mass tertile z=2 =
+  0.9% vs z=0.4 = 0.7%; the BCG's z=2 is its *best* fit, 0.3%). So the multi-epoch
+  failure (z=0.4 degrades to 19% when fit jointly) is **not** a shape limit — the
+  Gaussian sum can describe compact high-z massive profiles — it is a *consistency*
+  limit (fixed-width additive deposits can't redistribute early-compact mass). The
+  decisive test was fitting each epoch alone, not reasoning from the joint fit.
+- **Pin the normalization to the measured aperture, not the deposited total
+  (exp29).** Centred Gaussians leak ~8% mass beyond 148 kpc, so normalizing the
+  *total* deposit mass to M*(z_k) leaves the model CoG ~0.035 dex low at the outer
+  radius and contaminates the shape params. Rescaling the model to match the data at
+  the 148-kpc point (`model *= data[-1]/model[-1]`) removes the leak cleanly so the
+  shape test is honest.
+- **Mean log-RMS hides structured error; report linear max/90th-pct relative
+  residual over R>3 kpc (exp29).** Single-epoch log-RMS is ~0.001–0.002 dex at every
+  epoch, but the honest linear metric (max|rel|, 90th|rel|, inner ≤3 kpc softening
+  excluded) is what makes "z=2 is as easy as z=0.4" a defensible claim rather than an
+  averaged-away one.
 
 ## Workflow
 
