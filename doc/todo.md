@@ -433,8 +433,17 @@ Cross-experiment plan. Mirrors the phase sequence in
   mass must extend **~1.8× (≈2.7× for BCGs)**. The single-epoch fits realize this via
   the efficiency (a per-epoch freedom the joint fit lacks) → confirms the joint model
   needs an explicit extra DOF, and `R50`-doubling sets the puff-law magnitude.
+- [x] **exp29 — loose redshift-dependent-parameter joint fit (`loose_zdep.py`).**
+  Each kernel param a polynomial in observation z (const/linear/quad), fit jointly,
+  vs the independent ceiling. **Result (n=60): epoch-avg max|rel| fixed 10.2% →
+  linear 4.8% → quad 4.5%, ceiling 0.7%.** z-dependence ~halves the error (reasonable
+  multi-epoch fit) but plateaus ~6× above the ceiling — quad≈linear, middle epochs
+  (z=0.7/1.0) hardest — because the degenerate per-epoch params don't lie on a
+  low-order z-curve. So generic z-floating ≠ single-epoch quality; need *structured*
+  DOF. **Benchmark for the puff-up model to beat: ~4.5% epoch-avg.**
 - [ ] **(next) build the puff-up deposition model** (`PUFF_MODEL_PLAN.md`): width
   grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward
+  (must beat the loose-zdep ~4.5% benchmark, ideally toward the 0.7% ceiling)
   (target in fixed kpc apertures: pre-z2 mass-fraction inside 5 kpc drops 0.64→0.44,
   inside 10 kpc 0.76→0.66, z=2→0.4, more for BCGs; keep `g≈1.7`, ONE efficiency `f`).
   CoG stays linear in masses → NNLS inner solve survives. **Key design point**: puff-up

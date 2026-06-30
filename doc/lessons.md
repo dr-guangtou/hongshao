@@ -277,6 +277,15 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   freedom a joint fit lacks (`f` is one fixed function). So "each epoch fits great"
   does not imply "one model fits all epochs"; the param *trend* across epochs is what
   reveals the DOF the joint model is missing.
+- **Smooth low-order z-dependence of degenerate params plateaus far above the
+  per-epoch ceiling (exp29).** Making the 5 kernel params a polynomial in observation
+  z and fitting jointly cut multi-epoch max|rel| from ~10% (fixed) to ~4.5%
+  (linear/quad) — a reasonable fit — but quad barely beat linear and both stayed ~6×
+  above the 0.7% single-epoch ceiling, because the per-epoch best-fit params are
+  degenerate/scattered and don't lie on a low-order curve (you'd need ~quartic =
+  per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
+  closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
+  not more polynomial order. Test the structured model against this ~4.5% benchmark.
 
 ## Workflow
 

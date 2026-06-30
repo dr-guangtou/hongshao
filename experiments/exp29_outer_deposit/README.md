@@ -135,6 +135,13 @@ primitive question: **keep the centred Gaussian.**
   (z=0.4..2.0): is the centred-Gaussian *shape* a high-z limit? (No.) Honest linear
   max/90th-pct relative metric, aperture pinned at 148 kpc; caches best-fit params to
   `outputs/single_epoch_params.npz`; `demo` self-check.
+- `loose_zdep.py` — joint multi-epoch fit with each kernel param a **polynomial in
+  the observation epoch z** (constant/linear/quad), vs the independent ceiling. n=60:
+  epoch-avg max|rel| **fixed 10.2% → linear 4.8% → quad 4.5%**, ceiling **0.7%**.
+  z-dependence ~halves the error but **plateaus ~6× above the ceiling** (quad≈linear,
+  middle epochs hardest) — the degenerate per-epoch params don't lie on a low-order
+  z-curve, so parsimonious z-trends can't reach single-epoch quality. Motivates a
+  *structured* DOF (puff-up) over generic z-floating. `demo` self-check.
 - `param_trends.py` — patterns in those best-fit params. **`g≈1.7` is epoch-stable**
   (a shared spatial kernel); the **efficiency rotates** (`b_early` 3.2→5.8 to high z);
   and the robust puff-up calibration — the **`R50` of the pre-z=2 mass grows ~1.8×
