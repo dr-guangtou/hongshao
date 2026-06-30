@@ -142,6 +142,15 @@ primitive question: **keep the centred Gaussian.**
   0.7%. **Puffing helps but does NOT beat the looser z-dependent fit** (diffusion
   nearly inert, κ→0) → with mass frozen, width migration is a weaker lever than
   epoch-dependent mass distribution. `demo` self-check.
+- `nnls_floor.py` — the **free-mass NNLS floor**: give every deposit a free
+  non-negative mass (convex NNLS inner, width law σ₀(t_i/t_obs)^g outer), one shared
+  mass vector across epochs = one consistent history. **Decisive result (n=60,
+  max|rel|): free masses fit each epoch ALONE to 0.2%, but the consistent JOINT fit
+  caps at 12% (~60× cost) — free masses do NOT relieve the multi-epoch tension.** The
+  parametric joint models beat free-mass-joint only by relaxing consistency
+  (loose-quad 4.5%) or adding width freedom (puff 7%). So the binding limit is the
+  single consistent additive Gaussian-sum history itself, not the mass
+  parameterization. `demo` self-check.
 - `model_compare.py` — radial comparison of the four models (independent / loose-quad /
   puff-ratio / puff-diff): per-galaxy CoG + residual panels and **median
   relative-residual profiles vs R, per epoch x 3 mass bins**. Shows *where* each model

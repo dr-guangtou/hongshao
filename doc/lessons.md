@@ -286,6 +286,17 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **Free per-deposit mass does NOT relieve the multi-epoch tension; the consistency
+  constraint itself is the binding limit (exp29).** Convex free-mass NNLS (each deposit
+  a free non-negative mass) fits each epoch ALONE to 0.2% max|rel|, but one shared mass
+  vector across epochs (a single consistent additive history) caps the JOINT fit at 12%
+  (~60×). Parametric joint models beat free-mass-joint only by relaxing consistency
+  (loose-zdep 4.5%) or adding width freedom (puff 7%). So the limit is the single
+  consistent additive Gaussian-sum history, not the mass parameterization — reaching the
+  per-epoch ceiling needs a non-additive primitive (mass that moves, not just adds).
+  Isolate a constraint's cost with an alone-vs-joint comparison in the SAME method/metric
+  (here both free-mass NNLS), not a cross-model table (objective/width-basis differences
+  muddy it).
 - **The physically-appealing DOF is not always the most effective one — let
   performance decide (exp29).** The puff-up model (one consistent history, mass
   frozen, only widths migrate) was the "principled" fix, but it underperformed: n=60

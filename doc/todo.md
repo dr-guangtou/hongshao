@@ -450,12 +450,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   → with mass frozen, width migration is a weaker lever than epoch-dependent mass
   distribution. (Matches param-trends: single-epoch fits de-concentrate early mass via
   the efficiency, not the width.)
-- [ ] **(next, DECISION POINT) close the multi-epoch model.** Options: (a) a
-  parsimonious **z-dependent efficiency** (the lever loose-zdep actually used — e.g.
-  `b_early` linear in z, others fixed) — head-to-head vs puff at equal DOF; (b) a
-  **hybrid** (mild z-efficiency + ratio puffing); (c) the untested **halo-driven**
-  puffing law `σ ∝ (M_h(t_k)/M_h(t_i))^p`; (d) accept the loose-zdep ~4.5% as the
-  working emulator. Pick based on the user's steer + performance.
+- [x] **exp29 — free-mass NNLS floor (`nnls_floor.py`).** Gave every deposit a free
+  non-negative mass (convex NNLS), one shared mass vector = one consistent history.
+  **Decisive (n=60, max|rel|): free masses fit each epoch ALONE to 0.2%, but the
+  consistent JOINT fit caps at 12% (~60×).** Free masses do NOT relieve the multi-epoch
+  tension; the binding limit is the single consistent additive Gaussian-sum history
+  itself, not the mass parameterization. Parametric joint models (loose 4.5%, puff 7%)
+  do better only by relaxing consistency or adding width freedom. Reaching the 0.7%
+  ceiling would need a NON-additive primitive (mass that moves, not just adds).
+- [ ] **(next, DECISION POINT) the multi-epoch ceiling is unreachable by any consistent
+  additive Gaussian history.** So either (a) **accept the practical floor** — loose-zdep
+  ~4.5% (or puff ~7% if strict consistency is wanted) — and **build the forward emulator**
+  (halo-only inputs → 5-epoch CoG); this is the original product goal and ~0.02 dex is
+  good. Or (b) **rethink the primitive** to a non-additive one (stars migrate/redistribute,
+  a transport model) if reaching ~ceiling is required. Recommend (a) unless the science
+  needs sub-2%.
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /
