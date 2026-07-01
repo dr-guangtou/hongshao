@@ -286,6 +286,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **Do NOT inner-mask the multi-epoch fit; the inner region holds most of the high-z
+  mass (exp29).** Masking R<3 kpc was fine for a z=0.4-only emulator but wrong for the
+  multi-epoch fit: high-z massive progenitors have Re<3 kpc, so the mask hides >50% of
+  their stellar mass and buys a better metric by dropping the hardest region. Corrected
+  (real MAH, ALL radii): loose-quad epoch-avg max|rel| is ~10% (ceiling ~2%), not the
+  inner-masked 4.5%. Fit and evaluate over all radii for multi-epoch.
+- **Pair the point-wise profile residual with INTEGRATED aperture + outskirt mass
+  checks (exp29).** Cumulative aperture masses M*(<10..<100 kpc) are reproduced to
+  ~0.01 dex even where the profile max|rel| is ~10% -- the cumulative is forgiving. The
+  differential OUTSKIRT mass M*(>50 kpc) amplifies shape errors: the loose model
+  under-predicts it by up to 0.31 dex (~2x) at z=2, worst for massive galaxies -- the
+  sum-of-centred-Gaussians can't build the extended mass around compact high-z
+  progenitors. Report M*(<R) at fixed apertures AND M*(>R_out); the outskirt is the
+  sensitive diagnostic (small denominator + real shape deficiency).
 - **The smooth DiffMAH fit curve flatters the deposition model; use the real MAH for
   honest numbers (exp29).** `dipfree_mah` fed the kernel the *smooth* DiffMAH fit, which
   erases merger-driven bursts (real single-step growth is 7-18% of total vs 2-3% for the

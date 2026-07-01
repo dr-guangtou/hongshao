@@ -465,9 +465,19 @@ Cross-experiment plan. Mirrors the phase sequence in
   7.0%). Both changes make the fit worse and ~add; per-epoch ceiling stays ~2% (shape
   still fine). Smooth curve flattered the model. Real MAH is the honest input AND carries
   the merger events needed for an event-driven width model.
+- [x] **exp29 — corrected multi-epoch evaluation (`integrated_check.py`): real MAH,
+  ALL radii, + integrated aperture/outskirt mass checks.** No inner mask (high-z Re<3
+  kpc → inner holds most of the mass). **Result (n=45): loose-quad profile max|rel|
+  epoch-avg ~10% (ceiling ~2%); cumulative aperture masses M*(<10..<100) reproduced to
+  ~0.01 dex; but outskirt M*(>50 kpc) under-predicted up to 0.31 dex (~2x) at z=2, worst
+  for massive galaxies** — the centred-Gaussian sum can't build the extended high-z
+  outskirt. Integrated outskirt mass is the sensitive diagnostic.
+- **STANDARD GOING FORWARD**: evaluate over ALL radii + report M*(<R) apertures and
+  M*(>50 kpc) outskirt, alongside the profile max|rel|. The honest best-model number is
+  ~10%, not 4.5%.
 - [ ] **(consider) switch the model's default MAH to the real de-dipped `peak_history`**
-  (currently `dipfree_mah` = smooth DiffMAH fit). Would change every exp29 number
-  (~4.5%→~6-9% honest). Decide before any final emulator numbers.
+  (currently `dipfree_mah` = smooth DiffMAH fit). Would change every exp29 number.
+  Decide before any final emulator numbers.
 - [ ] **(next, DECISION POINT) the multi-epoch ceiling is unreachable by any consistent
   additive Gaussian history.** So either (a) **accept the practical floor** — loose-zdep
   ~4.5% (or puff ~7% if strict consistency is wanted) — and **build the forward emulator**
