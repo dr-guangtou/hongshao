@@ -286,6 +286,18 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **The smooth DiffMAH fit curve flatters the deposition model; use the real MAH for
+  honest numbers (exp29).** `dipfree_mah` fed the kernel the *smooth* DiffMAH fit, which
+  erases merger-driven bursts (real single-step growth is 7-18% of total vs 2-3% for the
+  fit) and provides ~99 evenly-spaced deposits. Swapping in the real de-dipped
+  main-branch MAH (`peak_history`, running-max: keeps bursts, removes dips, ~60 gappy
+  deposits) raised the best model's multi-epoch max|rel| from 4.4% to 6.1% (R>3), and
+  removing the inner-3-kpc cut raised it further to 8.9% (real, all R); the per-epoch
+  ceiling stayed low (~2%), so the *shape* is still representable — the *consistency*
+  gap is what widens. The bursty/gappy real MAH is a less flexible basis for a smooth
+  power-law width law, BUT it is the only input that carries merger *events* — so it is
+  the prerequisite for an event-driven width/puff model (the parked "width set by the
+  accretion event" idea). Report final numbers on the real MAH + all radii.
 - **Free per-deposit mass does NOT relieve the multi-epoch tension; the consistency
   constraint itself is the binding limit (exp29).** Convex free-mass NNLS (each deposit
   a free non-negative mass) fits each epoch ALONE to 0.2% max|rel|, but one shared mass

@@ -458,6 +458,16 @@ Cross-experiment plan. Mirrors the phase sequence in
   itself, not the mass parameterization. Parametric joint models (loose 4.5%, puff 7%)
   do better only by relaxing consistency or adding width freedom. Reaching the 0.7%
   ceiling would need a NON-additive primitive (mass that moves, not just adds).
+- [x] **exp29 — real-MAH / no-inner-cut re-test (`real_mah_test.py`).** `dipfree_mah`
+  used the SMOOTH DiffMAH fit (no merger bursts); re-tested with the real de-dipped
+  main-branch MAH (`peak_history`) and no inner cut. **Result (n=50, loose-quad
+  epoch-avg max|rel|): smooth/R>3 4.4% → real/R>3 6.1% → real/all-R 8.9%** (smooth/all-R
+  7.0%). Both changes make the fit worse and ~add; per-epoch ceiling stays ~2% (shape
+  still fine). Smooth curve flattered the model. Real MAH is the honest input AND carries
+  the merger events needed for an event-driven width model.
+- [ ] **(consider) switch the model's default MAH to the real de-dipped `peak_history`**
+  (currently `dipfree_mah` = smooth DiffMAH fit). Would change every exp29 number
+  (~4.5%→~6-9% honest). Decide before any final emulator numbers.
 - [ ] **(next, DECISION POINT) the multi-epoch ceiling is unreachable by any consistent
   additive Gaussian history.** So either (a) **accept the practical floor** — loose-zdep
   ~4.5% (or puff ~7% if strict consistency is wanted) — and **build the forward emulator**
