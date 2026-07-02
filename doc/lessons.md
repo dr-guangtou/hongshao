@@ -286,6 +286,11 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **A "floor" in one metric is not a floor in another (exp29).** The free-mass NNLS
+  minimizes L2 (relative SSE), so it is the best model in log-RMS but the WORST in
+  max|rel| (18.5% honest, vs loose 9.9%) — free masses buy L2 by concentrating error into
+  a worst-radius spike. Always state which metric a "floor"/"ceiling" refers to; report
+  both the fitted objective and the reported metric.
 - **Do NOT inner-mask the multi-epoch fit; the inner region holds most of the high-z
   mass (exp29).** Masking R<3 kpc was fine for a z=0.4-only emulator but wrong for the
   multi-epoch fit: high-z massive progenitors have Re<3 kpc, so the mask hides >50% of

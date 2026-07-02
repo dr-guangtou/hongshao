@@ -142,6 +142,14 @@ primitive question: **keep the centred Gaussian.**
   0.7%. **Puffing helps but does NOT beat the looser z-dependent fit** (diffusion
   nearly inert, κ→0) → with mass frozen, width migration is a weaker lever than
   epoch-dependent mass distribution. `demo` self-check.
+- `final_scorecard.py` — the **honest final scorecard**: all 4 models (independent,
+  loose-quad, puff-ratio, free-mass NNLS floor) on the corrected standard (real MAH,
+  all radii, profile + mass QA). n=45: profile max|rel| epoch-avg **independent 1.9%
+  (ceiling), loose 9.9%, puff 10.9%, floor 18.5%** — the free-mass floor is *worst* in
+  max|rel| (it minimizes L2, so free masses spike the worst radius: a floor in log-RMS
+  is not a floor in max|rel|). All models nail cumulative apertures (~0.01 dex) and the
+  relative outskirt M*(>2Re) (~0.02 dex for the good ones); only the fixed-kpc far
+  outskirt at high z fails (loose −0.31 dex at z=2).
 - `mass_qa.py` — **STANDARD post-fit mass QA** (run parallel to the profile metric).
   Two bin sets — physical kpc and R_half (relative, cross-z-comparable) — with aperture
   M*(<R) and outer-envelope M*(>R) masses; QA figure per set = truth-vs-model values

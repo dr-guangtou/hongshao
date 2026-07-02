@@ -484,13 +484,22 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [ ] **(consider) switch the model's default MAH to the real de-dipped `peak_history`**
   (currently `dipfree_mah` = smooth DiffMAH fit). Would change every exp29 number.
   Decide before any final emulator numbers.
+- [x] **exp29 — honest final scorecard (`final_scorecard.py`).** All 4 models on the
+  corrected standard (real MAH, all radii, profile + mass QA). n=45 profile max|rel|
+  epoch-avg: **independent 1.9% (ceiling), loose-quad 9.9%, puff 10.9%, free-mass floor
+  18.5%.** Free-mass floor is worst in max|rel| (L2 objective spikes the worst radius).
+  All nail cumulative apertures (~0.01 dex) + relative outskirt M*(>2Re) (~0.02 dex);
+  only fixed-kpc far outskirt at high z fails (loose −0.31 dex at z=2).
 - [ ] **(next, DECISION POINT) the multi-epoch ceiling is unreachable by any consistent
-  additive Gaussian history.** So either (a) **accept the practical floor** — loose-zdep
-  ~4.5% (or puff ~7% if strict consistency is wanted) — and **build the forward emulator**
-  (halo-only inputs → 5-epoch CoG); this is the original product goal and ~0.02 dex is
-  good. Or (b) **rethink the primitive** to a non-additive one (stars migrate/redistribute,
-  a transport model) if reaching ~ceiling is required. Recommend (a) unless the science
-  needs sub-2%.
+  additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
+  max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and
+  build the forward emulator** (halo-only → 5-epoch CoG); note cumulative-aperture and
+  relative-outskirt masses are excellent (~0.01-0.02 dex), so the emulator is far better
+  on integrated/size-relative quantities than the ~10% profile number implies. Or
+  (b) **rethink the primitive** (non-additive / transport, stars migrate) to reach the
+  ceiling. Or (c) **event-driven width** (real MAH now carries the merger events) —
+  the one untried lever that could exploit the bursts. Recommend (a) for the product,
+  (c) as the highest-upside modeling try.
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /
