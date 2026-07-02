@@ -135,6 +135,45 @@ primitive question: **keep the centred Gaussian.**
   (z=0.4..2.0): is the centred-Gaussian *shape* a high-z limit? (No.) Honest linear
   max/90th-pct relative metric, aperture pinned at 148 kpc; caches best-fit params to
   `outputs/single_epoch_params.npz`; `demo` self-check.
+- `puff_fit.py` — the **puff-up model**: one consistent history (mass frozen), only
+  widths migrate post-deposition, `σ_i(t_k) = σ₀(t_i/t_obs)^g · (t_k/t_i)^q` (ratio)
+  or `√(σ_{i,0}² + κ(t_k−t_i))` (diffusion), fit jointly (6 params). n=60: epoch-avg
+  max|rel| **no-puff 9.1% → ratio 7.1% → diff 7.7%**, vs loose-zdep ~4.5%, ceiling
+  0.7%. **Puffing helps but does NOT beat the looser z-dependent fit** (diffusion
+  nearly inert, κ→0) → with mass frozen, width migration is a weaker lever than
+  epoch-dependent mass distribution. `demo` self-check.
+- `final_scorecard.py` — the **honest final scorecard**: all 4 models (independent,
+  loose-quad, puff-ratio, free-mass NNLS floor) on the corrected standard (real MAH,
+  all radii, profile + mass QA). n=45: profile max|rel| epoch-avg **independent 1.9%
+  (ceiling), loose 9.9%, puff 10.9%, floor 18.5%** — the free-mass floor is *worst* in
+  max|rel| (it minimizes L2, so free masses spike the worst radius: a floor in log-RMS
+  is not a floor in max|rel|). All models nail cumulative apertures (~0.01 dex) and the
+  relative outskirt M*(>2Re) (~0.02 dex for the good ones); only the fixed-kpc far
+  outskirt at high z fails (loose −0.31 dex at z=2).
+- `mass_qa.py` — **STANDARD post-fit mass QA** (run parallel to the profile metric).
+  Two bin sets — physical kpc and R_half (relative, cross-z-comparable) — with aperture
+  M*(<R) and outer-envelope M*(>R) masses; QA figure per set = truth-vs-model values
+  (log-log, 1:1) + truth-vs-(model-data)/data. `evaluate(model_cogs, data_cogs, R,
+  anchor_z, name=...)`. Key insight: the loose model nails kpc apertures (~1%) and all
+  R_half quantities (~few %) but under-fills the fixed-kpc far outskirt at high z
+  (M*(>100 kpc) −88% at z=2) — a far-tail/absolute-radius effect, not a shape error.
+- `integrated_check.py` — corrected multi-epoch eval (real MAH, ALL radii) that feeds
+  `mass_qa`; establishes the honest ~10% profile number and the aperture/outskirt biases.
+- `nnls_floor.py` — the **free-mass NNLS floor**: give every deposit a free
+  non-negative mass (convex NNLS inner, width law σ₀(t_i/t_obs)^g outer), one shared
+  mass vector across epochs = one consistent history. **Decisive result (n=60,
+  max|rel|): free masses fit each epoch ALONE to 0.2%, but the consistent JOINT fit
+  caps at 12% (~60× cost) — free masses do NOT relieve the multi-epoch tension.** The
+  parametric joint models beat free-mass-joint only by relaxing consistency
+  (loose-quad 4.5%) or adding width freedom (puff 7%). So the binding limit is the
+  single consistent additive Gaussian-sum history itself, not the mass
+  parameterization. `demo` self-check.
+- `model_compare.py` — radial comparison of the four models (independent / loose-quad /
+  puff-ratio / puff-diff): per-galaxy CoG + residual panels and **median
+  relative-residual profiles vs R, per epoch x 3 mass bins**. Shows *where* each model
+  fails: loose-quad overshoots the inner ~3-6 kpc at high z; the puff laws misplace mass
+  at intermediate radii (10-50 kpc), worst for BCGs; puff-diff distorts the high-z BCG
+  CoG outright. Only the independent ceiling is flat ~0 everywhere. `demo` self-check.
 - `loose_zdep.py` — joint multi-epoch fit with each kernel param a **polynomial in
   the observation epoch z** (constant/linear/quad), vs the independent ceiling. n=60:
   epoch-avg max|rel| **fixed 10.2% → linear 4.8% → quad 4.5%**, ceiling **0.7%**.

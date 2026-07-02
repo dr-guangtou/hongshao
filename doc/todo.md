@@ -441,18 +441,65 @@ Cross-experiment plan. Mirrors the phase sequence in
   (z=0.7/1.0) hardest — because the degenerate per-epoch params don't lie on a
   low-order z-curve. So generic z-floating ≠ single-epoch quality; need *structured*
   DOF. **Benchmark for the puff-up model to beat: ~4.5% epoch-avg.**
-- [ ] **(next) build the puff-up deposition model** (`PUFF_MODEL_PLAN.md`): width
-  grows post-deposition `σ_i(t_k) ≥ σ_{i,0}` so early-compact mass migrates outward
-  (must beat the loose-zdep ~4.5% benchmark, ideally toward the 0.7% ceiling)
-  (target in fixed kpc apertures: pre-z2 mass-fraction inside 5 kpc drops 0.64→0.44,
-  inside 10 kpc 0.76→0.66, z=2→0.4, more for BCGs; keep `g≈1.7`, ONE efficiency `f`).
-  CoG stays linear in masses → NNLS inner solve survives. **Key design point**: puff-up
-  = let only the WIDTH depend on observation time `t_k` (mass `f(t_i)` frozen = one
-  consistent history); contrast a looser "all params z-dependent" fit, which also lets
-  the deposited mass at `t_i` change with `t_k` (mass not conserved across epochs, not
-  a forward model). Optional first step: run the loose z-dependent-param fit as a
-  feasibility ceiling, then tighten to frozen-mass puff-up. Test: does multi-epoch
-  z=0.4 recover from 19% to the single-epoch ~1%, and does the high-z S-shape flatten?
+- [x] **exp29 — built & tested the puff-up deposition model (`puff_fit.py`).** One
+  consistent history (mass frozen), only widths migrate post-deposition: ratio law
+  `σ₀(t_i/t_obs)^g (t_k/t_i)^q` and diffusion law `√(σ_{i,0}²+κ(t_k−t_i))`, fit jointly
+  (6 params) vs no-puff / loose-zdep / ceiling. **Result (n=60, epoch-avg max|rel|):
+  no-puff 9.1% → ratio 7.1% → diff 7.7%, loose-zdep ~4.5%, ceiling 0.7%.** Puffing
+  helps but does NOT clear the looser z-dependent fit; diffusion nearly inert (κ→0).
+  → with mass frozen, width migration is a weaker lever than epoch-dependent mass
+  distribution. (Matches param-trends: single-epoch fits de-concentrate early mass via
+  the efficiency, not the width.)
+- [x] **exp29 — free-mass NNLS floor (`nnls_floor.py`).** Gave every deposit a free
+  non-negative mass (convex NNLS), one shared mass vector = one consistent history.
+  **Decisive (n=60, max|rel|): free masses fit each epoch ALONE to 0.2%, but the
+  consistent JOINT fit caps at 12% (~60×).** Free masses do NOT relieve the multi-epoch
+  tension; the binding limit is the single consistent additive Gaussian-sum history
+  itself, not the mass parameterization. Parametric joint models (loose 4.5%, puff 7%)
+  do better only by relaxing consistency or adding width freedom. Reaching the 0.7%
+  ceiling would need a NON-additive primitive (mass that moves, not just adds).
+- [x] **exp29 — real-MAH / no-inner-cut re-test (`real_mah_test.py`).** `dipfree_mah`
+  used the SMOOTH DiffMAH fit (no merger bursts); re-tested with the real de-dipped
+  main-branch MAH (`peak_history`) and no inner cut. **Result (n=50, loose-quad
+  epoch-avg max|rel|): smooth/R>3 4.4% → real/R>3 6.1% → real/all-R 8.9%** (smooth/all-R
+  7.0%). Both changes make the fit worse and ~add; per-epoch ceiling stays ~2% (shape
+  still fine). Smooth curve flattered the model. Real MAH is the honest input AND carries
+  the merger events needed for an event-driven width model.
+- [x] **exp29 — corrected multi-epoch evaluation (`integrated_check.py`): real MAH,
+  ALL radii, + integrated aperture/outskirt mass checks.** No inner mask (high-z Re<3
+  kpc → inner holds most of the mass). **Result (n=45): loose-quad profile max|rel|
+  epoch-avg ~10% (ceiling ~2%); cumulative aperture masses M*(<10..<100) reproduced to
+  ~0.01 dex; but outskirt M*(>50 kpc) under-predicted up to 0.31 dex (~2x) at z=2, worst
+  for massive galaxies** — the centred-Gaussian sum can't build the extended high-z
+  outskirt. Integrated outskirt mass is the sensitive diagnostic.
+- [x] **exp29 — standardized mass QA (`mass_qa.py`).** Reusable `evaluate()` with two
+  bin sets (kpc + R_half) x {aperture M*(<R), envelope M*(>R)} and the two QA figure
+  types (truth-vs-model values; truth-vs-relerror), colored by epoch. Insight: loose
+  model reproduces kpc apertures ~1% and ALL R_half quantities ~few% at every epoch, but
+  under-fills the fixed-kpc far outskirt at high z (M*(>100 kpc) -88% at z=2) -- a
+  far-tail/absolute-radius effect, NOT a shape error (R_half envelopes are fine).
+- **STANDARD GOING FORWARD**: after every fit run (1) profile max|rel| over ALL radii
+  and (2) `mass_qa.evaluate()` (kpc + R_half aperture/envelope masses). Honest
+  best-model profile number is ~10% (not the inner-masked 4.5%).
+- [ ] **(consider) switch the model's default MAH to the real de-dipped `peak_history`**
+  (currently `dipfree_mah` = smooth DiffMAH fit). Would change every exp29 number.
+  Decide before any final emulator numbers.
+- [x] **exp29 — honest final scorecard (`final_scorecard.py`).** All 4 models on the
+  corrected standard (real MAH, all radii, profile + mass QA). n=45 profile max|rel|
+  epoch-avg: **independent 1.9% (ceiling), loose-quad 9.9%, puff 10.9%, free-mass floor
+  18.5%.** Free-mass floor is worst in max|rel| (L2 objective spikes the worst radius).
+  All nail cumulative apertures (~0.01 dex) + relative outskirt M*(>2Re) (~0.02 dex);
+  only fixed-kpc far outskirt at high z fails (loose −0.31 dex at z=2).
+- [ ] **(next, DECISION POINT) the multi-epoch ceiling is unreachable by any consistent
+  additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
+  max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and
+  build the forward emulator** (halo-only → 5-epoch CoG); note cumulative-aperture and
+  relative-outskirt masses are excellent (~0.01-0.02 dex), so the emulator is far better
+  on integrated/size-relative quantities than the ~10% profile number implies. Or
+  (b) **rethink the primitive** (non-additive / transport, stars migrate) to reach the
+  ceiling. Or (c) **event-driven width** (real MAH now carries the merger events) —
+  the one untried lever that could exploit the bursts. Recommend (a) for the product,
+  (c) as the highest-upside modeling try.
 - [ ] **(next) shared-kernel population CoG fit on the dip-free MAH** (redo exp25
   Phase 3 with the DiffMAH curve, g anchored near 0.55, centred Gaussian).
 - [ ] **(next) width set by the accretion *event*** (merger mass-ratio /

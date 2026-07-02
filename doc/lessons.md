@@ -286,6 +286,69 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **A "floor" in one metric is not a floor in another (exp29).** The free-mass NNLS
+  minimizes L2 (relative SSE), so it is the best model in log-RMS but the WORST in
+  max|rel| (18.5% honest, vs loose 9.9%) — free masses buy L2 by concentrating error into
+  a worst-radius spike. Always state which metric a "floor"/"ceiling" refers to; report
+  both the fitted objective and the reported metric.
+- **Do NOT inner-mask the multi-epoch fit; the inner region holds most of the high-z
+  mass (exp29).** Masking R<3 kpc was fine for a z=0.4-only emulator but wrong for the
+  multi-epoch fit: high-z massive progenitors have Re<3 kpc, so the mask hides >50% of
+  their stellar mass and buys a better metric by dropping the hardest region. Corrected
+  (real MAH, ALL radii): loose-quad epoch-avg max|rel| is ~10% (ceiling ~2%), not the
+  inner-masked 4.5%. Fit and evaluate over all radii for multi-epoch.
+- **Standard mass QA: two bin sets (kpc + R_half) tell complementary truths (exp29,
+  `mass_qa.py`).** In fixed *kpc* apertures the loose model reproduces M*(<10..<100 kpc)
+  to ~1% but under-predicts the far outskirt M*(>50 kpc) by ~50% and M*(>100 kpc) by
+  ~88% at z=2 -- because 50-100 kpc is 15-30 R_half out for compact high-z galaxies
+  (R_half: 12.7 kpc at z=0.4 -> 3.3 kpc at z=2), i.e. the negligible tail. In *R_half*
+  units the SAME model reproduces M*(<4Re) and M*(>2Re, >4Re) to a few % at EVERY epoch.
+  So the model gets the profile *shape* (mass relative to size) right across cosmic time;
+  the kpc-outskirt "failure" is about absolute radius in the far tail, not shape. Always
+  report BOTH bin sets, and both the truth-vs-model value plot (makes the smallness
+  explicit) and truth-vs-(Y-X)/X. `mass_qa.evaluate()` is the standard step, run in
+  parallel with the profile max|rel| metric after every fit.
+- **Pair the point-wise profile residual with INTEGRATED aperture + outskirt mass
+  checks (exp29).** Cumulative aperture masses M*(<10..<100 kpc) are reproduced to
+  ~0.01 dex even where the profile max|rel| is ~10% -- the cumulative is forgiving. The
+  differential OUTSKIRT mass M*(>50 kpc) amplifies shape errors: the loose model
+  under-predicts it by up to 0.31 dex (~2x) at z=2, worst for massive galaxies -- the
+  sum-of-centred-Gaussians can't build the extended mass around compact high-z
+  progenitors. Report M*(<R) at fixed apertures AND M*(>R_out); the outskirt is the
+  sensitive diagnostic (small denominator + real shape deficiency).
+- **The smooth DiffMAH fit curve flatters the deposition model; use the real MAH for
+  honest numbers (exp29).** `dipfree_mah` fed the kernel the *smooth* DiffMAH fit, which
+  erases merger-driven bursts (real single-step growth is 7-18% of total vs 2-3% for the
+  fit) and provides ~99 evenly-spaced deposits. Swapping in the real de-dipped
+  main-branch MAH (`peak_history`, running-max: keeps bursts, removes dips, ~60 gappy
+  deposits) raised the best model's multi-epoch max|rel| from 4.4% to 6.1% (R>3), and
+  removing the inner-3-kpc cut raised it further to 8.9% (real, all R); the per-epoch
+  ceiling stayed low (~2%), so the *shape* is still representable — the *consistency*
+  gap is what widens. The bursty/gappy real MAH is a less flexible basis for a smooth
+  power-law width law, BUT it is the only input that carries merger *events* — so it is
+  the prerequisite for an event-driven width/puff model (the parked "width set by the
+  accretion event" idea). Report final numbers on the real MAH + all radii.
+- **Free per-deposit mass does NOT relieve the multi-epoch tension; the consistency
+  constraint itself is the binding limit (exp29).** Convex free-mass NNLS (each deposit
+  a free non-negative mass) fits each epoch ALONE to 0.2% max|rel|, but one shared mass
+  vector across epochs (a single consistent additive history) caps the JOINT fit at 12%
+  (~60×). Parametric joint models beat free-mass-joint only by relaxing consistency
+  (loose-zdep 4.5%) or adding width freedom (puff 7%). So the limit is the single
+  consistent additive Gaussian-sum history, not the mass parameterization — reaching the
+  per-epoch ceiling needs a non-additive primitive (mass that moves, not just adds).
+  Isolate a constraint's cost with an alone-vs-joint comparison in the SAME method/metric
+  (here both free-mass NNLS), not a cross-model table (objective/width-basis differences
+  muddy it).
+- **The physically-appealing DOF is not always the most effective one — let
+  performance decide (exp29).** The puff-up model (one consistent history, mass
+  frozen, only widths migrate) was the "principled" fix, but it underperformed: n=60
+  epoch-avg max|rel| no-puff 9.1% → ratio-law puff 7.1% → diffusion-law 7.7%, vs the
+  looser z-dependent-parameter fit at ~4.5%. Width migration with frozen mass is a
+  *weaker* lever than letting the deposit mass-distribution (efficiency) vary with
+  epoch — consistent with the param-trends finding that single-epoch fits
+  de-concentrate early mass via the efficiency, not the width. The diffusion law
+  (σ²+=κΔt) was nearly inert (κ→0). Don't pre-commit to the elegant constraint;
+  benchmark it against the looser model and keep whatever fits.
 
 ## Workflow
 
