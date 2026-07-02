@@ -72,8 +72,11 @@ clean, portable SHMR library — don't let it grow into an inference framework.
   sequential heatmaps; sequential, not diverging, when all values share a sign).
   Save PNG + PDF with `hongshao.plotting.save_fig()`. Follow the
   scientific-visualization skill for presentation.
-- **Always surface new figures to the user for review** — point to the file
-  paths and display them; don't just save them silently.
+- **Always surface new figures to the user for review** — don't just save them
+  silently. In the SAME turn a figure is generated, explicitly list each new
+  figure's full path (PNG, and note the PDF companion) AND a one-line description
+  of its content, and display it. Do this every figure-generating turn, without
+  being asked.
 - **Always visualize fits and evaluations directly, not just summary metrics.**
   For any model fit or prediction check, produce an intuitive per-object
   visualization (e.g. measured-vs-model curves and residual profiles, by mass
