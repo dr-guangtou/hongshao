@@ -142,6 +142,15 @@ primitive question: **keep the centred Gaussian.**
   0.7%. **Puffing helps but does NOT beat the looser z-dependent fit** (diffusion
   nearly inert, κ→0) → with mass frozen, width migration is a weaker lever than
   epoch-dependent mass distribution. `demo` self-check.
+- `mass_qa.py` — **STANDARD post-fit mass QA** (run parallel to the profile metric).
+  Two bin sets — physical kpc and R_half (relative, cross-z-comparable) — with aperture
+  M*(<R) and outer-envelope M*(>R) masses; QA figure per set = truth-vs-model values
+  (log-log, 1:1) + truth-vs-(model-data)/data. `evaluate(model_cogs, data_cogs, R,
+  anchor_z, name=...)`. Key insight: the loose model nails kpc apertures (~1%) and all
+  R_half quantities (~few %) but under-fills the fixed-kpc far outskirt at high z
+  (M*(>100 kpc) −88% at z=2) — a far-tail/absolute-radius effect, not a shape error.
+- `integrated_check.py` — corrected multi-epoch eval (real MAH, ALL radii) that feeds
+  `mass_qa`; establishes the honest ~10% profile number and the aperture/outskirt biases.
 - `nnls_floor.py` — the **free-mass NNLS floor**: give every deposit a free
   non-negative mass (convex NNLS inner, width law σ₀(t_i/t_obs)^g outer), one shared
   mass vector across epochs = one consistent history. **Decisive result (n=60,

@@ -292,6 +292,17 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   their stellar mass and buys a better metric by dropping the hardest region. Corrected
   (real MAH, ALL radii): loose-quad epoch-avg max|rel| is ~10% (ceiling ~2%), not the
   inner-masked 4.5%. Fit and evaluate over all radii for multi-epoch.
+- **Standard mass QA: two bin sets (kpc + R_half) tell complementary truths (exp29,
+  `mass_qa.py`).** In fixed *kpc* apertures the loose model reproduces M*(<10..<100 kpc)
+  to ~1% but under-predicts the far outskirt M*(>50 kpc) by ~50% and M*(>100 kpc) by
+  ~88% at z=2 -- because 50-100 kpc is 15-30 R_half out for compact high-z galaxies
+  (R_half: 12.7 kpc at z=0.4 -> 3.3 kpc at z=2), i.e. the negligible tail. In *R_half*
+  units the SAME model reproduces M*(<4Re) and M*(>2Re, >4Re) to a few % at EVERY epoch.
+  So the model gets the profile *shape* (mass relative to size) right across cosmic time;
+  the kpc-outskirt "failure" is about absolute radius in the far tail, not shape. Always
+  report BOTH bin sets, and both the truth-vs-model value plot (makes the smallness
+  explicit) and truth-vs-(Y-X)/X. `mass_qa.evaluate()` is the standard step, run in
+  parallel with the profile max|rel| metric after every fit.
 - **Pair the point-wise profile residual with INTEGRATED aperture + outskirt mass
   checks (exp29).** Cumulative aperture masses M*(<10..<100 kpc) are reproduced to
   ~0.01 dex even where the profile max|rel| is ~10% -- the cumulative is forgiving. The

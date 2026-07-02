@@ -472,9 +472,15 @@ Cross-experiment plan. Mirrors the phase sequence in
   ~0.01 dex; but outskirt M*(>50 kpc) under-predicted up to 0.31 dex (~2x) at z=2, worst
   for massive galaxies** — the centred-Gaussian sum can't build the extended high-z
   outskirt. Integrated outskirt mass is the sensitive diagnostic.
-- **STANDARD GOING FORWARD**: evaluate over ALL radii + report M*(<R) apertures and
-  M*(>50 kpc) outskirt, alongside the profile max|rel|. The honest best-model number is
-  ~10%, not 4.5%.
+- [x] **exp29 — standardized mass QA (`mass_qa.py`).** Reusable `evaluate()` with two
+  bin sets (kpc + R_half) x {aperture M*(<R), envelope M*(>R)} and the two QA figure
+  types (truth-vs-model values; truth-vs-relerror), colored by epoch. Insight: loose
+  model reproduces kpc apertures ~1% and ALL R_half quantities ~few% at every epoch, but
+  under-fills the fixed-kpc far outskirt at high z (M*(>100 kpc) -88% at z=2) -- a
+  far-tail/absolute-radius effect, NOT a shape error (R_half envelopes are fine).
+- **STANDARD GOING FORWARD**: after every fit run (1) profile max|rel| over ALL radii
+  and (2) `mass_qa.evaluate()` (kpc + R_half aperture/envelope masses). Honest
+  best-model profile number is ~10% (not the inner-masked 4.5%).
 - [ ] **(consider) switch the model's default MAH to the real de-dipped `peak_history`**
   (currently `dipfree_mah` = smooth DiffMAH fit). Would change every exp29 number.
   Decide before any final emulator numbers.
