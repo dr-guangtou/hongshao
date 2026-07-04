@@ -490,8 +490,23 @@ Cross-experiment plan. Mirrors the phase sequence in
   18.5%.** Free-mass floor is worst in max|rel| (L2 objective spikes the worst radius).
   All nail cumulative apertures (~0.01 dex) + relative outskirt M*(>2Re) (~0.02 dex);
   only fixed-kpc far outskirt at high z fails (loose −0.31 dex at z=2).
-- [ ] **(next, DECISION POINT) the multi-epoch ceiling is unreachable by any consistent
-  additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
+- [x] **exp30 — transport-kernel feasibility gate PASSED (`transport_floor.py`, branch
+  `exp30-transport-kernel`).** Core-retaining redistribution: deposit splits into a
+  retained core + migrated envelope, mass-conserving, dt-only observation dependence,
+  CoG linear in masses → NNLS inner + 4-5 param outer. **n=45 (real MAH, all radii,
+  median max|rel| epoch-avg): additive floor 18.5% → transport 9.1% (envelope 11.3%),
+  loose-zdep 9.9%, ceiling 0.2%.** A consistent history now BEATS the inconsistent
+  loose fit — redistribution is the missing freedom. Remaining gaps: still ~9% vs the
+  0.2% ceiling; fixed-kpc far outskirt at high z unfixed by the global clock (the
+  dynamical-clock envelope variant fixes z=2 on BCGs); n=5→n=45 flip suggests
+  mass-dependent preference between the two clocks.
+- [ ] **(next) exp30 phase 2: combined / event-driven redistribution.** Merge the two
+  winning ingredients (dynamical clock τ∝t_i + observation-epoch envelope width + the
+  global-clock's low-z behaviour), then replace the smooth clock with **event-triggered
+  kicks at the real-MAH merger bursts**. Then: generalization test (held-out epoch),
+  and the population/forward version (predict the NNLS masses from halo-only inputs).
+- [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
+  unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and
   build the forward emulator** (halo-only → 5-epoch CoG); note cumulative-aperture and
   relative-outskirt masses are excellent (~0.01-0.02 dex), so the emulator is far better

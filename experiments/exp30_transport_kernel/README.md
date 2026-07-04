@@ -1,5 +1,17 @@
 # exp30 — transport kernel: core-retaining redistribution (feasibility gate)
 
+> **RESULT (2026-07-02, n=45): GATE PASSED.** Median profile max|rel| epoch-avg,
+> real MAH, ALL radii: additive floor **18.5%** → transport **9.1%** (envelope 11.3%),
+> vs loose-zdep reference 9.9% and per-epoch ceiling 0.2%. The global-clock transport
+> (τ≈2.9 Gyr, q≈1.5) **halves the additive consistency floor and edges past the
+> inconsistent 15-param loose-zdep fit with a genuine consistent history** (4 outer
+> params + NNLS masses), flat 8–9% at every epoch. Mass QA: cumulative apertures
+> ≤~1% everywhere; R_half envelopes good (M*(>2Re) within ~7%); the fixed-kpc far
+> outskirt at high z remains unfixed (M*(>50 kpc) −91% at z=2) — the global-clock
+> variant migrates too little by z=2, exactly what the envelope variant fixed on the
+> BCG subsample (n=5 z=2: 29→10%). → Redistribution IS the missing freedom; next is
+> an event-driven / combined form and then the population model.
+
 ## Why this exists
 exp29 ended with a proven structural limit: **no consistent additive Gaussian-sum
 history can reach the per-epoch ceiling.** The free-mass NNLS floor showed each epoch

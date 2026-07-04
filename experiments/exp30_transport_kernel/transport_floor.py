@@ -54,14 +54,14 @@ def basis(theta, ti, t_obs, tk, mode):
                fast, matching front-loaded merging); migrated width = w0 (tk/t_obs)^gw
                set by the halo at the OBSERVATION time, not the (tiny) birth width."""
     s0, g = 10.0 ** theta[0], theta[1]
-    sig0 = s0 * (ti / t_obs) ** g
+    sig0 = np.clip(s0 * (ti / t_obs) ** g, 1e-4, 1e5)    # clip: underflow*overflow -> NaN
     dt = np.clip(tk - ti, 0.0, None)
     if mode == "transport":
         fc = np.exp(-dt / 10.0 ** theta[2])
-        sigw = sig0 * (tk / ti) ** max(theta[3], 0.0)
+        sigw = np.clip(sig0 * (tk / ti) ** max(theta[3], 0.0), 1e-4, 1e5)
     elif mode == "envelope":
         fc = np.exp(-dt / (10.0 ** theta[2] * ti))
-        sigw = np.full_like(ti, 10.0 ** theta[3] * (tk / t_obs) ** theta[4])
+        sigw = np.full_like(ti, np.clip(10.0 ** theta[3] * (tk / t_obs) ** theta[4], 1e-4, 1e5))
     else:                                                # additive
         fc, sigw = np.ones_like(ti), sig0
     core = 1.0 - np.exp(-R[:, None] ** 2 / (2.0 * sig0[None, :] ** 2))
@@ -75,6 +75,8 @@ def solve_joint(theta, mah, data, mode):
     masks = [snap <= sa for sa in ANCHOR_SNAP]
     blocks = [basis(theta, ti, t_obs, AT[k], mode) * masks[k][None, :] for k in range(5)]
     A = np.vstack([b / data[k][:, None] for k, b in enumerate(blocks)])
+    if not np.isfinite(A).all():
+        return None, np.inf
     x, rnorm = nnls(A, np.ones(A.shape[0]), maxiter=10 * A.shape[1])
     return np.array([b @ x for b in blocks]), rnorm
 
@@ -183,11 +185,12 @@ def main():
           f"w0 median {np.median(w0):.0f} kpc, gw median {np.median(gw):.2f}")
 
     a_e, a_t, a_a, a_al = avg("envelope"), avg("transport"), avg("additive"), avg("alone")
-    best_name, a_best = ("envelope", a_e) if a_e <= a_t else ("transport", a_t)
+    cand = [(v, nm) for v, nm in ((a_e, "envelope"), (a_t, "transport")) if np.isfinite(v)]
+    a_best, best_name = min(cand)
     print(f"\n[gate] additive floor {a_a:.1f}%  ->  transport {a_t:.1f}%  ->  envelope {a_e:.1f}%   "
           f"(ceiling {a_al:.1f}%" + (f", loose-quad {np.median(loose):.1f}%" if loose else "") + ")")
     if a_best < 0.5 * a_a and (loose is None or a_best < np.median(loose)):
-        print(f"  core-retaining {best_name} transport BREAKS the additive ceiling and beats the\n"
+        print(f"  core-retaining redistribution ({best_name}) BREAKS the additive ceiling and beats the\n"
               "  loose-zdep reference with a consistent history -> redistribution is the missing\n"
               "  freedom. Next: event-driven kicks at the real-MAH bursts, then the population model.")
     elif a_best < 0.85 * a_a:

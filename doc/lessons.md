@@ -286,6 +286,22 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **Core-retaining redistribution breaks the additive consistency floor (exp30).** A
+  two-component deposit (retained core at the deposition width + migrated envelope,
+  mass-conserving, observation-time dependence only via elapsed time) halves the joint
+  multi-epoch error (additive 18.5% → transport 9.1% max|rel|, flat across epochs) and
+  edges past the inconsistent loose-zdep fit with a genuine consistent history. The CoG
+  stays linear in the masses, so the convex NNLS inner solve survives — the transport
+  freedom costs only 2-3 outer params. Two form lessons: a GLOBAL migration clock
+  under-migrates by z=2 (front-loaded merging wants tau ∝ t_i), and the migrated width
+  must be set at the OBSERVATION epoch, not the (tiny) birth width — else the high-z
+  envelope is unreachable.
+- **scipy nnls does not raise on non-finite design matrices; guard the basis (exp30).**
+  An optimizer exploring extreme width params produced sig0-underflow x ratio-overflow
+  = 0*inf = NaN in the basis; nnls silently returned garbage, one galaxy's NaN poisoned
+  the population medians AND the nan-unsafe best-model selection picked the broken mode.
+  Clip basis widths to finite ranges, check np.isfinite(A) before nnls (return inf loss),
+  and make model-selection comparisons NaN-safe.
 - **A "floor" in one metric is not a floor in another (exp29).** The free-mass NNLS
   minimizes L2 (relative SSE), so it is the best model in log-RMS but the WORST in
   max|rel| (18.5% honest, vs loose 9.9%) — free masses buy L2 by concentrating error into
