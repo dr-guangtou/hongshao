@@ -296,6 +296,15 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   under-migrates by z=2 (front-loaded merging wants tau ∝ t_i), and the migrated width
   must be set at the OBSERVATION epoch, not the (tiny) birth width — else the high-z
   envelope is unreachable.
+- **Run the cheap correlation pre-test before building the model extension — and
+  believe it (exp30).** Before building event-triggered kicks, the planned go/no-go was:
+  does the fitted per-galaxy migration speed (dyntrans alpha) correlate with MAH
+  burstiness? It came back NULL (Spearman rho ~ 0). The full event model then confirmed
+  it: kicks at the real-MAH bursts underperform the smooth self-similar clock at every
+  threshold (10.3-12.1% vs 7.5%), monotonically worse with fewer events, no scatter
+  reduction. Physical reading: halo-MAH-step timing is a poor proxy for STELLAR
+  redistribution timing (dynamical-friction delays ~Gyr; relaxation continues between
+  events). The pre-test cost seconds and predicted the outcome of a multi-minute build.
 - **When two model variants win in different regimes, complete the factorial before
   combining (exp30).** Transport (global clock + multi-scale width) won the population;
   envelope (dynamical clock + shared width) won BCGs/high-z. The intuitive "combine the

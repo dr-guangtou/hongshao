@@ -510,12 +510,18 @@ Cross-experiment plan. Mirrors the phase sequence in
   clock is self-similar: α≈1.04 → migration timescale = cosmic time at deposition;
   q≈1.6. Mass QA: apertures ≤1%; R_half envelopes ≤1.8% (M>2Re) at every epoch; only
   the z=2 fixed-kpc far tail remains (M(>50) −86%).
-- [ ] **(next) exp30 phase 2.2: event-triggered kicks** at the real-MAH merger bursts
-  (replace the smooth dynamical clock in `dyntrans`; pre-test: does fitted per-galaxy α
-  correlate with MAH burstiness?). **Phase 2.3: held-out-epoch generalization** (fit 4
-  epochs, predict the 5th; dyntrans vs loose-quad generalization gap; z=0.4-holdout
-  needs the parametric mass law → bridge to phase 3). Then the population/forward
-  version (predict the ~8-10 active NNLS masses from halo-only inputs).
+- [x] **exp30 phase 2.2 — event-triggered kicks: clean NEGATIVE (`event_kicks.py`).**
+  Pre-test null (fitted α vs MAH burstiness, ρ≈0); event-clock model underperforms the
+  smooth self-similar clock at every threshold (10.3–12.1% vs dyntrans 7.5%, n=45),
+  monotonically worse with fewer events; no per-galaxy scatter reduction. Halo-MAH-step
+  timing ≠ stellar redistribution timing (dynamical-friction delays; continuous
+  relaxation). **Keep dyntrans (τ≈tᵢ).**
+- [ ] **(next) exp30 phase 2.3: held-out-epoch generalization.** Fit 4 epochs, predict
+  the 5th (h ∈ {0.7, 1.0, 1.5, 2.0}; z=0.4-holdout needs the parametric mass law →
+  phase 3). Symmetric aperture pin on the held-out epoch for ALL models (shape test;
+  amplitude is the SHMR's job). Compare dyntrans vs additive vs loose-quad held-out
+  error + generalization gap. Then the population/forward version (predict the ~8-10
+  active NNLS masses from halo-only inputs).
 - [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
   unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and

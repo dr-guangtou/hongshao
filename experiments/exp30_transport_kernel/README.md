@@ -74,6 +74,19 @@ the redistribution form is wrong or the limit is deeper → stop before over-inv
 Evaluation per repo standard: profile max|rel| over ALL radii + `mass_qa.evaluate()`
 (kpc + R_half aperture/envelope masses), figures surfaced with paths.
 
+## Phase 2.2 — event-triggered kicks (`event_kicks.py`): clean NEGATIVE
+Replaced dyntrans's smooth clock with kicks at the real-MAH bursts,
+`f_core,i(t_k) = prod (1 − ε₀ s_j)` over events between deposition and observation
+(s_j = peak-history steps; dip-recovery discounted by construction). Three consistent
+results (n=45): **(1)** pre-test NULL — fitted dyntrans migration speed does not
+correlate with MAH burstiness (Spearman ρ=+0.01/−0.13, p≫0.05); **(2)** events
+underperform at every threshold (s>0.03/0.05/0.10 → 10.3/10.7/12.1% vs dyntrans 7.5%),
+monotonically worse with fewer events (the event product only approaches the smooth
+clock as s_min→0); **(3)** no per-galaxy scatter reduction (p75/p90 slightly worse).
+Reading: halo-MAH-step timing is a poor proxy for stellar redistribution timing
+(dynamical-friction delays ~Gyr; relaxation continues between events) — the
+self-similar τ≈tᵢ clock stands. **Keep dyntrans.**
+
 ## Fair model comparison (`ic_compare.py`)
 Effective parameters: outer params + **active (nonzero) NNLS masses** (nnls returns
 exact zeros; active-set size is the standard effective-df estimate) + 5 aperture pins
