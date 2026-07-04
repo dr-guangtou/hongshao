@@ -87,6 +87,17 @@ Reading: halo-MAH-step timing is a poor proxy for stellar redistribution timing
 (dynamical-friction delays ~Gyr; relaxation continues between events) — the
 self-similar τ≈tᵢ clock stands. **Keep dyntrans.**
 
+**Phase 2.2b — lagged kicks (user hypothesis: halo→galaxy coalescence delay).** Events
+fire at t'_j = (1+β)t_j with β free per galaxy. The lag GENUINELY helps the event
+model (s>0.03: 10.3% → 9.5%) and the fitted delay is coherent and physical — **median
+β = 0.37 (IQR 0.30–0.72), i.e. coalescence ~0.3–0.7·t_j after the halo merger**,
+right in the dynamical-friction range, echoing the smooth clock's α≈1. But lagged
+events still trail the smooth clock (9.5% vs 7.5%): the delay physics is real, yet
+per-event discreteness adds no in-sample signal beyond the delay-averaged smooth
+clock. τ≈tᵢ IS the delay-averaged merger clock. The ex-situ-channel case (phase-3 v2)
+now rests on the dual-region merger deposit, gated by the burstiness-residual
+diagnostic after v1.
+
 ## Phase 2.3 — held-out-epoch generalization (`holdout.py`): the in-sample ranking INVERTS
 LOEO (fit 4 epochs, predict the 5th, symmetric aperture pin, no leakage; n=45,
 held-out median max|rel| averaged over h ∈ {z=0.7,1.0,1.5,2.0}):

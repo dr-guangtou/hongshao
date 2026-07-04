@@ -523,6 +523,12 @@ Cross-experiment plan. Mirrors the phase sequence in
   information; parametric-mass loose degrades less; rigid additive least. Totals
   predict fine (dyntrans |dlog M*| 0.06–0.16); the SHAPE overfits. No current model
   predicts acceptably (all ≥30%).
+- [x] **exp30 phase 2.2b — lagged event kicks (`event_kicks.py lagged`).** Coalescence
+  delay t'=(1+β)t_j, β free. Lag genuinely helps events (10.3→9.5%) with a coherent
+  physical delay (median β=0.37, IQR 0.30–0.72 ≈ dynamical friction; echoes α≈1), but
+  still trails the smooth clock (7.5%). **τ≈tᵢ is the delay-averaged merger clock**;
+  discreteness adds nothing in-sample. Ex-situ channel (v2) now rests on the
+  dual-region merger deposit, gated on the v1 burstiness-residual diagnostic.
 - [ ] **(next) exp30/31 phase 3 — the parametric-mass transport emulator.** Put the
   dyntrans transport structure (dynamical clock τ=α·tᵢ + multi-scale migrated width)
   on **parametric masses** dM*ᵢ = f(zᵢ)·dMhᵢ (two-epoch efficiency, 3 params) — ~7

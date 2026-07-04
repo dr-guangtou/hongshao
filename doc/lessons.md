@@ -315,6 +315,12 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   reduction. Physical reading: halo-MAH-step timing is a poor proxy for STELLAR
   redistribution timing (dynamical-friction delays ~Gyr; relaxation continues between
   events). The pre-test cost seconds and predicted the outcome of a multi-minute build.
+  FOLLOW-UP (lagged kicks, user hypothesis): letting events fire at t'=(1+beta)t_j
+  genuinely helps (10.3->9.5%) with a coherent physical delay (median beta=0.37, IQR
+  0.30-0.72 ~ dynamical friction) -- yet still trails the smooth clock (7.5%). So the
+  smooth self-similar clock IS the delay-averaged merger clock: the delay physics is
+  real, but per-event discreteness carries no in-sample signal beyond it. A negative
+  model result can still validate the underlying physics through its fitted parameters.
 - **When two model variants win in different regimes, complete the factorial before
   combining (exp30).** Transport (global clock + multi-scale width) won the population;
   envelope (dynamical clock + shared width) won BCGs/high-z. The intuitive "combine the
