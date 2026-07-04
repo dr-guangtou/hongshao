@@ -44,8 +44,10 @@ R = tf.R
 N_PTS = 5 * len(R)                                    # 120
 # model -> (source, explicit params incl. pins)
 PARAMETRIC = {"independent": 25 + 5, "loose-quad": 15 + 5, "puff-ratio": 6 + 5}
-NNLS_OUTER = {"alone": 10, "additive": 2, "transport": 4, "envelope": 5}
-ORDER = ["alone", "additive", "transport", "envelope", "independent", "loose-quad", "puff-ratio"]
+NNLS_OUTER = {"alone": 10, "additive": 2, "transport": 4, "envelope": 5, "combined": 6,
+              "dyntrans": 4}
+ORDER = ["alone", "additive", "transport", "envelope", "combined", "dyntrans",
+         "independent", "loose-quad", "puff-ratio"]
 
 
 def solve_with_count(theta, mah, data, mode):
@@ -102,7 +104,8 @@ def main():
         cogs[nm] = s["models"][:, snames.index(nm)]
         keff[nm] = np.full(ng, PARAMETRIC[nm], float)
     cogs["additive"] = d["additive"]; cogs["transport"] = d["transport"]
-    cogs["envelope"] = d["envelope"]; cogs["alone"] = d["alone"]
+    cogs["envelope"] = d["envelope"]; cogs["combined"] = d["combined"]
+    cogs["dyntrans"] = d["dyntrans"]; cogs["alone"] = d["alone"]
     for nm in NNLS_OUTER:
         keff[nm] = np.zeros(ng)
 
@@ -111,7 +114,9 @@ def main():
         data = [datas[i][k] for k in range(5)]
         _, th_add = tf.fit_joint(mah, data, "additive")
         for nm, th in (("additive", th_add), ("transport", d["params_transport"][i]),
-                       ("envelope", d["params_envelope"][i])):
+                       ("envelope", d["params_envelope"][i]),
+                       ("combined", d["params_combined"][i]),
+                       ("dyntrans", d["params_dyntrans"][i])):
             _, na = solve_with_count(th, mah, data, nm)
             keff[nm][i] = NNLS_OUTER[nm] + na
         _, na = alone_with_count(mah, data)
@@ -130,7 +135,8 @@ def main():
     print(f"  {'model':>12s} | {'k_eff':>6s} | {'relRMS':>7s} | {'dAIC':>8s} | {'dAICc':>8s} | "
           f"{'dBIC':>8s} | consistent history?")
     CONS = {"alone": "no (5 separate fits)", "additive": "yes", "transport": "yes",
-            "envelope": "yes", "independent": "no (5 separate fits)",
+            "envelope": "yes", "combined": "yes", "dyntrans": "yes",
+            "independent": "no (5 separate fits)",
             "loose-quad": "no (params drift with z_k)", "puff-ratio": "yes"}
     for nm in ORDER:
         med = [np.median(table[nm][:, c]) for c in range(3)]

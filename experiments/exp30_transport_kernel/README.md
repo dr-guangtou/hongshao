@@ -1,16 +1,25 @@
 # exp30 — transport kernel: core-retaining redistribution (feasibility gate)
 
-> **RESULT (2026-07-02, n=45): GATE PASSED.** Median profile max|rel| epoch-avg,
-> real MAH, ALL radii: additive floor **18.5%** → transport **9.1%** (envelope 11.3%),
-> vs loose-zdep reference 9.9% and per-epoch ceiling 0.2%. The global-clock transport
-> (τ≈2.9 Gyr, q≈1.5) **halves the additive consistency floor and edges past the
-> inconsistent 15-param loose-zdep fit with a genuine consistent history** (4 outer
-> params + NNLS masses), flat 8–9% at every epoch. Mass QA: cumulative apertures
-> ≤~1% everywhere; R_half envelopes good (M*(>2Re) within ~7%); the fixed-kpc far
-> outskirt at high z remains unfixed (M*(>50 kpc) −91% at z=2) — the global-clock
-> variant migrates too little by z=2, exactly what the envelope variant fixed on the
-> BCG subsample (n=5 z=2: 29→10%). → Redistribution IS the missing freedom; next is
-> an event-driven / combined form and then the population model.
+> **RESULT (2026-07-04, n=45): GATE PASSED — winner `dyntrans` at 7.5%.** The phase-2
+> "combined clock" step completed the 2×2 of {clock} × {migrated-width form}, median
+> profile max|rel| epoch-avg (real MAH, ALL radii):
+>
+> | | global clock e^(−Δt/τ) | dynamical clock e^(−Δt/(α·tᵢ)) |
+> |---|---|---|
+> | **multi-scale width** σ₀ᵢ(t_k/tᵢ)^q | transport **9.1%** | **dyntrans 7.5%** ← winner |
+> | **shared width** w₀(t_k/t_obs)^{g_w} | (combined→τ₀=0) | envelope 11.3% |
+>
+> (additive floor 18.5%, loose-zdep 9.9%, ceiling 0.2%; the 7-param "combined"
+> two-clock model collapsed onto envelope, 11.7% — the shared width was its binding
+> flaw, not the clock.) **Both ingredients matter**: the dynamical clock (9.1→7.5 at
+> fixed width form) and the per-deposit multi-scale migrated width (11.3→7.5 at fixed
+> clock). `dyntrans` (4 outer params + NNLS masses) is best at EVERY epoch among
+> consistent models and beats loose-zdep by every IC (k_eff=14, rel-RMS 3.4%, ΔAICc
+> 495 vs 600). Its fitted clock is maximally simple: **α ≈ 1.04 — the migration
+> timescale equals the cosmic time at deposition** (self-similar), q ≈ 1.6. Mass QA:
+> apertures ≤1%; R_half envelopes now excellent (M*(>2Re) within 1.8% at every
+> epoch); only the fixed-kpc far tail at z=2 remains (M*(>50 kpc) −86%). → Next:
+> event-triggered kicks (phase 2.2) and the held-out-epoch test (phase 2.3).
 
 ## Why this exists
 exp29 ended with a proven structural limit: **no consistent additive Gaussian-sum

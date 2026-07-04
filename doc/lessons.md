@@ -296,6 +296,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   under-migrates by z=2 (front-loaded merging wants tau ∝ t_i), and the migrated width
   must be set at the OBSERVATION epoch, not the (tiny) birth width — else the high-z
   envelope is unreachable.
+- **When two model variants win in different regimes, complete the factorial before
+  combining (exp30).** Transport (global clock + multi-scale width) won the population;
+  envelope (dynamical clock + shared width) won BCGs/high-z. The intuitive "combine the
+  winners" model (two-param clock + shared width) merely collapsed onto envelope (11.7%)
+  because it inherited the WRONG shared ingredient — the binding difference was the
+  width form, not the clock. Completing the 2x2 exposed the untested cell (dynamical
+  clock + multi-scale width) as the true winner: dyntrans 7.5% vs transport 9.1% /
+  envelope 11.3%, best at every epoch, 4 params, fitted alpha ~ 1 (migration timescale
+  = cosmic time at deposition). Attribute wins to INGREDIENTS via a factorial, not to
+  whole variants.
 - **scipy nnls does not raise on non-finite design matrices; guard the basis (exp30).**
   An optimizer exploring extreme width params produced sig0-underflow x ratio-overflow
   = 0*inf = NaN in the basis; nnls silently returned garbage, one galaxy's NaN poisoned

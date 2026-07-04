@@ -500,11 +500,22 @@ Cross-experiment plan. Mirrors the phase sequence in
   0.2% ceiling; fixed-kpc far outskirt at high z unfixed by the global clock (the
   dynamical-clock envelope variant fixes z=2 on BCGs); n=5→n=45 flip suggests
   mass-dependent preference between the two clocks.
-- [ ] **(next) exp30 phase 2: combined / event-driven redistribution.** Merge the two
-  winning ingredients (dynamical clock τ∝t_i + observation-epoch envelope width + the
-  global-clock's low-z behaviour), then replace the smooth clock with **event-triggered
-  kicks at the real-MAH merger bursts**. Then: generalization test (held-out epoch),
-  and the population/forward version (predict the NNLS masses from halo-only inputs).
+- [x] **exp30 phase 2.1 — combined clock: 2×2 completed, winner `dyntrans` 7.5%.**
+  The intuitive combination (two-param clock τ₀+α·tᵢ + shared obs-epoch width, 7p)
+  collapsed onto envelope (11.7%) — the shared width was the flaw, not the clock.
+  Completing the {clock}×{width form} factorial exposed the untested cell: **dyntrans
+  = dynamical clock + multi-scale per-deposit width, 4 params, 7.5% epoch-avg max|rel|
+  (n=45, real MAH, all radii)** — best at every epoch among consistent models, beats
+  loose-zdep (9.9%) and every IC (k_eff=14, rel-RMS 3.4%, ΔAICc 495 vs 600). Fitted
+  clock is self-similar: α≈1.04 → migration timescale = cosmic time at deposition;
+  q≈1.6. Mass QA: apertures ≤1%; R_half envelopes ≤1.8% (M>2Re) at every epoch; only
+  the z=2 fixed-kpc far tail remains (M(>50) −86%).
+- [ ] **(next) exp30 phase 2.2: event-triggered kicks** at the real-MAH merger bursts
+  (replace the smooth dynamical clock in `dyntrans`; pre-test: does fitted per-galaxy α
+  correlate with MAH burstiness?). **Phase 2.3: held-out-epoch generalization** (fit 4
+  epochs, predict the 5th; dyntrans vs loose-quad generalization gap; z=0.4-holdout
+  needs the parametric mass law → bridge to phase 3). Then the population/forward
+  version (predict the ~8-10 active NNLS masses from halo-only inputs).
 - [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
   unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and

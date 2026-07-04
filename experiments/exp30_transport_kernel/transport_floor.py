@@ -41,9 +41,10 @@ SCORE_NPZ = EXP29 / "outputs" / "final_scorecard.npz"        # loose-quad refere
 OUT_NPZ = OUTDIR / "transport_floor.npz"
 R = COG_RAD_KPC
 AT = load_cosmic_time()[ANCHOR_SNAP]                          # cosmic time at the 5 epochs
-MODES = ["alone", "additive", "transport", "envelope"]
+MODES = ["alone", "additive", "transport", "envelope", "combined", "dyntrans"]
 COLORS = {"alone": "0.45", "additive": "#E69F00", "transport": "#009E73",
-          "envelope": "#CC3377", "loose-quad": "#0072B2"}
+          "envelope": "#CC3377", "combined": "#D55E00", "dyntrans": "#56B4E9",
+          "loose-quad": "#0072B2"}
 
 
 def basis(theta, ti, t_obs, tk, mode):
@@ -52,7 +53,10 @@ def basis(theta, ti, t_obs, tk, mode):
     transport: f_core = exp(-dt/tau) global clock; migrated width = sig0_i (tk/ti)^q.
     envelope : f_core = exp(-dt/(alpha ti)) dynamical clock (early deposits migrate
                fast, matching front-loaded merging); migrated width = w0 (tk/t_obs)^gw
-               set by the halo at the OBSERVATION time, not the (tiny) birth width."""
+               set by the halo at the OBSERVATION time, not the (tiny) birth width.
+    combined : two-parameter clock tau_i = tau0 + alpha*ti nesting BOTH the global
+               (alpha->0) and dynamical (tau0->0) clocks, + the observation-epoch
+               width both variants converged on. (Core floor f_min deferred.)"""
     s0, g = 10.0 ** theta[0], theta[1]
     sig0 = np.clip(s0 * (ti / t_obs) ** g, 1e-4, 1e5)    # clip: underflow*overflow -> NaN
     dt = np.clip(tk - ti, 0.0, None)
@@ -62,6 +66,12 @@ def basis(theta, ti, t_obs, tk, mode):
     elif mode == "envelope":
         fc = np.exp(-dt / (10.0 ** theta[2] * ti))
         sigw = np.full_like(ti, np.clip(10.0 ** theta[3] * (tk / t_obs) ** theta[4], 1e-4, 1e5))
+    elif mode == "combined":
+        fc = np.exp(-dt / (10.0 ** theta[2] + 10.0 ** theta[3] * ti))
+        sigw = np.full_like(ti, np.clip(10.0 ** theta[4] * (tk / t_obs) ** theta[5], 1e-4, 1e5))
+    elif mode == "dyntrans":                             # dynamical clock + multi-scale width
+        fc = np.exp(-dt / (10.0 ** theta[2] * ti))
+        sigw = np.clip(sig0 * (tk / ti) ** max(theta[3], 0.0), 1e-4, 1e5)
     else:                                                # additive
         fc, sigw = np.ones_like(ti), sig0
     core = 1.0 - np.exp(-R[:, None] ** 2 / (2.0 * sig0[None, :] ** 2))
@@ -91,9 +101,21 @@ def fit_joint(mah, data, mode, warm=None):
     elif mode == "transport":                         # warm (s0, g) from the additive fit
         starts = [[warm[0], warm[1], lt, q]
                   for lt in (np.log10(0.5), np.log10(3.0), np.log10(10.0)) for q in (0.7, 1.8)]
-    else:                                             # envelope: alpha, w0 [kpc], gw
+    elif mode == "envelope":                          # envelope: alpha, w0 [kpc], gw
         starts = [[warm[0], warm[1], la, lw, gw]
                   for la in (np.log10(0.3), np.log10(2.0)) for lw in (1.7, 2.0) for gw in (0.3, 1.0)]
+    elif mode == "combined":                          # warm = (tr_th, en_th)
+        tr, en = warm
+        starts = [
+            [en[0], en[1], -1.3, en[2], en[3], en[4]],           # ~pure dynamical (envelope)
+            [tr[0], tr[1], tr[2], -2.0, tr[0], max(tr[3], 0.1)],  # ~pure global (transport-ish)
+            [en[0], en[1], tr[2], en[2], en[3], en[4]],          # transport clock + envelope rest
+        ]
+    else:                                             # dyntrans: warm = (tr_th, en_th)
+        tr, en = warm
+        starts = [[tr[0], tr[1], la, max(tr[3], 0.1)]
+                  for la in (np.log10(0.3), np.log10(2.0), np.log10(8.0))] + \
+                 [[tr[0], tr[1], en[2], 1.0]]                    # envelope's fitted clock
     best = None
     for p0 in starts:
         r = minimize(loss, p0, method="Nelder-Mead",
@@ -134,7 +156,7 @@ def maxrel(cogs, data):
 def compute(n):
     d = np.load(IN_NPZ)
     idx, logms, datas = d["index"][:n], d["logms"][:n], d["data"][:n]
-    out = {m: [] for m in MODES}; ptr, pen = [], []
+    out = {m: [] for m in MODES}; ptr, pen, pco, pdy = [], [], [], []
     for i in range(len(idx)):
         mah = real_mah(int(idx[i]))
         data = [datas[i][k] for k in range(5)]
@@ -145,9 +167,14 @@ def compute(n):
         out["transport"].append(tr_cogs); ptr.append(tr_th)
         en_cogs, en_th = fit_joint(mah, data, "envelope", warm=add_th)
         out["envelope"].append(en_cogs); pen.append(en_th)
+        co_cogs, co_th = fit_joint(mah, data, "combined", warm=(tr_th, en_th))
+        out["combined"].append(co_cogs); pco.append(co_th)
+        dy_cogs, dy_th = fit_joint(mah, data, "dyntrans", warm=(tr_th, en_th))
+        out["dyntrans"].append(dy_cogs); pdy.append(dy_th)
     OUTDIR.mkdir(parents=True, exist_ok=True)
     np.savez(OUT_NPZ, index=idx, logms=logms, data=datas,
              params_transport=np.array(ptr), params_envelope=np.array(pen),
+             params_combined=np.array(pco), params_dyntrans=np.array(pdy),
              **{m: np.array(v) for m, v in out.items()})
     print(f"wrote {OUT_NPZ}  (n={len(idx)})")
     return np.load(OUT_NPZ)
@@ -158,7 +185,7 @@ def main():
     n = next((int(a) for a in sys.argv[1:] if a.isdigit()), 45)
     d = compute(n) if (refit or not OUT_NPZ.exists()) else np.load(OUT_NPZ)
     logms, datas = d["logms"], d["data"]
-    ptr, pen = d["params_transport"], d["params_envelope"]
+    ptr, pen, pco = d["params_transport"], d["params_envelope"], d["params_combined"]
     ng = len(logms)
     mr = {m: np.array([maxrel(d[m][i], datas[i]) for i in range(ng)]) for m in MODES}
     avg = lambda m: 100 * np.median([np.median(mr[m][:, k]) for k in range(5)])
@@ -183,11 +210,22 @@ def main():
     print(f"\n  transport params: tau median {np.median(tau):.1f} Gyr, q median {np.median(q):.2f}")
     print(f"  envelope  params: alpha median {np.median(al):.2f} (tau = alpha*t_i), "
           f"w0 median {np.median(w0):.0f} kpc, gw median {np.median(gw):.2f}")
+    ct0, cal = 10.0 ** pco[:, 2], 10.0 ** pco[:, 3]
+    cw0, cgw = 10.0 ** pco[:, 4], pco[:, 5]
+    print(f"  combined  params: tau0 median {np.median(ct0):.2f} Gyr, alpha median "
+          f"{np.median(cal):.2f} (tau_i = tau0 + alpha*t_i), w0 median {np.median(cw0):.0f} kpc, "
+          f"gw median {np.median(cgw):.2f}")
+    pdy_ = d["params_dyntrans"]
+    print(f"  dyntrans  params: alpha median {np.median(10.0 ** pdy_[:, 2]):.2f} "
+          f"(tau_i = alpha*t_i), q median {np.median(np.clip(pdy_[:, 3], 0, None)):.2f}")
 
-    a_e, a_t, a_a, a_al = avg("envelope"), avg("transport"), avg("additive"), avg("alone")
-    cand = [(v, nm) for v, nm in ((a_e, "envelope"), (a_t, "transport")) if np.isfinite(v)]
+    a_d, a_c, a_e, a_t = avg("dyntrans"), avg("combined"), avg("envelope"), avg("transport")
+    a_a, a_al = avg("additive"), avg("alone")
+    cand = [(v, nm) for v, nm in ((a_d, "dyntrans"), (a_c, "combined"), (a_e, "envelope"),
+                                  (a_t, "transport")) if np.isfinite(v)]
     a_best, best_name = min(cand)
-    print(f"\n[gate] additive floor {a_a:.1f}%  ->  transport {a_t:.1f}%  ->  envelope {a_e:.1f}%   "
+    print(f"\n[gate] additive floor {a_a:.1f}%  ->  transport {a_t:.1f}%  |  envelope {a_e:.1f}%  |  "
+          f"combined {a_c:.1f}%  |  dyntrans {a_d:.1f}%   "
           f"(ceiling {a_al:.1f}%" + (f", loose-quad {np.median(loose):.1f}%" if loose else "") + ")")
     if a_best < 0.5 * a_a and (loose is None or a_best < np.median(loose)):
         print(f"  core-retaining redistribution ({best_name}) BREAKS the additive ceiling and beats the\n"
@@ -219,12 +257,12 @@ def _figure(logms, datas, d, mr, loose):
     cmap = matplotlib.colormaps["viridis"]                # BCG = hardest case, index 0
     for k in range(5):
         c = cmap(k / 4)
-        b.plot(R, 100 * (d["envelope"][0, k] - datas[0, k]) / datas[0, k], "-", c=c, lw=1.7,
+        b.plot(R, 100 * (d["combined"][0, k] - datas[0, k]) / datas[0, k], "-", c=c, lw=1.7,
                label=f"z={ANCHOR_Z[k]}")
-        b.plot(R, 100 * (d["additive"][0, k] - datas[0, k]) / datas[0, k], ":", c=c, lw=1.4)
+        b.plot(R, 100 * (d["transport"][0, k] - datas[0, k]) / datas[0, k], ":", c=c, lw=1.4)
     b.axhline(0, c="0.6", lw=0.8)
     b.set(xscale="log", xlabel="R [kpc]", ylabel="(model$-$data)/data [%]", ylim=(-25, 25),
-          title=f"B. BCG (logM*={logms[0]:.2f}): envelope (solid) vs additive (dotted)")
+          title=f"B. BCG (logM*={logms[0]:.2f}): combined (solid) vs transport (dotted)")
     b.legend(fontsize=7)
     fig.suptitle("exp30 — core-retaining transport kernel: joint 5-epoch free-mass fit "
                  "(real MAH, all radii)", fontsize=12)
@@ -244,15 +282,29 @@ def demo():
     assert np.allclose(Ba, Bt, rtol=1e-6), "tau->inf must recover the additive basis"
     big = basis(th_t, mah["t"], mah["t_obs"], AT[0], "transport")
     assert np.all(np.diff(big, axis=0) >= -1e-12), "basis CoG must be monotonic in R"
+    th_env = [2.0, 1.5, np.log10(0.3), 1.7, 0.7]
+    th_co_env = [2.0, 1.5, -9.0, np.log10(0.3), 1.7, 0.7]     # tau0 -> 0: pure dynamical
+    th_co_add = [2.0, 1.5, 9.0, -9.0, 1.7, 0.7]               # tau_i -> inf: fc ~ 1
+    Be = basis(th_env, mah["t"], mah["t_obs"], AT[0], "envelope")
+    assert np.allclose(basis(th_co_env, mah["t"], mah["t_obs"], AT[0], "combined"), Be,
+                       rtol=1e-5), "combined(tau0->0) must recover the envelope basis"
+    assert np.allclose(basis(th_co_add, mah["t"], mah["t_obs"], AT[0], "combined"), Ba,
+                       atol=1e-6), "combined(tau_i->inf) must recover the additive basis"
+    th_dy_add = [2.0, 1.5, 9.0, 1.0]                          # alpha -> inf: fc ~ 1
+    assert np.allclose(basis(th_dy_add, mah["t"], mah["t_obs"], AT[0], "dyntrans"), Ba,
+                       atol=1e-6), "dyntrans(alpha->inf) must recover the additive basis"
     th_t2 = [2.0, 1.5, np.log10(2.0), 1.0]
-    _, rn_a = solve_joint(th_a, mah, data, "additive")
     ca, ta = fit_joint(mah, data, "additive")
-    ct, _ = fit_joint(mah, data, "transport", warm=ta)
-    _, rn_add = solve_joint(ta, mah, data, "additive")
+    ct, tt = fit_joint(mah, data, "transport", warm=ta)
+    ce, te = fit_joint(mah, data, "envelope", warm=ta)
+    cc, _ = fit_joint(mah, data, "combined", warm=(tt, te))
     assert solve_joint(th_t2, mah, data, "transport")[1] > 0
     assert maxrel(ct, data).mean() <= maxrel(ca, data).mean() * 1.10, \
         "transport (nests additive) should not fit meaningfully worse"
-    print("transport_floor.demo OK: tau->inf == additive, monotonic basis, nesting holds")
+    assert maxrel(cc, data).mean() <= min(maxrel(ct, data).mean(), maxrel(ce, data).mean()) * 1.10, \
+        "combined (warm-started from both variants) should not fit meaningfully worse than either"
+    print("transport_floor.demo OK: tau->inf == additive, combined nests envelope+additive, "
+          "monotonic basis, nesting holds")
 
 
 if __name__ == "__main__":
