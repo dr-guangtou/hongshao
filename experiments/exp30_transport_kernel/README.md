@@ -87,6 +87,26 @@ Reading: halo-MAH-step timing is a poor proxy for stellar redistribution timing
 (dynamical-friction delays ~Gyr; relaxation continues between events) — the
 self-similar τ≈tᵢ clock stands. **Keep dyntrans.**
 
+## Phase 2.3 — held-out-epoch generalization (`holdout.py`): the in-sample ranking INVERTS
+LOEO (fit 4 epochs, predict the 5th, symmetric aperture pin, no leakage; n=45,
+held-out median max|rel| averaged over h ∈ {z=0.7,1.0,1.5,2.0}):
+
+| model | in-sample | held-out | gap |
+|---|---|---|---|
+| additive | 19.8% | **30.9%** | +11.1 |
+| loose-quad | 9.2% | 35.3% | +26.1 |
+| dyntrans | **7.5%** | 53.7% | **+46.2** |
+
+**The best in-sample model is the worst predictor.** The discriminator is the mass
+parameterization: dyntrans's free NNLS masses (+ migration flexibility) absorb
+epoch-specific information and cannot predict an unseen epoch; loose-quad's masses are
+parametric (efficiency), so it degrades less despite its z-drifting params; rigid
+additive has the smallest gap. NO current model predicts acceptably (all ≥ 30%).
+**Conclusion: the free-mass gate and the predictive emulator are different regimes —
+phase 3 (parametric masses INSIDE the dyntrans transport structure, ~7 params total,
+zero free masses) is required, not optional.** Native total-mass prediction is fine
+(dyntrans |dlog M*| 0.06–0.16) — it is the SHAPE that overfits.
+
 ## Fair model comparison (`ic_compare.py`)
 Effective parameters: outer params + **active (nonzero) NNLS masses** (nnls returns
 exact zeros; active-set size is the standard effective-df estimate) + 5 aperture pins

@@ -296,6 +296,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   under-migrates by z=2 (front-loaded merging wants tau ∝ t_i), and the migrated width
   must be set at the OBSERVATION epoch, not the (tiny) birth width — else the high-z
   envelope is unreachable.
+- **The in-sample winner inverted out-of-sample: free-mass flexibility is a
+  generalization liability (exp30).** LOEO (fit 4 epochs, predict the 5th): dyntrans,
+  best in-sample (7.5%), is the WORST predictor (53.7% held-out, gap +46); rigid
+  additive has the smallest gap (+11); loose-quad — 15 z-drifting params but PARAMETRIC
+  masses — sits between (35.3%, +26). The discriminator is the mass parameterization:
+  free NNLS masses absorb epoch-specific information and cannot predict an unseen
+  epoch, while the transport structure itself predicts totals fine (|dlog M*| 0.06-0.16
+  dex) — the shape overfits. The representational gate and the predictive emulator are
+  different regimes: never promote an in-sample winner without a held-out test, and
+  parametric masses (phase 3) are REQUIRED for prediction, not a refinement.
 - **Run the cheap correlation pre-test before building the model extension — and
   believe it (exp30).** Before building event-triggered kicks, the planned go/no-go was:
   does the fitted per-galaxy migration speed (dyntrans alpha) correlate with MAH

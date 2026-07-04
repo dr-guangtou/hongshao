@@ -516,12 +516,22 @@ Cross-experiment plan. Mirrors the phase sequence in
   monotonically worse with fewer events; no per-galaxy scatter reduction. Halo-MAH-step
   timing ≠ stellar redistribution timing (dynamical-friction delays; continuous
   relaxation). **Keep dyntrans (τ≈tᵢ).**
-- [ ] **(next) exp30 phase 2.3: held-out-epoch generalization.** Fit 4 epochs, predict
-  the 5th (h ∈ {0.7, 1.0, 1.5, 2.0}; z=0.4-holdout needs the parametric mass law →
-  phase 3). Symmetric aperture pin on the held-out epoch for ALL models (shape test;
-  amplitude is the SHMR's job). Compare dyntrans vs additive vs loose-quad held-out
-  error + generalization gap. Then the population/forward version (predict the ~8-10
-  active NNLS masses from halo-only inputs).
+- [x] **exp30 phase 2.3 — LOEO generalization: the in-sample ranking INVERTS
+  (`holdout.py`).** n=45, held-avg max|rel|: additive 30.9% (gap +11), loose-quad 35.3%
+  (+26), dyntrans 53.7% (+46) — the best in-sample model is the worst predictor. The
+  discriminator is the mass parameterization: free NNLS masses absorb epoch-specific
+  information; parametric-mass loose degrades less; rigid additive least. Totals
+  predict fine (dyntrans |dlog M*| 0.06–0.16); the SHAPE overfits. No current model
+  predicts acceptably (all ≥30%).
+- [ ] **(next) exp30/31 phase 3 — the parametric-mass transport emulator.** Put the
+  dyntrans transport structure (dynamical clock τ=α·tᵢ + multi-scale migrated width)
+  on **parametric masses** dM*ᵢ = f(zᵢ)·dMhᵢ (two-epoch efficiency, 3 params) — ~7
+  params total, ZERO free masses, one consistent history. Tests, in order: (a)
+  in-sample joint fit (expect between additive 18.5% and dyntrans 7.5%); (b) **LOEO
+  including the z=0.4 holdout** (now possible — masses are parametric everywhere);
+  target: held-out ≈ in-sample (small gap), beating additive's 30.9% held-out; (c)
+  mass QA + IC; (d) then the population step: predict the ~7 params from halo-only
+  inputs (c_200c, t50, logMh) as in exp29 Phase 4e.
 - [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
   unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and
