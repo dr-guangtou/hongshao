@@ -65,7 +65,19 @@ the redistribution form is wrong or the limit is deeper → stop before over-inv
 Evaluation per repo standard: profile max|rel| over ALL radii + `mass_qa.evaluate()`
 (kpc + R_half aperture/envelope masses), figures surfaced with paths.
 
+## Fair model comparison (`ic_compare.py`)
+Effective parameters: outer params + **active (nonzero) NNLS masses** (nnls returns
+exact zeros; active-set size is the standard effective-df estimate) + 5 aperture pins
+for the exp29 parametric models. Median k_eff / rel-RMS / ΔAIC/ΔAICc/ΔBIC (n=45):
+transport **k_eff=14, 4.5%** dominates loose-quad (k_eff=20, 5.1%) on BOTH parsimony
+and fit — every IC prefers it (ΔAICc 555 vs 600). Within the consistent-history class
+the IC ranking is transport < envelope < puff-ratio < additive on every criterion.
+Caveats: CoG points are correlated (n=120 overstated; n_eff=40 sensitivity keeps the
+ordering) and ICs cannot see the consistency requirement — alone/independent "win"
+only by abandoning a single history.
+
 ## Files
 - `transport_floor.py` — the gate: three-mode comparison + figures; `demo` self-check.
+- `ic_compare.py` — effective-parameter accounting + AIC/AICc/BIC table + figure.
 
 Run: `PYTHONPATH=. uv run python experiments/exp30_transport_kernel/transport_floor.py [n] [--refit]`
