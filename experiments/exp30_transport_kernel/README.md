@@ -118,6 +118,26 @@ phase 3 (parametric masses INSIDE the dyntrans transport structure, ~7 params to
 zero free masses) is required, not optional.** Native total-mass prediction is fine
 (dyntrans |dlog M*| 0.06–0.16) — it is the SHAPE that overfits.
 
+## Phase 3 v1 — parametric-mass transport emulator (`param_emulator.py`): IT PREDICTS
+dyntrans transport structure + two-epoch efficiency masses dM*ᵢ = f(zᵢ)·dMhᵢ:
+**7 params, ZERO free masses, one consistent history** (amplitude per-epoch pinned;
+the SHMR's job). n=45, all radii:
+- **In-sample 9.7%** — only +2.2 over free-mass dyntrans (7.5%): the 3-param efficiency
+  recovers most of what ~70 free masses provided. Fitted params physical, no railing:
+  **α=1.01** (the self-similar clock again), q=0.77, b_early=4.48, b_late=1.88, z_c=2.23.
+- **LOEO held-avg 24.0% (gap +14.3), including the z=0.4 forward holdout (31.4%)** —
+  beats every 2.3 model (additive 30.9, loose 35.3, dyntrans-free 53.7) at every
+  epoch. Parametric masses fixed the generalization failure, as diagnosed.
+- Native mass-growth prediction: 0.075 dex (z=0.7) → 0.31 dex (z=2) — the efficiency
+  form's stress shows in amplitude space; pinned/SHMR protocol keeps it out of shape.
+- **v2 gate CLOSED**: residuals do NOT correlate with MAH burstiness (in-sample
+  ρ=+0.21 p=0.17; LOEO ρ=−0.01 p=0.93) — no evidence-driven case for the dual-region
+  ex-situ channel at current precision.
+- Mass QA: apertures ≤3%; R_half envelopes ≤5.5%; the known z≥1.5 fixed-kpc far tail
+  remains (M*(>50 kpc) −83% at z=2, form-independent).
+
+→ Next: the population step — predict the 7 parameters from halo-only inputs.
+
 ## Fair model comparison (`ic_compare.py`)
 Effective parameters: outer params + **active (nonzero) NNLS masses** (nnls returns
 exact zeros; active-set size is the standard effective-df estimate) + 5 aperture pins

@@ -296,6 +296,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   under-migrates by z=2 (front-loaded merging wants tau ∝ t_i), and the migrated width
   must be set at the OBSERVATION epoch, not the (tiny) birth width — else the high-z
   envelope is unreachable.
+- **Parametric masses fixed the generalization failure exactly as diagnosed (exp30).**
+  Replacing the ~70 free NNLS masses with the 3-param two-epoch efficiency inside the
+  dyntrans transport structure (7 params total) cost only +2.2 points in-sample
+  (7.5%→9.7%) but transformed prediction: LOEO held-avg 53.7%→24.0% (gap +46→+14),
+  beating every previous model at every held-out epoch INCLUDING the previously
+  impossible z=0.4 forward extrapolation. The information the free masses "used" was
+  mostly epoch-specific noise; 3 efficiency numbers carry the real signal. Corollary:
+  when a diagnosis (free masses = liability) is this specific, the targeted fix's
+  success/failure is itself a test of the diagnosis — and it passed. Note the fitted
+  clock reproduced alpha≈1 (self-similar) for the third independent time.
 - **The in-sample winner inverted out-of-sample: free-mass flexibility is a
   generalization liability (exp30).** LOEO (fit 4 epochs, predict the 5th): dyntrans,
   best in-sample (7.5%), is the WORST predictor (53.7% held-out, gap +46); rigid

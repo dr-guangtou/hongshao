@@ -529,15 +529,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   still trails the smooth clock (7.5%). **τ≈tᵢ is the delay-averaged merger clock**;
   discreteness adds nothing in-sample. Ex-situ channel (v2) now rests on the
   dual-region merger deposit, gated on the v1 burstiness-residual diagnostic.
-- [ ] **(next) exp30/31 phase 3 — the parametric-mass transport emulator.** Put the
-  dyntrans transport structure (dynamical clock τ=α·tᵢ + multi-scale migrated width)
-  on **parametric masses** dM*ᵢ = f(zᵢ)·dMhᵢ (two-epoch efficiency, 3 params) — ~7
-  params total, ZERO free masses, one consistent history. Tests, in order: (a)
-  in-sample joint fit (expect between additive 18.5% and dyntrans 7.5%); (b) **LOEO
-  including the z=0.4 holdout** (now possible — masses are parametric everywhere);
-  target: held-out ≈ in-sample (small gap), beating additive's 30.9% held-out; (c)
-  mass QA + IC; (d) then the population step: predict the ~7 params from halo-only
-  inputs (c_200c, t50, logMh) as in exp29 Phase 4e.
+- [x] **exp30 phase 3 v1 — parametric-mass transport emulator: IT PREDICTS
+  (`param_emulator.py`).** 7 params (4 transport + 3 efficiency), zero free masses.
+  **In-sample 9.7%** (only +2.2 over free-mass dyntrans); **LOEO held-avg 24.0%, gap
+  +14.3, including the z=0.4 forward holdout (31.4%)** — beats every 2.3 model
+  (additive 30.9, loose 35.3, dyntrans-free 53.7). Fitted params physical (α=1.01
+  self-similar again; b_early 4.5, b_late 1.9, z_c 2.2). Native mass growth 0.075→0.31
+  dex (z=0.7→2). **v2 gate CLOSED** (residual-burstiness ρ≈0) — no evidence for the
+  dual-region ex-situ channel at current precision. Mass QA: apertures ≤3%, R_half
+  envelopes ≤5.5%, known z≥1.5 far-kpc tail.
+- [ ] **(next) exp30/31 phase 4 — the population/forward step.** Predict the 7
+  emulator params from halo-only inputs (logMh, c_200c, t50, MAH shape), à la exp29
+  Phase 4e: per-param predictability (r), then end-to-end halo→5-epoch-CoG error with
+  predicted params + SHMR amplitude; compare to the per-galaxy-fit 9.7%/24.0%
+  numbers. Also consider: tighten the z=0.4 forward holdout (efficiency extrapolation
+  is the weak point — a bounded/regularized f(z) may help).
 - [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
   unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and
