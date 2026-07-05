@@ -538,19 +538,32 @@ Cross-experiment plan. Mirrors the phase sequence in
   dex (z=0.7→2). **v2 gate CLOSED** (residual-burstiness ρ≈0) — no evidence for the
   dual-region ex-situ channel at current precision. Mass QA: apertures ≤3%, R_half
   envelopes ≤5.5%, known z≥1.5 far-kpc tail.
-- [ ] **(next) exp30/31 phase 4 — the population/forward step.** Sequence agreed with
-  user: **(i) universal-θ baseline** (one global 7-param set; emulator = MAH → profile;
-  measures whether the MAH alone carries the individuality); **(ii) halo-conditioning**
-  only where per-galaxy fitted θ correlates with halo props (logMh, c_200c, t50, MAH
-  shape), à la exp29 Phase 4e; **(iii) end-to-end halo→5-epoch-CoG error** with
-  predicted θ + SHMR amplitude (0.086 dex), vs the per-galaxy-fit 9.7% floor. Two
-  configurations: **real-MAH emulator = the reference; DiffMAH-parameter-input = a
-  variant to quantify** (user: its key advantage is a fully DIFFERENTIABLE framework
-  for forward-modeling observations — same motivation as DiffMAH itself; validate,
-  don't assume equivalence; smooth curve changed results by ~2% for old models).
-  Also: tighten the z=0.4 forward holdout via bounded/regularized f(z) (population-
-  informed bounds or shrinkage prior — note this is the population model at weaker
-  strength).
+- [x] **exp30 phase 4 — the population/forward step (`pop_forward.py`).** LOGO
+  (leave-galaxy-out = the new-halo number), n=45, median profile max|rel| all radii,
+  vs the 10.2% per-galaxy floor: **(i) universal θ 33.6% real / 30.6% DiffMAH-input**,
+  in-sample ≈ LOGO (gap ~1) → a CAPACITY limit, not overfitting — the MAH through
+  the transport model + one shared θ leaves a +20-point individuality gap. Median of
+  per-galaxy θ is useless (55–82%): the per-galaxy fits are degenerate (b_early 3–44,
+  z_c 1.5–48), so population θ must be refit jointly through the data. **(ii)
+  halo-conditioning**: no θ–halo correlation passes p<0.01 (best log_s0←c200c ρ=+0.36
+  p=0.014); width←c200c (4e's Lc, p<0.05 selection, LOGO promotion) gives −1.6 real
+  but +1.6 diffmah — marginal, not robust. **(iii) end-to-end** with per-epoch
+  MAH-derived SHMR (0.10–0.18 dex): 44.9% real / 39.8% diffmah. **The
+  DiffMAH-parameter input is validated and FREE at the population level** (30.6 vs
+  33.6 — the ~2% per-galaxy penalty vanishes for a shared θ) → the differentiable
+  configuration is the product recommendation. Bounded f(z) (population-informed box;
+  the unbounded fit rails z_c) restores identifiability but does NOT improve LOGO —
+  rejected. Integrated aperture masses stay few-% (mass QA); the 30% is the
+  worst-radius shape metric.
+- [ ] **(next) phase 4 follow-up — close or accept the +20-point individuality gap.**
+  Options, in order of information gained per cost: (a) **n=200 re-test of the
+  conditioning step** (4e detected c200c structure at n=200; n=45 may simply lack
+  power — requires fitting per-galaxy θ for the larger sample first); (b) **θ-residual
+  anatomy**: which θ directions carry the individuality (fit per-galaxy θ warm-started
+  from the universal set with the other 6 frozen, one dimension at a time) — tells
+  whether the gap is one interpretable knob (e.g. width normalization = size) or
+  irreducibly multi-dimensional; (c) **accept ~30% shape / few-% integrated masses**
+  and graduate the DiffMAH-input universal-θ emulator as the profile-growth module.
 - [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
   unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and

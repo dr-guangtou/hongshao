@@ -136,7 +136,56 @@ the SHMR's job). n=45, all radii:
 - Mass QA: apertures ≤3%; R_half envelopes ≤5.5%; the known z≥1.5 fixed-kpc far tail
   remains (M*(>50 kpc) −83% at z=2, form-independent).
 
-→ Next: the population step — predict the 7 parameters from halo-only inputs.
+## Phase 4 — the population/forward step (`pop_forward.py`): the residual individuality is NOT recoverable from the halo
+Turns the per-galaxy 7-param emulator into the goal forward map
+`(MAH, halo props) -> theta -> shape x SHMR -> M*(<R, z_k)`. All numbers =
+**leave-galaxy-out** (LOGO, the new-halo regime; LOEO 24% was epoch-generalization)
+median profile max|rel|, all radii, n=45. Per-galaxy in-sample floor: **10.2%**.
+
+| shape model (M*_k given) | real MAH | DiffMAH-curve input |
+|---|---|---|
+| median of per-galaxy theta (no refit) | 54.8% | 82.5% |
+| universal theta — in-sample | 32.3% | 29.9% |
+| universal theta — LOGO | 33.6% | **30.6%** |
+| + width <- c200c conditioning (LOGO) | **32.0%** | 32.2% |
+| + population-informed f(z) box (LOGO) | 33.6% | 33.1% |
+| end-to-end: x per-epoch SHMR amplitude | 44.9% | 39.8% |
+
+1. **The ~30% is a capacity limit, not overfitting**: universal in-sample ≈ LOGO
+   (gap ~1 point). One consistent theta, fed each galaxy's own MAH, leaves a
+   +20-point gap to the per-galaxy floor — the individuality lives in theta, and
+   neither the MAH (through this model) nor the halo props recover it.
+2. **Per-galaxy theta are degenerate** (b_early spans 3–44, z_c 1.5–48), so raw-theta
+   population statistics fail: the median-theta predictor is 55–82%, and theta–halo
+   correlations are washed out (best: log_s0 <- c200c, rho=+0.36, p=0.014; no pair
+   passes p<0.01). Conditioning the width on c200c (the exp29-4e `Lc` structure,
+   selected at p<0.05, promoted only by LOGO) gives −1.6 points on the real config
+   but +1.6 on diffmah — marginal, not robust at n=45.
+3. **Bounded f(z) rejected**: the unbounded universal fit rails z_c at the −1 guard
+   (single-power-law efficiency, b_late unidentified); a population-informed soft box
+   (b in [0,10], z_c in [1,5]) restores identifiability but does NOT improve LOGO
+   (33.6 -> 33.6 real, 30.6 -> 33.1 diffmah). The z=0.4 column stays the worst
+   (~44%) either way.
+4. **The DiffMAH-parameter input is FREE at the population level — validated**:
+   30.6% vs real 33.6% (better at z<=1.0, slightly worse at z=1.5). The ~2%
+   per-galaxy penalty of the smooth curve vanishes for a shared theta (its smooth
+   ~99-deposit basis suits one global parameter set). The fully differentiable
+   forward-modeling configuration costs nothing here.
+5. **SHMR amplitude** (logM*(z_k) <- logMh(z_k) interpolated from the MAH itself,
+   LOGO): 0.10–0.12 dex at z<=1.0, 0.18 dex at z=2 (the z=0.4 value 0.120 vs 4e's
+   0.086 reflects n=45 massive-end vs n=200). End-to-end adds ~8–12 points over the
+   pinned shape.
+6. **Mass QA** (conditioned, real): fixed-kpc apertures within ~7% (M*(<100 kpc)
+   <=2%) at every epoch; the known z>=1.5 far-kpc tail persists; the DiffMAH variant
+   flips the outskirt residual sign (over-predicts M*(>50 kpc) at z<=1.5 where the
+   real-MAH variant under-predicts).
+
+**Verdict:** on NEW halos the emulator delivers ~30% worst-radius shape error
+(+0.10–0.18 dex amplitude), vs ~10% with per-galaxy theta; integrated aperture
+masses stay at the few-% level. Product recommendation: the **DiffMAH-input
+universal-theta** configuration (simplest, differentiable, best LOGO). The
++20-point individuality gap is the open question — not addressable by
+conditioning/regularization at n=45.
 
 ## Fair model comparison (`ic_compare.py`)
 Effective parameters: outer params + **active (nonzero) NNLS masses** (nnls returns
@@ -150,7 +199,12 @@ ordering) and ICs cannot see the consistency requirement — alone/independent "
 only by abandoning a single history.
 
 ## Files
-- `transport_floor.py` — the gate: three-mode comparison + figures; `demo` self-check.
+- `transport_floor.py` — the gate: mode comparison + figures; `demo` self-check.
 - `ic_compare.py` — effective-parameter accounting + AIC/AICc/BIC table + figure.
+- `event_kicks.py` — phase 2.2/2.2b event-triggered + lagged kicks (negative).
+- `holdout.py` — phase 2.3 LOEO epoch-generalization test.
+- `param_emulator.py` — phase 3 v1: the 7-param parametric-mass emulator.
+- `pop_forward.py` — phase 4: universal/conditioned/bounded population theta,
+  per-epoch SHMR, end-to-end LOGO; `demo` self-check.
 
-Run: `PYTHONPATH=. uv run python experiments/exp30_transport_kernel/transport_floor.py [n] [--refit]`
+Run: `PYTHONPATH=. uv run python experiments/exp30_transport_kernel/<script>.py [n] [--refit]`
