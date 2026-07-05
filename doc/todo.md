@@ -538,12 +538,19 @@ Cross-experiment plan. Mirrors the phase sequence in
   dex (z=0.7→2). **v2 gate CLOSED** (residual-burstiness ρ≈0) — no evidence for the
   dual-region ex-situ channel at current precision. Mass QA: apertures ≤3%, R_half
   envelopes ≤5.5%, known z≥1.5 far-kpc tail.
-- [ ] **(next) exp30/31 phase 4 — the population/forward step.** Predict the 7
-  emulator params from halo-only inputs (logMh, c_200c, t50, MAH shape), à la exp29
-  Phase 4e: per-param predictability (r), then end-to-end halo→5-epoch-CoG error with
-  predicted params + SHMR amplitude; compare to the per-galaxy-fit 9.7%/24.0%
-  numbers. Also consider: tighten the z=0.4 forward holdout (efficiency extrapolation
-  is the weak point — a bounded/regularized f(z) may help).
+- [ ] **(next) exp30/31 phase 4 — the population/forward step.** Sequence agreed with
+  user: **(i) universal-θ baseline** (one global 7-param set; emulator = MAH → profile;
+  measures whether the MAH alone carries the individuality); **(ii) halo-conditioning**
+  only where per-galaxy fitted θ correlates with halo props (logMh, c_200c, t50, MAH
+  shape), à la exp29 Phase 4e; **(iii) end-to-end halo→5-epoch-CoG error** with
+  predicted θ + SHMR amplitude (0.086 dex), vs the per-galaxy-fit 9.7% floor. Two
+  configurations: **real-MAH emulator = the reference; DiffMAH-parameter-input = a
+  variant to quantify** (user: its key advantage is a fully DIFFERENTIABLE framework
+  for forward-modeling observations — same motivation as DiffMAH itself; validate,
+  don't assume equivalence; smooth curve changed results by ~2% for old models).
+  Also: tighten the z=0.4 forward holdout via bounded/regularized f(z) (population-
+  informed bounds or shrinkage prior — note this is the population model at weaker
+  strength).
 - [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
   unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and
