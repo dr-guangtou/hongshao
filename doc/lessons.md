@@ -286,6 +286,67 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   per-epoch freedom to reach it). Parsimonious z-trends ≠ single-epoch quality;
   closing the gap needs *structured* freedom (e.g. puff-up: fix mass+g, vary width),
   not more polynomial order. Test the structured model against this ~4.5% benchmark.
+- **Core-retaining redistribution breaks the additive consistency floor (exp30).** A
+  two-component deposit (retained core at the deposition width + migrated envelope,
+  mass-conserving, observation-time dependence only via elapsed time) halves the joint
+  multi-epoch error (additive 18.5% → transport 9.1% max|rel|, flat across epochs) and
+  edges past the inconsistent loose-zdep fit with a genuine consistent history. The CoG
+  stays linear in the masses, so the convex NNLS inner solve survives — the transport
+  freedom costs only 2-3 outer params. Two form lessons: a GLOBAL migration clock
+  under-migrates by z=2 (front-loaded merging wants tau ∝ t_i), and the migrated width
+  must be set at the OBSERVATION epoch, not the (tiny) birth width — else the high-z
+  envelope is unreachable.
+- **Parametric masses fixed the generalization failure exactly as diagnosed (exp30).**
+  Replacing the ~70 free NNLS masses with the 3-param two-epoch efficiency inside the
+  dyntrans transport structure (7 params total) cost only +2.2 points in-sample
+  (7.5%→9.7%) but transformed prediction: LOEO held-avg 53.7%→24.0% (gap +46→+14),
+  beating every previous model at every held-out epoch INCLUDING the previously
+  impossible z=0.4 forward extrapolation. The information the free masses "used" was
+  mostly epoch-specific noise; 3 efficiency numbers carry the real signal. Corollary:
+  when a diagnosis (free masses = liability) is this specific, the targeted fix's
+  success/failure is itself a test of the diagnosis — and it passed. Note the fitted
+  clock reproduced alpha≈1 (self-similar) for the third independent time.
+- **The in-sample winner inverted out-of-sample: free-mass flexibility is a
+  generalization liability (exp30).** LOEO (fit 4 epochs, predict the 5th): dyntrans,
+  best in-sample (7.5%), is the WORST predictor (53.7% held-out, gap +46); rigid
+  additive has the smallest gap (+11); loose-quad — 15 z-drifting params but PARAMETRIC
+  masses — sits between (35.3%, +26). The discriminator is the mass parameterization:
+  free NNLS masses absorb epoch-specific information and cannot predict an unseen
+  epoch, while the transport structure itself predicts totals fine (|dlog M*| 0.06-0.16
+  dex) — the shape overfits. The representational gate and the predictive emulator are
+  different regimes: never promote an in-sample winner without a held-out test, and
+  parametric masses (phase 3) are REQUIRED for prediction, not a refinement.
+- **Run the cheap correlation pre-test before building the model extension — and
+  believe it (exp30).** Before building event-triggered kicks, the planned go/no-go was:
+  does the fitted per-galaxy migration speed (dyntrans alpha) correlate with MAH
+  burstiness? It came back NULL (Spearman rho ~ 0). The full event model then confirmed
+  it: kicks at the real-MAH bursts underperform the smooth self-similar clock at every
+  threshold (10.3-12.1% vs 7.5%), monotonically worse with fewer events, no scatter
+  reduction. Physical reading: halo-MAH-step timing is a poor proxy for STELLAR
+  redistribution timing (dynamical-friction delays ~Gyr; relaxation continues between
+  events). The pre-test cost seconds and predicted the outcome of a multi-minute build.
+  FOLLOW-UP (lagged kicks, user hypothesis): letting events fire at t'=(1+beta)t_j
+  genuinely helps (10.3->9.5%) with a coherent physical delay (median beta=0.37, IQR
+  0.30-0.72 ~ dynamical friction) -- yet still trails the smooth clock (7.5%). So the
+  smooth self-similar clock IS the delay-averaged merger clock: the delay physics is
+  real, but per-event discreteness carries no in-sample signal beyond it. A negative
+  model result can still validate the underlying physics through its fitted parameters.
+- **When two model variants win in different regimes, complete the factorial before
+  combining (exp30).** Transport (global clock + multi-scale width) won the population;
+  envelope (dynamical clock + shared width) won BCGs/high-z. The intuitive "combine the
+  winners" model (two-param clock + shared width) merely collapsed onto envelope (11.7%)
+  because it inherited the WRONG shared ingredient — the binding difference was the
+  width form, not the clock. Completing the 2x2 exposed the untested cell (dynamical
+  clock + multi-scale width) as the true winner: dyntrans 7.5% vs transport 9.1% /
+  envelope 11.3%, best at every epoch, 4 params, fitted alpha ~ 1 (migration timescale
+  = cosmic time at deposition). Attribute wins to INGREDIENTS via a factorial, not to
+  whole variants.
+- **scipy nnls does not raise on non-finite design matrices; guard the basis (exp30).**
+  An optimizer exploring extreme width params produced sig0-underflow x ratio-overflow
+  = 0*inf = NaN in the basis; nnls silently returned garbage, one galaxy's NaN poisoned
+  the population medians AND the nan-unsafe best-model selection picked the broken mode.
+  Clip basis widths to finite ranges, check np.isfinite(A) before nnls (return inf loss),
+  and make model-selection comparisons NaN-safe.
 - **A "floor" in one metric is not a floor in another (exp29).** The free-mass NNLS
   minimizes L2 (relative SSE), so it is the best model in log-RMS but the WORST in
   max|rel| (18.5% honest, vs loose 9.9%) — free masses buy L2 by concentrating error into

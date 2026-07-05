@@ -490,8 +490,69 @@ Cross-experiment plan. Mirrors the phase sequence in
   18.5%.** Free-mass floor is worst in max|rel| (L2 objective spikes the worst radius).
   All nail cumulative apertures (~0.01 dex) + relative outskirt M*(>2Re) (~0.02 dex);
   only fixed-kpc far outskirt at high z fails (loose −0.31 dex at z=2).
-- [ ] **(next, DECISION POINT) the multi-epoch ceiling is unreachable by any consistent
-  additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
+- [x] **exp30 — transport-kernel feasibility gate PASSED (`transport_floor.py`, branch
+  `exp30-transport-kernel`).** Core-retaining redistribution: deposit splits into a
+  retained core + migrated envelope, mass-conserving, dt-only observation dependence,
+  CoG linear in masses → NNLS inner + 4-5 param outer. **n=45 (real MAH, all radii,
+  median max|rel| epoch-avg): additive floor 18.5% → transport 9.1% (envelope 11.3%),
+  loose-zdep 9.9%, ceiling 0.2%.** A consistent history now BEATS the inconsistent
+  loose fit — redistribution is the missing freedom. Remaining gaps: still ~9% vs the
+  0.2% ceiling; fixed-kpc far outskirt at high z unfixed by the global clock (the
+  dynamical-clock envelope variant fixes z=2 on BCGs); n=5→n=45 flip suggests
+  mass-dependent preference between the two clocks.
+- [x] **exp30 phase 2.1 — combined clock: 2×2 completed, winner `dyntrans` 7.5%.**
+  The intuitive combination (two-param clock τ₀+α·tᵢ + shared obs-epoch width, 7p)
+  collapsed onto envelope (11.7%) — the shared width was the flaw, not the clock.
+  Completing the {clock}×{width form} factorial exposed the untested cell: **dyntrans
+  = dynamical clock + multi-scale per-deposit width, 4 params, 7.5% epoch-avg max|rel|
+  (n=45, real MAH, all radii)** — best at every epoch among consistent models, beats
+  loose-zdep (9.9%) and every IC (k_eff=14, rel-RMS 3.4%, ΔAICc 495 vs 600). Fitted
+  clock is self-similar: α≈1.04 → migration timescale = cosmic time at deposition;
+  q≈1.6. Mass QA: apertures ≤1%; R_half envelopes ≤1.8% (M>2Re) at every epoch; only
+  the z=2 fixed-kpc far tail remains (M(>50) −86%).
+- [x] **exp30 phase 2.2 — event-triggered kicks: clean NEGATIVE (`event_kicks.py`).**
+  Pre-test null (fitted α vs MAH burstiness, ρ≈0); event-clock model underperforms the
+  smooth self-similar clock at every threshold (10.3–12.1% vs dyntrans 7.5%, n=45),
+  monotonically worse with fewer events; no per-galaxy scatter reduction. Halo-MAH-step
+  timing ≠ stellar redistribution timing (dynamical-friction delays; continuous
+  relaxation). **Keep dyntrans (τ≈tᵢ).**
+- [x] **exp30 phase 2.3 — LOEO generalization: the in-sample ranking INVERTS
+  (`holdout.py`).** n=45, held-avg max|rel|: additive 30.9% (gap +11), loose-quad 35.3%
+  (+26), dyntrans 53.7% (+46) — the best in-sample model is the worst predictor. The
+  discriminator is the mass parameterization: free NNLS masses absorb epoch-specific
+  information; parametric-mass loose degrades less; rigid additive least. Totals
+  predict fine (dyntrans |dlog M*| 0.06–0.16); the SHAPE overfits. No current model
+  predicts acceptably (all ≥30%).
+- [x] **exp30 phase 2.2b — lagged event kicks (`event_kicks.py lagged`).** Coalescence
+  delay t'=(1+β)t_j, β free. Lag genuinely helps events (10.3→9.5%) with a coherent
+  physical delay (median β=0.37, IQR 0.30–0.72 ≈ dynamical friction; echoes α≈1), but
+  still trails the smooth clock (7.5%). **τ≈tᵢ is the delay-averaged merger clock**;
+  discreteness adds nothing in-sample. Ex-situ channel (v2) now rests on the
+  dual-region merger deposit, gated on the v1 burstiness-residual diagnostic.
+- [x] **exp30 phase 3 v1 — parametric-mass transport emulator: IT PREDICTS
+  (`param_emulator.py`).** 7 params (4 transport + 3 efficiency), zero free masses.
+  **In-sample 9.7%** (only +2.2 over free-mass dyntrans); **LOEO held-avg 24.0%, gap
+  +14.3, including the z=0.4 forward holdout (31.4%)** — beats every 2.3 model
+  (additive 30.9, loose 35.3, dyntrans-free 53.7). Fitted params physical (α=1.01
+  self-similar again; b_early 4.5, b_late 1.9, z_c 2.2). Native mass growth 0.075→0.31
+  dex (z=0.7→2). **v2 gate CLOSED** (residual-burstiness ρ≈0) — no evidence for the
+  dual-region ex-situ channel at current precision. Mass QA: apertures ≤3%, R_half
+  envelopes ≤5.5%, known z≥1.5 far-kpc tail.
+- [ ] **(next) exp30/31 phase 4 — the population/forward step.** Sequence agreed with
+  user: **(i) universal-θ baseline** (one global 7-param set; emulator = MAH → profile;
+  measures whether the MAH alone carries the individuality); **(ii) halo-conditioning**
+  only where per-galaxy fitted θ correlates with halo props (logMh, c_200c, t50, MAH
+  shape), à la exp29 Phase 4e; **(iii) end-to-end halo→5-epoch-CoG error** with
+  predicted θ + SHMR amplitude (0.086 dex), vs the per-galaxy-fit 9.7% floor. Two
+  configurations: **real-MAH emulator = the reference; DiffMAH-parameter-input = a
+  variant to quantify** (user: its key advantage is a fully DIFFERENTIABLE framework
+  for forward-modeling observations — same motivation as DiffMAH itself; validate,
+  don't assume equivalence; smooth curve changed results by ~2% for old models).
+  Also: tighten the z=0.4 forward holdout via bounded/regularized f(z) (population-
+  informed bounds or shrinkage prior — note this is the population model at weaker
+  strength).
+- [ ] **(superseded by exp30 gate — kept for the record) the multi-epoch ceiling is
+  unreachable by any consistent additive Gaussian history — HONEST numbers.** Practical floor is now ~10% profile
   max|rel| (loose-quad, real MAH, all radii), ceiling ~2%. Either (a) **accept ~10% and
   build the forward emulator** (halo-only → 5-epoch CoG); note cumulative-aperture and
   relative-outskirt masses are excellent (~0.01-0.02 dex), so the emulator is far better
