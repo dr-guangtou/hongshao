@@ -410,6 +410,27 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   de-concentrate early mass via the efficiency, not the width. The diffusion law
   (σ²+=κΔt) was nearly inert (κ→0). Don't pre-commit to the elegant constraint;
   benchmark it against the looser model and keep whatever fits.
+- **Degenerate per-galaxy fits poison every population statistic built FROM the
+  fitted parameters (exp30 phase 4).** The 45 per-galaxy 7-param fits are individually
+  good (10%) but degenerate (b_early spans 3–44, z_c 1.5–48), so the median-θ
+  predictor gives 55–82% error and θ–halo correlations are washed out. Population
+  models must be refit jointly THROUGH the data (universal θ: 33.6%/30.6%), and
+  conditioning slopes fit against the data, not against fitted θ. Use fitted-θ
+  correlations only as a cheap structure-selection hint — and pair a liberal
+  selection gate (p<0.05) with strict held-out (LOGO) promotion, which correctly
+  rejected the pair that regressed on the diffmah config.
+- **In-sample ≈ held-out for a low-dimensional shared model means the residual is
+  CAPACITY, not overfitting — regularization cannot help (exp30 phase 4).** Universal
+  θ: in-sample 32.3% vs LOGO 33.6%. Confirmed: the population-informed f(z) box fixed
+  the z_c railing (identifiability) yet left LOGO unchanged/worse. When the
+  generalization gap is ~0, only new per-object information can close the distance
+  to the per-object floor, not priors/bounds on the shared parameters.
+- **The smooth-DiffMAH-input penalty is a per-galaxy effect, not a population one
+  (exp30 phase 4).** Per-galaxy fits pay ~2% for the smooth curve (exp29), but with
+  ONE shared θ the DiffMAH input is BETTER (30.6% vs 33.6% LOGO): its smooth,
+  evenly-spaced ~99-deposit basis suits a global parameter set, while the bursty
+  gappy real MAH demands per-galaxy adaptation. Validate input equivalence at the
+  level where the model will be used.
 
 ## Workflow
 
