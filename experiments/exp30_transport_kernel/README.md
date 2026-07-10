@@ -206,5 +206,8 @@ only by abandoning a single history.
 - `param_emulator.py` — phase 3 v1: the 7-param parametric-mass emulator.
 - `pop_forward.py` — phase 4: universal/conditioned/bounded population theta,
   per-epoch SHMR, end-to-end LOGO; `demo` self-check.
+- `profile_qa.py` — phase 4 QA: direct CoG curves — median data-vs-model by
+  stellar-mass tercile with residual profiles, and a best/worst-case gallery
+  with the worst radius (the max|rel| location) marked; `demo` self-check.
 
 Run: `PYTHONPATH=. uv run python experiments/exp30_transport_kernel/<script>.py [n] [--refit]`
