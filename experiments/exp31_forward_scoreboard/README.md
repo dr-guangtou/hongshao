@@ -78,6 +78,18 @@ model with monotonic, mass-conserving, differentiable profiles. The remaining
 are the same open problem seen from two sides: the predicted population is not
 yet diverse enough at fixed halo.
 
+## Consistency with past experiments (the MAH's per-quantity value)
+At z=0.4 the direct model reproduces the canonical assembly-history gain:
+apertures −21..−31% scatter, M*(>50 kpc) 0.229 -> 0.179 dex — nearly identical to
+exp13's 0.230 -> 0.175 (+24%) on the same quantity at n=2533 (and to exp07/08's
+19–30%). The NEW finding is the epoch decay: the increment shrinks to ~5–8% at
+z=0.7–1.0 and ~0 at z>=1.5. Caveat: the features (t50, fz2, c200c) are
+z=0.4-anchored summaries — partly describing the halo's FUTURE relative to an
+early target epoch — and logMh(z_k) is itself a MAH point. Whether epoch-matched
+history features help at high z is untested (cheap follow-up); physically, less
+divergence time at fixed Mh plus the higher z=2 measurement floor (~0.2 dex in
+every model) both argue for a real decay on top of the feature misalignment.
+
 ## Files
 - `run.py` — scoreboard driver (`demo` self-check: exact LOGO regression;
   e2e totals = SHMR prediction).
