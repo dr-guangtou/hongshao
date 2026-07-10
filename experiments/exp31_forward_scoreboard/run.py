@@ -5,7 +5,9 @@ halo-only inputs) and is scored by the one standardized harness (hongshao.qa):
 
   transport-real     phase-4 universal-theta e2e (real MAH; SHMR amplitude)
   transport-diffmah  same, DiffMAH-parameter input (the differentiable config)
-  shmr-only          per-radius/epoch LOGO regression log M*(<R,z_k) <- logMh(z_k)
+  logmh-only         per-radius/epoch LOGO regression log M*(<R,z_k) <- logMh(z_k):
+                     the classic SHMR generalized to every aperture — the halo-mass-
+                     only null (no assembly history, no secondaries)
   direct             exp08-pattern: same + halo-only secondaries (c200c, t50, fz2)
                      — the tier-1/2 statistical ceiling; no consistency, no physics
 
@@ -40,9 +42,9 @@ set_style()
 FIGDIR, OUTDIR = HERE / "figures", HERE / "outputs"
 OUT_NPZ = OUTDIR / "scoreboard.npz"
 R = COG_RAD_KPC
-MODELS = ["transport-real", "transport-diffmah", "shmr-only", "direct"]
+MODELS = ["transport-real", "transport-diffmah", "logmh-only", "direct"]
 COLORS = {"transport-real": "#CC3377", "transport-diffmah": "#D55E00",
-          "shmr-only": "0.45", "direct": "#0072B2"}
+          "logmh-only": "0.45", "direct": "#0072B2"}
 
 
 def logo_regress(X, y):
@@ -86,7 +88,7 @@ def compute():
     feats_direct = [np.column_stack([logmh_zk[:, k], sec]) for k in range(5)]
     cogs = {"transport-real": transport_e2e(d4, "real", data),
             "transport-diffmah": transport_e2e(d4, "diffmah", data),
-            "shmr-only": regression_cogs(feats_shmr, data),
+            "logmh-only": regression_cogs(feats_shmr, data),
             "direct": regression_cogs(feats_direct, data)}
     OUTDIR.mkdir(parents=True, exist_ok=True)
     np.savez(OUT_NPZ, index=dp["index"], data=data,
@@ -118,14 +120,16 @@ def main():
     is_ann = lambda k: "-" in k.split(":")[1]
     is_env = lambda k: "(>" in k
     print("\n=== SCOREBOARD (LOGO, n=%d) — median dex scatter per epoch ===" % len(data))
-    print(f"    {'model':>18s} {'group':>10s} | "
-          + " | ".join(f"z={z}".rjust(6) for z in ANCHOR_Z))
-    for m in MODELS:
-        for gname, kind in (("apertures", is_aper), ("annuli", is_ann),
-                            ("envelopes", is_env)):
-            g = group_dex(results[m], "kpc:", kind)
-            print(f"    {m:>18s} {gname:>10s} | "
-                  + " | ".join(f"{v:6.3f}" for v in g))
+    for prefix, unit in (("kpc:", "kpc"), ("Re:", "Re")):
+        print(f"\n  [{unit} bins]")
+        print(f"    {'model':>18s} {'group':>10s} | "
+              + " | ".join(f"z={z}".rjust(6) for z in ANCHOR_Z))
+        for m in MODELS:
+            for gname, kind in (("apertures", is_aper), ("annuli", is_ann),
+                                ("envelopes", is_env)):
+                g = group_dex(results[m], prefix, kind)
+                print(f"    {m:>18s} {gname:>10s} | "
+                      + " | ".join(f"{v:6.3f}" for v in g))
     print("\n    profile max|rel| median, epoch-avg (all R | R>5 kpc):")
     for m in MODELS:
         ma = 100 * np.nanmean(np.nanmedian(results[m]["mr_all"], axis=0))
@@ -141,23 +145,27 @@ def main():
 
 
 def _figure(results):
-    """Scoreboard: dex scatter per kpc quantity, one line per model, panel per epoch."""
-    keys = [k for k in results[MODELS[0]]["keys"] if k.startswith("kpc:")]
-    x = np.arange(len(keys))
-    fig, axes = plt.subplots(1, 5, figsize=(19, 4.6), sharey=True)
-    for j, ax in enumerate(axes):
-        for m in MODELS:
-            sc = [qa.dex_scatter(results[m]["model"][k][:, j],
-                                 results[m]["truth"][k][:, j]) for k in keys]
-            ax.plot(x, sc, "o-", c=COLORS[m], lw=1.6, ms=4, label=m)
-        ax.set_xticks(x)
-        ax.set_xticklabels([k.split(":")[1] for k in keys], rotation=60, fontsize=7)
-        ax.set(title=f"z={ANCHOR_Z[j]}")
-        ax.grid(alpha=0.25, axis="y")
-    axes[0].set(ylabel="LOGO dex scatter")
-    axes[0].legend(fontsize=7)
+    """Scoreboard: dex scatter per quantity, one line per model, panel per epoch;
+    top row = fixed-kpc bins, bottom row = R_half-relative bins."""
+    fig, axes = plt.subplots(2, 5, figsize=(19, 9.0), sharey="row")
+    for row, prefix in enumerate(("kpc:", "Re:")):
+        keys = [k for k in results[MODELS[0]]["keys"] if k.startswith(prefix)]
+        x = np.arange(len(keys))
+        for j in range(5):
+            ax = axes[row, j]
+            for m in MODELS:
+                sc = [qa.dex_scatter(results[m]["model"][k][:, j],
+                                     results[m]["truth"][k][:, j]) for k in keys]
+                ax.plot(x, sc, "o-", c=COLORS[m], lw=1.6, ms=4, label=m)
+            ax.set_xticks(x)
+            ax.set_xticklabels([k.split(":")[1] for k in keys], rotation=60, fontsize=7)
+            if row == 0:
+                ax.set(title=f"z={ANCHOR_Z[j]}")
+            ax.grid(alpha=0.25, axis="y")
+        axes[row, 0].set(ylabel=f"LOGO dex scatter ({prefix[:-1]} bins)")
+    axes[0, 0].legend(fontsize=7)
     fig.suptitle("exp31 scoreboard — halo-only LOGO dex scatter per mass quantity "
-                 "(kpc bins)", fontsize=12)
+                 "(top: fixed kpc; bottom: $R_{\\rm half}$ units)", fontsize=12)
     fig.tight_layout()
     print("\nwrote", save_fig(fig, FIGDIR / "exp31_scoreboard")[0])
 

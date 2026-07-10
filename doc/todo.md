@@ -560,9 +560,12 @@ Cross-experiment plan. Mirrors the phase sequence in
   profile max|rel| all-R AND R>5 kpc, mass-tercile + best/worst visual QA; synthetic
   demo self-check). Part B (LOGO, n=45, halo-only): **tier 1 is feature-limited**
   (all four models within ~0.02 dex on apertures; direct regression 0.083 at z=0.4);
-  **transport-diffmah wins tier 2** (annuli/envelopes 2–5× tighter at z≥1.5) and
-  **tier 2b** (plane fidelity |Δscatter| 0.137 vs direct 0.398 — regression-to-the-
-  mean shrinks the predicted planes; the forward model propagates MAH diversity);
+  **transport-diffmah wins tier 2 in FIXED KPC** (annuli/envelopes 2–5× tighter at
+  z≥1.5) but in **Re units tier 2 is feature-limited too** (all models ~0.19–0.27
+  dex at z≥1.5; regressions marginally ahead on envelopes) — report both units;
+  the unit-independent win is **tier 2b** (plane fidelity |Δscatter| 0.137 vs
+  direct 0.398 — regression-to-the-mean shrinks the predicted planes; the forward
+  model propagates MAH diversity);
   tier-3 medians tie (31.6% vs 32.0% over R>5 kpc). **Product configuration
   confirmed: transport-diffmah universal-θ.** Caveat: even its planes are tighter
   than truth (slope 1.88→1.15, scatter 0.206→0.108 at z=0.4) — the individuality
