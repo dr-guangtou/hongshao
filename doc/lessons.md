@@ -431,6 +431,14 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   evenly-spaced ~99-deposit basis suits a global parameter set, while the bursty
   gappy real MAH demands per-galaxy adaptation. Validate input equivalence at the
   level where the model will be used.
+- **Per-galaxy dex scatter cannot see regression-to-the-mean; the observational
+  planes can (exp31).** Per-quantity LOGO regression TIES the physical emulator on
+  aperture dex scatter (~0.1) while predicting population distributions that are
+  badly too tight and too shallow (M(<30) vs M(50-100) plane: truth slope 1.88 /
+  scatter 0.206 -> regression ~1.05/0.05; transport 1.15/0.108). Any emulator meant
+  to be compared with observations must be scored on DISTRIBUTION fidelity
+  (relation slope/scatter in the observational planes), not only per-object error —
+  `hongshao/qa.py` tier 2b is the standard for this.
 
 ## Workflow
 

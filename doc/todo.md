@@ -555,7 +555,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   the unbounded fit rails z_c) restores identifiability but does NOT improve LOGO —
   rejected. Integrated aperture masses stay few-% (mass QA); the 30% is the
   worst-radius shape metric.
-- [ ] **(next) exp31 — standardized tiered QA harness + the honest scoreboard.**
+- [x] **exp31 — standardized tiered QA harness + the honest scoreboard.** Part A:
+  `hongshao/qa.py` graduated (apertures, annuli, envelopes, observational planes,
+  profile max|rel| all-R AND R>5 kpc, mass-tercile + best/worst visual QA; synthetic
+  demo self-check). Part B (LOGO, n=45, halo-only): **tier 1 is feature-limited**
+  (all four models within ~0.02 dex on apertures; direct regression 0.083 at z=0.4);
+  **transport-diffmah wins tier 2 in FIXED KPC** (annuli/envelopes 2–5× tighter at
+  z≥1.5) but in **Re units tier 2 is feature-limited too** (all models ~0.19–0.27
+  dex at z≥1.5; regressions marginally ahead on envelopes) — report both units;
+  the unit-independent win is **tier 2b** (plane fidelity |Δscatter| 0.137 vs
+  direct 0.398 — regression-to-the-mean shrinks the predicted planes; the forward
+  model propagates MAH diversity);
+  tier-3 medians tie (31.6% vs 32.0% over R>5 kpc). **Product configuration
+  confirmed: transport-diffmah universal-θ.** Caveat: even its planes are tighter
+  than truth (slope 1.88→1.15, scatter 0.206→0.108 at z=0.4) — the individuality
+  gap and the plane shortfall are the same open problem.
   HongShao's core = a forward-model engine (real-MAH or DiffMAH input); basic goal =
   aperture/outskirt masses per epoch, ambitious goal = full profile evolution. The QA
   must score every approach identically across that ladder. **Part A — graduate the
