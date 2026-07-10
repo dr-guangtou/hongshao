@@ -555,6 +555,25 @@ Cross-experiment plan. Mirrors the phase sequence in
   the unbounded fit rails z_c) restores identifiability but does NOT improve LOGO —
   rejected. Integrated aperture masses stay few-% (mass QA); the 30% is the
   worst-radius shape metric.
+- [ ] **(next) exp31 — standardized tiered QA harness + the honest scoreboard.**
+  HongShao's core = a forward-model engine (real-MAH or DiffMAH input); basic goal =
+  aperture/outskirt masses per epoch, ambitious goal = full profile evolution. The QA
+  must score every approach identically across that ladder. **Part A — graduate the
+  evaluation stack to `hongshao/qa.py`**, one entry point (predicted 5-epoch CoGs,
+  truth) -> (1) aperture masses, kpc {<10,<30,<50,<100} + Re {<1,<2,<4}: per-epoch
+  bias + dex scatter; (2) ANNULUS masses [10,30],[30,50],[50,100],[100,150] kpc +
+  Re analogs [1,2],[2,4] + outskirts >50,>100 kpc / >2,>4 Re; (2b) OBSERVATIONAL
+  PLANES — joint 2-D distributions, e.g. M*(<30 kpc) vs M*[50,100 kpc] (and the Re
+  analog): truth-vs-prediction overlay + the relation's slope/scatter in both samples
+  (this plane is what real observations use — the predicted DISTRIBUTION must match,
+  not just per-galaxy residuals); (3) profile max|rel| quoted over ALL radii AND
+  R>5 kpc (inner 2-5 kpc marginally resolved, exp07) + the two visual products
+  (median CoG by mass tercile with residuals; best/worst gallery). **Part B — LOGO
+  scoreboard** on the same n=45: transport universal-theta end-to-end (real +
+  DiffMAH, SHMR amplitude) vs (i) logMh-only per-quantity regression baseline and
+  (ii) exp08-pattern direct statistical emulator (halo-only features -> each mass
+  directly; no profile, no consistency — the tier-1/2 ceiling). Decides whether the
+  tier-3 individuality push is needed or the basic goal is already served.
 - [ ] **(next) phase 4 follow-up — close or accept the +20-point individuality gap.**
   Options, in order of information gained per cost: (a) **n=200 re-test of the
   conditioning step** (4e detected c200c structure at n=200; n=45 may simply lack
