@@ -588,7 +588,25 @@ Cross-experiment plan. Mirrors the phase sequence in
   (ii) exp08-pattern direct statistical emulator (halo-only features -> each mass
   directly; no profile, no consistency — the tier-1/2 ceiling). Decides whether the
   tier-3 individuality push is needed or the basic goal is already served.
-- [ ] **(next) phase 4 follow-up — close or accept the +20-point individuality gap.**
+- [ ] **(next) exp32 — the full-population emulator (n≈2545, logM* 10.7–12.4).**
+  Decision: the emulator must serve the ENTIRE mass range; full sample measured
+  feasible (per-galaxy fits 2 s/gal → 1.6 h; universal fit ~2 h; 10-fold CV ~1.7 h,
+  single core; 100% of 2545 have valid 5-epoch CoGs + real MAHs). Steps, in order:
+  **(1) foundation** — full-sample loader + cached npz (both MAH configs, CoGs,
+  halo props; validate small first), then the per-galaxy 7-param θ atlas for all
+  2545; **(2) mass structure of θ** — mass-binned universal θ vs global vs
+  logMh-slope conditioning (10-fold CV); θ-anatomy (free ONE component per galaxy:
+  which direction carries the individuality, constant with mass?); condition that
+  component on halo props with real power; **(3) scoreboard vs mass** — exp31
+  rerun at n=2545 in mass bins (+ epoch-matched-features regression to settle the
+  MAH-decay question); does the plane-fidelity win and the DiffMAH-config choice
+  hold down-mass?; **(4) stochastic layer** — fit the distribution of per-galaxy
+  θ deviations, emulator = mean + correlated scatter, judged by tier-2b plane
+  fidelity + exp07 CRPS/calibration; **(5) graduate** to the library with the
+  error budget vs mass and epoch. Protocol: n=45 + a stratified ~100 as dev
+  subsamples; long runs in background; DiffMAH input primary unless step 3 objects.
+- [ ] **(superseded by exp32 — the massive-end-only follow-up) phase 4 follow-up —
+  close or accept the +20-point individuality gap.**
   Options, in order of information gained per cost: (a) **n=200 re-test of the
   conditioning step** (4e detected c200c structure at n=200; n=45 may simply lack
   power — requires fitting per-galaxy θ for the larger sample first); (b) **θ-residual
