@@ -108,9 +108,36 @@ five epochs, full DiffMAH deposit input). Median max|rel|:
    high halo mass (panel C) — the massive end is where one consistent history
    costs most, echoing exp32.
 
+## Representation repairs (`repr_fix.py`): a clean NEGATIVE — the wall holds
+Same folds/inputs/metrics, only the target representation changed (OOF mean,
+shape pinned; Re plane = the known defect):
+
+| architecture | max\|rel\| R>5 / all R | Re-plane scatter / E centered |
+|---|---|---|
+| A baseline (kpc PCA-3) | 15.7% / 28.1% | 0.072→0.100 / 2.6 |
+| B size-aware (R/R50 basis + predicted R50) | 18.0% / 39.6% | 0.072→0.117 / 2.6 |
+| C core-split (M(<5kpc) + R>5 basis) | 15.7% / 28.2% | 0.072→0.100 / 2.6 |
+| D density-integrated | 21.1% / 51.4% | 0.072→0.096 / 2.8 |
+
+- **No representation beats the baseline** — exactly what the rho=0.87
+  head-to-head predicted: the residual is missing information, so re-encoding
+  the same information cannot help. B fails BECAUSE the predicted R50 carries
+  the same ~0.04+ dex unpredictability (reconstructing at a wrong size is a
+  new error source, and the Re plane is measured against the TRUE Re — it is
+  not fixable by coordinates alone). C is a wash (the core neither helped nor
+  contaminated). D adds a structural handicap discovered here: the
+  shell-integration CoG path is biased ~0.11 dex at the steep inner edge and
+  accumulates ~0.05 dex outward (exp22's "stable" meant monotonic, not exact)
+  — mode 4's higher density-space predictability cannot survive the transform.
+- The Re-plane defect is therefore ALSO an information problem (each galaxy's
+  size at fixed halo), not a basis problem: closing it needs either new
+  size-carrying inputs (halo spin — direction 1) or the generative layer in
+  Re-native targets (mode 2 already passes its plane).
+
 ## Remaining (per todo)
-(v) verdict + what graduates; (vi) higher-z single-epoch fits and their
-relation to the z=0.4 model (the alternative path to a multi-epoch model).
+(v) verdict + what graduates — the mean-model consolidation is now COMPLETE
+(features at limit, representations at limit, wall proven twice); (vi)
+higher-z single-epoch fits and their relation to the z=0.4 model.
 
 ## Files
 - `run.py` — modes 1/2/3 OOF + generative plane tests (`demo`: synthetic
