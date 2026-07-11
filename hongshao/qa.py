@@ -351,13 +351,26 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir):
             med_m = np.median(np.log10(np.clip(model_cogs[m, k], 1.0, None)), axis=0)
             rel = 100 * np.median((model_cogs[m, k] - data_cogs[m, k])
                                   / data_cogs[m, k], axis=0)
+            # amplitude-pinned residual: rescale each model CoG to the true
+            # total, isolating SHAPE error from amplitude regression-to-the-
+            # mean (binning by truth M* makes any conditional mean look
+            # biased by ~ the unexplained amplitude scatter)
+            pin = model_cogs[m, k] * (data_cogs[m, k][:, -1:]
+                                      / np.clip(model_cogs[m, k][:, -1:], 1.0, None))
+            rel_pin = 100 * np.median((pin - data_cogs[m, k]) / data_cogs[m, k],
+                                      axis=0)
             ax.plot(R, med_d, "-", c=cols[k], lw=1.8,
                     label=f"z={anchor_z[k]}" if b == 0 else None)
             ax.plot(R, med_m, "--", c=cols[k], lw=1.4)
-            rax.plot(R, rel, "-", c=cols[k], lw=1.4)
+            rax.plot(R, rel, "-", c=cols[k], lw=1.4,
+                     label="raw" if (b == 0 and k == 0) else None)
+            rax.plot(R, rel_pin, ":", c=cols[k], lw=1.4,
+                     label="amplitude-pinned (shape)" if (b == 0 and k == 0) else None)
         rax.axhline(0, c="0.6", lw=0.8)
         for y in (-20, 20):
             rax.axhline(y, c="0.8", lw=0.7, ls=":")
+        if b == 0:
+            rax.legend(fontsize=7, loc="upper right")
         ax.set(xscale="log", title=f"logM* {edges[b]:.2f}-{edges[b+1]:.2f}  (n={m.sum()})")
         rax.set(xscale="log", xlabel="R [kpc]", ylim=(-60, 60))
     axes[0, 0].set(ylabel="median log$_{10}$ M$_*$(<R) [M$_\\odot$]")

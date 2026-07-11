@@ -46,6 +46,18 @@ plane metric = 2-D energy distance / truth split-half floor (full | centered).
    porting it across epochs (with the anatomy subspace as the correlated
    dimensions) is the concrete path.
 
+## Mean-CoG recovery decomposed (user question on the bins figure)
+The apparent systematic failure in truth-M* terciles (low bin over-predicted at
+all radii, high bin under-predicted in the outskirts) is ~100% AMPLITUDE
+regression-to-the-mean, not shape error: total-mass residual +0.044/-0.021/
+-0.035 dex by truth tercile, while the amplitude-pinned shape residual is
+<=0.013 dex at 8 kpc and <=0.003 dex beyond 45 kpc in every bin; binned by
+HALO mass (what the model knows) the bias is ~0. The 0.099 dex amplitude
+scatter is the SHMR information limit at fixed [DiffMAH+c200c] (exp13/16), and
+truth-binning converts it into apparent systematics — unavoidable for ANY
+conditional mean. The bins figure now shows raw AND amplitude-pinned residuals
+so the two cannot be conflated again.
+
 ## Remaining (per todo)
 (iii) feature increments (burstiness, real-MAH t50/fz2 vs DiffMAH, acc_rate,
 shuffle controls); (iv) physical-vs-statistical CoG head-to-head at z=0.4;
