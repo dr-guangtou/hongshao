@@ -440,6 +440,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the prediction epoch. Corollary (sharpened from the exp31 lesson): the better a
   regression per galaxy, the WORSE its population distribution — direct-epoch has
   the strongest regression-to-the-mean (plane fidelity 0.54 vs transport 0.19).
+- **The aperture-horizon degeneracy: efficiency and deposition width multiply
+  into one observable inside the aperture, and per-epoch pinning lets the fit
+  delete mass geometrically (exp33/exp32).** The population transport fits
+  (multi-epoch AND z=0.4-only) put 15%+ of all formed stars at widths of
+  550-19,000 kpc — observationally identical to zero efficiency (measured:
+  z=1-2 deposits 14% of the budget, 4% visible), physically absurd, enabled by
+  renormalizing each epoch to the 150-kpc mass. Performance numbers are
+  unaffected (the basins are observationally equivalent); parameter VALUES of
+  all population transport fits must not be read physically. Fixes: prior-side
+  (bound widths to the per-galaxy basin, alpha=1, lognormal f(z) peak — 7->5
+  params) and data-side (normalize to an asymptotic total from CoG
+  extrapolation, making the aperture fraction a fitted datum). A model whose
+  selling point is mass conservation must not be normalized per epoch inside
+  an aperture.
 - **The frozen single-epoch feature set [DiffMAH(4)+c200c] is at its information
   limit; candidates from the recent experiments do not earn slots (exp33 iii).**
   Burstiness carries a REAL, shuffle-controlled but small signal (+1.3% CRPS —

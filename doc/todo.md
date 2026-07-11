@@ -608,6 +608,16 @@ Cross-experiment plan. Mirrors the phase sequence in
   energy → ~1). Step 5 (graduation) explicitly NOT reached: the multi-epoch
   model is not good enough to graduate; the fundamental (mean-model) side needs
   work first. Revisit after the single-epoch consolidation below.
+- [ ] **(next, data-side fix for the aperture-horizon degeneracy) asymptotic
+  total stellar mass via CoG extrapolation.** Raw drop audited: NOTHING beyond
+  ~160 kpc (profiles to 159.7, apertures to 150). User decision: prefer a
+  methodology-consistent total from extrapolating our own CoG (careful choice
+  of functional form + radial fitting range; exp29 `cog_extrapolate.py` is the
+  prototype) over TNG SubhaloMassType (different definition). Then refit the
+  transport model normalized to the TOTAL, with the aperture fraction
+  M*(<150)/M*_total as a fitted datum per epoch — the geometric-deletion basin
+  becomes falsified by data, and the emulator gains an honest native
+  mass-growth target. Easiest/most binding at z<=1.0.
 - [ ] **(next) exp33 — consolidate the SINGLE-EPOCH (z=0.4) prediction.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
