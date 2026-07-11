@@ -78,10 +78,39 @@ better-conditioned encoding of the MAH than [logmh, t50, fz2], confirming
 exp10 from the opposite direction. The exp29 "smooth curve flatters" concern
 does not apply to the statistical single-epoch emulator.
 
+## Step iv — physical vs statistical CoG head-to-head (`head2head.py`, common n=2397)
+Held-out z=0.4 CoGs: mode-3 statistical (all freedom at one epoch, PCA-3 on 5
+numbers) vs the exp32 transport theta(logMh) CV prediction (one history through
+five epochs, full DiffMAH deposit input). Median max|rel|:
+
+| | R>5 kpc | all R |
+|---|---|---|
+| statistical e2e / shape | 24.4% / 15.6% | 33.6% / 28.0% |
+| physical e2e / shape | 29.7% / 19.1% | 39.2% / 31.1% |
+
+1. **The multi-epoch consistency tax at a single epoch is ~3–5 points**
+   (paired median +3.1; the statistical model is better for only 63% of
+   galaxies) — the physical model is competitive despite fitting five epochs
+   with one history and just 14 population parameters.
+2. **THE finding: both model classes fail on the SAME galaxies** — shape
+   residual correlation rho = +0.89 / +0.87 / +0.82 at 5/30/100 kpc, +0.72 in
+   amplitude, +0.60 on per-galaxy max|rel|. Two maximally different
+   architectures (empirical PCA-Gaussian vs physical transport kernel) hit one
+   shared information wall: the residual is information MISSING from the halo
+   (intrinsic/baryonic stochasticity + the single-projection noise flagged in
+   AGENTS), not a model-class deficiency. Corollaries: (a) hybrid/ensemble
+   headroom is minimal (errors correlated); (b) further mean-model sophistication
+   at fixed inputs is not the path — the generative layer over this wall is;
+   (c) exp13's "remaining scatter is intrinsic" now has a two-independent-model
+   proof.
+3. Both error profiles are radius-identical in form (26% at 2 kpc falling to
+   ~1% near the pin), statistical uniformly ~5–10% lower; the gap grows toward
+   high halo mass (panel C) — the massive end is where one consistent history
+   costs most, echoing exp32.
+
 ## Remaining (per todo)
-(iv) physical-vs-statistical CoG head-to-head at z=0.4; (v) verdict + what
-graduates; (vi) higher-z single-epoch fits and their relation to the z=0.4
-model (the alternative path to a multi-epoch model).
+(v) verdict + what graduates; (vi) higher-z single-epoch fits and their
+relation to the z=0.4 model (the alternative path to a multi-epoch model).
 
 ## Files
 - `run.py` — modes 1/2/3 OOF + generative plane tests (`demo`: synthetic
