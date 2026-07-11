@@ -631,7 +631,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   **(v)** verdict: the single-epoch error budget, whether the generative layer
   passes the plane test (if yes → template for the multi-epoch stochastic
   layer; if no → THE fundamental problem, fix here first), and what transfers
-  to the multi-epoch design.
+  to the multi-epoch design. **(vi, user 2026-07-11) after z=0.4: repeat the
+  single-epoch fit at the higher-z snapshots (z=0.7/1.0/1.5/2.0)** — how do the
+  fitted single-epoch models RELATE to the z=0.4 one (coefficients, scatter,
+  feature importances vs z)? A smooth relation is itself a path to the
+  multi-epoch model (connect independently-fitted epochs rather than force one
+  consistent history). QA figure improvement (also user): split qa_mass_* into
+  groups; stack each quantity's truth-vs-prediction and residual panels
+  vertically with a shared x-axis; per-quantity x-ranges.
   Decision: the emulator must serve the ENTIRE mass range; full sample measured
   feasible (per-galaxy fits 2 s/gal → 1.6 h; universal fit ~2 h; 10-fold CV ~1.7 h,
   single core; 100% of 2545 have valid 5-epoch CoGs + real MAHs). Steps, in order:
