@@ -248,44 +248,59 @@ def _zcolors(nz):
 
 
 def _mass_figure(tag, keys, truth, model, anchor_z, name, figdir):
-    """Rows = quantities; cols = [truth-vs-model 1:1, relative error vs truth]."""
+    """Two figures per bin set: cumulative apertures ('aper') and differential
+    annuli+envelopes ('diff'). Each quantity is a COLUMN: truth-vs-model on top,
+    relative error below, vertically stacked with a shared per-quantity x-axis
+    whose range follows that quantity's own truth values."""
+    groups = {"aper": [k for k in keys if "(<" in k],
+              "diff": [k for k in keys if "(<" not in k]}
+    for gtag, gkeys in groups.items():
+        if gkeys:
+            _mass_group_figure(tag, gtag, gkeys, truth, model, anchor_z, name, figdir)
+
+
+def _mass_group_figure(tag, gtag, keys, truth, model, anchor_z, name, figdir):
     nz = len(anchor_z)
     cols = _zcolors(nz)
-    nrow = len(keys)
-    fig, axes = plt.subplots(nrow, 2, figsize=(9.5, 2.4 * nrow), squeeze=False)
-    for ri, key in enumerate(keys):
+    ncol = len(keys)
+    fig, axes = plt.subplots(2, ncol, figsize=(3.1 * ncol, 6.4), squeeze=False,
+                             sharex="col", height_ratios=[2, 1])
+    for ci, key in enumerate(keys):
         X, Y = truth[key], model[key]
-        av, ar = axes[ri, 0], axes[ri, 1]
+        av, ar = axes[0, ci], axes[1, ci]
         for j in range(nz):
             x, y = X[:, j], Y[:, j]
             good = (x > 0) & (y > 0) & np.isfinite(x) & np.isfinite(y)
-            av.scatter(x[good], y[good], s=9, c=[cols[j]], alpha=0.45, edgecolors="none",
-                       label=f"z={anchor_z[j]}" if ri == 0 else None)
+            av.scatter(x[good], y[good], s=8, c=[cols[j]], alpha=0.4, edgecolors="none",
+                       label=f"z={anchor_z[j]}" if ci == 0 else None)
             re = relerr(y, x)
-            ar.scatter(x[good], re[good], s=9, c=[cols[j]], alpha=0.35, edgecolors="none")
+            ar.scatter(x[good], re[good], s=8, c=[cols[j]], alpha=0.3, edgecolors="none")
             if good.any():
-                ar.plot(np.median(x[good]), np.median(re[good]), "o", c=cols[j], ms=9,
+                ar.plot(np.median(x[good]), np.median(re[good]), "o", c=cols[j], ms=8,
                         mec="k", mew=0.6)
-        pos = (X > 0) & (Y > 0)
+        pos = (X > 0) & np.isfinite(X)
         if pos.any():
-            lo, hi = min(X[pos].min(), Y[pos].min()), max(X[pos].max(), Y[pos].max())
+            # robust per-quantity range: near-empty bins (~1 Msun) must not
+            # stretch the axes; the residual panel still shows every galaxy
+            lo = np.percentile(X[pos], 0.5) / 2.0
+            hi = np.percentile(X[pos], 99.5) * 2.0
             av.plot([lo, hi], [lo, hi], "k--", lw=1, zorder=0)
-        av.set(xscale="log", yscale="log", ylabel=f"model\n{key}")
+            av.set_xlim(lo, hi)
+            av.set_ylim(lo, hi)
+        av.set(xscale="log", yscale="log", title=key)
         ar.axhline(0, c="0.5", lw=0.8)
         for gpm in (0.1, -0.1):
             ar.axhline(gpm, c="0.7", ls=":", lw=0.8)
-        ar.set(xscale="log", ylim=(-0.6, 0.6), ylabel="(model$-$truth)/truth")
-        if ri == 0:
+        ar.set(xscale="log", ylim=(-0.6, 0.6), xlabel=r"truth $M_*$ [$M_\odot$]")
+        if ci == 0:
+            av.set_ylabel(r"model $M_*$ [$M_\odot$]")
+            ar.set_ylabel("(model$-$truth)/truth")
             av.legend(fontsize=7, loc="upper left", markerscale=1.6)
-            av.set_title("truth vs model (values, 1:1)")
-            ar.set_title("relative error vs truth")
-        if ri == nrow - 1:
-            av.set_xlabel(r"truth $M_*$ [$M_\odot$]")
-            ar.set_xlabel(r"truth $M_*$ [$M_\odot$]")
     unit = "physical kpc" if tag == "kpc" else r"$R_{\rm half}$ units"
-    fig.suptitle(f"QA [{name}] — {unit}: apertures, annuli, envelopes", fontsize=12)
+    kind = "cumulative apertures" if gtag == "aper" else "annuli + envelopes"
+    fig.suptitle(f"QA [{name}] — {unit}: {kind}", fontsize=12)
     fig.tight_layout()
-    print("wrote", save_fig(fig, figdir / f"qa_mass_{tag}_{name}")[0])
+    print("wrote", save_fig(fig, figdir / f"qa_mass_{tag}_{gtag}_{name}")[0])
 
 
 def _plane_figure(truth, model, anchor_z, name, figdir):
