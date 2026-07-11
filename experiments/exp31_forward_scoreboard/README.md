@@ -79,6 +79,9 @@ are the same open problem seen from two sides: the predicted population is not
 yet diverse enough at fixed halo.
 
 ## Consistency with past experiments (the MAH's per-quantity value)
+> **SUPERSEDED on the epoch-decay point by exp32**: with epoch-matched history
+> features the MAH improves every tier at every epoch (n=2397); the decay seen
+> here was feature misalignment, as the caveat below anticipated.
 At z=0.4 the direct model reproduces the canonical assembly-history gain:
 apertures −21..−31% scatter, M*(>50 kpc) 0.229 -> 0.179 dex — nearly identical to
 exp13's 0.230 -> 0.175 (+24%) on the same quantity at n=2533 (and to exp07/08's

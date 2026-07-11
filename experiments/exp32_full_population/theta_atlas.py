@@ -49,6 +49,8 @@ def fit_one(args):
     if mah is None:
         return row, np.full(7, np.nan), np.full(5, np.nan)
     cogs, _, theta = pe.fit(mah, data)
+    if cogs is None:                       # all starts invalid (seen at the low-mass end)
+        return row, np.full(7, np.nan), np.full(5, np.nan)
     return row, theta, pe.tf.maxrel(cogs, data)
 
 

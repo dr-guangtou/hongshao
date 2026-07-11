@@ -588,7 +588,28 @@ Cross-experiment plan. Mirrors the phase sequence in
   (ii) exp08-pattern direct statistical emulator (halo-only features -> each mass
   directly; no profile, no consistency — the tier-1/2 ceiling). Decides whether the
   tier-3 individuality push is needed or the basic goal is already served.
-- [ ] **(next) exp32 — the full-population emulator (n≈2545, logM* 10.7–12.4).**
+- [x] **exp32 steps 1–3 — the full-population emulator (n=2397, logM* 10.66–12.36).**
+  (1) Cache + per-galaxy θ atlas both configs (~10% floor holds over the whole
+  mass range, rising 9.7→13.7% with mass; the historical n=45 was a stratified
+  every-41st subsample, not the top-45). (2) Universal θ: held-out 30.4% with
+  ZERO CV gap (capacity confirmed at n=2397); mass-conditioning +1 point
+  (29.4%), continuous θ(logMh) = binning with half the params → adopted;
+  DiffMAH stays ~5 points ahead of real-MAH; ANATOMY: individuality is NOT
+  log_s0 (0.2% gap closure) — g/q/b_early/b_late/z_c each close 35–40% → a
+  degenerate width-growth × efficiency-shape subspace. (3) Scoreboard vs mass:
+  **epoch-matched history features (direct-epoch) are the best per-quantity
+  regression at every tier/quartile (apertures 0.139 dex, R>5 max|rel| 26.9%) —
+  the exp31 "MAH decays with z" was feature misalignment**; but the better the
+  regression, the worse its plane fidelity (direct-epoch 0.542 vs transport
+  0.19–0.21) — the per-quantity/distribution trade-off is now sharp and no
+  model wins both.
+- [ ] **(next) exp32 step 4 — the stochastic layer.** Draw correlated θ-deviations
+  in the anatomy subspace around the θ(logMh) mean model; target: plane fidelity
+  0.19 → ~0.07–0.10 (truth-scatter scale) with calibrated CRPS (exp07 suite).
+  Explore: condition f(z) on the epoch-matched features (absorb direct-epoch's
+  information into the transport structure) without losing plane fidelity.
+- [ ] **(then) exp32 step 5 — graduate** the θ(logMh)+scatter DiffMAH-input module
+  into hongshao/ with the error budget vs mass and epoch.
   Decision: the emulator must serve the ENTIRE mass range; full sample measured
   feasible (per-galaxy fits 2 s/gal → 1.6 h; universal fit ~2 h; 10-fold CV ~1.7 h,
   single core; 100% of 2545 have valid 5-epoch CoGs + real MAHs). Steps, in order:
