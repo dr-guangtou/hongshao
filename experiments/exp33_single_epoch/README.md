@@ -161,6 +161,29 @@ justification. This is the alternative architecture to the one-consistent-
 history transport kernel — smoother, fully statistical, differentiable; what
 it gives up is physical interpretability and mass conservation.
 
+## The completed 2x2 (`transport_z04.py`): the head-to-head gap decomposed
+Transport kernel fitted to z=0.4 ONLY (same population forms, 10-fold CV;
+z=0.4 shape max|rel| R>5 kpc, held-out):
+
+| | single-epoch fit | multi-epoch fit |
+|---|---|---|
+| statistical (PCA-Gaussian, ~90 params) | 15.6% | — |
+| transport theta(logMh) (14 params) | **16.1%** | 19.1% |
+| transport global (7 params) | 19.0% | ~19% |
+
+**Decomposition of the head-to-head gap: form costs ~0.5 points, consistency
+costs ~3.0.** The mass-conditioned transport kernel fitted to one epoch
+matches the statistical emulator to within 0.5 points using 6x fewer
+parameters — the kernel FORM is essentially as expressive as PCA-Gaussian at
+a single epoch, and physics compresses extremely well. The multi-epoch
+constraint is the real (and known) price, bought back as cross-epoch
+structure, mass conservation, and interpretability. Note mass-conditioning
+matters far more for the single-epoch kernel (19.0 -> 16.1) than it did for
+the multi-epoch fit (exp32: ~1 point): with five epochs, the epoch lever arm
+partially substitutes for the mass lever. The z=0.4-only theta also lands in
+a different parameter regime (b_late 4.1 vs 6.5) — the theta components are
+epoch-degenerate, consistent with the exp32 anatomy.
+
 ## Remaining (per todo)
 (v) verdict + what graduates — all evidence is in; write the consolidation
 verdict and decide the graduation set.
