@@ -58,11 +58,30 @@ truth-binning converts it into apparent systematics — unavoidable for ANY
 conditional mean. The bins figure now shows raw AND amplitude-pinned residuals
 so the two cannot be conflated again.
 
+## Step iii — feature increments (`features.py`, n=2484, mode-1 targets)
+| feature set | CRPS | vs baseline |
+|---|---|---|
+| baseline [DiffMAH(4), c200c] | 0.0824 | — |
+| + burst (real-MAH burstiness) | 0.0813 | +1.3% (shuffle: 0.0%) |
+| + t50 + fz2 (real-MAH summaries) | 0.0819 | +0.5% |
+| + acc_rate | 0.0821 | +0.3% |
+| + all four | 0.0806 | +2.1% (shuffle: 0.0%) |
+| REPLACE shape params: [logmh, t50, fz2, c200c] | 0.0890 | **−8.0%** |
+
+**Verdict: the frozen feature set stands.** (1) Burstiness carries a real
+(shuffle-controlled) but small +1.3% signal — the first detection of merger
+content in mass prediction (exp30's residual test saw none) — yet it requires
+the raw MAH, so adopting it would break the portable/differentiable
+DiffMAH-input configuration for a ~1% gain: not worth it. (2) The alternative
+raw-summary parameterization is 8% WORSE — the smooth DiffMAH fit is a
+better-conditioned encoding of the MAH than [logmh, t50, fz2], confirming
+exp10 from the opposite direction. The exp29 "smooth curve flatters" concern
+does not apply to the statistical single-epoch emulator.
+
 ## Remaining (per todo)
-(iii) feature increments (burstiness, real-MAH t50/fz2 vs DiffMAH, acc_rate,
-shuffle controls); (iv) physical-vs-statistical CoG head-to-head at z=0.4;
-(v) verdict + what graduates; (vi) higher-z single-epoch fits and their
-relation to the z=0.4 model (the alternative path to a multi-epoch model).
+(iv) physical-vs-statistical CoG head-to-head at z=0.4; (v) verdict + what
+graduates; (vi) higher-z single-epoch fits and their relation to the z=0.4
+model (the alternative path to a multi-epoch model).
 
 ## Files
 - `run.py` — modes 1/2/3 OOF + generative plane tests (`demo`: synthetic
