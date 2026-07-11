@@ -174,7 +174,7 @@ def plane_energy(truth_xy, model_xy, n_split=8, seed=0):
 
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
-             verbose=True, figures=True):
+             verbose=True, figures=True, bin_by=None, bin_label=None):
     """Tiered QA for one model. Prints the report, writes the standard figures
     (mass tables per bin set, observational planes, profile visual QA), and
     returns a dict with all measurements for programmatic comparison."""
@@ -235,7 +235,8 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         _mass_figure("Re", [k for k in keys if k.startswith("Re:")],
                      truth, model, anchor_z, name, figdir)
         _plane_figure(truth, model, anchor_z, name, figdir)
-        _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir)
+        _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
+                     bin_by=bin_by, bin_label=bin_label)
         _cases_figure(model_cogs, data_cogs, R, anchor_z, mr_all, name, figdir)
 
     return dict(truth=truth, model=model, rhalf=rhalf, keys=keys,
@@ -335,16 +336,26 @@ def _plane_figure(truth, model, anchor_z, name, figdir):
     print("wrote", save_fig(fig, figdir / f"qa_planes_{name}")[0])
 
 
-def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir):
-    """Median data-vs-model CoG per stellar-mass tercile + median residual profile."""
+def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
+                 bin_by=None, bin_label=None):
+    """Median data-vs-model CoG per tercile of ``bin_by`` + median residuals.
+
+    Bin by a MODEL INPUT (halo mass) whenever available: binning by the truth
+    stellar mass converts unexplained amplitude scatter into apparent bin-wise
+    bias (regression to the mean) for any conditional-mean model. The truth-M*
+    binning remains the fallback (and is the view an observed, M*-selected
+    sample would give)."""
     nz = len(anchor_z)
     cols = _zcolors(nz)
-    logms = np.log10(data_cogs[:, 0, -1])
-    edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
+    if bin_by is None:
+        bin_by = np.log10(data_cogs[:, 0, -1])
+        bin_label = bin_label or "logM* (z=0.4)"
+    bin_label = bin_label or "bin quantity"
+    edges = np.quantile(bin_by, [0, 1 / 3, 2 / 3, 1])
     fig, axes = plt.subplots(2, 3, figsize=(15.5, 7.5), sharex=True,
                              height_ratios=[2, 1])
     for b in range(3):
-        m = (logms >= edges[b]) & (logms <= edges[b + 1] + 1e-9)
+        m = (bin_by >= edges[b]) & (bin_by <= edges[b + 1] + 1e-9)
         ax, rax = axes[0, b], axes[1, b]
         for k in range(nz):
             med_d = np.median(np.log10(data_cogs[m, k]), axis=0)
@@ -371,13 +382,14 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir):
             rax.axhline(y, c="0.8", lw=0.7, ls=":")
         if b == 0:
             rax.legend(fontsize=7, loc="upper right")
-        ax.set(xscale="log", title=f"logM* {edges[b]:.2f}-{edges[b+1]:.2f}  (n={m.sum()})")
+        ax.set(xscale="log",
+               title=f"{bin_label} {edges[b]:.2f}-{edges[b+1]:.2f}  (n={m.sum()})")
         rax.set(xscale="log", xlabel="R [kpc]", ylim=(-60, 60))
     axes[0, 0].set(ylabel="median log$_{10}$ M$_*$(<R) [M$_\\odot$]")
     axes[1, 0].set(ylabel="median (model$-$data)/data [%]")
     axes[0, 0].legend(fontsize=8, loc="lower right")
-    fig.suptitle(f"QA [{name}] — CoGs by stellar-mass tercile (data solid, model dashed)",
-                 fontsize=12)
+    fig.suptitle(f"QA [{name}] — CoGs by {bin_label} tercile "
+                 "(data solid, model dashed)", fontsize=12)
     fig.tight_layout()
     print("wrote", save_fig(fig, figdir / f"qa_bins_{name}")[0])
 

@@ -155,7 +155,8 @@ def main():
     mu3, sig3, dr3 = cv_cog(X, cog)
     print("\n  == mode 3 (CoG profile) — full standardized QA (mean prediction) ==")
     res = qa.evaluate(10.0 ** mu3[:, None, :], 10.0 ** cog[:, None, :], R, [0.4],
-                      name="cog-mean", figdir=FIGDIR, verbose=True, figures=True)
+                      name="cog-mean", figdir=FIGDIR, verbose=True, figures=True,
+                      bin_by=X[:, 0], bin_label="logMh (DiffMAH logmp)")
     print("\n  mode 3 generative planes (draws through the same quantity set):")
     for kx, ky in qa.PLANES:
         tr_ = np.column_stack([np.log10(np.clip(res["truth"][kx][:, 0], 1, None)),
