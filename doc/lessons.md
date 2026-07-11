@@ -431,6 +431,28 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   evenly-spaced ~99-deposit basis suits a global parameter set, while the bursty
   gappy real MAH demands per-galaxy adaptation. Validate input equivalence at the
   level where the model will be used.
+- **Summary features must be defined relative to the target epoch; z=0.4-anchored
+  summaries made the MAH look useless at high z (exp31 -> exp32).** With t50/fz2
+  anchored to z=0.4, the MAH's per-quantity gain decayed to ~0 by z=1 — but with
+  epoch-matched features (t50(z_k)/t(z_k), Mh(t_k/2)/Mh(t_k)) the history improves
+  every tier at every epoch and is the best regression overall (n=2397). Before
+  concluding an input carries no information, check the features are aligned to
+  the prediction epoch. Corollary (sharpened from the exp31 lesson): the better a
+  regression per galaxy, the WORSE its population distribution — direct-epoch has
+  the strongest regression-to-the-mean (plane fidelity 0.54 vs transport 0.19).
+- **Compare 2-D population distributions with the energy distance (+ split-half
+  floor), decomposed into location vs shape — a single relation statistic
+  misleads (exp32).** |Δscatter| alone crowned transport-real the best plane
+  model (0.169) while the full energy distance exposed a 16.6x-floor LOCATION
+  bias it had hidden; centering (shape-only) showed all models are comparably
+  far (3.5–4.8x floor) from the real 2-D population, because the energy metric
+  is dominated by the ridge/marginals while Δscatter isolates the transverse
+  diversity. Report BOTH: Δscatter answers "is the diversity around the relation
+  right", energy/floor answers "is the whole 2-D population right", and the
+  full-vs-centered split separates fixable amplitude bias from missing
+  diversity. (2-D K-S rejected: not distribution-free in 2-D, least sensitive
+  to exactly the spread differences at issue.) `hongshao/qa.py` tier 2b now
+  reports all three.
 - **Per-galaxy dex scatter cannot see regression-to-the-mean; the observational
   planes can (exp31).** Per-quantity LOGO regression TIES the physical emulator on
   aperture dex scatter (~0.1) while predicting population distributions that are
@@ -442,6 +464,11 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Workflow
 
+- Multi-hour compute jobs launched as harness background tasks were repeatedly
+  killed mid-run (whole process group, silent, no OOM); plain `nohup uv run ... >
+  log` survived for ~1 h jobs, and the robust pattern for longer chains is
+  launch-and-`disown` from a foreground shell (orphan the process), with a
+  persistent log tail for milestones and `caffeinate -im` against idle sleep.
 - Background `uv run` commands buffer stdout through pipes; redirect to a file
   and read that, or block on the process, rather than polling a pipe.
 - `np.trapz` is gone in NumPy 2 — use `np.trapezoid`.

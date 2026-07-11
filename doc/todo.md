@@ -588,7 +588,75 @@ Cross-experiment plan. Mirrors the phase sequence in
   (ii) exp08-pattern direct statistical emulator (halo-only features -> each mass
   directly; no profile, no consistency — the tier-1/2 ceiling). Decides whether the
   tier-3 individuality push is needed or the basic goal is already served.
-- [ ] **(next) phase 4 follow-up — close or accept the +20-point individuality gap.**
+- [x] **exp32 steps 1–3 — the full-population emulator (n=2397, logM* 10.66–12.36).**
+  (1) Cache + per-galaxy θ atlas both configs (~10% floor holds over the whole
+  mass range, rising 9.7→13.7% with mass; the historical n=45 was a stratified
+  every-41st subsample, not the top-45). (2) Universal θ: held-out 30.4% with
+  ZERO CV gap (capacity confirmed at n=2397); mass-conditioning +1 point
+  (29.4%), continuous θ(logMh) = binning with half the params → adopted;
+  DiffMAH stays ~5 points ahead of real-MAH; ANATOMY: individuality is NOT
+  log_s0 (0.2% gap closure) — g/q/b_early/b_late/z_c each close 35–40% → a
+  degenerate width-growth × efficiency-shape subspace. (3) Scoreboard vs mass:
+  **epoch-matched history features (direct-epoch) are the best per-quantity
+  regression at every tier/quartile (apertures 0.139 dex, R>5 max|rel| 26.9%) —
+  the exp31 "MAH decays with z" was feature misalignment**; but the better the
+  regression, the worse its plane fidelity (direct-epoch 0.542 vs transport
+  0.19–0.21) — the per-quantity/distribution trade-off is now sharp and no
+  model wins both.
+- [ ] **(PARKED, user decision 2026-07-11) exp32 step 4 — the stochastic layer**
+  (correlated θ-deviations in the anatomy subspace; target centered plane
+  energy → ~1). Step 5 (graduation) explicitly NOT reached: the multi-epoch
+  model is not good enough to graduate; the fundamental (mean-model) side needs
+  work first. Revisit after the single-epoch consolidation below.
+- [ ] **(next) exp33 — consolidate the SINGLE-EPOCH (z=0.4) prediction.** Review
+  finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
+  conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
+  1–4 = kpc apertures / Re apertures / CoG / density profile; `forward.py`
+  deformation knobs) predates the standardized QA and has NEVER been scored on
+  it — its record is CRPS/NLL/coverage (exp19: CV CRPS ~0.083; exp22: +10%
+  per-radius CRPS from shape, mostly c200c via PC1). Plan: **(i)** refit the
+  frozen spec on the current z=0.4 sample (n~2545), 5-fold CV; **(ii)** run
+  `hongshao/qa.py` on every mode — point-prediction tiers (apertures/annuli/
+  outskirts kpc+Re, bias + dex scatter) AND the GENERATIVE test the stack has
+  never had: score its `sample()` draws on the observational planes
+  (energy/floor full + centered) — "generative and calibrated" was claimed
+  from 1-D coverage only; the 2-D plane test is the honest version. Profile
+  modes (3)/(4) additionally get tier 3 (max|rel| all-R and R>5 kpc) + the
+  visual QA (mass-tercile medians, best/worst gallery); **(iii)** feature
+  increments at z=0.4 under the new harness with shuffle controls: DiffMAH+
+  c200c (portable baseline) vs + burstiness (never tested as a feature), real-
+  MAH t50/fz2 vs the smooth DiffMAH params (exp29 lesson: the smooth curve can
+  flatter), acc_rate; **(iv)** physical-vs-statistical CoG head-to-head at
+  z=0.4: exp32's universal-θ transport CoG (pinned) vs mode (3)/(4), same QA;
+  **(v)** verdict: the single-epoch error budget, whether the generative layer
+  passes the plane test (if yes → template for the multi-epoch stochastic
+  layer; if no → THE fundamental problem, fix here first), and what transfers
+  to the multi-epoch design. **(vi, user 2026-07-11) after z=0.4: repeat the
+  single-epoch fit at the higher-z snapshots (z=0.7/1.0/1.5/2.0)** — how do the
+  fitted single-epoch models RELATE to the z=0.4 one (coefficients, scatter,
+  feature importances vs z)? A smooth relation is itself a path to the
+  multi-epoch model (connect independently-fitted epochs rather than force one
+  consistent history). QA figure improvement (also user): split qa_mass_* into
+  groups; stack each quantity's truth-vs-prediction and residual panels
+  vertically with a shared x-axis; per-quantity x-ranges.
+  Decision: the emulator must serve the ENTIRE mass range; full sample measured
+  feasible (per-galaxy fits 2 s/gal → 1.6 h; universal fit ~2 h; 10-fold CV ~1.7 h,
+  single core; 100% of 2545 have valid 5-epoch CoGs + real MAHs). Steps, in order:
+  **(1) foundation** — full-sample loader + cached npz (both MAH configs, CoGs,
+  halo props; validate small first), then the per-galaxy 7-param θ atlas for all
+  2545; **(2) mass structure of θ** — mass-binned universal θ vs global vs
+  logMh-slope conditioning (10-fold CV); θ-anatomy (free ONE component per galaxy:
+  which direction carries the individuality, constant with mass?); condition that
+  component on halo props with real power; **(3) scoreboard vs mass** — exp31
+  rerun at n=2545 in mass bins (+ epoch-matched-features regression to settle the
+  MAH-decay question); does the plane-fidelity win and the DiffMAH-config choice
+  hold down-mass?; **(4) stochastic layer** — fit the distribution of per-galaxy
+  θ deviations, emulator = mean + correlated scatter, judged by tier-2b plane
+  fidelity + exp07 CRPS/calibration; **(5) graduate** to the library with the
+  error budget vs mass and epoch. Protocol: n=45 + a stratified ~100 as dev
+  subsamples; long runs in background; DiffMAH input primary unless step 3 objects.
+- [ ] **(superseded by exp32 — the massive-end-only follow-up) phase 4 follow-up —
+  close or accept the +20-point individuality gap.**
   Options, in order of information gained per cost: (a) **n=200 re-test of the
   conditioning step** (4e detected c200c structure at n=200; n=45 may simply lack
   power — requires fitting per-galaxy θ for the larger sample first); (b) **θ-residual
