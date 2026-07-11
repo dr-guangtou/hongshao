@@ -134,10 +134,36 @@ shape pinned; Re plane = the known defect):
   size-carrying inputs (halo spin — direction 1) or the generative layer in
   Re-native targets (mode 2 already passes its plane).
 
+## Step vi — the epoch connection (`epochs.py`, n=2397)
+Five independent single-epoch emulators (shared [DiffMAH(4)+c200c], same
+folds), z=0.4..2.0:
+1. **Performance vs z**: CRPS 0.081 -> 0.200, CoG shape max|rel| 24.3% ->
+   33.6% — the independent-single-epoch ceiling per epoch. The multi-epoch
+   transport (~29-30% every epoch) sits close to this ceiling at z>=1 and
+   pays its consistency tax mostly at low z.
+2. **The residual process is MARKOVIAN in epoch.** Cross-epoch OOF residual
+   correlation: adjacent epochs 0.64-0.70, decaying with separation almost
+   exactly as AR(1) with rho=0.67: predicted 0.67/0.45/0.30/0.20 vs observed
+   0.64-0.70/0.43-0.50/0.27-0.34/0.17. A per-galaxy latent persists but
+   decorrelates over ~2 epoch steps — the multi-epoch stochastic layer should
+   draw an AR(1)-in-epoch latent, NOT a single static per-galaxy offset.
+3. **The closure test PASSES**: hold an epoch out entirely, interpolate the
+   other epochs' fitted coefficients quadratically in z, predict the held
+   epoch: CRPS within -3.2%/+0.7%/+3.9% of the direct fit at z=0.7/1.0/1.5
+   (and 12-22% better than transplanting the nearest epoch's model). The
+   coefficients evolve smoothly (panel C) — mostly a slow growth of the
+   logmp weight and decline of `early`.
+
+**The multi-epoch blueprint that falls out**: continuous-z mean model by
+coefficient interpolation + AR(1)-in-epoch correlated latent + generative
+sampling (which passes the 2-D planes). Every ingredient now has a measured
+justification. This is the alternative architecture to the one-consistent-
+history transport kernel — smoother, fully statistical, differentiable; what
+it gives up is physical interpretability and mass conservation.
+
 ## Remaining (per todo)
-(v) verdict + what graduates — the mean-model consolidation is now COMPLETE
-(features at limit, representations at limit, wall proven twice); (vi)
-higher-z single-epoch fits and their relation to the z=0.4 model.
+(v) verdict + what graduates — all evidence is in; write the consolidation
+verdict and decide the graduation set.
 
 ## Files
 - `run.py` — modes 1/2/3 OOF + generative plane tests (`demo`: synthetic
