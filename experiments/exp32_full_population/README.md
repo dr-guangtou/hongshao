@@ -52,7 +52,14 @@ sample (per-quartile numbers in the output):
 | kpc apertures [dex] | 0.149 | 0.146 | 0.162 | 0.163 | 0.150 | **0.139** |
 | Re envelopes [dex] | 0.259 | 0.246 | 0.359 | 0.303 | 0.293 | **0.251** |
 | max\|rel\| R>5 kpc | 30.8% | 29.5% | 35.6% | 30.5% | 28.3% | **26.9%** |
-| plane fidelity \|Δscatter\| [dex] | 0.209 | 0.193 | **0.169** | 0.429 | 0.417 | 0.542 |
+| plane \|Δscatter\| [dex] | 0.209 | 0.193 | **0.169** | 0.429 | 0.417 | 0.542 |
+| plane energy/floor, full | 5.2 | 4.2 | 16.6 | 4.7 | 3.9 | **3.7** |
+| plane energy/floor, centered | 4.8 | 4.5 | **3.5** | 4.7 | 3.7 | **3.5** |
+
+Plane fidelity = M(<30 kpc) vs M(50–100 kpc), epoch-avg. Energy/floor = 2-D
+energy distance to the truth sample over the truth's split-half sampling floor
+(1 = indistinguishable from a redraw of the truth); "centered" shifts each
+sample to its own median first (shape/spread only, location bias removed).
 
 1. **The epoch-matched features settle the MAH question**: `direct-epoch`
    (logMh(z_k), t50(z_k)/t(z_k), Mh(t_k/2)/Mh(t_k) — history up to z_k only,
@@ -60,15 +67,22 @@ sample (per-quartile numbers in the output):
    and mass quartile. The exp31 "MAH adds nothing at high z" was feature
    misalignment, as suspected — the assembly history carries per-quantity
    information at all epochs when summarized relative to the target epoch.
-2. **The per-quantity/distribution trade-off is now sharp**: the better a
-   regression's per-galaxy error, the worse its population distribution
-   (direct-epoch has the WORST plane fidelity, 0.542 — strongest
-   regression-to-the-mean). The transport family reproduces the observational
-   planes 2–3x more faithfully at slightly worse per-quantity scatter. No
-   current model does both; that is exactly step 4's job.
-3. **Config check down-mass**: DiffMAH input beats the real MAH at every tier
-   and quartile except plane fidelity (real 0.169 — its bursty diversity
-   propagates); the differentiable configuration stands.
+2. **The plane story, properly measured, has three layers** (the energy metric
+   corrected the |Δscatter|-only reading): (a) NO model's predicted 2-D
+   population is close to real — all sit 3.5–5x above the sampling floor;
+   (b) the regressions' failure is the transverse diversity specifically
+   (|Δscatter| 0.42–0.54, regression-to-the-mean), while their overall 2-D
+   shape score survives because the plane's structure is dominated by the mass
+   sequence along the ridge, which they center well; (c) transport-real's
+   "best" |Δscatter| hid a large LOCATION bias (full 16.6 -> centered 3.5):
+   its diversity is the most realistic but its amplitude calibration is off —
+   a fixable failure, unlike missing diversity. The two statistics answer
+   different questions; the QA now reports both.
+3. **Config check down-mass**: DiffMAH input beats the real MAH at every
+   per-quantity tier and quartile; the real MAH carries the most realistic
+   population diversity (centered energy 3.5, |Δscatter| 0.169) but a badly
+   biased amplitude. The differentiable configuration stands for the mean
+   model; the real MAH's diversity is a candidate ingredient for step 4.
 4. Everyone degrades on the massive quartile (apertures 0.19–0.21 dex) — the
    massive end is intrinsically the hardest, also at the per-galaxy floor.
 

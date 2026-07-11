@@ -440,6 +440,19 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the prediction epoch. Corollary (sharpened from the exp31 lesson): the better a
   regression per galaxy, the WORSE its population distribution — direct-epoch has
   the strongest regression-to-the-mean (plane fidelity 0.54 vs transport 0.19).
+- **Compare 2-D population distributions with the energy distance (+ split-half
+  floor), decomposed into location vs shape — a single relation statistic
+  misleads (exp32).** |Δscatter| alone crowned transport-real the best plane
+  model (0.169) while the full energy distance exposed a 16.6x-floor LOCATION
+  bias it had hidden; centering (shape-only) showed all models are comparably
+  far (3.5–4.8x floor) from the real 2-D population, because the energy metric
+  is dominated by the ridge/marginals while Δscatter isolates the transverse
+  diversity. Report BOTH: Δscatter answers "is the diversity around the relation
+  right", energy/floor answers "is the whole 2-D population right", and the
+  full-vs-centered split separates fixable amplitude bias from missing
+  diversity. (2-D K-S rejected: not distribution-free in 2-D, least sensitive
+  to exactly the spread differences at issue.) `hongshao/qa.py` tier 2b now
+  reports all three.
 - **Per-galaxy dex scatter cannot see regression-to-the-mean; the observational
   planes can (exp31).** Per-quantity LOGO regression TIES the physical emulator on
   aperture dex scatter (~0.1) while predicting population distributions that are

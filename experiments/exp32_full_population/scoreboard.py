@@ -152,12 +152,15 @@ def main():
             allv = getter(r, np.arange(len(rows)))
             print(f"    {m:>16s} | " + " | ".join(cells)
                   + (f" | {allv:6.3f}" if "dex" in label else f" | {allv:5.1f}%"))
-    print("\n  tier2b plane fidelity |model-truth| scatter, M(<30) vs M(50-100), "
-          "epoch-avg [dex]:")
+    print("\n  tier2b plane fidelity, M(<30) vs M(50-100), epoch-avg: "
+          "|Δscatter| [dex] | energy/floor full (location+shape) | centered "
+          "(shape only; ~1 = indistinguishable from real):")
     for m, r in results.items():
         st = r["planes"][("kpc:M(<30)", "kpc:M(50-100)")]
-        print(f"    {m:>16s} : "
-              f"{np.nanmean([abs(mo['scatter'] - t['scatter']) for t, mo in st]):.3f}")
+        dsc = np.nanmean([abs(mo["scatter"] - t["scatter"]) for t, mo in st])
+        er = np.nanmean([mo["energy_ratio"] for _, mo in st])
+        ec = np.nanmean([mo["energy_ratio_centered"] for _, mo in st])
+        print(f"    {m:>16s} : {dsc:.3f} | full {er:4.1f} | centered {ec:4.1f}")
     _figure(results, qbin, edges, len(rows))
 
 

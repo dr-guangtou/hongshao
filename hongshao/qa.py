@@ -126,6 +126,52 @@ def plane_stats(logx, logy):
                 rho=float(spearmanr(logx[good], logy[good])[0]))
 
 
+def energy_distance_2d(A, B):
+    """Energy distance between two 2-D samples (Szekely & Rizzo): a true metric
+    on distributions (0 iff equal), sensitive to location/spread/shape/correlation
+    at once — unlike the 2-D K-S, it needs no per-case calibration and no kernel
+    bandwidth. A (n,2), B (m,2); rows with non-finite entries are dropped."""
+    A = A[np.isfinite(A).all(axis=1)]
+    B = B[np.isfinite(B).all(axis=1)]
+    if len(A) < 2 or len(B) < 2:
+        return np.nan
+
+    def mean_pdist(X, Y):
+        d2 = ((X[:, None, :] - Y[None, :, :]) ** 2).sum(-1)
+        return np.sqrt(np.clip(d2, 0.0, None)).mean()
+
+    e2 = 2.0 * mean_pdist(A, B) - mean_pdist(A, A) - mean_pdist(B, B)
+    return float(np.sqrt(max(e2, 0.0)))
+
+
+def plane_energy(truth_xy, model_xy, n_split=8, seed=0):
+    """dict(energy, floor, energy_ratio, energy_ratio_centered).
+
+    Both samples are standardized by the TRUTH's per-axis std (same transform),
+    so values are dimensionless and comparable across planes/epochs. The floor
+    is the median energy distance between two random halves of the truth (pure
+    sampling noise): ratio ~ 1 means the predicted population is statistically
+    indistinguishable from the real one. The CENTERED ratio shifts each sample
+    to its own per-axis median first, isolating shape/spread mismatch (missing
+    population diversity) from location mismatch (bias, fixable by
+    recalibrating the amplitude model)."""
+    T = truth_xy[np.isfinite(truth_xy).all(axis=1)]
+    M = model_xy[np.isfinite(model_xy).all(axis=1)]
+    sd = T.std(axis=0) + 1e-12
+    T, M = T / sd, M / sd
+    e = energy_distance_2d(T, M)
+    e_c = energy_distance_2d(T - np.median(T, axis=0), M - np.median(M, axis=0))
+    rng = np.random.default_rng(seed)
+    floors = []
+    for _ in range(n_split):
+        perm = rng.permutation(len(T))
+        h = len(T) // 2
+        floors.append(energy_distance_2d(T[perm[:h]], T[perm[h:]]))
+    floor = max(float(np.median(floors)), 1e-12)
+    return dict(energy=e, floor=floor, energy_ratio=e / floor,
+                energy_ratio_centered=e_c / floor)
+
+
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
              verbose=True, figures=True):
@@ -144,9 +190,15 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                   y=np.log10(np.clip(truth[ky], 1.0, None)))
         lm = dict(x=np.log10(np.clip(model[kx], 1.0, None)),
                   y=np.log10(np.clip(model[ky], 1.0, None)))
-        planes[(kx, ky)] = [
-            (plane_stats(lt["x"][:, j], lt["y"][:, j]),
-             plane_stats(lm["x"][:, j], lm["y"][:, j])) for j in range(nz)]
+        per_epoch = []
+        for j in range(nz):
+            st = plane_stats(lt["x"][:, j], lt["y"][:, j])
+            sm = plane_stats(lm["x"][:, j], lm["y"][:, j])
+            sm.update(plane_energy(
+                np.column_stack([lt["x"][:, j], lt["y"][:, j]]),
+                np.column_stack([lm["x"][:, j], lm["y"][:, j]])))
+            per_epoch.append((st, sm))
+        planes[(kx, ky)] = per_epoch
 
     if verbose:
         print(f"\n=== QA [{name}]  (n={n}) ===")
@@ -160,13 +212,15 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                 cells.append(f"{bias:+6.1f}%/{sc:.3f}")
             print(f"    {k:>16s} | " + " | ".join(cells))
         print("\n  tier 2b — observational planes (log-log): slope / scatter / rho, "
-              "truth -> model")
+              "truth -> model | energy-distance ratio to sampling floor")
         for (kx, ky), st in planes.items():
             for j in range(nz):
                 t, mo = st[j]
                 print(f"    {kx} vs {ky}  z={anchor_z[j]}: "
                       f"{t['slope']:+.2f}/{t['scatter']:.3f}/{t['rho']:+.2f} -> "
-                      f"{mo['slope']:+.2f}/{mo['scatter']:.3f}/{mo['rho']:+.2f}")
+                      f"{mo['slope']:+.2f}/{mo['scatter']:.3f}/{mo['rho']:+.2f} | "
+                      f"E/floor {mo['energy_ratio']:.1f} "
+                      f"(centered {mo['energy_ratio_centered']:.1f})")
         print("\n  tier 3 — profile max|rel| median per epoch (all R | R>5 kpc):")
         row_a = " | ".join(f"{100*np.nanmedian(mr_all[:, j]):5.1f}%" for j in range(nz))
         row_o = " | ".join(f"{100*np.nanmedian(mr_out[:, j]):5.1f}%" for j in range(nz))
@@ -354,6 +408,19 @@ def demo():
         for t, m in st:
             assert abs(t["slope"] - m["slope"]) < 1e-9
 
+    # energy distance: identical samples -> 0; a large shift -> far above floor;
+    # a same-distribution resample -> ratio ~ 1
+    rng2 = np.random.default_rng(1)
+    A = rng2.normal(size=(400, 2))
+    assert energy_distance_2d(A, A.copy()) < 1e-12
+    shift = plane_energy(A, A + 3.0)
+    same = plane_energy(A, rng2.normal(size=(400, 2)))
+    tight = plane_energy(A, 0.3 * rng2.normal(size=(400, 2)))
+    assert shift["energy_ratio"] > 10, shift
+    assert shift["energy_ratio_centered"] < 3, shift      # pure shift: centered ~ floor
+    assert same["energy_ratio"] < 3, same
+    assert tight["energy_ratio_centered"] > 3, tight      # too tight: centered catches it
+
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)
     for k in res2["keys"]:
@@ -366,7 +433,11 @@ def demo():
     mr_rmin = profile_maxrel(1.1 * truth, truth, R, rmin=RMIN_KPC)
     assert np.allclose(mr_rmin, 0.1, atol=1e-9)
     print("qa.demo OK: identity exact, +10% scaling -> +10% bias everywhere, "
-          "0 dex scatter, 10% max|rel| (all-R and R>5)")
+          "0 dex scatter, 10% max|rel| (all-R and R>5); energy distance: 0 on "
+          f"identity; shift {shift['energy_ratio']:.0f} (centered "
+          f"{shift['energy_ratio_centered']:.1f}); resample "
+          f"{same['energy_ratio']:.1f}; over-tight centered "
+          f"{tight['energy_ratio_centered']:.0f}")
 
 
 if __name__ == "__main__":
