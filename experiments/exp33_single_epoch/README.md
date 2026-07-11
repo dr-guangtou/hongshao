@@ -184,9 +184,46 @@ partially substitutes for the mass lever. The z=0.4-only theta also lands in
 a different parameter regime (b_late 4.1 vs 6.5) — the theta components are
 epoch-degenerate, consistent with the exp32 anatomy.
 
+## The aperture-horizon degeneracy + the physical refit (`physical_theta.py`)
+Discovery (user-prompted): the population transport fits delete whole epochs
+GEOMETRICALLY — z=1-2 deposits carrying 14% of the star budget are placed at
+widths ~550 kpc (4% visible inside 150 kpc), observationally identical to zero
+efficiency because each epoch is renormalized to the 150-kpc mass. Physically
+absurd; performance numbers unaffected (the basins are observationally
+equivalent); all population-theta VALUES uninterpretable. The raw drop has
+NOTHING beyond ~160 kpc (audited), so the fix is prior-side now, data-side
+next (asymptotic total via CoG extrapolation — user prefers methodology-
+consistent totals over SubhaloMassType).
+
+Physical 5-param refit (alpha=1 fixed, lognormal f(z), widths boxed to the
+per-galaxy basin; held-out R>5 kpc):
+
+| | unconstrained 7p | physical 5p |
+|---|---|---|
+| z=0.4-only global | 19.0% | 22.4% |
+| z=0.4-only +logMh slope | 16.1% | 20.5% |
+| multi-epoch global (epoch-avg) | 18.7% | 21.7% |
+
+1. **Physicality restored at a +3-4.4 point price**: every z-bin now
+   contributes visibly (0.49-1.00), the efficiency is a broad peak (z~4.2
+   single-epoch, z~6.8 multi-epoch), no railing z_c/b_early.
+2. **Epoch stability improved but incomplete**: both fits land in the same
+   physical basin (log_s0 2.35 vs 2.20, g both at bound) yet mu and q still
+   differ — and **g rails at its 2.5 bound in every fit**: the data actively
+   want part of the geometric channel.
+3. **The synthesis: some of the "deleted" mass is probably REAL.** Massive
+   galaxies genuinely deposit accreted stars beyond 150 kpc (ICL); the
+   unconstrained basin exaggerates a true effect that the physical box now
+   forbids entirely — hence the accuracy price and the railing. Neither basin
+   is right: the total-normalized refit (aperture fraction as a fitted datum,
+   from the extrapolated asymptotic CoG) is not just hygiene, it measures the
+   real beyond-aperture mass budget. That is the decisive next experiment for
+   the transport family.
+
 ## Remaining (per todo)
 (v) verdict + what graduates — all evidence is in; write the consolidation
-verdict and decide the graduation set.
+verdict and decide the graduation set. Transport-side: the total-normalized
+refit (extrapolated asymptotic totals) supersedes further basin arguments.
 
 ## Files
 - `run.py` — modes 1/2/3 OOF + generative plane tests (`demo`: synthetic
