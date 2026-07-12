@@ -220,10 +220,51 @@ per-galaxy basin; held-out R>5 kpc):
    real beyond-aperture mass budget. That is the decisive next experiment for
    the transport family.
 
-## Remaining (per todo)
-(v) verdict + what graduates — all evidence is in; write the consolidation
-verdict and decide the graduation set. Transport-side: the total-normalized
-refit (extrapolated asymptotic totals) supersedes further basin arguments.
+## (v) THE CONSOLIDATION VERDICT
+
+**1. The single-epoch z=0.4 emulator is information-limited, and the limit is
+now proven three independent ways.** At fixed [DiffMAH(4)+c200c]: features are
+exhausted (everything new combined: +2.1%, exp33 iii), representations are
+exhausted (four target encodings, none beats the baseline), and two maximally
+different model classes share one residual (rho = 0.82–0.89 per radius). The
+budget: 0.099 dex amplitude (the SHMR scatter), 15.6% worst-radius shape
+(R>5 kpc; 24.4% end-to-end all-R), with the projection-noise floor ~5x below —
+headroom exists but belongs exclusively to NEW inputs (spin, subhalo content,
+environment; deferred direction 1).
+
+**2. The graduated stack survives consolidation — and its strongest claim is
+now proven rather than assumed.** The frozen spec reproduces its record
+(CRPS 0.0832); the generative `sample()` passes the 2-D observational-plane
+test at 0.8–1.0x the sampling floor in its native target spaces (modes 1/2 and
+mode 3 in kpc bins) — the first models in the project to do so. Known defects,
+both understood: the PCA-3 Re-coordinate failure is an information problem
+(size at fixed halo), not a basis problem; the density->CoG integrator carries
+a measured discretization bias (0.11 dex inner, 0.05 accumulating outward).
+**Graduation decision: the stack stays as-is; no exp33 code graduates; the
+error budget above is its documented spec.** QA additions (energy planes,
+input-binned bins figure, pinned/raw residuals) already live in hongshao/qa.py.
+
+**3. The transport kernel is validated as a FORM and corrected as a FIT.**
+Form: fitted to one epoch it matches the statistical emulator (16.1 vs 15.6%)
+with 6x fewer parameters; the multi-epoch consistency tax is ~3 points/epoch.
+Fit: the population fits exploited the aperture-horizon degeneracy (deleting
+epochs geometrically); the physical 5-param box restores interpretability at
++3–4 points — and exp34 shows why: the beyond-aperture mass is REAL (f_out
+12% median, 26% massive quartile at z=0.4), so neither basin is right. The
+transport family's next (and decisive) experiment is the TOTAL-NORMALIZED
+refit: normalize to M_tot(<500 kpc) from the validated CoG extrapolation,
+fit the aperture fraction per epoch, and test the width law against the
+model-free differential-deposition curve (37%/11% of z=0.7->0.4 growth beyond
+50/100 kpc for massive centrals).
+
+**4. The multi-epoch path has a measured blueprint — two variants, one
+decision left.** Statistical: continuous-z coefficient interpolation (closure
++-4%) + AR(1)-in-epoch latent (rho = 0.67, textbook Markov decay) + generative
+sampling (passes the planes) — smooth, differentiable, fully specified by
+exp33-vi measurements. Physical: the total-normalized transport refit above,
+if it closes most of its 3-point tax with the aperture fraction as data. Build
+the statistical one as the product baseline; let the transport refit compete
+on the differential-deposition physics it alone can interpret.
 
 ## Files
 - `run.py` — modes 1/2/3 OOF + generative plane tests (`demo`: synthetic
