@@ -174,7 +174,7 @@ def plane_energy(truth_xy, model_xy, n_split=8, seed=0):
 
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
-             verbose=True, figures=True):
+             verbose=True, figures=True, bin_by=None, bin_label=None):
     """Tiered QA for one model. Prints the report, writes the standard figures
     (mass tables per bin set, observational planes, profile visual QA), and
     returns a dict with all measurements for programmatic comparison."""
@@ -235,7 +235,8 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         _mass_figure("Re", [k for k in keys if k.startswith("Re:")],
                      truth, model, anchor_z, name, figdir)
         _plane_figure(truth, model, anchor_z, name, figdir)
-        _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir)
+        _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
+                     bin_by=bin_by, bin_label=bin_label)
         _cases_figure(model_cogs, data_cogs, R, anchor_z, mr_all, name, figdir)
 
     return dict(truth=truth, model=model, rhalf=rhalf, keys=keys,
@@ -248,44 +249,59 @@ def _zcolors(nz):
 
 
 def _mass_figure(tag, keys, truth, model, anchor_z, name, figdir):
-    """Rows = quantities; cols = [truth-vs-model 1:1, relative error vs truth]."""
+    """Two figures per bin set: cumulative apertures ('aper') and differential
+    annuli+envelopes ('diff'). Each quantity is a COLUMN: truth-vs-model on top,
+    relative error below, vertically stacked with a shared per-quantity x-axis
+    whose range follows that quantity's own truth values."""
+    groups = {"aper": [k for k in keys if "(<" in k],
+              "diff": [k for k in keys if "(<" not in k]}
+    for gtag, gkeys in groups.items():
+        if gkeys:
+            _mass_group_figure(tag, gtag, gkeys, truth, model, anchor_z, name, figdir)
+
+
+def _mass_group_figure(tag, gtag, keys, truth, model, anchor_z, name, figdir):
     nz = len(anchor_z)
     cols = _zcolors(nz)
-    nrow = len(keys)
-    fig, axes = plt.subplots(nrow, 2, figsize=(9.5, 2.4 * nrow), squeeze=False)
-    for ri, key in enumerate(keys):
+    ncol = len(keys)
+    fig, axes = plt.subplots(2, ncol, figsize=(3.1 * ncol, 6.4), squeeze=False,
+                             sharex="col", height_ratios=[2, 1])
+    for ci, key in enumerate(keys):
         X, Y = truth[key], model[key]
-        av, ar = axes[ri, 0], axes[ri, 1]
+        av, ar = axes[0, ci], axes[1, ci]
         for j in range(nz):
             x, y = X[:, j], Y[:, j]
             good = (x > 0) & (y > 0) & np.isfinite(x) & np.isfinite(y)
-            av.scatter(x[good], y[good], s=9, c=[cols[j]], alpha=0.45, edgecolors="none",
-                       label=f"z={anchor_z[j]}" if ri == 0 else None)
+            av.scatter(x[good], y[good], s=8, c=[cols[j]], alpha=0.4, edgecolors="none",
+                       label=f"z={anchor_z[j]}" if ci == 0 else None)
             re = relerr(y, x)
-            ar.scatter(x[good], re[good], s=9, c=[cols[j]], alpha=0.35, edgecolors="none")
+            ar.scatter(x[good], re[good], s=8, c=[cols[j]], alpha=0.3, edgecolors="none")
             if good.any():
-                ar.plot(np.median(x[good]), np.median(re[good]), "o", c=cols[j], ms=9,
+                ar.plot(np.median(x[good]), np.median(re[good]), "o", c=cols[j], ms=8,
                         mec="k", mew=0.6)
-        pos = (X > 0) & (Y > 0)
+        pos = (X > 0) & np.isfinite(X)
         if pos.any():
-            lo, hi = min(X[pos].min(), Y[pos].min()), max(X[pos].max(), Y[pos].max())
+            # robust per-quantity range: near-empty bins (~1 Msun) must not
+            # stretch the axes; the residual panel still shows every galaxy
+            lo = np.percentile(X[pos], 0.5) / 2.0
+            hi = np.percentile(X[pos], 99.5) * 2.0
             av.plot([lo, hi], [lo, hi], "k--", lw=1, zorder=0)
-        av.set(xscale="log", yscale="log", ylabel=f"model\n{key}")
+            av.set_xlim(lo, hi)
+            av.set_ylim(lo, hi)
+        av.set(xscale="log", yscale="log", title=key)
         ar.axhline(0, c="0.5", lw=0.8)
         for gpm in (0.1, -0.1):
             ar.axhline(gpm, c="0.7", ls=":", lw=0.8)
-        ar.set(xscale="log", ylim=(-0.6, 0.6), ylabel="(model$-$truth)/truth")
-        if ri == 0:
+        ar.set(xscale="log", ylim=(-0.6, 0.6), xlabel=r"truth $M_*$ [$M_\odot$]")
+        if ci == 0:
+            av.set_ylabel(r"model $M_*$ [$M_\odot$]")
+            ar.set_ylabel("(model$-$truth)/truth")
             av.legend(fontsize=7, loc="upper left", markerscale=1.6)
-            av.set_title("truth vs model (values, 1:1)")
-            ar.set_title("relative error vs truth")
-        if ri == nrow - 1:
-            av.set_xlabel(r"truth $M_*$ [$M_\odot$]")
-            ar.set_xlabel(r"truth $M_*$ [$M_\odot$]")
     unit = "physical kpc" if tag == "kpc" else r"$R_{\rm half}$ units"
-    fig.suptitle(f"QA [{name}] — {unit}: apertures, annuli, envelopes", fontsize=12)
+    kind = "cumulative apertures" if gtag == "aper" else "annuli + envelopes"
+    fig.suptitle(f"QA [{name}] — {unit}: {kind}", fontsize=12)
     fig.tight_layout()
-    print("wrote", save_fig(fig, figdir / f"qa_mass_{tag}_{name}")[0])
+    print("wrote", save_fig(fig, figdir / f"qa_mass_{tag}_{gtag}_{name}")[0])
 
 
 def _plane_figure(truth, model, anchor_z, name, figdir):
@@ -320,36 +336,60 @@ def _plane_figure(truth, model, anchor_z, name, figdir):
     print("wrote", save_fig(fig, figdir / f"qa_planes_{name}")[0])
 
 
-def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir):
-    """Median data-vs-model CoG per stellar-mass tercile + median residual profile."""
+def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
+                 bin_by=None, bin_label=None):
+    """Median data-vs-model CoG per tercile of ``bin_by`` + median residuals.
+
+    Bin by a MODEL INPUT (halo mass) whenever available: binning by the truth
+    stellar mass converts unexplained amplitude scatter into apparent bin-wise
+    bias (regression to the mean) for any conditional-mean model. The truth-M*
+    binning remains the fallback (and is the view an observed, M*-selected
+    sample would give)."""
     nz = len(anchor_z)
     cols = _zcolors(nz)
-    logms = np.log10(data_cogs[:, 0, -1])
-    edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
+    if bin_by is None:
+        bin_by = np.log10(data_cogs[:, 0, -1])
+        bin_label = bin_label or "logM* (z=0.4)"
+    bin_label = bin_label or "bin quantity"
+    edges = np.quantile(bin_by, [0, 1 / 3, 2 / 3, 1])
     fig, axes = plt.subplots(2, 3, figsize=(15.5, 7.5), sharex=True,
                              height_ratios=[2, 1])
     for b in range(3):
-        m = (logms >= edges[b]) & (logms <= edges[b + 1] + 1e-9)
+        m = (bin_by >= edges[b]) & (bin_by <= edges[b + 1] + 1e-9)
         ax, rax = axes[0, b], axes[1, b]
         for k in range(nz):
             med_d = np.median(np.log10(data_cogs[m, k]), axis=0)
             med_m = np.median(np.log10(np.clip(model_cogs[m, k], 1.0, None)), axis=0)
             rel = 100 * np.median((model_cogs[m, k] - data_cogs[m, k])
                                   / data_cogs[m, k], axis=0)
+            # amplitude-pinned residual: rescale each model CoG to the true
+            # total, isolating SHAPE error from amplitude regression-to-the-
+            # mean (binning by truth M* makes any conditional mean look
+            # biased by ~ the unexplained amplitude scatter)
+            pin = model_cogs[m, k] * (data_cogs[m, k][:, -1:]
+                                      / np.clip(model_cogs[m, k][:, -1:], 1.0, None))
+            rel_pin = 100 * np.median((pin - data_cogs[m, k]) / data_cogs[m, k],
+                                      axis=0)
             ax.plot(R, med_d, "-", c=cols[k], lw=1.8,
                     label=f"z={anchor_z[k]}" if b == 0 else None)
             ax.plot(R, med_m, "--", c=cols[k], lw=1.4)
-            rax.plot(R, rel, "-", c=cols[k], lw=1.4)
+            rax.plot(R, rel, "-", c=cols[k], lw=1.4,
+                     label="raw" if (b == 0 and k == 0) else None)
+            rax.plot(R, rel_pin, ":", c=cols[k], lw=1.4,
+                     label="amplitude-pinned (shape)" if (b == 0 and k == 0) else None)
         rax.axhline(0, c="0.6", lw=0.8)
         for y in (-20, 20):
             rax.axhline(y, c="0.8", lw=0.7, ls=":")
-        ax.set(xscale="log", title=f"logM* {edges[b]:.2f}-{edges[b+1]:.2f}  (n={m.sum()})")
+        if b == 0:
+            rax.legend(fontsize=7, loc="upper right")
+        ax.set(xscale="log",
+               title=f"{bin_label} {edges[b]:.2f}-{edges[b+1]:.2f}  (n={m.sum()})")
         rax.set(xscale="log", xlabel="R [kpc]", ylim=(-60, 60))
     axes[0, 0].set(ylabel="median log$_{10}$ M$_*$(<R) [M$_\\odot$]")
     axes[1, 0].set(ylabel="median (model$-$data)/data [%]")
     axes[0, 0].legend(fontsize=8, loc="lower right")
-    fig.suptitle(f"QA [{name}] — CoGs by stellar-mass tercile (data solid, model dashed)",
-                 fontsize=12)
+    fig.suptitle(f"QA [{name}] — CoGs by {bin_label} tercile "
+                 "(data solid, model dashed)", fontsize=12)
     fig.tight_layout()
     print("wrote", save_fig(fig, figdir / f"qa_bins_{name}")[0])
 

@@ -440,6 +440,42 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the prediction epoch. Corollary (sharpened from the exp31 lesson): the better a
   regression per galaxy, the WORSE its population distribution — direct-epoch has
   the strongest regression-to-the-mean (plane fidelity 0.54 vs transport 0.19).
+- **The aperture-horizon degeneracy: efficiency and deposition width multiply
+  into one observable inside the aperture, and per-epoch pinning lets the fit
+  delete mass geometrically (exp33/exp32).** The population transport fits
+  (multi-epoch AND z=0.4-only) put 15%+ of all formed stars at widths of
+  550-19,000 kpc — observationally identical to zero efficiency (measured:
+  z=1-2 deposits 14% of the budget, 4% visible), physically absurd, enabled by
+  renormalizing each epoch to the 150-kpc mass. Performance numbers are
+  unaffected (the basins are observationally equivalent); parameter VALUES of
+  all population transport fits must not be read physically. Fixes: prior-side
+  (bound widths to the per-galaxy basin, alpha=1, lognormal f(z) peak — 7->5
+  params) and data-side (normalize to an asymptotic total from CoG
+  extrapolation, making the aperture fraction a fitted datum). A model whose
+  selling point is mass conservation must not be normalized per epoch inside
+  an aperture.
+- **The frozen single-epoch feature set [DiffMAH(4)+c200c] is at its information
+  limit; candidates from the recent experiments do not earn slots (exp33 iii).**
+  Burstiness carries a REAL, shuffle-controlled but small signal (+1.3% CRPS —
+  the first detection of merger content in mass prediction; exp30's
+  residual-correlation gate saw none), and everything new combined gives +2.1%.
+  Do not adopt burst: it needs the raw MAH and would break the portable,
+  differentiable DiffMAH-input configuration for ~1%. Revisit only if a future
+  model class shows merger-linked residuals.
+- **The smooth DiffMAH fit is the better MAH ENCODING for statistical emulators;
+  the "smooth curve flatters" lesson is specific to deposition-kernel models
+  (exp33 iii vs exp29).** Replacing the DiffMAH shape params with raw-MAH
+  summaries [logmh, t50, fz2] COSTS 8% CRPS (exp10 confirmed from the other
+  direction). Feature parameterization quality matters more than feature
+  "rawness"; test encodings per model class, don't transfer lessons across.
+- **A conditional-mean predictor evaluated in TRUTH-target bins shows
+  regression-to-the-mean as fake bin-wise bias; bin QA by a model INPUT
+  (exp33).** Mode-3 CoG looked systematically off in truth-M* terciles
+  (+0.04/-0.035 dex) yet is unbiased binned by halo mass, and its
+  amplitude-pinned shape is good to <=0.01 dex — the apparent failure was the
+  0.099 dex SHMR scatter (the information limit), amplified by truth-binning.
+  qa's bins figure now takes bin_by (use halo mass) and shows raw AND
+  amplitude-pinned residuals.
 - **Compare 2-D population distributions with the energy distance (+ split-half
   floor), decomposed into location vs shape — a single relation statistic
   misleads (exp32).** |Δscatter| alone crowned transport-real the best plane

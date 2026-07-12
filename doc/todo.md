@@ -608,7 +608,43 @@ Cross-experiment plan. Mirrors the phase sequence in
   energy → ~1). Step 5 (graduation) explicitly NOT reached: the multi-epoch
   model is not good enough to graduate; the fundamental (mean-model) side needs
   work first. Revisit after the single-epoch consolidation below.
-- [ ] **(next) exp33 — consolidate the SINGLE-EPOCH (z=0.4) prediction.** Review
+- [ ] **(next, data-side fix for the aperture-horizon degeneracy) asymptotic
+  total stellar mass via CoG extrapolation.** Raw drop audited: NOTHING beyond
+  ~160 kpc (profiles to 159.7, apertures to 150). User decision: prefer a
+  methodology-consistent total from extrapolating our own CoG (careful choice
+  of functional form + radial fitting range; exp29 `cog_extrapolate.py` is the
+  prototype) over TNG SubhaloMassType (different definition). Then refit the
+  transport model normalized to the TOTAL, with the aperture fraction
+  M*(<150)/M*_total as a fitted datum per epoch — the geometric-deletion basin
+  becomes falsified by data, and the emulator gains an honest native
+  mass-growth target. Easiest/most binding at z<=1.0.
+- [x] **exp33 — single-epoch consolidation COMPLETE (verdict in the README).**
+  (i–ii) frozen spec reproduces its record; generative sample() PASSES the 2-D
+  planes at 0.8–1.0x floor in native targets (first models to do so); PCA-3
+  fails only in Re coordinates. (iii) features at the limit (+2.1% ceiling;
+  burst real but not worth breaking portability; DiffMAH encoding beats raw
+  summaries by 8%). (iv) statistical and transport residuals correlate at
+  rho=0.82–0.89 — one shared information wall; consistency tax ~3 points,
+  form ~0.5 (the 2x2 completed via the z=0.4-only transport fit). (repr)
+  size-aware/core-split/density representations: clean negative. (vi) epoch
+  connection: coefficient-interpolation closure +-4%; cross-epoch residuals
+  are AR(1) with rho=0.67. DISCOVERY: the aperture-horizon degeneracy (fits
+  delete epochs geometrically; per-epoch pinning hides it) -> physical 5-param
+  refit (+3–4 points, g rails) -> exp34 asymptotic totals: f_out is REAL
+  (12% median, 26% massive quartile at z=0.4); differential deposition
+  measured (37%/11% of late growth beyond 50/100 kpc, massive). Graduation:
+  the stack stays as-is with its documented error budget; nothing new
+  graduates; headroom belongs to new inputs only.
+- [ ] **(next A, product path) the multi-epoch statistical emulator from the
+  exp33-vi blueprint**: continuous-z coefficient interpolation + AR(1)-in-epoch
+  latent (rho=0.67) + generative sampling; judged by the full QA incl. planes
+  per epoch and cross-epoch coherence.
+- [ ] **(next B, physics path) the TOTAL-NORMALIZED transport refit**: normalize
+  to M_tot(<500 kpc) from exp34's validated extrapolation, aperture fraction as
+  a per-epoch datum, physical 5-param theta; test the width law against the
+  differential-deposition curve. Decides whether the transport family closes
+  its ~3-point tax once the beyond-aperture budget is data, not assumption.
+- [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
   1–4 = kpc apertures / Re apertures / CoG / density profile; `forward.py`
