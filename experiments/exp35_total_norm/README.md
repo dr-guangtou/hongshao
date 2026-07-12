@@ -102,6 +102,30 @@ railing: the data ask for MORE outward transport at the massive end than the
 loose physical box allows — a real, now-measurable tension, not a fitting
 artifact.
 
+## Bounds-stress test (`stress`, follow-up): the rail is deletion, not physics
+Refit multi-slope with log_s0 <= 3.5 (3160 kpc), g <= 6, warm + nudged starts
+(both converge, 0.1676/0.1678):
+
+| | loss | log_s0 | g | z[0.4,1) vis148/vis500 | z[1,2) vis148 | massive f148 (data 0.883) | diff mark (data 0.37/0.11) |
+|---|---|---|---|---|---|---|---|
+| baseline (box 3.0/4.0) | 0.1751 | 3.0 (rail) | 3.93 (rail) | 0.06 / 0.50 | 0.95 | 0.920 | 0.40/0.12 |
+| stress (box 3.5/6.0) | 0.1676 | **3.5 (rails again)** | 4.71 (interior) | 0.009 / 0.09 | **0.62** | 0.913 | 0.41/0.13 |
+
+The 4.3% loss gain is real — and it is bought by RE-DELETING mass past the
+500-kpc horizon: the z<1 bin becomes 91% invisible even within 500 kpc, the
+z=1–2 bin drops from 95% to 62% visible in the aperture, log_s0 rails at
+whatever bound it is given, while the two measured physics observables (the
+massive-end aperture fraction, the differential-deposition mark) do not
+improve. The aperture-horizon pathology reproduced at a larger radius,
+exactly as the exp33 lesson predicts — a per-epoch normalization radius,
+wherever placed, leaves an invisible channel beyond it. Conclusions: (1)
+keep the physical box at (3.0, 4.0) — the exp35 headline numbers stand as
+the honest ones; (2) the loss headroom is real but a single global width
+exponent can only reach it by horizon escape — the motivated modification
+is the TWO-CHANNEL deposit (compact in-situ + wide ex-situ with a
+mass-dependent split), which can widen the massive-end recent deposits
+without dragging the entire width law past the horizon.
+
 ## Verdict (feeds the Path A vs B decision)
 1. The total normalization does what it was built to do: the deletion
    channel is priced, physicality costs ~1.4 points instead of ~3–4, and

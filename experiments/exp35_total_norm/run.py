@@ -448,6 +448,51 @@ def run_report(dev):
     print("wrote", save_fig(fig, FIGDIR / f"exp35_total_norm{tag}")[0])
 
 
+def run_stress(dev):
+    """Bounds-stress test: refit multi-slope with log_s0 <= 3.5 (3160 kpc) and
+    g <= 6. If loss / massive-end f148 / the differential marks barely move,
+    the exp35 rail is a flat plateau; if they improve, a channel is missing."""
+    global HI
+    HI = np.array([3.5, 6.0, 3.0, 3.0, 2.0])
+    config, mh_scale, rows = _setup(dev)
+    tag = "_dev" if dev else ""
+    base = np.load(OUTDIR / f"thetas{tag}.npz")
+    warm = base["theta_multi-slope"]
+    nudge = warm.copy()
+    nudge[:2] = [3.3, 5.0]                                # foothold past the old rail
+    workers = max(os.cpu_count() - 2, 2)
+    ks = [0, 1, 2, 3, 4]
+    with Pool(workers, initializer=_init, initargs=(config, mh_scale, rows)) as pool:
+        th, lo = fit_pop("slope", ks, [warm, nudge],
+                         max(int(5000 * (0.06 if dev else 1.0)), 60),
+                         pool, workers, "stress-multi-slope")
+    physicality(th[:5], "stress-multi-slope")
+    print(f"\n  loss: stress {lo:.4f} vs baseline {base['loss_multi-slope']:.4f}")
+    gals = _G["gals"]
+    n = len(gals)
+    data = np.stack([g["data"] for g in gals])
+    logms = np.array([g["logms"] for g in gals])
+    m500 = np.stack([g["m500"] for g in gals])
+    massive = logms >= np.quantile(logms, 2 / 3)
+    print("  massive-tercile f148 (z=0.4) data "
+          f"{np.median(data[massive, 0, -1] / m500[massive, 0]):.3f}; "
+          "differential marks data "
+          + "/".join(f"{v:.2f}" for v in differential(data, data, logms)[1][("model", 2, 0)]))
+    for label, thx in (("baseline", warm), ("stress", th)):
+        cogs = np.full((n, 5, len(R)), np.nan)
+        for i, g in enumerate(gals):
+            out = model_cogs_total(theta_of(thx, g, "slope"), g["mah"], g["m500"], ks)
+            if out is not None:
+                cogs[i] = out
+        _, rows_d = differential(cogs, data, logms)
+        print(f"    {label:>8s}: massive f148 "
+              f"{np.nanmedian(cogs[massive, 0, -1] / m500[massive, 0]):.3f}; "
+              "differential z0.7->z0.4 massive "
+              + "/".join(f"{v:.2f}" for v in rows_d[("model", 2, 0)]))
+    np.savez(OUTDIR / f"stress{tag}.npz", theta=th, loss=lo, hi=HI)
+    print(f"wrote {OUTDIR / f'stress{tag}.npz'}")
+
+
 def demo():
     """Self-checks: basis_ext == tf.basis on the 24-point grid; 500-pinned model
     re-pinned at 148 == exp33 physical model (same theta, same shape); synthetic
@@ -489,4 +534,4 @@ if __name__ == "__main__":
         demo()
     else:
         {"totals": lambda d: compute_totals(), "fit": run_fit,
-         "cv": run_cv, "report": run_report}[cmd](dev)
+         "cv": run_cv, "report": run_report, "stress": run_stress}[cmd](dev)
