@@ -92,7 +92,7 @@ def arch_C(X, cog, tr, te):
 
 
 def arch_D(X, cog, tr, te):
-    log_sig, mid = density_from_cog(cog, R)
+    log_sig, _ = density_from_cog(cog, R)
     shape = log_sig - cog[:, -1:]
     mean_shape, modes = pca_fit(shape[tr])
     scores = (shape - mean_shape) @ modes.T
@@ -100,9 +100,8 @@ def arch_D(X, cog, tr, te):
     emu = emu_fit(X[tr], Y[tr])
     mu, _, _ = emu.predict(X[te])
     sig_pred = mu[:, 1:2] + mean_shape + mu[:, 2:] @ modes
-    cum = integrate_density(sig_pred, mid, mu[:, 0])
-    return np.column_stack([mu[:, 0], np.array([np.interp(R[1:], mid, c)
-                                                for c in cum])])
+    cum = integrate_density(sig_pred, R, mu[:, 0])           # exact on R[1:]
+    return np.column_stack([mu[:, 0], cum])
 
 
 def cv_arch(builder, X, cog, *extra):
@@ -156,8 +155,8 @@ def main():
 
     fig, axes = plt.subplots(1, 3, figsize=(14.5, 4.6))
     names = list(results)
-    for ax, key, title in ((axes[0], "mr_out", "shape max|rel| R>5 kpc [%]"),
-                           (axes[1], "dscatter", "Re-plane |Δscatter| [dex]"),
+    for ax, key, title in ((axes[0], "mr_out", r"shape max$|$rel$|$ $R>5$ kpc [\%]"),
+                           (axes[1], "dscatter", r"Re-plane $|\Delta \mathrm{scatter}|$ [dex]"),
                            (axes[2], "ec", "Re-plane energy/floor (centered)")):
         ax.bar(range(len(names)), [results[nm][key] for nm in names],
                color=["0.55", "#0072B2", "#009E73", "#D55E00"])
@@ -177,16 +176,16 @@ def demo():
     d = np.load(NPZ)
     cog = d["cog"][:200]
     r50 = np.array([qa.half_mass_radius(10.0 ** c, R) for c in cog])
-    log_sig, mid = density_from_cog(cog, R)
-    cum = integrate_density(log_sig, mid, cog[:, 0])
-    back = np.array([np.interp(R[1:], mid, c) for c in cum])
-    err = np.abs(back - cog[:, 1:])
-    # the shell-area discretization is biased at BOTH ends: ~0.11 dex at the
-    # steep innermost radius and an accumulating ~0.05 dex by the outermost
-    # (architecture D's structural handicap; exp22's "stable" = monotonic,
-    # not exact); the mid radii (~5-10 kpc) are clean
+    log_sig, _ = density_from_cog(cog, R)
+    cum = integrate_density(log_sig, R, cog[:, 0])
+    err = np.abs(cum - cog[:, 1:])
+    # with the shell areas taken between the same grid edges the round-trip is
+    # exact on the grid. (The pre-fix mid-radius areas biased the steep inner
+    # region by up to ~0.24 dex and were misread here as architecture D's
+    # "structural handicap" — that was the integrate_density bug, not a
+    # property of the density representation.)
     per_rad = np.median(err, axis=0)
-    assert per_rad.min() < 0.01 and np.median(per_rad) < 0.05, per_rad.round(3)
+    assert per_rad.max() < 1e-9, per_rad.round(3)
     shape = np.array([np.interp(UGRID * r50[i], R, cog[i]) - cog[i, -1]
                       for i in range(len(cog))])
     mean_shape, modes = pca_fit(shape)
@@ -194,8 +193,8 @@ def demo():
     u_ok = (UGRID > 0.3) & (UGRID < 4.0)
     rms = np.sqrt(((rec - shape)[:, u_ok] ** 2).mean())
     assert rms < 0.05, ("R/R50-basis reconstruction", rms)
-    print(f"repr_fix.demo OK: density roundtrip per-radius median "
-          f"{per_rad.min():.4f}-{per_rad.max():.4f} dex (biased ends); "
+    print(f"repr_fix.demo OK: density roundtrip exact "
+          f"(max per-radius median {per_rad.max():.2e} dex); "
           f"R/R50 PCA-3 recon RMS {rms:.3f} dex")
 
 

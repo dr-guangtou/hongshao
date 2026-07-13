@@ -188,7 +188,9 @@ log_sigma_pred, _ = pe_den.predict(X_new)
 # central mass M(<R_min): predict it separately as its own 1-target emulator
 central = fit(X, cog[:, [0]])                  # log M(<radii[0])
 m_central, _, _ = central.predict(X_new)
-log_cog_pred = integrate_density(log_sigma_pred, mid_radii, central_log_mass=m_central[:, 0])
+# pass the EDGE grid `radii` (the one density_from_cog was given), NOT the
+# annulus mid radii — the returned CoG lives on radii[1:]
+log_cog_pred = integrate_density(log_sigma_pred, radii, central_log_mass=m_central[:, 0])
 ```
 
 ### 2.5 Tuning the relation for external inference (the deformation layer)
@@ -298,7 +300,7 @@ hongshao.profile_emulator
   aperture_targets(cog, radii, edges_kpc)            -> Y
   re_targets(cog, radii, re_edges, total_kpc=120.0)  -> (Y, Re, mask)
   density_from_cog(cog, radii)                       -> (log_sigma, mid_radii)
-  integrate_density(log_sigma, mid_radii, central_log_mass) -> log_cog
+  integrate_density(log_sigma, radii, central_log_mass) -> log_cog  # on radii[1:]
   fit_profile(X, profile, anchor, radii, n_modes=3, mean="linear", ridge=2.0) -> ProfileEmulator
   ProfileEmulator.predict(X)            -> (mu, sigma)        # per radius
   ProfileEmulator.sample(X, size=1, rng=None) -> (size, N, R)

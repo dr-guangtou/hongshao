@@ -501,6 +501,26 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   structural DOF that decouples the constraint (here: two-channel deposit),
   not a looser bound. Run the one-fit stress test before reading a rail
   physically in either direction.
+- **A measurable bias in a graduated utility was asserted into the record as
+  physics (integrate_density; found 2026-07-13, affected exp33).** The
+  `density_from_cog` -> `integrate_density` round-trip is an exact discrete
+  identity when the shell areas use the same grid edges — but `integrate_density`
+  derived areas from the annulus MID radii, biasing the reconstructed CoG up to
+  ~0.24 dex at the steep inner radii. exp33's repr_fix demo MEASURED the bias
+  (~0.11 dex inner), then wrote a tolerance assertion codifying it as expected
+  behavior ("architecture D's structural handicap"), and the density
+  representation was scored 21.1%/51.4% when its true score is 15.9%/28.7% — a
+  tie with the baseline (verdict unchanged: ties, doesn't beat; but the "density
+  cannot survive the transform" claim was false). Three lessons: (1) when a
+  transform has an exact identity, assert EXACTNESS (1e-9), not "small enough" —
+  a tolerance assertion can enshrine a bug as documented behavior; (2) a
+  function only graduates when the library self-check pins its contract —
+  `integrate_density` was never exercised by `profile_emulator`'s `__main__`,
+  so the bug rode along silently; (3) before attributing a systematic residual
+  to a method's "structural handicap", check the identity the method is supposed
+  to satisfy on synthetic input. (The transport/deposition models — exp29/30/32/
+  35 — are unaffected: they build model CoGs analytically from the Gaussian
+  deposit basis and never call `integrate_density`.)
 - **Per-galaxy dex scatter cannot see regression-to-the-mean; the observational
   planes can (exp31).** Per-quantity LOGO regression TIES the physical emulator on
   aperture dex scatter (~0.1) while predicting population distributions that are
