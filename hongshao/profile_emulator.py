@@ -41,10 +41,12 @@ def aperture_targets(cog, radii, edges_kpc):
 
     ``cog`` (N, R) is the log curve of growth on ``radii`` (kpc). Returns (N, E):
     column 0 is the cumulative ``log M(<edges[0])``; the rest are annuli
-    ``log[M(<edge_k) - M(<edge_{k-1})]``.
+    ``log[M(<edge_k) - M(<edge_{k-1})]``. Raises if any edge leaves the
+    measured grid; a non-positive annulus (noisy CoG) comes back NaN.
     """
     radii = np.asarray(radii, float)
     edges = np.asarray(edges_kpc, float)
+    _check_in_grid(edges, radii, "edges_kpc")
     cum = np.column_stack([10.0 ** np.array([np.interp(e, radii, c) for c in cog])
                            for e in edges])
     return _cum_to_bins(cum)
@@ -57,10 +59,13 @@ def re_targets(cog, radii, re_edges, total_kpc=120.0):
     log CoG. Bins are the consecutive ``re_edges`` (multiples of Re). Returns
     ``(Y, Re, mask)``: ``Y`` (N, len(re_edges)) the bin masses, ``Re`` (N,) kpc,
     and a boolean ``mask`` dropping galaxies whose outermost edge leaves the
-    measured CoG (apply it: ``Y[mask]``, ``X[mask]``).
+    measured CoG (apply it: ``Y[mask]``, ``X[mask]``). Raises if ``total_kpc``
+    itself leaves the grid — ``np.interp`` would silently clamp there, giving
+    every galaxy a wrong Re with ``mask`` still True.
     """
     radii = np.asarray(radii, float)
     re_edges = np.asarray(re_edges, float)
+    _check_in_grid(np.array([total_kpc]), radii, "total_kpc")
     log_total = np.array([np.interp(total_kpc, radii, c) for c in cog])
     re = np.array([np.interp(lt - np.log10(2.0), c, radii) for c, lt in zip(cog, log_total)])
     edge_kpc = re[:, None] * re_edges[None, :]                       # (N, E) kpc
@@ -86,12 +91,27 @@ def density_from_cog(cog, radii):
     return np.log10(np.clip(dM, 1.0, None) / dA[None, :]), mid
 
 
+def _check_in_grid(values, radii, name):
+    """Raise if any queried radius leaves the measured grid — ``np.interp``
+    would silently clamp to the edge value and return a wrong mass."""
+    if values.min() < radii[0] or values.max() > radii[-1]:
+        raise ValueError(f"{name} must lie within the measured radii "
+                         f"[{radii[0]:.3g}, {radii[-1]:.3g}] kpc, got "
+                         f"[{values.min():.3g}, {values.max():.3g}]")
+
+
 def _cum_to_bins(cum):
-    """(N, E) linear cumulative masses -> (N, E) log [first cumulative, rest annuli]."""
+    """(N, E) linear cumulative masses -> (N, E) log [first cumulative, rest annuli].
+
+    A non-positive annulus (non-monotonic cumulative, e.g. a noisy CoG) is
+    flagged NaN — flooring it to log M = 0 would be a silent unphysical outlier.
+    Genuinely tiny positive annuli still floor at 1 Msun.
+    """
     Y = np.empty_like(cum)
     Y[:, 0] = np.log10(np.clip(cum[:, 0], 1.0, None))
     for k in range(1, cum.shape[1]):
-        Y[:, k] = np.log10(np.clip(cum[:, k] - cum[:, k - 1], 1.0, None))
+        d = cum[:, k] - cum[:, k - 1]
+        Y[:, k] = np.where(d > 0.0, np.log10(np.clip(d, 1.0, None)), np.nan)
     return Y
 
 
@@ -229,6 +249,33 @@ if __name__ == "__main__":
         cog_rt = integrate_density(log_sig_t, r_grid, cog_t[:, 0])
         err_rt = np.abs(cog_rt - cog_t[:, 1:]).max()
         assert err_rt < 1e-9, f"round-trip not exact: max err {err_rt:.4f} dex"
+
+    # target-builder guards: np.interp silently clamps outside the measured
+    # grid, so out-of-range queries must raise instead of returning wrong
+    # masses with mask=True (an 80-kpc toy grid gave Re 56.6 vs true 84.9 kpc).
+    r80 = np.geomspace(2.0, 80.0, 20)
+    cog80 = np.log10(4e10 * (1.0 - np.exp(-r80 / 30.0)))[None, :]
+    try:
+        re_targets(cog80, r80, [0.5, 1.0, 2.0], total_kpc=120.0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("re_targets accepted total_kpc beyond the grid")
+    Y80, re80, m80 = re_targets(cog80, r80, [0.5, 1.0, 2.0], total_kpc=60.0)
+    assert m80[0] and np.isfinite(Y80).all(), "in-range total_kpc must still work"
+    try:
+        aperture_targets(cog80, r80, [10.0, 30.0, 120.0])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("aperture_targets accepted an edge beyond the grid")
+    # a non-monotonic (noisy) CoG makes an annulus non-positive: that bin must
+    # come back NaN — a flagged outlier — not silently floored to log M = 0.
+    r5 = np.array([2.0, 10.0, 30.0, 50.0, 80.0])
+    cog_dip = np.array([[9.0, 10.0, 10.5, 10.4, 10.6]])
+    Ydip = aperture_targets(cog_dip, r5, [10.0, 30.0, 50.0])
+    assert np.isfinite(Ydip[0, :2]).all(), "good bins must stay finite"
+    assert np.isnan(Ydip[0, 2]), "non-positive annulus must flag NaN, not log M = 0"
 
     # real-data reproduction of all four modes
     table = Path(__file__).resolve().parents[1] / "data" / "processed" / "tng300_072_z0p4.fits"

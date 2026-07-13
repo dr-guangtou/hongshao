@@ -219,9 +219,20 @@ def cog_sigma_dex(index: int, data_dir: Path = DEFAULT_DATA_DIR) -> np.ndarray:
              else np.zeros_like(r))
     m = (np.isfinite(r) & np.isfinite(intens) & np.isfinite(intens_err)
          & np.isfinite(ellip) & (r > 0) & (intens > 0))
-    r, intens, intens_err, ellip = r[m], intens[m], intens_err[m], ellip[m]
-    if len(r) < 4:
+    if m.sum() < 4:
         return np.full(COG_RAD_KPC.shape, np.nan)
+    return _isophote_cog_sigma(r[m], intens[m], intens_err[m], ellip[m])
+
+
+def _isophote_cog_sigma(r, intens, intens_err, ellip):
+    """Error-propagation core of ``cog_sigma_dex`` (pure, self-checkable).
+
+    The cumulative sum and ``np.interp`` both silently assume ascending radii,
+    so the isophotes are sorted by radius first.
+    """
+    order = np.argsort(r, kind="stable")
+    r, intens, intens_err, ellip = (r[order], intens[order],
+                                    intens_err[order], ellip[order])
     area = np.pi * r**2 * (1.0 - ellip)            # enclosed elliptical area
     dA = np.diff(area)
     mass = np.concatenate([[intens[0] * area[0]],
@@ -438,6 +449,11 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
 
     # convenience: a clean analysis cut (good profile, reliable & still-rising
     # M0 above 1e13, finite CoG). Excludes halos that have turned over by z=0.4.
+    # Decision 2026-07-13: the mass threshold intentionally stays on logm0_halo
+    # (MAH peak), NOT the exact logmh_z0p4 the metadata prefers as the M0
+    # *feature* — measured on the full table the two agree to +0.004 dex median
+    # and switching would only re-baseline the recorded n=2545 sample
+    # (a strict superset, +55 galaxies) and every recorded number.
     tbl["use"] = (
         tbl["flag"] & tbl["valid_mah"]
         & ~tbl["mah_declined"]
@@ -460,7 +476,9 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
              "mass first reached XX% of M0. rdm_* fit over R>=cog_fit_rmin_kpc; "
              "dmah_* = DiffMAH fit over t>=dmah_fit_tmin_gyr (logmp~M0). "
              "logmh_z0p4 = log10 of the EXACT z=0.4 halo mass (mass_halo, Msun) "
-             "from the aperture table; prefer it over logm0_halo as M0. "
+             "from the aperture table; prefer it over logm0_halo as the M0 "
+             "feature (the 'use' selection intentionally stays on logm0_halo; "
+             "decision 2026-07-13, +0.004 dex median difference). "
              "logmstar_aper_proj[gal, proj, r] = log10 aperture M* on "
              "projections=(xy,xz,yz), radii=aper6_sma_kpc; *_proj cols likewise "
              "per projection. c_200c/c_to_a_3d/b_to_a_3d/v_sigma_3d/acc_rate are "
@@ -496,6 +514,19 @@ def qc_summary(tbl: Table) -> str:
 
 def _selftest(data_dir: Path):
     """Cheap correctness checks on a small subsample (the runnable check)."""
+    # cog_sigma_dex core: np.interp and the cumulative sum silently assume
+    # ascending radii, so unsorted isophote tables must give the same answer
+    rs = np.geomspace(1.0, 160.0, 50)
+    intens_s = 1e9 * (rs / 5.0) ** -1.5
+    err_s = 0.05 * intens_s
+    ell_s = np.full_like(rs, 0.3)
+    ref = _isophote_cog_sigma(rs, intens_s, err_s, ell_s)
+    assert np.isfinite(ref).all() and (ref > 0).all()
+    sh = np.random.default_rng(0).permutation(len(rs))
+    assert np.array_equal(_isophote_cog_sigma(rs[sh], intens_s[sh], err_s[sh],
+                                              ell_s[sh]), ref), \
+        "cog_sigma_dex core corrupted by unsorted isophote radii"
+
     tbl = build_dataset(data_dir, n_gal=60)
     assert len(tbl) == 60
     assert tbl["logmstar_cog"].shape == (60, 24)
