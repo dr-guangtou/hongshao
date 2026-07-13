@@ -176,6 +176,237 @@ def fit_shared_profile(X, profs, anchors, radii, z_grid, n_modes=3, rho=0.0):
 
 
 # --------------------------------------------------------------------------- #
+# real data: fit / qa / closure / report                                       #
+# --------------------------------------------------------------------------- #
+N_DRAW = 3
+NPZ = OUTDIR / "multi_epoch.npz"
+
+
+def _load_data(dev=False):
+    X, Y, data = _EPOCHS.load()          # (n,5feat), (n,5,4), (n,5,24) linear
+    if dev:
+        X, Y, data = X[:400], Y[:400], data[:400]
+    profs = np.log10(data[..., :-1])
+    anchors = np.log10(data[..., -1])
+    return X, Y, data, profs, anchors
+
+
+def _spearman_corr(res):
+    """exp33-vi convention: mean-over-targets Spearman cross-epoch matrix."""
+    from scipy.stats import spearmanr
+    E = len(res)
+    C = np.eye(E)
+    for a in range(E):
+        for b in range(a + 1, E):
+            C[a, b] = C[b, a] = np.mean([spearmanr(res[a][:, j], res[b][:, j])[0]
+                                         for j in range(res[a].shape[1])])
+    return C
+
+
+def cmd_fit(dev=False):
+    from hongshao.metrics import crps_gaussian
+    X, Y, data, profs, anchors = _load_data(dev)
+    n = len(X)
+    R = _EPOCHS.R
+    print(f"exp37 fit (n={n}{', DEV' if dev else ''})")
+
+    # (1) kpc mode: OOF per epoch (exp33-vi setup) + CRPS + cross-epoch rho
+    mus = np.empty_like(Y)
+    sigs = np.empty_like(Y)
+    for k in range(5):
+        mus[:, k], sigs[:, k] = _EPOCHS.cv_epoch(X, Y[:, k])
+    crps = crps_gaussian(Y.reshape(-1, 4), mus.reshape(-1, 4),
+                         sigs.reshape(-1, 4)).reshape(n, 5, 4).mean(axis=(0, 2))
+    C = _spearman_corr([mus[:, k] - Y[:, k] for k in range(5)])
+    rho = _fit_rho(C)
+    print("  kpc CRPS per epoch: " + " ".join(f"{c:.4f}" for c in crps)
+          + f"  (exp33-vi marks 0.081 -> 0.200)\n  rho = {rho:.3f} "
+          f"(exp33-vi 0.67); adjacent C: "
+          + " ".join(f"{C[k, k+1]:+.2f}" for k in range(4)))
+
+    # (2) shared-basis profile mode: fold-clean OOF per-radius + anchor, and
+    # OOF generative CoG draws from the SAME fold-fitted products
+    MU = np.empty_like(profs)
+    SIG = np.empty_like(profs)
+    AMU = np.empty_like(anchors)
+    ASIG = np.empty_like(anchors)
+    cog_draws = np.empty((N_DRAW, n, 5, 24))
+    for fi, fold in enumerate(_EPOCHS.folds_of(n)):
+        tr = np.setdiff1d(np.arange(n), fold)
+        mp = fit_shared_profile(X[tr], profs[tr], anchors[tr], R[:-1], ZK,
+                                rho=rho)
+        for k in range(5):
+            MU[fold, k], SIG[fold, k] = mp.at_z(ZK[k]).predict(X[fold])
+            m, s, _ = mp.me.emus[k].predict(X[fold])
+            AMU[fold, k], ASIG[fold, k] = m[:, 0], s[:, 0]
+        dc = mp.me.sample_epochs(X[fold], size=N_DRAW, rng=100 + fi)
+        A = np.column_stack([np.ones(len(mp.radii)), mp.modes.T])
+        dprof = dc @ A.T + mp.mean_shape                    # (S, f, 5, 23)
+        cog_draws[:, fold] = np.concatenate(
+            [10.0 ** dprof, 10.0 ** dc[..., 0:1]], axis=-1)
+    OUTDIR.mkdir(exist_ok=True)
+    np.savez(NPZ, crps=crps, C=C, rho=rho, mu_kpc=mus, sig_kpc=sigs,
+             MU=MU, SIG=SIG, AMU=AMU, ASIG=ASIG, cog_draws=cog_draws,
+             dev=dev, n=n)
+    print(f"  wrote {NPZ}")
+
+
+def _model_cogs(d):
+    """OOF mean model CoGs (n, 5, 24), linear, from the saved fit."""
+    return np.concatenate([10.0 ** d["MU"], 10.0 ** d["AMU"][..., None]],
+                          axis=-1)
+
+
+def cmd_qa(dev=False):
+    from hongshao import qa
+    X, Y, data, profs, anchors = _load_data(dev)
+    d = np.load(NPZ)
+    assert int(d["n"]) == len(X), "saved fit does not match the loaded sample"
+    R = _EPOCHS.R
+    model = _model_cogs(d)
+    FIGDIR.mkdir(exist_ok=True)
+    res = qa.evaluate(model, data, R, list(ZK), name="exp37_oof",
+                      figdir=FIGDIR, bin_by=X[:, 0], bin_label="dmah logmp")
+
+    # generative: per-epoch observational planes on the OOF draws
+    print("\n  generative planes (energy/floor full | centered), "
+          f"{N_DRAW} OOF drawn populations vs truth:")
+    truth_m, _, rhalf, _ = qa.measure_all(data, data, R)
+    for di in range(N_DRAW):
+        dm, _, _, _ = qa.measure_all(d["cog_draws"][di], d["cog_draws"][di], R)
+        for (kx, ky) in qa.PLANES:
+            cells = []
+            for k in range(5):
+                pe = qa.plane_energy(
+                    np.column_stack([np.log10(np.clip(truth_m[kx][:, k], 1.0, None)),
+                                     np.log10(np.clip(truth_m[ky][:, k], 1.0, None))]),
+                    np.column_stack([np.log10(np.clip(dm[kx][:, k], 1.0, None)),
+                                     np.log10(np.clip(dm[ky][:, k], 1.0, None))]))
+                cells.append(f"{pe['energy_ratio']:4.1f}|{pe['energy_ratio_centered']:4.1f}")
+            print(f"    draw {di} {kx} vs {ky}: " + "  ".join(cells))
+
+    # cross-epoch coherence: (a) draw residual correlation vs the measured C;
+    # (b) the growth plane logM*tot(z=2) vs logM*tot(z=0.4), truth vs draws
+    la = np.log10(d["cog_draws"][..., -1])                   # (S, n, 5)
+    res_d = (la - d["AMU"][None]) / d["ASIG"][None]
+    C_draw = np.corrcoef(res_d.transpose(2, 0, 1).reshape(5, -1))
+    print("\n  cross-epoch coherence: measured C (kpc OOF) vs draws:")
+    for a in range(5):
+        print("    " + " ".join(f"{d['C'][a, b]:+.2f}" for b in range(5))
+              + "   |   " + " ".join(f"{C_draw[a, b]:+.2f}" for b in range(5)))
+    print(f"    rho: measured {float(d['rho']):.3f} -> draws "
+          f"{_fit_rho(C_draw):.3f}")
+    gt = np.column_stack([anchors[:, 4], anchors[:, 0]])
+    ge = [qa.plane_energy(gt, np.column_stack([la[i, :, 4], la[i, :, 0]]))
+          for i in range(N_DRAW)]
+    gm = qa.plane_energy(gt, np.column_stack([d["AMU"][:, 4], d["AMU"][:, 0]]))
+    print("  growth plane logMtot(z=2) vs logMtot(z=0.4), energy/floor "
+          "full | centered:")
+    print(f"    mean prediction: {gm['energy_ratio']:.1f} | "
+          f"{gm['energy_ratio_centered']:.1f}")
+    for i, g in enumerate(ge):
+        print(f"    draw {i}:          {g['energy_ratio']:.1f} | "
+              f"{g['energy_ratio_centered']:.1f}")
+    _coherence_figure(d, C_draw, anchors, la)
+    return res
+
+
+def _coherence_figure(d, C_draw, anchors, la):
+    import matplotlib.pyplot as plt
+    from hongshao.plotting import set_style, save_fig
+    set_style()
+    fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.4))
+    a, b, c = axes
+    for M, ax, title in ((d["C"], a, "measured cross-epoch C (kpc OOF)"),
+                         (C_draw, b, "draw residual correlation")):
+        im = ax.imshow(M, vmin=0, vmax=1, cmap="cividis")
+        ax.set_xticks(range(5))
+        ax.set_yticks(range(5))
+        ax.set_xticklabels(ZK)
+        ax.set_yticklabels(ZK)
+        for i in range(5):
+            for j in range(5):
+                ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center",
+                        color="w" if M[i, j] < 0.6 else "k", fontsize=8)
+        ax.set_title(title, fontsize=10)
+        plt.colorbar(im, ax=ax, fraction=0.046)
+    c.scatter(anchors[:, 4], anchors[:, 0], s=6, alpha=0.4, c="#0072B2",
+              edgecolors="none", label="truth")
+    c.scatter(la[0, :, 4], la[0, :, 0], s=8, facecolors="none",
+              edgecolors="0.3", lw=0.5, label="draw 0")
+    c.set(xlabel="log Mtot (z=2)", ylabel="log Mtot (z=0.4)",
+          title="growth plane")
+    c.legend(fontsize=8)
+    fig.suptitle(f"exp37 cross-epoch coherence (rho={float(d['rho']):.2f})",
+                 fontsize=12)
+    fig.tight_layout()
+    print("\nwrote", save_fig(fig, FIGDIR / "exp37_coherence")[0])
+
+
+def cmd_closure(dev=False):
+    """Held-epoch closure in the SHARED-basis profile space (fold-clean over
+    galaxies AND epochs): basis + cores from the other four epochs, cores
+    interpolated to the held z. The product's continuous-z claim for profiles."""
+    from hongshao import qa
+    X, Y, data, profs, anchors = _load_data(dev)
+    n = len(X)
+    R = _EPOCHS.R
+    d = np.load(NPZ)
+    model_direct = _model_cogs(d)
+    print(f"exp37 closure — shared-basis profile space (n={n})")
+    print("  held z: CoG max|rel| median, direct shared-basis fit -> "
+          "coefficient-interpolated (all R | R>5 kpc)")
+    out = {}
+    for k in (1, 2, 3):
+        others = [j for j in range(5) if j != k]
+        MU_i = np.empty((n, profs.shape[-1]))
+        AMU_i = np.empty(n)
+        for fold in _EPOCHS.folds_of(n):
+            tr = np.setdiff1d(np.arange(n), fold)
+            mp = fit_shared_profile(X[tr], profs[tr][:, others],
+                                    anchors[tr][:, others], R[:-1],
+                                    ZK[others])
+            pe = mp.at_z(ZK[k])
+            MU_i[fold] = pe.predict(X[fold])[0]
+            AMU_i[fold] = mp.me.at_z(ZK[k]).predict(X[fold])[0][:, 0]
+        cog_i = np.concatenate([10.0 ** MU_i, 10.0 ** AMU_i[:, None]],
+                               axis=1)[:, None, :]
+        truth_k = data[:, k][:, None, :]
+        direct_k = model_direct[:, k][:, None, :]
+        rows = []
+        for cog_m in (direct_k, cog_i):
+            mr_a = 100 * np.nanmedian(qa.profile_maxrel(cog_m, truth_k, R))
+            mr_o = 100 * np.nanmedian(qa.profile_maxrel(cog_m, truth_k, R,
+                                                        rmin=qa.RMIN_KPC))
+            rows.append((mr_a, mr_o))
+        out[k] = rows
+        print(f"    z={ZK[k]}: {rows[0][0]:5.1f}% | {rows[0][1]:5.1f}%  ->  "
+              f"{rows[1][0]:5.1f}% | {rows[1][1]:5.1f}%")
+    np.savez(OUTDIR / "closure.npz",
+             held=np.array([[out[k][i][j] for i in range(2) for j in range(2)]
+                            for k in (1, 2, 3)]))
+    print(f"  wrote {OUTDIR / 'closure.npz'}")
+
+
+def cmd_report():
+    d = np.load(NPZ)
+    print("exp37 report — the multi-epoch statistical emulator "
+          f"(n={int(d['n'])}{', DEV' if bool(d['dev']) else ''})")
+    print("  kpc CRPS per epoch : "
+          + " ".join(f"{c:.4f}" for c in d["crps"])
+          + "   (exp33-vi independent ceiling 0.081 -> 0.200)")
+    print(f"  AR(1) rho          : {float(d['rho']):.3f}   (exp33-vi 0.67)")
+    cl = OUTDIR / "closure.npz"
+    if cl.exists():
+        held = np.load(cl)["held"]
+        print("  profile closure (held z, direct -> interpolated, "
+              "all R | R>5):")
+        for row, k in zip(held, (1, 2, 3)):
+            print(f"    z={ZK[k]}: {row[0]:5.1f}%|{row[1]:5.1f}% -> "
+                  f"{row[2]:5.1f}%|{row[3]:5.1f}%")
+
+
+# --------------------------------------------------------------------------- #
 # self-check                                                                   #
 # --------------------------------------------------------------------------- #
 def demo():
@@ -270,7 +501,16 @@ def demo():
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "demo"
+    dev = "--dev" in sys.argv
     if cmd == "demo":
         demo()
+    elif cmd == "fit":
+        cmd_fit(dev)
+    elif cmd == "qa":
+        cmd_qa(dev)
+    elif cmd == "closure":
+        cmd_closure(dev)
+    elif cmd == "report":
+        cmd_report()
     else:
         sys.exit(f"unknown subcommand {cmd!r}")

@@ -216,8 +216,12 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         for k in keys:
             cells = []
             for j in range(nz):
-                bias = 100 * np.nanmedian(relerr(model[k][:, j], truth[k][:, j]))
-                sc = dex_scatter(model[k][:, j], truth[k][:, j])
+                t, m = truth[k][:, j], model[k][:, j]
+                if not (np.isfinite(t) & np.isfinite(m)).any():
+                    cells.append("  flagged NaN")     # e.g. beyond the CoG grid
+                    continue
+                bias = 100 * np.nanmedian(relerr(m, t))
+                sc = dex_scatter(m, t)
                 cells.append(f"{bias:+6.1f}%/{sc:.3f}")
             print(f"    {k:>16s} | " + " | ".join(cells))
         print("\n  tier 2b — observational planes (log-log): slope / scatter / rho, "
@@ -295,8 +299,14 @@ def _mass_group_figure(tag, gtag, keys, truth, model, anchor_z, name, figdir):
             lo = np.percentile(X[pos], 0.5) / 2.0
             hi = np.percentile(X[pos], 99.5) * 2.0
             av.plot([lo, hi], [lo, hi], "k--", lw=1, zorder=0)
-            av.set_xlim(lo, hi)
-            av.set_ylim(lo, hi)
+        else:
+            # all-NaN quantity (e.g. flagged beyond the CoG grid edge): give
+            # the log axes finite limits — empty log axes crash tight_layout
+            lo, hi = 1.0, 10.0
+            av.text(0.5, 0.5, "flagged NaN\n(beyond CoG grid)", ha="center",
+                    va="center", transform=av.transAxes, fontsize=8, color="0.4")
+        av.set_xlim(lo, hi)
+        av.set_ylim(lo, hi)
         av.set(xscale="log", yscale="log", title=key)
         ar.axhline(0, c="0.5", lw=0.8)
         for gpm in (0.1, -0.1):
@@ -506,6 +516,14 @@ def demo():
     assert np.isfinite(m_short["kpc:M(<100)"]), "in-grid aperture must stay finite"
     assert np.isnan(m_short["kpc:M(100-150)"]), "annulus past the grid edge must flag NaN"
     assert np.isnan(m_short["Re:M(>4Re)"]), "Re envelope past the grid edge must flag NaN"
+    # ... and the mass figures must survive a quantity that is ALL-NaN on such
+    # a grid (an empty log-scaled panel crashes tight_layout otherwise)
+    import tempfile
+    truth_short = (amp * (1.0 - np.exp(-R_short[None, None, :] ** 2
+                                       / (2.0 * sig ** 2))))
+    evaluate(1.1 * truth_short, truth_short, R_short, [0.4, 1.0, 2.0],
+             name="short_grid", verbose=False, figures=True,
+             figdir=tempfile.mkdtemp(prefix="qa_demo_"))
 
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)

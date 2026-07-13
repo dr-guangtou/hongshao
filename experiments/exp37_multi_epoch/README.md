@@ -1,6 +1,34 @@
 # exp37 — the multi-epoch statistical emulator (Path A, the product)
 
-Status: IN PROGRESS (branch `exp37-multi-epoch-emulator`, started 2026-07-13).
+Status: first full results 2026-07-13 (branch `exp37-multi-epoch-emulator`);
+see Results below. Open item: the high-z kpc-annuli plane mismatch of the
+draws.
+
+## Results (2026-07-13, n=2397, OOF 5-fold, `outputs/full_*.log`)
+
+1. **The multi-epoch product costs ~nothing vs independent per-epoch fits.**
+   kpc CRPS per epoch 0.0813/0.1028/0.1294/0.1713/0.2001 — AT the exp33-vi
+   independent-single-epoch ceiling (0.081 -> 0.200). Profile tier 3 median
+   max|rel| (all R | R>5 kpc): 34.0–42.6% | 24.4–33.6%, matching the exp33-vi
+   per-epoch ceiling (24.3% -> 33.6%) — the ONE shared PCA basis is free.
+2. **rho = 0.664 measured** (exp33-vi reference 0.67, adjacent C 0.64–0.70);
+   the AR(1) draws reproduce the full measured Markov decay matrix
+   (draw-rho 0.674, every element within ~0.06).
+3. **The multi-epoch generative claim is TRUE with the AR(1) latent**: the
+   growth plane logMtot(z=2) vs logMtot(z=0.4) sits at 3.0x the sampling
+   floor for the mean prediction (regression to the mean) but 1.0–1.1x for
+   the drawn populations — statistically indistinguishable from TNG.
+   Re-native planes pass at every epoch (0.8–1.4x floor, full and centered).
+4. **Continuous-z closure holds in the shared-basis profile space**: held
+   epochs z=0.7/1.0/1.5 lose <=0.5 points max|rel| (e.g. 35.2% -> 35.5% all-R
+   at z=0.7) when the cores are coefficient-interpolated instead of fitted.
+5. **Open item**: the kpc annuli planes of the DRAWS degrade with z (2–12x
+   floor at z>=1; the mean's tier-2b also grows 3.1 -> 4.6). This is the
+   known far-kpc-outskirt regime (M(50–100 kpc) is 15–30 R_half at high z;
+   truth scatter 0.5–1.1 dex, near-empty annuli) — the shape-relative Re
+   planes are the honest observational comparison there — but the draw excess
+   should be diagnosed (candidate: Gaussian log-space draws overshoot in
+   near-empty annuli) before the product is frozen.
 
 ## Goal
 
