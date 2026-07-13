@@ -111,6 +111,35 @@ Before adding any DOF, measure what is left to win:
    mass-restricted single-width fit reach the massive-end f148? If yes the
    split is about population coupling, not form).
 
+## Phase 0 RESULTS (2026-07-14, `phase0.py`, n=2397, z=0.4)
+
+1. **The wall is lower for the exp35 variant — ~half the residual variance
+   is winnable.** Per-radius correlation of the 148-pinned shape residuals
+   (transport vs statistical mode-3 OOF, R>5 kpc): multi-slope 0.67/0.68/0.71
+   (min/med/max), z04-slope 0.69/0.70/0.75 — below the exp33 record
+   (0.82-0.89, measured for the exp32 variant). Shared variance ~45-56%:
+   the total normalization changed the residual structure, and the dressing
+   (C) has real unshared material to work with.
+2. **The unshared residual is organized by formation time and concentration,
+   not by merger burstiness.** PC1 carries 97% of the unshared variance;
+   shuffle-controlled R^2 on PC1: fz2 0.244*, t50 0.165*, c200c 0.148*,
+   burst 0.069*, dmah_late 0.035*, logmh 0.001 (already conditioned on).
+   -> (B) should condition theta on c200c AND an epoch-matched formation-time
+   summary (fz2 or t50), not just logMh. Note the kernel consumes the full
+   MAH as deposits, yet its population theta ignores formation time — that
+   is the measured omission. (E) stays parked: the burst signal is weak.
+3. **Massive-tercile probe: decoupling closes 60% of the f148 gap; the form
+   still rails.** The single-width exp35 form refit to the massive logM*
+   tercile alone: dlog f148 +0.0149 (population multi-slope) -> +0.0059 dex,
+   with log_s0 railed at 3.0 and g ~ 3.97 even massive-only, and no shape
+   improvement (20.4 -> 21.7% in-sample). -> the split (A) is justified
+   twice over: as population decoupling (most of the f148 gap) AND as form
+   freedom (the residual rail).
+
+Build plan refined by phase 0: (A) two-channel deposit + (B) theta
+conditioned on [logMh, c200c, fz2-or-t50] + (C) the statistical dressing,
+in that order, each against the fixed criteria below.
+
 ## 5. Judged by (fixed before any fitting)
 
 - Held-out (exp32/33 folds) 148-pinned shape max|rel| R>5 at z=0.4 and
