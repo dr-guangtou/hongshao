@@ -348,6 +348,7 @@ def cmd_fit(dev=False, mean="poly2", n_modes=6):
     # fold-clean OOF mean CoGs + anchor, and OOF generative CoG draws from
     # the SAME fold-fitted products
     MU24 = np.empty((n, 5, 24))
+    DMU = np.empty((n, 5, 23))            # OOF mean log-density (the FIT space)
     AMU = np.empty_like(anchors)
     ASIG = np.empty_like(anchors)
     cog_draws = np.empty((N_DRAW, n, 5, 24))
@@ -360,13 +361,15 @@ def cmd_fit(dev=False, mean="poly2", n_modes=6):
             m, s, _ = mpd.me.emus[k].predict(X[fold])
             AMU[fold, k], ASIG[fold, k] = m[:, 0], s[:, 0]
             MU24[fold, k] = mpd.reconstruct(m)
+            DMU[fold, k] = (m[:, 0:1] + mpd.mean_shape
+                            + m[:, 1:-1] @ mpd.modes)
         cog_draws[:, fold] = 10.0 ** mpd.sample_cogs(X[fold], size=N_DRAW,
                                                      rng=100 + fi)
     assert np.all(np.diff(cog_draws, axis=-1)
                   > -1e-6 * cog_draws[..., 1:]), "non-monotone draw escaped"
     OUTDIR.mkdir(exist_ok=True)
     np.savez(NPZ, crps=crps, C=C, rho=rho, mu_kpc=mus, sig_kpc=sigs,
-             MU24=MU24, AMU=AMU, ASIG=ASIG, cog_draws=cog_draws,
+             MU24=MU24, DMU=DMU, AMU=AMU, ASIG=ASIG, cog_draws=cog_draws,
              dev=dev, n=n, mean=mean, n_modes=n_modes)
     print(f"  wrote {NPZ}")
 
@@ -428,7 +431,55 @@ def cmd_qa(dev=False):
         print(f"    draw {i}:          {g['energy_ratio']:.1f} | "
               f"{g['energy_ratio_centered']:.1f}")
     _coherence_figure(d, C_draw, anchors, la)
+    _density_bins_figure(d["DMU"], data, R, X[:, 0], "exp37_oof")
     return res
+
+
+def _density_bins_figure(DMU, data, R, bin_by, name):
+    """The model's performance in the space it was FIT: median log-density
+    profiles by halo-mass tercile (data solid, model dashed) with the paired
+    per-galaxy residual in dex — the integrated CoG view hides where the
+    density fit itself is good or biased."""
+    import matplotlib.pyplot as plt
+    from hongshao.plotting import set_style, save_fig
+    from hongshao.qa import _zcolors
+    set_style()
+    n = len(DMU)
+    dens_t, mid = density_from_cog(np.log10(data).reshape(-1, 24), R)
+    dens_t = dens_t.reshape(n, 5, 23)
+    cols = _zcolors(5)
+    edges = np.quantile(bin_by, [0, 1 / 3, 2 / 3, 1])
+    fig, axes = plt.subplots(2, 3, figsize=(15.5, 7.5), sharex=True,
+                             height_ratios=[2, 1])
+    rmax = 0.0
+    for b in range(3):
+        m = (bin_by >= edges[b]) & (bin_by <= edges[b + 1] + 1e-9)
+        ax, rax = axes[0, b], axes[1, b]
+        for k in range(5):
+            med_d = np.nanmedian(dens_t[m, k], axis=0)
+            med_m = np.nanmedian(DMU[m, k], axis=0)
+            dres = np.nanmedian(DMU[m, k] - dens_t[m, k], axis=0)
+            rmax = max(rmax, float(np.nanmax(np.abs(dres))))
+            ax.plot(mid, med_d, "-", c=cols[k], lw=1.8,
+                    label=f"z={ZK[k]}" if b == 0 else None)
+            ax.plot(mid, med_m, "--", c=cols[k], lw=1.4)
+            rax.plot(mid, dres, "-", c=cols[k], lw=1.4)
+        rax.axhline(0, c="0.6", lw=0.8)
+        for y in (-0.05, 0.05):
+            rax.axhline(y, c="0.8", lw=0.7, ls=":")
+        ax.set(xscale="log",
+               title=f"dmah logmp {edges[b]:.2f}-{edges[b+1]:.2f}  (n={m.sum()})")
+        rax.set(xscale="log", xlabel="R [kpc]")
+    lim = float(np.clip(1.25 * rmax, 0.05, 1.0))
+    for b in range(3):
+        axes[1, b].set_ylim(-lim, lim)
+    axes[0, 0].set(ylabel=r"median log$_{10}$ $\Sigma_*$ [M$_\odot$ kpc$^{-2}$]")
+    axes[1, 0].set(ylabel=r"median $\Delta$ log$_{10}$ $\Sigma_*$ [dex]")
+    axes[0, 0].legend(fontsize=8, loc="lower left")
+    fig.suptitle(f"QA [{name}] — log-density profiles, the FIT space "
+                 "(data solid, model dashed)", fontsize=12)
+    fig.tight_layout()
+    print("wrote", save_fig(fig, FIGDIR / f"qa_density_bins_{name}")[0])
 
 
 def _coherence_figure(d, C_draw, anchors, la):

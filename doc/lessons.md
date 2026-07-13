@@ -552,3 +552,24 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   all-NaN panels explicit finite limits. And the cividis ramp makes adjacent
   epochs indistinguishable — `qa._zcolors` now uses a distinct ordered
   Okabe-Ito subset (user request: visibly distinct epoch colors).
+
+- **The fit-space choice trades inner for outer accuracy in profile emulators
+  (exp37, 2026-07-14).** Head-to-head on the same folds and cores, the
+  log-density-space product's MEAN prediction is +6-7% biased inside 10 kpc
+  where the log-CoG-space product is +1.5-2% (and per-galaxy worst-radius
+  errors ~3 points worse), while the density space wins the shape/outskirt
+  metrics. Three structural reasons, all measured: (1) differencing amplifies
+  where the profile is steep — in CoG space the inner cumulative is a direct,
+  smooth target; in density space it is a sum of a few steep shells (small
+  denominator, compounded errors) — the exp26 lesson operating in reverse;
+  (2) pinning the total to the anchor EXPORTS shape error to the centre: any
+  outskirt deficit is compensated by a global rescale that biases the small
+  inner cumulative (K=3->8: outskirt bias +9.9%->+0.7% dragged the inner bias
+  +7.2%->+4.2% in lockstep); (3) mode-budget competition: pooled density
+  shapes are dominated by decades of outskirt dynamic range, so shared PCA
+  modes underserve the inner region — the cumulative compresses that range,
+  which is why K=3 sufficed in CoG space. Fix directions: segment-pinned
+  reconstruction (kpc-annulus masses as explicit coefficients, shape only
+  distributing WITHIN segments) or a hybrid (CoG-space mean + density-space
+  draws). Corollary: present a model's QA in the space it was FIT, alongside
+  the integrated deliverable.

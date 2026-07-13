@@ -123,6 +123,12 @@ doc/             # science context, data reference, todo.md, lessons.md
 - Avoid software/PM jargon and tool names the user wouldn't know (e.g. YAGNI,
   CI/CD, DVC, Snakemake). If a term is genuinely important, define it in one
   plain sentence instead of assuming it.
+- (2026-07-14, user rule) This explicitly includes development-methodology
+  shorthand: say "write the check first, watch it fail, then code until it
+  passes" instead of "TDD"; "one build-and-verify round" instead of "a TDD
+  cycle"; describe what a change does rather than naming the methodology.
+  Astronomy language needs NO simplification — the user is the domain expert;
+  keep that side at full technical precision.
 
 ## Conventions
 
