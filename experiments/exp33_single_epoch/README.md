@@ -117,7 +117,7 @@ shape pinned; Re plane = the known defect):
 | A baseline (kpc PCA-3) | 15.7% / 28.1% | 0.072→0.100 / 2.6 |
 | B size-aware (R/R50 basis + predicted R50) | 18.0% / 39.6% | 0.072→0.117 / 2.6 |
 | C core-split (M(<5kpc) + R>5 basis) | 15.7% / 28.2% | 0.072→0.100 / 2.6 |
-| D density-integrated | 21.1% / 51.4% | 0.072→0.096 / 2.8 |
+| D density-integrated (corrected 2026-07-13) | 15.9% / 28.7% | 0.072→0.104 / 2.8 |
 
 - **No representation beats the baseline** — exactly what the rho=0.87
   head-to-head predicted: the residual is missing information, so re-encoding
@@ -125,10 +125,18 @@ shape pinned; Re plane = the known defect):
   the same ~0.04+ dex unpredictability (reconstructing at a wrong size is a
   new error source, and the Re plane is measured against the TRUE Re — it is
   not fixable by coordinates alone). C is a wash (the core neither helped nor
-  contaminated). D adds a structural handicap discovered here: the
-  shell-integration CoG path is biased ~0.11 dex at the steep inner edge and
-  accumulates ~0.05 dex outward (exp22's "stable" meant monotonic, not exact)
-  — mode 4's higher density-space predictability cannot survive the transform.
+  contaminated).
+- **CORRECTION (2026-07-13).** D's original score (21.1% / 51.4%) and the
+  "structural handicap" reading were an artifact of a bug in
+  `hongshao.profile_emulator.integrate_density`: it took shell areas between
+  the annulus MID radii instead of the grid edges `density_from_cog` used, so
+  the reconstructed CoG was biased by up to ~0.24 dex at the steep inner radii
+  (the demo's "biased at both ends" was this bug, not discretization — the
+  correct round-trip is exact on the grid). Fixed, D scores 15.9% / 28.7% — a
+  TIE with the baseline, not a degradation. The verdict stands (no
+  representation BEATS the baseline; the wall is information, not encoding),
+  but mode 4's density-space predictability DOES survive the transform: the
+  density route is an equal-accuracy alternative, no longer disqualified.
 - The Re-plane defect is therefore ALSO an information problem (each galaxy's
   size at fixed halo), not a basis problem: closing it needs either new
   size-carrying inputs (halo spin — direction 1) or the generative layer in

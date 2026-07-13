@@ -151,16 +151,23 @@ def fit_profile(X, profile, anchor, radii, n_modes=3, mean="linear", ridge=2.0):
     return ProfileEmulator(emu, mean_shape, modes, np.asarray(radii, float))
 
 
-def integrate_density(log_sigma, mid_radii, central_log_mass):
+def integrate_density(log_sigma, radii, central_log_mass):
     """Mode (4) -> cumulative: integrate ``Sigma(R)`` OUTWARD from the centre.
 
-    ``central_log_mass`` (N,) is ``log M(<R_min)`` — the real, resolution-limited
-    centre, which still counts toward larger apertures. Integrating outward
-    (rather than inward from the total, or from R_min with no centre) is the only
-    stable direction for the small inner cumulative (the near-cancellation lesson,
-    exp22). Returns log cumulative ``M(<mid_radii)`` (N, R).
+    ``radii`` (R,) is the SAME edge grid handed to ``density_from_cog``, so
+    ``log_sigma`` (N, R-1) holds one annulus per pair of consecutive edges and
+    the shell areas here match the ones the densities were built with — the
+    round-trip is then exact on the grid (do NOT pass the annulus mid radii;
+    mid-derived areas bias the steep inner region by up to ~0.24 dex).
+    ``central_log_mass`` (N,) is ``log M(<radii[0])`` — the real,
+    resolution-limited centre, which still counts toward larger apertures.
+    Integrating outward (rather than inward from the total, or from R_min with
+    no centre) is the only stable direction for the small inner cumulative (the
+    near-cancellation lesson, exp22). Returns log cumulative ``M(<radii[1:])``
+    (N, R-1).
     """
-    dA = np.pi * np.diff(np.r_[0.0, mid_radii] ** 2)        # shell areas to each mid radius
+    radii = np.asarray(radii, float)
+    dA = np.pi * (radii[1:] ** 2 - radii[:-1] ** 2)         # true annulus areas
     shells = 10.0 ** np.asarray(log_sigma, float) * dA[None, :]
     cum = 10.0 ** np.asarray(central_log_mass, float)[:, None] + np.cumsum(shells, axis=1)
     return np.log10(np.clip(cum, 1.0, None))
@@ -210,6 +217,18 @@ if __name__ == "__main__":
     _, cov = interval_coverage((prof - mu_p).ravel(), 0.0, sig_p.ravel())
     assert np.allclose(cov, [0.5, 0.68, 0.9, 0.95], atol=0.04), cov     # calibrated
     assert np.allclose(draws.std(0).mean(0), sig_p.mean(0), rtol=0.1)   # sample spread = sigma
+
+    # density_from_cog -> integrate_density is a discrete identity: with the shell
+    # areas taken between the SAME grid edges, the round-trip must reproduce the
+    # input CoG at radii[1:] to float precision, for any profile shape.
+    r_grid = np.arange(2 ** 0.25, 150 ** 0.25, 0.1) ** 4                # the 24-point CoG grid
+    cog_uniform = np.log10(np.pi * r_grid ** 2 * 1e8)[None, :]          # uniform Sigma
+    cog_steep = (11.5 + 0.8 * np.log10(1.0 - np.exp(-(r_grid / 8.0) ** 0.5)))[None, :]
+    for cog_t in (cog_uniform, cog_steep):
+        log_sig_t, _ = density_from_cog(cog_t, r_grid)
+        cog_rt = integrate_density(log_sig_t, r_grid, cog_t[:, 0])
+        err_rt = np.abs(cog_rt - cog_t[:, 1:]).max()
+        assert err_rt < 1e-9, f"round-trip not exact: max err {err_rt:.4f} dex"
 
     # real-data reproduction of all four modes
     table = Path(__file__).resolve().parents[1] / "data" / "processed" / "tng300_072_z0p4.fits"
