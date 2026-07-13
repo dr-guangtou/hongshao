@@ -22,13 +22,17 @@ draws.
 4. **Continuous-z closure holds in the shared-basis profile space**: held
    epochs z=0.7/1.0/1.5 lose <=0.5 points max|rel| (e.g. 35.2% -> 35.5% all-R
    at z=0.7) when the cores are coefficient-interpolated instead of fitted.
-5. **Open item**: the kpc annuli planes of the DRAWS degrade with z (2–12x
-   floor at z>=1; the mean's tier-2b also grows 3.1 -> 4.6). This is the
-   known far-kpc-outskirt regime (M(50–100 kpc) is 15–30 R_half at high z;
-   truth scatter 0.5–1.1 dex, near-empty annuli) — the shape-relative Re
-   planes are the honest observational comparison there — but the draw excess
-   should be diagnosed (candidate: Gaussian log-space draws overshoot in
-   near-empty annuli) before the product is frozen.
+5. **Open item — MEASURED cause**: the kpc annuli planes of the DRAWS degrade
+   with z (2–12x floor at z>=1) because some drawn CoGs are NON-MONOTONIC in
+   the far kpc outskirts at high z (per-radius sigma is large there:
+   M(50–100 kpc) is 15–30 R_half). The distribution CORE is right — draw
+   16/50/84th pct of logM(50-100) at z=1: 9.58/10.05/10.48 vs truth
+   9.56/10.02/10.51 — but a drawn M(<100) < M(<50) makes the annulus
+   negative -> floored to log M = 0, a spurious low tail (draw std 1.70 vs
+   truth 0.54 dex at z=1; 2.95 vs 0.82 at z=2). Fix before freezing the
+   product: draw in a monotonicity-preserving parameterization (or
+   rejection/repair of non-monotonic draws), NOT a wider clip — the Re-native
+   planes, which never hit this regime, pass at every epoch.
 
 ## Goal
 
