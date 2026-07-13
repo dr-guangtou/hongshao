@@ -152,7 +152,8 @@ class MultiEpochProfile:
         return draws @ A.T + self.mean_shape
 
 
-def fit_shared_profile(X, profs, anchors, radii, z_grid, n_modes=3, rho=0.0):
+def fit_shared_profile(X, profs, anchors, radii, z_grid, n_modes=3, rho=0.0,
+                       mean="poly2"):
     """Fit the shared-basis profile product.
 
     ``profs`` (n, E, R) per-epoch log profiles; ``anchors`` (n, E) the
@@ -160,6 +161,9 @@ def fit_shared_profile(X, profs, anchors, radii, z_grid, n_modes=3, rho=0.0):
     amplitude-removed shapes of every epoch, then a per-epoch core on
     [anchor, shared scores] — unlike per-epoch ``fit_profile`` bases, the
     compressed coefficients then live in one space and interpolate in z.
+    ``mean``: the core mean model — "poly2" (exp17's 7 degree-2 terms; the
+    DEFAULT: the linear mean under-predicts low-mass z=2 progenitors by -5%,
+    poly2 by -2%) or "linear".
     """
     profs = np.asarray(profs, float)
     anchors = np.asarray(anchors, float)
@@ -169,10 +173,27 @@ def fit_shared_profile(X, profs, anchors, radii, z_grid, n_modes=3, rho=0.0):
     _, _, Vt = np.linalg.svd(flat, full_matrices=False)
     modes = Vt[:n_modes]
     emus = [emu_fit(X, np.column_stack([anchors[:, k],
-                                        (shape[:, k] - mean_shape) @ modes.T]))
+                                        (shape[:, k] - mean_shape) @ modes.T]),
+                    mean=mean)
             for k in range(shape.shape[1])]
     me = MultiEpochEmulator(np.asarray(z_grid, float), emus, rho)
     return MultiEpochProfile(me, mean_shape, modes, np.asarray(radii, float))
+
+
+def progenitor_quality_mask(data, max_drop_dex=2.0, min_logm=9.0):
+    """Flag broken progenitor CoGs in the population table.
+
+    A z>0.4 progenitor whose total mass sits more than ``max_drop_dex`` below
+    the z=0.4 descendant (or below ``min_logm``) is a broken main-branch
+    match, not evolution: the measured population's max drop ends at 1.68 dex
+    (99.9th pct) with a clean break to the flagged cases (idx 181 sits 3.8 dex
+    low, flat at 1e8 Msun over four epochs). Returns ``(keep_mask,
+    flagged_indices)``.
+    """
+    tot = np.log10(np.asarray(data, float)[..., -1])         # (n, E)
+    drop = (tot[:, 0:1] - tot).max(axis=1)
+    bad = (drop > max_drop_dex) | (tot.min(axis=1) < min_logm)
+    return ~bad, np.where(bad)[0]
 
 
 # --------------------------------------------------------------------------- #
@@ -184,6 +205,11 @@ NPZ = OUTDIR / "multi_epoch.npz"
 
 def _load_data(dev=False):
     X, Y, data = _EPOCHS.load()          # (n,5feat), (n,5,4), (n,5,24) linear
+    keep, flagged = progenitor_quality_mask(data)
+    if len(flagged):
+        print(f"  masked {len(flagged)} broken-progenitor galaxies "
+              f"(indices in the exp32 table row order): {list(flagged)}")
+    X, Y, data = X[keep], Y[keep], data[keep]
     if dev:
         X, Y, data = X[:400], Y[:400], data[:400]
     profs = np.log10(data[..., :-1])
@@ -203,18 +229,29 @@ def _spearman_corr(res):
     return C
 
 
-def cmd_fit(dev=False):
+def _cv_epoch(X, Yk, mean):
+    """OOF (mu, sigma) for one epoch's targets (exp33 folds, mean selectable)."""
+    mu = np.empty_like(Yk)
+    sig = np.empty_like(Yk)
+    for fold in _EPOCHS.folds_of(len(Yk)):
+        tr = np.setdiff1d(np.arange(len(Yk)), fold)
+        emu = emu_fit(X[tr], Yk[tr], mean=mean)
+        mu[fold], sig[fold], _ = emu.predict(X[fold])
+    return mu, sig
+
+
+def cmd_fit(dev=False, mean="poly2"):
     from hongshao.metrics import crps_gaussian
     X, Y, data, profs, anchors = _load_data(dev)
     n = len(X)
     R = _EPOCHS.R
-    print(f"exp37 fit (n={n}{', DEV' if dev else ''})")
+    print(f"exp37 fit (n={n}{', DEV' if dev else ''}, mean={mean})")
 
     # (1) kpc mode: OOF per epoch (exp33-vi setup) + CRPS + cross-epoch rho
     mus = np.empty_like(Y)
     sigs = np.empty_like(Y)
     for k in range(5):
-        mus[:, k], sigs[:, k] = _EPOCHS.cv_epoch(X, Y[:, k])
+        mus[:, k], sigs[:, k] = _cv_epoch(X, Y[:, k], mean)
     crps = crps_gaussian(Y.reshape(-1, 4), mus.reshape(-1, 4),
                          sigs.reshape(-1, 4)).reshape(n, 5, 4).mean(axis=(0, 2))
     C = _spearman_corr([mus[:, k] - Y[:, k] for k in range(5)])
@@ -234,7 +271,7 @@ def cmd_fit(dev=False):
     for fi, fold in enumerate(_EPOCHS.folds_of(n)):
         tr = np.setdiff1d(np.arange(n), fold)
         mp = fit_shared_profile(X[tr], profs[tr], anchors[tr], R[:-1], ZK,
-                                rho=rho)
+                                rho=rho, mean=mean)
         for k in range(5):
             MU[fold, k], SIG[fold, k] = mp.at_z(ZK[k]).predict(X[fold])
             m, s, _ = mp.me.emus[k].predict(X[fold])
@@ -247,7 +284,7 @@ def cmd_fit(dev=False):
     OUTDIR.mkdir(exist_ok=True)
     np.savez(NPZ, crps=crps, C=C, rho=rho, mu_kpc=mus, sig_kpc=sigs,
              MU=MU, SIG=SIG, AMU=AMU, ASIG=ASIG, cog_draws=cog_draws,
-             dev=dev, n=n)
+             dev=dev, n=n, mean=mean)
     print(f"  wrote {NPZ}")
 
 
@@ -344,7 +381,7 @@ def _coherence_figure(d, C_draw, anchors, la):
     print("\nwrote", save_fig(fig, FIGDIR / "exp37_coherence")[0])
 
 
-def cmd_closure(dev=False):
+def cmd_closure(dev=False, mean="poly2"):
     """Held-epoch closure in the SHARED-basis profile space (fold-clean over
     galaxies AND epochs): basis + cores from the other four epochs, cores
     interpolated to the held z. The product's continuous-z claim for profiles."""
@@ -354,7 +391,7 @@ def cmd_closure(dev=False):
     R = _EPOCHS.R
     d = np.load(NPZ)
     model_direct = _model_cogs(d)
-    print(f"exp37 closure — shared-basis profile space (n={n})")
+    print(f"exp37 closure — shared-basis profile space (n={n}, mean={mean})")
     print("  held z: CoG max|rel| median, direct shared-basis fit -> "
           "coefficient-interpolated (all R | R>5 kpc)")
     out = {}
@@ -366,7 +403,7 @@ def cmd_closure(dev=False):
             tr = np.setdiff1d(np.arange(n), fold)
             mp = fit_shared_profile(X[tr], profs[tr][:, others],
                                     anchors[tr][:, others], R[:-1],
-                                    ZK[others])
+                                    ZK[others], mean=mean)
             pe = mp.at_z(ZK[k])
             MU_i[fold] = pe.predict(X[fold])[0]
             AMU_i[fold] = mp.me.at_z(ZK[k]).predict(X[fold])[0][:, 0]
@@ -494,23 +531,39 @@ def demo():
     rms_h = float(np.sqrt(((mu_h - prof_h) ** 2).mean()))
     assert rms_h < 0.06, f"shared-basis held-z rms {rms_h:.4f}"
 
+    # (6) the core mean is an option, poly2 by DEFAULT (user decision
+    # 2026-07-13: the linear mean under-predicts low-mass z=2 progenitors)
+    assert all(e.mean == "poly2" for e in mp.me.emus), "default mean must be poly2"
+    mp_lin = fit_shared_profile(X[:500], profs[:500], anchors[:500], rad, ZK,
+                                n_modes=K, mean="linear")
+    assert all(e.mean == "linear" for e in mp_lin.me.emus)
+
+    # (7) broken-progenitor mask: a progenitor CoG collapsing >2 dex below the
+    # z=0.4 descendant (or below 1e9 Msun) is a broken match, not evolution
+    q = 1e11 * np.linspace(0.3, 1.0, 24)[None, None, :] * np.ones((6, 5, 1))
+    q[3, 2] = 1e8                                   # one broken epoch
+    keep, flagged = progenitor_quality_mask(q)
+    assert list(flagged) == [3] and keep.sum() == 5, (flagged, keep.sum())
+
     print("exp37 demo OK: AR(1) sampler exact (within R, cross rho^sep); "
           f"held-z coefficient recovery rms {rms:.4f}; draws AR(1)-coherent; "
           f"rho_hat {rho_hat:.3f}; shared-basis profile snapshot/held-z rms "
-          f"{rms_snap:.4f}/{rms_h:.4f}")
+          f"{rms_snap:.4f}/{rms_h:.4f}; poly2 default + mean option; "
+          "broken-progenitor mask flags the planted galaxy")
 
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "demo"
     dev = "--dev" in sys.argv
+    mean = "linear" if "--linear-mean" in sys.argv else "poly2"
     if cmd == "demo":
         demo()
     elif cmd == "fit":
-        cmd_fit(dev)
+        cmd_fit(dev, mean)
     elif cmd == "qa":
         cmd_qa(dev)
     elif cmd == "closure":
-        cmd_closure(dev)
+        cmd_closure(dev, mean)
     elif cmd == "report":
         cmd_report()
     else:

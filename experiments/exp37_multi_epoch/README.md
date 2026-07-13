@@ -73,6 +73,27 @@ n=2397, z=0.4/0.7/1.0/1.5/2.0):
    passes the 2-D plane test (exp33 step v); the multi-epoch version must
    pass it per epoch AND be coherent across epochs.
 
+## Re-baseline 2026-07-13 (user decisions: poly2 cores DEFAULT + broken-progenitor mask)
+
+n=2395 (idx 181, 2372 masked: progenitor totals >2 dex below the z=0.4
+descendant — the population's max drop otherwise ends at 1.68 dex; criterion
+in `progenitor_quality_mask`, demo-asserted). `mean="poly2"` (exp17's 7
+degree-2 terms) is now the core default (`--linear-mean` restores the old
+behavior); note poly2 changes the MODEL (the mean function), so every number
+below supersedes the linear Results section, which stays as reference.
+
+- kpc CRPS per epoch **0.0784/0.0888/0.1027/0.1285/0.1523** — now BEATS the
+  linear exp33-vi ceiling at every epoch (−4% at z=0.4, −24% at z=2).
+- Cumulative-aperture biases <=1.4% at every epoch (the z=2 low-mass −5%
+  linear-mean bias is gone); M(<100) dex scatter at z=2: 0.220 -> 0.153.
+- rho = 0.622 (was 0.664): part of the "persistent per-galaxy latent" was
+  linear-mean misfit, now absorbed by the mean.
+- Closure unchanged (<=0.7 points at every held epoch); tier 3 all-R direct
+  improves 35.2/38.0/40.8 -> 33.6/35.1/36.6 at z=0.7/1.0/1.5.
+- Growth plane: mean 1.7x floor (was 3.0), draws 1.0–1.3x. Re-planes pass at
+  every epoch. The kpc-annuli draw planes at z>=1.5 (4–13x floor) remain
+  gated by the non-monotonic-draw open item below.
+
 ## Design
 
 - `run.py` subcommands: `demo` (synthetic self-checks, no data), `fit`
