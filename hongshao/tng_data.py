@@ -449,6 +449,11 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
 
     # convenience: a clean analysis cut (good profile, reliable & still-rising
     # M0 above 1e13, finite CoG). Excludes halos that have turned over by z=0.4.
+    # Decision 2026-07-13: the mass threshold intentionally stays on logm0_halo
+    # (MAH peak), NOT the exact logmh_z0p4 the metadata prefers as the M0
+    # *feature* — measured on the full table the two agree to +0.004 dex median
+    # and switching would only re-baseline the recorded n=2545 sample
+    # (a strict superset, +55 galaxies) and every recorded number.
     tbl["use"] = (
         tbl["flag"] & tbl["valid_mah"]
         & ~tbl["mah_declined"]
@@ -471,7 +476,9 @@ def build_dataset(data_dir: Path = DEFAULT_DATA_DIR, n_gal: int = N_GAL,
              "mass first reached XX% of M0. rdm_* fit over R>=cog_fit_rmin_kpc; "
              "dmah_* = DiffMAH fit over t>=dmah_fit_tmin_gyr (logmp~M0). "
              "logmh_z0p4 = log10 of the EXACT z=0.4 halo mass (mass_halo, Msun) "
-             "from the aperture table; prefer it over logm0_halo as M0. "
+             "from the aperture table; prefer it over logm0_halo as the M0 "
+             "feature (the 'use' selection intentionally stays on logm0_halo; "
+             "decision 2026-07-13, +0.004 dex median difference). "
              "logmstar_aper_proj[gal, proj, r] = log10 aperture M* on "
              "projections=(xy,xz,yz), radii=aper6_sma_kpc; *_proj cols likewise "
              "per projection. c_200c/c_to_a_3d/b_to_a_3d/v_sigma_3d/acc_rate are "
