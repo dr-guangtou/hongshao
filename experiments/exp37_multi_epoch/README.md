@@ -22,7 +22,25 @@ draws.
 4. **Continuous-z closure holds in the shared-basis profile space**: held
    epochs z=0.7/1.0/1.5 lose <=0.5 points max|rel| (e.g. 35.2% -> 35.5% all-R
    at z=0.7) when the cores are coefficient-interpolated instead of fitted.
-5. **Open item — MEASURED cause**: the kpc annuli planes of the DRAWS degrade
+5. **z=2 low-halo-mass bias — MEASURED cause (2026-07-13 review)**: the model
+   under-predicts the lowest-logmp tercile at z=2 by −5.2% median (−0.023
+   dex, flat in R; the visible dashed–solid gap in the bins figure is −0.05
+   dex because comparing medians of log in an under-dispersed, skewed
+   population roughly doubles the visual gap). It is a LINEAR-MEAN
+   limitation: poly2 cores cut the tercile bias to −1.9% and the z=2 anchor
+   OOF rms from 0.221 to 0.166 dex. Candidate change (user decision):
+   switch the cores to `mean="poly2"` — costs the exp33-vi linear-mark
+   comparability, forbidden only for the forward-deformation baseline (which
+   this product is not).
+6. **Best/worst gallery reading (2026-07-13 review)**: under minimax (worst-
+   epoch) ranking the best galaxies still carry smooth ±10–15% shape
+   residuals — the per-galaxy information limit (population medians are ±5%),
+   not a defect of the gallery. The "worst" cases are dominated by
+   near-empty TRUTH progenitor CoGs (flat at ~1e8 Msun over 4 epochs while
+   z=0.4 is ~10^11.8, e.g. idx 181, 2351) — a DATA-quality flag for the
+   exp32 population table (broken progenitor match?), not model failure;
+   the relative-to-truth metric explodes there by construction.
+7. **Open item — MEASURED cause**: the kpc annuli planes of the DRAWS degrade
    with z (2–12x floor at z>=1) because some drawn CoGs are NON-MONOTONIC in
    the far kpc outskirts at high z (per-radius sigma is large there:
    M(50–100 kpc) is 15–30 R_half). The distribution CORE is right — draw

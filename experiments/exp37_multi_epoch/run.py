@@ -266,7 +266,8 @@ def cmd_qa(dev=False):
     model = _model_cogs(d)
     FIGDIR.mkdir(exist_ok=True)
     res = qa.evaluate(model, data, R, list(ZK), name="exp37_oof",
-                      figdir=FIGDIR, bin_by=X[:, 0], bin_label="dmah logmp")
+                      figdir=FIGDIR, bin_by=X[:, 0], bin_label="dmah logmp",
+                      draw_cogs=d["cog_draws"])
 
     # generative: per-epoch observational planes on the OOF draws
     print("\n  generative planes (energy/floor full | centered), "

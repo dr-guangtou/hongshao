@@ -540,3 +540,15 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 - Background `uv run` commands buffer stdout through pipes; redirect to a file
   and read that, or block on the process, rather than polling a pipe.
 - `np.trapz` is gone in NumPy 2 — use `np.trapezoid`.
+
+## Figures / QA presentation
+
+- **This machine's matplotlibrc has `text.usetex: True`; raw `<`, `>`, `|`, `%`
+  in matplotlib text render as ¡, ¿, em-dash, or eat the rest of the label (%
+  is a LaTeX comment) — silently, no error (found 2026-07-13 in every qa.py
+  figure).** Route figure text through `hongshao.qa._tex()` (math-wraps <>|)
+  and `_pct()` (usetex-aware percent). Also: an axes with a log scale and NO
+  plotted data crashes `tight_layout` ("Data cannot be log-scaled") — give
+  all-NaN panels explicit finite limits. And the cividis ramp makes adjacent
+  epochs indistinguishable — `qa._zcolors` now uses a distinct ordered
+  Okabe-Ito subset (user request: visibly distinct epoch colors).
