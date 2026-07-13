@@ -489,6 +489,18 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   diversity. (2-D K-S rejected: not distribution-free in 2-D, least sensitive
   to exactly the spread differences at issue.) `hongshao/qa.py` tier 2b now
   reports all three.
+- **A railed bound is not evidence of missing physics until a bounds-stress
+  test says HOW the freedom would be spent (exp35).** log_s0/g railed at the
+  loose physical box in every total-normalized fit; loosening the box (3.0->3.5,
+  4->6) improved the loss 4.3% robustly — but the optimizer spent ALL of it
+  re-deleting mass past the 500-kpc normalization horizon (z=1-2 visibility
+  0.95->0.62, z<1 91% invisible even at 500) while the measured physics
+  observables (massive-end aperture fraction, differential-deposition marks)
+  did not move. A finite per-epoch normalization radius, wherever placed,
+  leaves an invisible channel beyond it; the fix for a load-bearing rail is a
+  structural DOF that decouples the constraint (here: two-channel deposit),
+  not a looser bound. Run the one-fit stress test before reading a rail
+  physically in either direction.
 - **Per-galaxy dex scatter cannot see regression-to-the-mean; the observational
   planes can (exp31).** Per-quantity LOGO regression TIES the physical emulator on
   aperture dex scatter (~0.1) while predicting population distributions that are

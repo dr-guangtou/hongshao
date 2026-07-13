@@ -639,11 +639,20 @@ Cross-experiment plan. Mirrors the phase sequence in
   exp33-vi blueprint**: continuous-z coefficient interpolation + AR(1)-in-epoch
   latent (rho=0.67) + generative sampling; judged by the full QA incl. planes
   per epoch and cross-epoch coherence.
-- [ ] **(next B, physics path) the TOTAL-NORMALIZED transport refit**: normalize
-  to M_tot(<500 kpc) from exp34's validated extrapolation, aperture fraction as
-  a per-epoch datum, physical 5-param theta; test the width law against the
-  differential-deposition curve. Decides whether the transport family closes
-  its ~3-point tax once the beyond-aperture budget is data, not assumption.
+- [x] **exp35 — the TOTAL-NORMALIZED transport refit COMPLETE (verdict in the
+  README; branch exp35-total-norm).** M(<500) datum from exp34 power tails
+  (form-sys 0.011 dex); aperture fraction fitted, not pinned. Physicality tax
+  shrinks +3–4 -> +1.4–2.3 points (multi-slope held-out shape 20.5% vs the
+  19.1% mark) with every z>=1 bin visible and f148 reproduced to 0.016–0.004
+  dex; all four fits in ONE basin. **The differential-deposition test PASSES**
+  (massive tercile z0.7->0.4: measured 0.37/0.11 vs model 0.40/0.12, mass
+  trend reproduced) — the transport family's unique physics claim now has a
+  passed out-of-model test. Consistency tax vs the single-epoch statistical
+  emulator persists (~5 points, as expected). Remaining tension: log_s0/g rail
+  at the loose bounds and the massive-end f148 is under-spread (model 0.875 vs
+  data 0.83) — the data want more outward transport at the massive end.
+  Decision input: Path A stays the accuracy product; the transport kernel is
+  the physics companion.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
