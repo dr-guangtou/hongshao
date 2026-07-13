@@ -1,8 +1,10 @@
 # exp37 — the multi-epoch statistical emulator (Path A, the product)
 
-Status: first full results 2026-07-13 (branch `exp37-multi-epoch-emulator`);
-see Results below. Open item: the high-z kpc-annuli plane mismatch of the
-draws.
+Status: COMPLETE and GRADUATED 2026-07-14 — `hongshao/multi_epoch.py` now
+holds the block-pinned product (default) and the K=3 log-CoG product (user
+decision: conservative pairing); this driver imports the graduated code and
+keeps the log-density variant as `--profile-mode dens`. Evidence table in
+the option (b) verdict section below.
 
 ## Results (2026-07-13, n=2397, OOF 5-fold, `outputs/full_*.log`)
 

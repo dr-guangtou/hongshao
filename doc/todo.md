@@ -635,15 +635,19 @@ Cross-experiment plan. Mirrors the phase sequence in
   measured (37%/11% of late growth beyond 50/100 kpc, massive). Graduation:
   the stack stays as-is with its documented error budget; nothing new
   graduates; headroom belongs to new inputs only.
-- [ ] **(next A, product path -> exp37 IN PROGRESS 2026-07-13, branch
-  exp37-multi-epoch-emulator) the multi-epoch statistical emulator from the
-  exp33-vi blueprint**: continuous-z coefficient interpolation + AR(1)-in-epoch
-  latent (rho=0.67, measured in-fit) + generative sampling; judged by the full
-  QA incl. planes per epoch and cross-epoch coherence (growth plane + rank
-  persistence). Design + fixed judging criteria: `experiments/exp37_multi_epoch/
-  README.md`. New ingredient beyond the blueprint: ONE pooled PCA shape basis
-  across epochs so the profile mode's coefficients interpolate in z (closure
-  re-tested in that space).
+- [x] **(A, product path) exp37 — the multi-epoch statistical emulator
+  COMPLETE and GRADUATED (2026-07-14, branch exp37-multi-epoch-emulator ->
+  `hongshao/multi_epoch.py`).** Continuous-z coefficient interpolation
+  (closure <=0.9 max|rel| points) + AR(1)-in-epoch latent (rho=0.622 measured,
+  poly2 cores) + generative sampling. Three profile representations built and
+  judged head-to-head (README evidence table); the BLOCK-PINNED product wins
+  (draw planes 0.4-0.9x floor through z=1, monotone by construction,
+  uncertainty-weighted deficit allocation) and is the graduated DEFAULT; the
+  K=3 log-CoG product graduates alongside it (user decision: conservative
+  pairing — best z=0.4 inner-region mean, +1.8% vs +3.5%); the log-density
+  variant stays in the experiment as `--profile-mode dens`. n=2395 (2
+  broken-progenitor galaxies masked); kpc CRPS 0.0784->0.1523 beats the
+  linear exp33-vi ceiling at every epoch; growth-plane draws 1.0-1.3x floor.
 - [x] **exp35 — the TOTAL-NORMALIZED transport refit COMPLETE (verdict in the
   README; branch exp35-total-norm).** M(<500) datum from exp34 power tails
   (form-sys 0.011 dex); aperture fraction fitted, not pinned. Physicality tax

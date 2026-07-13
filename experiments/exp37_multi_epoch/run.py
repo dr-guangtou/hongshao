@@ -28,8 +28,10 @@ matplotlib.use("Agg")
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT))
-from hongshao.emulator import fit as emu_fit, _chol_psd                      # noqa: E402
-from hongshao.profile_emulator import ProfileEmulator, density_from_cog      # noqa: E402
+from hongshao.emulator import fit as emu_fit                                 # noqa: E402
+from hongshao.profile_emulator import density_from_cog                       # noqa: E402
+from hongshao.multi_epoch import (_sample_eps, fit_rho, MultiEpochEmulator,  # noqa: E402
+                                  fit_shared_profile, fit_block_profile)
 
 
 def _load_by_path(name, path):
@@ -47,139 +49,6 @@ _EPOCHS = _load_by_path("exp33_epochs", ROOT / "experiments/exp33_single_epoch/e
 # --------------------------------------------------------------------------- #
 # the model layer                                                              #
 # --------------------------------------------------------------------------- #
-def ar1_corr(rho, idx):
-    """AR(1) correlation matrix over epoch-index positions ``idx``: rho^|di-dj|.
-
-    ``idx`` is in epoch-INDEX units (the exp33-vi measurement: residual
-    correlation decays per snapshot STEP, not per dz), so arbitrary redshifts
-    map in via ``MultiEpochEmulator.epoch_index``.
-    """
-    idx = np.asarray(idx, float)
-    return rho ** np.abs(idx[:, None] - idx[None, :])
-
-
-def _sample_eps(rho, corrs, n_draws, rng, idx=None):
-    """Standardized residual draws (n_draws, E, T).
-
-    Construction: chol(AR1(rho)) mixes iid normals ACROSS epochs per target,
-    then chol(R_k) mixes WITHIN each epoch across targets. Within-epoch
-    correlation is exactly ``corrs[k]``; cross-epoch same-target correlation is
-    rho^sep exactly when the R_k agree (A_kj * (L_k L_j^T) in general); PSD by
-    construction.
-    """
-    E = len(corrs)
-    T = corrs[0].shape[0]
-    La = _chol_psd(ar1_corr(rho, np.arange(E) if idx is None else idx))
-    Z = rng.standard_normal((n_draws, E, T))
-    eps = np.einsum("kj,njt->nkt", La, Z)
-    for k in range(E):
-        eps[:, k, :] = eps[:, k, :] @ _chol_psd(corrs[k]).T
-    return eps
-
-
-def _fit_rho(C, idx=None):
-    """Least-squares AR(1) rho from a cross-epoch correlation matrix:
-    log C_ab regressed on |idx_a - idx_b| through the origin."""
-    E = len(C)
-    idx = np.arange(E) if idx is None else np.asarray(idx, float)
-    sep, val = [], []
-    for a in range(E):
-        for b in range(a + 1, E):
-            if C[a, b] > 0:
-                sep.append(abs(idx[a] - idx[b]))
-                val.append(np.log(C[a, b]))
-    sep, val = np.asarray(sep), np.asarray(val)
-    return float(np.exp((sep @ val) / (sep @ sep)))
-
-
-@dataclass
-class MultiEpochEmulator:
-    """The product: per-epoch heteroscedastic cores, continuous in z by
-    quadratic coefficient interpolation, generative via an AR(1)-in-epoch
-    latent (exp33-vi blueprint)."""
-    z_grid: np.ndarray        # (E,) fitted snapshot redshifts
-    emus: list                # E per-epoch Emulator cores (shared features)
-    rho: float                # AR(1) epoch-latent correlation (measured)
-
-    def at_z(self, z):
-        """The DIRECT core at a fitted snapshot; elsewhere the element-wise
-        quadratic-in-z least-squares interpolation of its coefficients
-        (exp33-vi closure: within +-4% of a direct fit)."""
-        k = np.where(np.isclose(self.z_grid, z))[0]
-        if len(k):
-            return self.emus[int(k[0])]
-        return _EPOCHS.interp_emulator(self.emus, self.z_grid, z)
-
-    def predict(self, X, z):
-        return self.at_z(z).predict(X)
-
-    def epoch_index(self, z):
-        """Map z to epoch-INDEX units (the AR(1) separation coordinate)."""
-        return np.interp(z, self.z_grid, np.arange(len(self.z_grid)))
-
-    def sample_epochs(self, X, z=None, size=1, rng=None):
-        """(size, N, E, T) draws, AR(1)-coherent across the epochs ``z``
-        (default: the fitted snapshot grid)."""
-        rng = np.random.default_rng(rng)
-        z = self.z_grid if z is None else np.asarray(z, float)
-        cores = [self.at_z(zz) for zz in z]
-        mu = np.stack([c.predict(X)[0] for c in cores], axis=1)   # (N, E, T)
-        sig = np.stack([c.predict(X)[1] for c in cores], axis=1)
-        n = len(mu)
-        eps = _sample_eps(self.rho, [c.corr for c in cores], size * n, rng,
-                          idx=self.epoch_index(z))
-        return mu[None] + sig[None] * eps.reshape(size, n, len(z), -1)
-
-
-@dataclass
-class MultiEpochProfile:
-    """Profile product: ONE pooled PCA shape basis (so the compressed
-    coefficients interpolate in z) + a MultiEpochEmulator over
-    [anchor, shared-PC scores]."""
-    me: MultiEpochEmulator
-    mean_shape: np.ndarray    # (R,) pooled amplitude-removed mean shape
-    modes: np.ndarray         # (K, R) shared PCA modes
-    radii: np.ndarray         # (R,) kpc
-
-    def at_z(self, z):
-        return ProfileEmulator(self.me.at_z(z), self.mean_shape, self.modes,
-                               self.radii)
-
-    def sample_epochs(self, X, z=None, size=1, rng=None):
-        """(size, N, E, R) correlated log-profile draws across epochs."""
-        draws = self.me.sample_epochs(X, z=z, size=size, rng=rng)
-        A = np.column_stack([np.ones(len(self.radii)), self.modes.T])
-        return draws @ A.T + self.mean_shape
-
-
-def fit_shared_profile(X, profs, anchors, radii, z_grid, n_modes=3, rho=0.0,
-                       mean="poly2"):
-    """Fit the shared-basis profile product.
-
-    ``profs`` (n, E, R) per-epoch log profiles; ``anchors`` (n, E) the
-    amplitudes factored out (logMtot per epoch). One PCA basis from the POOLED
-    amplitude-removed shapes of every epoch, then a per-epoch core on
-    [anchor, shared scores] — unlike per-epoch ``fit_profile`` bases, the
-    compressed coefficients then live in one space and interpolate in z.
-    ``mean``: the core mean model — "poly2" (exp17's 7 degree-2 terms; the
-    DEFAULT: the linear mean under-predicts low-mass z=2 progenitors by -5%,
-    poly2 by -2%) or "linear".
-    """
-    profs = np.asarray(profs, float)
-    anchors = np.asarray(anchors, float)
-    shape = profs - anchors[..., None]
-    mean_shape = shape.mean(axis=(0, 1))
-    flat = (shape - mean_shape).reshape(-1, shape.shape[-1])
-    _, _, Vt = np.linalg.svd(flat, full_matrices=False)
-    modes = Vt[:n_modes]
-    emus = [emu_fit(X, np.column_stack([anchors[:, k],
-                                        (shape[:, k] - mean_shape) @ modes.T]),
-                    mean=mean)
-            for k in range(shape.shape[1])]
-    me = MultiEpochEmulator(np.asarray(z_grid, float), emus, rho)
-    return MultiEpochProfile(me, mean_shape, modes, np.asarray(radii, float))
-
-
 @dataclass
 class MultiEpochDensity:
     """The monotonicity-preserving profile product: the stochastic layer lives
@@ -261,126 +130,6 @@ def fit_density_profile(X, cogs_log, radii, z_grid, n_modes=3, rho=0.0,
             for k in range(E)]
     me = MultiEpochEmulator(np.asarray(z_grid, float), emus, rho)
     return MultiEpochDensity(me, mean_shape, modes, np.asarray(radii, float))
-
-
-@dataclass
-class MultiEpochBlock:
-    """Option (b): the block-pinned density product.
-
-    The emulator predicts the log masses of the kpc BLOCKS directly — the
-    representation the aperture emulator already fits at <=1.4% bias — and the
-    density shape only distributes each block's mass across its own shells.
-    Compressed vector per epoch: [anchor, cfrac, log block-fraction masses
-    (one per block), K density-shape scores]. Block masses are positive by
-    construction and shells within a block are positive, so every
-    reconstructed CoG is monotone; radial detail is unchanged (the full shell
-    grid, shape modes acting within blocks).
-    """
-    me: MultiEpochEmulator
-    mean_shape: np.ndarray    # (R-1,) pooled amplitude-removed mean log density
-    modes: np.ndarray         # (K, R-1) shared PCA density-shape modes
-    radii: np.ndarray         # (R,) kpc — the CoG EDGE grid
-    block_idx: np.ndarray     # (nb+1,) indices into radii: block boundaries
-
-    @property
-    def _dA(self):
-        r = self.radii
-        return np.pi * (r[1:] ** 2 - r[:-1] ** 2)
-
-    def compress(self, cogs_log):
-        """(..., R) log CoGs -> (..., 2+nb+K) [anchor, cfrac, bfracs, scores]."""
-        cogs_log = np.asarray(cogs_log, float)
-        lead = cogs_log.shape[:-1]
-        anchor = cogs_log[..., -1]
-        cfrac = cogs_log[..., 0] - anchor
-        cum = 10.0 ** cogs_log
-        # a near-empty block can underflow to a zero linear difference; floor
-        # at 1 Msun (the _cum_to_bins convention) — negligible mass, keeps the
-        # target finite and the round-trip within float tolerance
-        bfracs = [np.log10(np.clip(cum[..., b] - cum[..., a], 1.0, None)) - anchor
-                  for a, b in zip(self.block_idx[:-1], self.block_idx[1:])]
-        log_sig, _ = density_from_cog(cogs_log.reshape(-1, cogs_log.shape[-1]),
-                                      self.radii)
-        shape = log_sig.reshape(*lead, -1) - anchor[..., None]
-        scores = (shape - self.mean_shape) @ self.modes.T
-        return np.concatenate([anchor[..., None], cfrac[..., None],
-                               np.stack(bfracs, axis=-1), scores], axis=-1)
-
-    def reconstruct(self, compressed, sigma=None):
-        """(..., 2+nb+K) -> (..., R) log CoGs, monotone by construction.
-
-        The sum of the (median-predicted) parts falls short of the predicted
-        total by the lognormal median-vs-mean gap. Without ``sigma`` the
-        deficit is spread uniformly (the draw path — each draw is a
-        realization, the rescale just enforces its own total). With ``sigma``
-        (the per-target predictive dex scatter, the MEAN path) the deficit is
-        allocated in proportion to each block's expected gap,
-        B_j (e^(sigma_ln^2 / 2) - 1): tight blocks stay at their direct
-        predictions, the uncertainty-dominated blocks absorb the missing mass.
-        """
-        compressed = np.asarray(compressed, float)
-        nb = len(self.block_idx) - 1
-        anchor = compressed[..., 0:1]
-        cfrac = compressed[..., 1:2]
-        bfracs = compressed[..., 2:2 + nb]
-        scores = compressed[..., 2 + nb:]
-        blocks = 10.0 ** (anchor + bfracs)                       # (..., nb)
-        cen = 10.0 ** (anchor + cfrac)
-        total = 10.0 ** anchor
-        w = 10.0 ** (anchor + self.mean_shape + scores @ self.modes) * self._dA
-        shells = np.empty_like(w)
-        for j, (a, b) in enumerate(zip(self.block_idx[:-1], self.block_idx[1:])):
-            wj = w[..., a:b]
-            shells[..., a:b] = (wj / wj.sum(axis=-1, keepdims=True)
-                                * blocks[..., j:j + 1])
-        cum = np.concatenate([cen, cen + np.cumsum(shells, axis=-1)], axis=-1)
-        if sigma is None:
-            return np.log10(cum * total / cum[..., -1:])
-        sig_ln = np.log(10.0) * np.asarray(sigma, float)[..., 2:2 + nb]
-        gap_w = blocks * (np.exp(0.5 * sig_ln ** 2) - 1.0) + 1e-30
-        deficit = total[..., 0] - cum[..., -1]
-        alloc = gap_w / gap_w.sum(-1, keepdims=True) * deficit[..., None]
-        factor = np.clip((blocks + alloc) / blocks, 1e-6, None)  # keep positive
-        for j, (a, b) in enumerate(zip(self.block_idx[:-1], self.block_idx[1:])):
-            shells[..., a:b] = shells[..., a:b] * factor[..., j:j + 1]
-        cum = np.concatenate([cen, cen + np.cumsum(shells, axis=-1)], axis=-1)
-        # positivity clamps can leave a residual; close it with the uniform
-        # rescale (tiny once the weighted allocation has done the work)
-        return np.log10(cum * total / cum[..., -1:])
-
-    def predict_cog(self, X, z):
-        mu, sig, _ = self.me.predict(X, z)
-        return self.reconstruct(mu, sigma=sig)
-
-    def sample_cogs(self, X, z=None, size=1, rng=None):
-        return self.reconstruct(self.me.sample_epochs(X, z=z, size=size, rng=rng))
-
-
-def fit_block_profile(X, cogs_log, radii, z_grid, n_modes=3, rho=0.0,
-                      mean="poly2", block_kpc=(10.0, 30.0, 50.0, 100.0)):
-    """Fit the block-pinned density product (see ``MultiEpochBlock``).
-
-    Block boundaries snap to the nearest grid radii; the outermost block ends
-    at the grid edge and the innermost starts at the central disk boundary.
-    """
-    cogs_log = np.asarray(cogs_log, float)
-    n, E, R_ = cogs_log.shape
-    radii = np.asarray(radii, float)
-    idx = [0] + [int(np.argmin(np.abs(radii - e))) for e in block_kpc] + [R_ - 1]
-    block_idx = np.array(sorted(set(idx)))
-    assert len(block_idx) == len(idx), f"block edges collide on this grid: {idx}"
-    anchor = cogs_log[..., -1]
-    log_sig, _ = density_from_cog(cogs_log.reshape(-1, R_), radii)
-    shape = log_sig.reshape(n, E, R_ - 1) - anchor[..., None]
-    mean_shape = shape.mean(axis=(0, 1))
-    _, _, Vt = np.linalg.svd((shape - mean_shape).reshape(-1, R_ - 1),
-                             full_matrices=False)
-    modes = Vt[:n_modes]
-    mpb = MultiEpochBlock(None, mean_shape, modes, radii, block_idx)
-    comp = mpb.compress(cogs_log)                      # (n, E, 2+nb+K)
-    emus = [emu_fit(X, comp[:, k], mean=mean) for k in range(E)]
-    mpb.me = MultiEpochEmulator(np.asarray(z_grid, float), emus, rho)
-    return mpb
 
 
 def progenitor_quality_mask(data, max_drop_dex=2.0, min_logm=9.0):
@@ -467,7 +216,7 @@ def cmd_fit(dev=False, mean="poly2", n_modes=None, pmode="block"):
     crps = crps_gaussian(Y.reshape(-1, 4), mus.reshape(-1, 4),
                          sigs.reshape(-1, 4)).reshape(n, 5, 4).mean(axis=(0, 2))
     C = _spearman_corr([mus[:, k] - Y[:, k] for k in range(5)])
-    rho = _fit_rho(C)
+    rho = fit_rho(C)
     print("  kpc CRPS per epoch: " + " ".join(f"{c:.4f}" for c in crps)
           + f"  (exp33-vi marks 0.081 -> 0.200)\n  rho = {rho:.3f} "
           f"(exp33-vi 0.67); adjacent C: "
@@ -567,7 +316,7 @@ def cmd_qa(dev=False, pmode="block"):
         print("    " + " ".join(f"{d['C'][a, b]:+.2f}" for b in range(5))
               + "   |   " + " ".join(f"{C_draw[a, b]:+.2f}" for b in range(5)))
     print(f"    rho: measured {float(d['rho']):.3f} -> draws "
-          f"{_fit_rho(C_draw):.3f}")
+          f"{fit_rho(C_draw):.3f}")
     gt = np.column_stack([anchors[:, 4], anchors[:, 0]])
     ge = [qa.plane_energy(gt, np.column_stack([la[i, :, 4], la[i, :, 0]]))
           for i in range(N_DRAW)]
@@ -794,7 +543,7 @@ def demo():
 
     # (4) rho measurement: AR(1) fit to synthetic residual correlations
     # recovers the generating rho
-    rho_hat = _fit_rho(C_d)
+    rho_hat = fit_rho(C_d)
     assert abs(rho_hat - 0.6) < 0.03, f"rho measurement off: {rho_hat:.3f}"
 
     # (5) shared-PCA-basis profile mode: with one shared mode set and scores
