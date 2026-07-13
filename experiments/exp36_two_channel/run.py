@@ -232,9 +232,13 @@ def cmd_fit(dev=False, variants=VARIANTS):
                 starts = [np.concatenate([b_g, [2.9, -1.0, 1.0]]),
                           np.concatenate([b_g, [2.5, 0.0, 0.5]])]
             elif variant == "2ch-slope":
+                # warm from the fitted 2ch-global basin (zero slopes), NOT from
+                # exp35's railed slope theta — a nested model must not lose to
+                # its own special case
                 t = fitted.get("theta_2ch-global",
                                np.concatenate([b_g, [2.9, -1.0, 1.0]]))
-                starts = [np.concatenate([b_s, t[5:8]])]
+                starts = [np.concatenate([t[:5], np.zeros(5), t[5:8]]),
+                          np.concatenate([b_s, t[5:8]])]
             else:                                       # 2ch-cond (B)
                 t = fitted.get("theta_2ch-slope",
                                np.concatenate([b_s, [2.9, -1.0, 1.0]]))

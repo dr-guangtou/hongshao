@@ -1,6 +1,32 @@
 # exp36 — beyond the single-width transport kernel (two-channel + new DOF)
 
-Status: DESIGN REVIEW 2026-07-14 (branch `exp36-two-channel`). Goal reframed
+> **RESULT (2026-07-14, z=0.4, n=2397, 10-fold CV, held-out 148-pinned shape
+> max|rel| R>5 kpc).** The two-channel deposit closes almost the entire
+> physicality tax INSIDE the (3.0, 4.0) physical box, and the phase-0
+> conditioning earns its slots:
+>
+> | model | params | in-sample loss | held-out shape | massive dlog f148 |
+> |---|---|---|---|---|
+> | exp35 z04-slope (single width) | 10 | 0.1756 | 19.6% | +0.0149 |
+> | 2ch-global | 8 | 0.1590 | 16.9% | +0.0145 |
+> | 2ch-slope | 13 | 0.1566 | 16.8% | +0.0053 |
+> | **2ch-cond (B)** | 23 | **0.1543** | **16.4%** | **+0.0024** |
+> | marks | | | 16.1 (unconstr.) / 15.6 (statistical) | 0 = data |
+>
+> For the first time in the family's history the width law sits OFF the
+> rails (log_s0 ~ 2.05 ~ 110 kpc, g ~ 3.1 interior): the wide role moved to
+> the ex channel (log_s0_ex at the 3.0 box edge, carrying f_ex of the mass),
+> which is what the bounds-stress test said the loose bounds were faking —
+> and unlike the stress fit, the loss gain comes WITH the observables: the
+> massive-end aperture fraction now tracks the data (dlog f148 +0.015 ->
+> +0.002, figure), and the in-sample loss (0.1543) beats the stress fit
+> (0.1676) without any horizon escape. The fitted split rises f_ex = 0.45 ->
+> 0.75 over logMh 13 -> 15 — a free parameter landing on a plausible
+> ex-situ fraction trend. Remaining gap to the statistical wall: 0.8 points.
+> NEXT: the multi-epoch fit + differential-deposition test, then (C) the
+> statistical dressing.
+
+Status: (A)+(B) built and validated at z=0.4 (2026-07-14). Goal reframed
 by the user: no physicality mandate — the primary goal is the best
 parameterized model of the [MAH, halo properties] -> [stellar profile / CoG]
 statistical relation. New degrees of freedom that improve on the transport

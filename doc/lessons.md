@@ -587,3 +587,12 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   predictions. Corollary for generative layers: drawing the ANNULUS masses
   (block representation) reproduces near-empty high-z annuli that per-radius
   log-CoG or log-density draws cannot, while keeping every draw monotone.
+
+- **A nested model that loses to its own special case is an optimizer
+  failure, not a result (exp36).** Warm-starting the 13-param two-channel
+  slope fit from exp35's railed single-width theta left it stuck at exp35's
+  basin (0.1756) — WORSE than its nested 8-param global fit (0.1590), which
+  is impossible at a true optimum. Warm-start nested models from the best
+  fitted SUB-model's basin (+ zeros for the new freedom), and use the
+  nesting relation as the convergence check: fitted(superset) <=
+  fitted(subset) or refit.
