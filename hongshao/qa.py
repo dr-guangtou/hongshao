@@ -59,22 +59,31 @@ def half_mass_radius(cog, R):
 
 
 def measure(cog, R, rhalf):
-    """Standard aperture/annulus/envelope masses for one CoG, keyed '<set>:label'."""
+    """Standard aperture/annulus/envelope masses for one CoG, keyed '<set>:label'.
+
+    A quantity whose radius leaves the measured grid (e.g. the 100-150 kpc
+    annulus on the 148.2-kpc CoG grid, or 4 R_half for a large galaxy) is
+    flagged NaN: ``np.interp`` would silently clamp to the last CoG point and
+    report a wrong (usually ~zero) mass.
+    """
     mtot = cog[-1]
+
+    def cum(r):
+        return float(np.interp(r, R, cog)) if r <= R[-1] else np.nan
+
     m = {}
     for a in KPC_APER:
-        m[f"kpc:M(<{int(a)})"] = float(np.interp(a, R, cog))
+        m[f"kpc:M(<{int(a)})"] = cum(a)
     for a, b in KPC_ANN:
-        m[f"kpc:M({int(a)}-{int(b)})"] = float(np.interp(b, R, cog) - np.interp(a, R, cog))
+        m[f"kpc:M({int(a)}-{int(b)})"] = cum(b) - cum(a)
     for a in KPC_ENV:
-        m[f"kpc:M(>{int(a)})"] = float(mtot - np.interp(a, R, cog))
+        m[f"kpc:M(>{int(a)})"] = mtot - cum(a)
     for k in RE_APER:
-        m[f"Re:M(<{k:g}Re)"] = float(np.interp(k * rhalf, R, cog))
+        m[f"Re:M(<{k:g}Re)"] = cum(k * rhalf)
     for a, b in RE_ANN:
-        m[f"Re:M({a:g}-{b:g}Re)"] = float(np.interp(b * rhalf, R, cog)
-                                          - np.interp(a * rhalf, R, cog))
+        m[f"Re:M({a:g}-{b:g}Re)"] = cum(b * rhalf) - cum(a * rhalf)
     for k in RE_ENV:
-        m[f"Re:M(>{k:g}Re)"] = float(mtot - np.interp(k * rhalf, R, cog))
+        m[f"Re:M(>{k:g}Re)"] = mtot - cum(k * rhalf)
     return m
 
 
@@ -336,6 +345,33 @@ def _plane_figure(truth, model, anchor_z, name, figdir):
     print("wrote", save_fig(fig, figdir / f"qa_planes_{name}")[0])
 
 
+def _tercile_curves(model_k, data_k):
+    """Median log CoGs + median raw and amplitude-pinned residual curves for one
+    tercile/epoch selection (n_sel, R) -> four (R,) arrays. NaN-safe: one bad
+    galaxy must not blank the whole bin's medians."""
+    med_d = np.nanmedian(np.log10(np.clip(data_k, 1.0, None)), axis=0)
+    med_m = np.nanmedian(np.log10(np.clip(model_k, 1.0, None)), axis=0)
+    rel = 100 * np.nanmedian((model_k - data_k) / data_k, axis=0)
+    # amplitude-pinned residual: rescale each model CoG to the true total,
+    # isolating SHAPE error from amplitude regression-to-the-mean (binning by
+    # truth M* makes any conditional mean look biased by ~ the unexplained
+    # amplitude scatter)
+    pin = model_k * (data_k[:, -1:] / np.clip(model_k[:, -1:], 1.0, None))
+    rel_pin = 100 * np.nanmedian((pin - data_k) / data_k, axis=0)
+    return med_d, med_m, rel, rel_pin
+
+
+def _case_picks(mr, n=2):
+    """Best-``n`` + worst-``n`` galaxy indices by epoch-averaged max|rel|.
+
+    Galaxies with no finite epoch are excluded: NaN sorts last under argsort,
+    which would silently promote broken galaxies into the "worst" gallery.
+    """
+    good = np.where(np.isfinite(mr).any(axis=1))[0]
+    order = good[np.argsort(np.nanmean(mr[good], axis=1))]
+    return list(order[:n]) + list(order[-n:])
+
+
 def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
                  bin_by=None, bin_label=None):
     """Median data-vs-model CoG per tercile of ``bin_by`` + median residuals.
@@ -358,18 +394,8 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
         m = (bin_by >= edges[b]) & (bin_by <= edges[b + 1] + 1e-9)
         ax, rax = axes[0, b], axes[1, b]
         for k in range(nz):
-            med_d = np.median(np.log10(data_cogs[m, k]), axis=0)
-            med_m = np.median(np.log10(np.clip(model_cogs[m, k], 1.0, None)), axis=0)
-            rel = 100 * np.median((model_cogs[m, k] - data_cogs[m, k])
-                                  / data_cogs[m, k], axis=0)
-            # amplitude-pinned residual: rescale each model CoG to the true
-            # total, isolating SHAPE error from amplitude regression-to-the-
-            # mean (binning by truth M* makes any conditional mean look
-            # biased by ~ the unexplained amplitude scatter)
-            pin = model_cogs[m, k] * (data_cogs[m, k][:, -1:]
-                                      / np.clip(model_cogs[m, k][:, -1:], 1.0, None))
-            rel_pin = 100 * np.median((pin - data_cogs[m, k]) / data_cogs[m, k],
-                                      axis=0)
+            med_d, med_m, rel, rel_pin = _tercile_curves(model_cogs[m, k],
+                                                         data_cogs[m, k])
             ax.plot(R, med_d, "-", c=cols[k], lw=1.8,
                     label=f"z={anchor_z[k]}" if b == 0 else None)
             ax.plot(R, med_m, "--", c=cols[k], lw=1.4)
@@ -399,8 +425,7 @@ def _cases_figure(model_cogs, data_cogs, R, anchor_z, mr, name, figdir):
     nz = len(anchor_z)
     cols = _zcolors(nz)
     logms = np.log10(data_cogs[:, 0, -1])
-    order = np.argsort(np.nanmean(mr, axis=1))
-    picks = list(order[:2]) + list(order[-2:])
+    picks = _case_picks(mr)
     tags = ["best 1", "best 2", "worst 2", "worst 1"]
     fig, axes = plt.subplots(2, 4, figsize=(18.5, 7.5), sharex=True,
                              height_ratios=[2, 1])
@@ -460,6 +485,27 @@ def demo():
     assert shift["energy_ratio_centered"] < 3, shift      # pure shift: centered ~ floor
     assert same["energy_ratio"] < 3, same
     assert tight["energy_ratio_centered"] > 3, tight      # too tight: centered catches it
+
+    # NaN safety of the figure reductions: one bad galaxy must not blank a
+    # tercile's median curves, and an all-NaN galaxy must not rank as "worst"
+    model_nan = 1.1 * truth
+    model_nan[3] = np.nan
+    md, mm, rel, rel_pin = _tercile_curves(model_nan[:, 0], truth[:, 0])
+    for arr in (md, mm, rel, rel_pin):
+        assert np.isfinite(arr).all(), "one NaN galaxy blanked the tercile medians"
+    mr_nan = profile_maxrel(model_nan, truth, R)
+    picks = _case_picks(mr_nan)
+    assert len(picks) == 4 and 3 not in picks, \
+        f"all-NaN galaxy ranked in the best/worst gallery: {picks}"
+
+    # grid-edge queries must FLAG (NaN), not silently clamp to the last CoG
+    # point (the real 24-point grid ends at 148.2 kpc < the 150-kpc annulus edge)
+    R_short = np.geomspace(2.0, 120.0, 16)
+    cog_short = 1e11 * (1.0 - np.exp(-R_short / 10.0))
+    m_short = measure(cog_short, R_short, 40.0)
+    assert np.isfinite(m_short["kpc:M(<100)"]), "in-grid aperture must stay finite"
+    assert np.isnan(m_short["kpc:M(100-150)"]), "annulus past the grid edge must flag NaN"
+    assert np.isnan(m_short["Re:M(>4Re)"]), "Re envelope past the grid edge must flag NaN"
 
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)

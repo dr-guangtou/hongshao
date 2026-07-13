@@ -75,7 +75,7 @@ class Emulator:
         """
         rng = np.random.default_rng(rng)
         mu, sigma, _ = self.predict(X)
-        chol = np.linalg.cholesky(self.corr)                 # R = L L^T, shared
+        chol = _chol_psd(self.corr)                          # R = L L^T, shared
         z = rng.standard_normal((size, len(mu), mu.shape[1]))
         return mu[None] + sigma[None] * (z @ chol.T)
 
@@ -91,6 +91,11 @@ def fit(X, Y, mean="linear", ridge=2.0):
     Y = np.asarray(Y, float)
     if mean not in ("linear", "poly2"):
         raise ValueError(f"mean must be 'linear' or 'poly2', got {mean!r}")
+    if not np.isfinite(X).all() or not np.isfinite(Y).all():
+        raise ValueError(
+            f"fit requires finite X and Y (non-finite rows: X {int((~np.isfinite(X).all(1)).sum())}, "
+            f"Y {int((~np.isfinite(Y).all(1)).sum())}): one NaN silently poisons that "
+            "column's coefficients and the shared residual correlation — pre-filter rows")
     mu_x, sd_x = X.mean(0), X.std(0)
     Xs = (X - mu_x) / sd_x
     mean_design = _mean_design(Xs, mean)
@@ -108,6 +113,23 @@ def fit(X, Y, mean="linear", ridge=2.0):
         sig[:, j] = np.exp(0.5 * (var_design @ gamma[j]))
     corr = np.corrcoef((resid / sig).T)                      # scatter removed
     return Emulator(mean, mu_x, sd_x, beta, gamma, corr)
+
+
+def _chol_psd(corr):
+    """Cholesky of a correlation matrix, robust to ``corrcoef`` roundoff.
+
+    Near-duplicate targets can push an eigenvalue a hair below zero, where the
+    bare cholesky raises. On failure, shrink toward the identity by the
+    smallest amount that restores positive-definiteness (diagonal stays 1, the
+    correlation structure is preserved to ~the eigenvalue defect).
+    """
+    try:
+        return np.linalg.cholesky(corr)
+    except np.linalg.LinAlgError:
+        w_min = float(np.linalg.eigvalsh(corr).min())
+        lam = (1e-10 - w_min) / (1.0 - w_min)
+        shrunk = (1.0 - lam) * corr + lam * np.eye(len(corr))
+        return np.linalg.cholesky(shrunk)
 
 
 def _mean_design(Xs, mean):
@@ -224,6 +246,30 @@ if __name__ == "__main__":
     # sample spread matches the truth; the mean alone is under-dispersed (exp15)
     assert np.allclose(draws.std(axis=(0, 1)), Yt.std(0), rtol=0.1), "sample mis-dispersed"
     assert np.all(mu.std(0) < Yt.std(0)), "mean should be under-dispersed vs truth"
+
+    # fit must fail fast on non-finite input: a single NaN otherwise silently
+    # NaNs that column's coefficients AND the shared corrcoef row/column.
+    for bad_X, bad_Y in ((True, False), (False, True)):
+        Xb, Yb = Xs.copy(), Yt.copy()
+        (Xb if bad_X else Yb)[7, 1] = np.nan
+        try:
+            fit(Xb, Yb)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"fit accepted non-finite {'X' if bad_X else 'Y'}")
+
+    # sample() must survive a numerically non-PSD correlation: corrcoef
+    # roundoff on near-duplicate targets can push an eigenvalue just below 0,
+    # where a bare cholesky raises.
+    emu_psd = fit(Xs, np.column_stack([Yt[:, :2], Yt[:, 1]]))
+    emu_psd.corr = np.array([[1.0, 0.0, 0.0],
+                             [0.0, 1.0, 1.0 + 1e-9],
+                             [0.0, 1.0 + 1e-9, 1.0]])
+    d_psd = emu_psd.sample(Xs[:50], size=100, rng=3)
+    assert np.isfinite(d_psd).all(), "sample not robust to corrcoef roundoff"
+    rr = np.corrcoef(((d_psd - d_psd.mean(0)) / d_psd.std(0)).reshape(-1, 3).T)
+    assert rr[1, 2] > 0.99, "PSD repair must preserve the correlation structure"
 
     # (2) exp19 reproduction on the real catalog (skipped if data absent).
     data = _load_real()

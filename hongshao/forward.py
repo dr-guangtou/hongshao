@@ -34,6 +34,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .emulator import _chol_psd
+
 
 @dataclass(frozen=True)
 class Deform:
@@ -79,7 +81,7 @@ def sample(emu, X, theta=Deform(), size=1, rng=None, norm_weight=None, outer_wei
     """
     rng = np.random.default_rng(rng)
     mu, sigma, _ = forward(emu, X, theta, norm_weight, outer_weight)
-    chol = np.linalg.cholesky(emu.corr)
+    chol = _chol_psd(emu.corr)
     z = rng.standard_normal((size, len(mu), mu.shape[1]))
     return mu[None] + sigma[None] * (z @ chol.T)
 
@@ -178,6 +180,12 @@ if __name__ == "__main__":  # self-check: baseline == emulator; each knob moves 
     flat = res.reshape(-1, 4)
     assert np.allclose(flat.std(0), 1.0, rtol=0.05), "sample spread wrong"
     assert np.allclose(np.corrcoef(flat.T), emu.corr, atol=0.03), "sample correlation wrong"
+
+    # sample() must survive corrcoef roundoff (non-PSD by ~1e-9, exact-duplicate
+    # targets): the shared _chol_psd guard, exercised at THIS call site
+    emu_psd = fit(X, np.column_stack([Y[:, :3], Y[:, 2]]))
+    emu_psd.corr[2, 3] = emu_psd.corr[3, 2] = 1.0 + 1e-9
+    assert np.isfinite(sample(emu_psd, X[:20], size=10, rng=4)).all()
 
     # (any T) a 6-target emulator works; default d_out hits the last of 6
     Y6 = np.column_stack([Y, Y[:, :2] + 0.05 * rng.standard_normal((n, 2))])

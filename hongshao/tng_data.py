@@ -219,9 +219,20 @@ def cog_sigma_dex(index: int, data_dir: Path = DEFAULT_DATA_DIR) -> np.ndarray:
              else np.zeros_like(r))
     m = (np.isfinite(r) & np.isfinite(intens) & np.isfinite(intens_err)
          & np.isfinite(ellip) & (r > 0) & (intens > 0))
-    r, intens, intens_err, ellip = r[m], intens[m], intens_err[m], ellip[m]
-    if len(r) < 4:
+    if m.sum() < 4:
         return np.full(COG_RAD_KPC.shape, np.nan)
+    return _isophote_cog_sigma(r[m], intens[m], intens_err[m], ellip[m])
+
+
+def _isophote_cog_sigma(r, intens, intens_err, ellip):
+    """Error-propagation core of ``cog_sigma_dex`` (pure, self-checkable).
+
+    The cumulative sum and ``np.interp`` both silently assume ascending radii,
+    so the isophotes are sorted by radius first.
+    """
+    order = np.argsort(r, kind="stable")
+    r, intens, intens_err, ellip = (r[order], intens[order],
+                                    intens_err[order], ellip[order])
     area = np.pi * r**2 * (1.0 - ellip)            # enclosed elliptical area
     dA = np.diff(area)
     mass = np.concatenate([[intens[0] * area[0]],
@@ -496,6 +507,19 @@ def qc_summary(tbl: Table) -> str:
 
 def _selftest(data_dir: Path):
     """Cheap correctness checks on a small subsample (the runnable check)."""
+    # cog_sigma_dex core: np.interp and the cumulative sum silently assume
+    # ascending radii, so unsorted isophote tables must give the same answer
+    rs = np.geomspace(1.0, 160.0, 50)
+    intens_s = 1e9 * (rs / 5.0) ** -1.5
+    err_s = 0.05 * intens_s
+    ell_s = np.full_like(rs, 0.3)
+    ref = _isophote_cog_sigma(rs, intens_s, err_s, ell_s)
+    assert np.isfinite(ref).all() and (ref > 0).all()
+    sh = np.random.default_rng(0).permutation(len(rs))
+    assert np.array_equal(_isophote_cog_sigma(rs[sh], intens_s[sh], err_s[sh],
+                                              ell_s[sh]), ref), \
+        "cog_sigma_dex core corrupted by unsorted isophote radii"
+
     tbl = build_dataset(data_dir, n_gal=60)
     assert len(tbl) == 60
     assert tbl["logmstar_cog"].shape == (60, 24)

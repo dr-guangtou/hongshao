@@ -80,6 +80,15 @@ Y = aperture_targets(cog, radii, edges_kpc=[10, 30, 50, 100])      # (N, 4)
 # outer bin exceeds the measured CoG — APPLY IT to both Y and X:
 Y_re, Re, mask = re_targets(cog, radii, re_edges=[0.5, 1, 2, 4, 6, 9], total_kpc=120.0)
 Y_re, X_re = Y_re[mask], X[mask]
+```
+
+Guards: both builders raise `ValueError` if a requested radius (`edges_kpc`, or
+`total_kpc` for mode 2) leaves the measured `radii` grid — `np.interp` would
+otherwise silently clamp to the edge and return wrong masses. A non-positive
+annulus (a non-monotonic, noisy CoG) comes back **NaN**, not `log M = 0`;
+filter with `np.isfinite(Y).all(1)` (mode 2's `mask` already includes this).
+
+```python
 
 # Mode 4 — the 1-D surface-density profile Sigma(R) = dM/dA (for the profile emulator):
 log_sigma, mid_radii = density_from_cog(cog, radii)               # (N, R-1), (R-1,)
@@ -95,6 +104,10 @@ from hongshao.emulator import fit
 emu = fit(X, Y)                       # default: linear mean + heteroscedastic full covariance
 emu_poly = fit(X, Y, mean="poly2")    # optional richer mean (7 degree-2 terms); marginally sharper
 ```
+
+`fit` raises `ValueError` on any non-finite entry in `X` or `Y` (one NaN would
+otherwise silently poison that column's coefficients *and* the shared residual
+correlation): pre-filter rows, e.g. `g = np.isfinite(X).all(1) & np.isfinite(Y).all(1)`.
 
 **Profile modes (3 & 4)** — fit a `ProfileEmulator`, which PCA-compresses the
 profile shape, predicts `[total mass, PC1..PCK]`, and reconstructs the per-radius
