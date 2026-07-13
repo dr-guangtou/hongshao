@@ -183,10 +183,14 @@ def plane_energy(truth_xy, model_xy, n_split=8, seed=0):
 
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
-             verbose=True, figures=True, bin_by=None, bin_label=None):
+             verbose=True, figures=True, bin_by=None, bin_label=None,
+             draw_cogs=None):
     """Tiered QA for one model. Prints the report, writes the standard figures
     (mass tables per bin set, observational planes, profile visual QA), and
-    returns a dict with all measurements for programmatic comparison."""
+    returns a dict with all measurements for programmatic comparison.
+    ``draw_cogs`` (S, n, nz, nr): sampled CoG populations from the generative
+    layer; the first is overlaid on the plane figure (the mean prediction is
+    under-dispersed there by construction)."""
     set_style()
     model_cogs, data_cogs = np.asarray(model_cogs), np.asarray(data_cogs)
     n, nz = data_cogs.shape[:2]
@@ -216,8 +220,12 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         for k in keys:
             cells = []
             for j in range(nz):
-                bias = 100 * np.nanmedian(relerr(model[k][:, j], truth[k][:, j]))
-                sc = dex_scatter(model[k][:, j], truth[k][:, j])
+                t, m = truth[k][:, j], model[k][:, j]
+                if not (np.isfinite(t) & np.isfinite(m)).any():
+                    cells.append("  flagged NaN")     # e.g. beyond the CoG grid
+                    continue
+                bias = 100 * np.nanmedian(relerr(m, t))
+                sc = dex_scatter(m, t)
                 cells.append(f"{bias:+6.1f}%/{sc:.3f}")
             print(f"    {k:>16s} | " + " | ".join(cells))
         print("\n  tier 2b — observational planes (log-log): slope / scatter / rho, "
@@ -243,7 +251,9 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                      truth, model, anchor_z, name, figdir)
         _mass_figure("Re", [k for k in keys if k.startswith("Re:")],
                      truth, model, anchor_z, name, figdir)
-        _plane_figure(truth, model, anchor_z, name, figdir)
+        draw_m = (None if draw_cogs is None
+                  else measure_all(np.asarray(draw_cogs)[0], data_cogs, R)[1])
+        _plane_figure(truth, model, anchor_z, name, figdir, draws=draw_m)
         _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
                      bin_by=bin_by, bin_label=bin_label)
         _cases_figure(model_cogs, data_cogs, R, anchor_z, mr_all, name, figdir)
@@ -253,8 +263,26 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
 
 
 # --- figures ---------------------------------------------------------------------
+# ordered cool->warm subset of the Okabe-Ito colorblind-safe palette: the
+# cividis ramp made adjacent epochs (z=0.7..1.5) nearly indistinguishable
+_EPOCH_COLORS = ["#0072B2", "#009E73", "#E69F00", "#D55E00", "#CC79A7"]
+
+
 def _zcolors(nz):
+    if nz <= len(_EPOCH_COLORS):
+        return _EPOCH_COLORS[:nz]
     return [matplotlib.colormaps["cividis"](v) for v in np.linspace(0.0, 0.92, nz)]
+
+
+def _tex(s):
+    """Make a label LaTeX-text-mode safe: <, >, | render as inverted
+    punctuation / dashes under usetex unless wrapped in math mode."""
+    return s.replace("<", "$<$").replace(">", "$>$").replace("|", "$|$")
+
+
+def _pct():
+    """A percent sign that survives usetex (% starts a LaTeX comment)."""
+    return r"\%" if matplotlib.rcParams.get("text.usetex", False) else "%"
 
 
 def _mass_figure(tag, keys, truth, model, anchor_z, name, figdir):
@@ -295,9 +323,15 @@ def _mass_group_figure(tag, gtag, keys, truth, model, anchor_z, name, figdir):
             lo = np.percentile(X[pos], 0.5) / 2.0
             hi = np.percentile(X[pos], 99.5) * 2.0
             av.plot([lo, hi], [lo, hi], "k--", lw=1, zorder=0)
-            av.set_xlim(lo, hi)
-            av.set_ylim(lo, hi)
-        av.set(xscale="log", yscale="log", title=key)
+        else:
+            # all-NaN quantity (e.g. flagged beyond the CoG grid edge): give
+            # the log axes finite limits — empty log axes crash tight_layout
+            lo, hi = 1.0, 10.0
+            av.text(0.5, 0.5, "flagged NaN\n(beyond CoG grid)", ha="center",
+                    va="center", transform=av.transAxes, fontsize=8, color="0.4")
+        av.set_xlim(lo, hi)
+        av.set_ylim(lo, hi)
+        av.set(xscale="log", yscale="log", title=_tex(key))
         ar.axhline(0, c="0.5", lw=0.8)
         for gpm in (0.1, -0.1):
             ar.axhline(gpm, c="0.7", ls=":", lw=0.8)
@@ -313,8 +347,11 @@ def _mass_group_figure(tag, gtag, keys, truth, model, anchor_z, name, figdir):
     print("wrote", save_fig(fig, figdir / f"qa_mass_{tag}_{gtag}_{name}")[0])
 
 
-def _plane_figure(truth, model, anchor_z, name, figdir):
-    """Observational planes: truth (filled) vs model (open), one row per plane."""
+def _plane_figure(truth, model, anchor_z, name, figdir, draws=None):
+    """Observational planes: truth (filled) vs the MEAN prediction (open) — the
+    mean is under-dispersed by construction (regression to the mean), so when
+    ``draws`` (a measured sampled population) is given, it is overlaid as the
+    honest generative comparison and its scatter quoted in the title."""
     nz = len(anchor_z)
     cols = _zcolors(nz)
     fig, axes = plt.subplots(len(PLANES), nz, figsize=(3.1 * nz, 3.2 * len(PLANES)),
@@ -329,17 +366,33 @@ def _plane_figure(truth, model, anchor_z, name, figdir):
             ax.scatter(lx, ly, s=14, c=[cols[j]], alpha=0.75, edgecolors="none",
                        label="truth")
             ax.scatter(mx, my, s=18, facecolors="none", edgecolors="0.25", lw=0.7,
-                       label="model")
+                       label="model mean")
             st, sm = plane_stats(lx, ly), plane_stats(mx, my)
-            ax.set_title(f"z={anchor_z[j]}  slope {st['slope']:+.2f}->{sm['slope']:+.2f}"
-                         f"\nscatter {st['scatter']:.3f}->{sm['scatter']:.3f}",
-                         fontsize=8)
+            title = (f"z={anchor_z[j]}  slope {st['slope']:+.2f}$\\to$"
+                     f"{sm['slope']:+.2f}\nscatter {st['scatter']:.3f}$\\to$"
+                     f"{sm['scatter']:.3f}")
+            if draws is not None:
+                dx, dy = (np.log10(np.clip(draws[kx][:, j], 1.0, None)),
+                          np.log10(np.clip(draws[ky][:, j], 1.0, None)))
+                ax.scatter(dx, dy, s=8, marker="x", c="0.45", lw=0.5,
+                           alpha=0.6, label="draw")
+                sd = plane_stats(dx, dy)
+                title += f" (draw {sd['scatter']:.3f})"
+            ax.set_title(title, fontsize=8)
+            # frame the TRUTH population: floored/absurd model points may clip
+            good = np.isfinite(lx) & np.isfinite(ly)
+            if good.sum() > 10:
+                xr = np.percentile(lx[good], [0.5, 99.5])
+                yr = np.percentile(ly[good], [0.5, 99.5])
+                ax.set_xlim(xr[0] - 0.4, xr[1] + 0.4)
+                ax.set_ylim(yr[0] - 0.4, yr[1] + 0.4)
             if j == 0:
-                ax.set_ylabel(f"log {ky}")
-            ax.set_xlabel(f"log {kx}")
+                ax.set_ylabel(_tex(f"log {ky}"))
+            ax.set_xlabel(_tex(f"log {kx}"))
             if ri == 0 and j == 0:
                 ax.legend(fontsize=7, loc="upper left")
-    fig.suptitle(f"QA [{name}] — observational planes: truth (filled) vs model (open)",
+    fig.suptitle(f"QA [{name}] — observational planes: truth (filled) vs "
+                 "model mean (open)" + ("" if draws is None else " vs draw (x)"),
                  fontsize=12)
     fig.tight_layout()
     print("wrote", save_fig(fig, figdir / f"qa_planes_{name}")[0])
@@ -362,13 +415,15 @@ def _tercile_curves(model_k, data_k):
 
 
 def _case_picks(mr, n=2):
-    """Best-``n`` + worst-``n`` galaxy indices by epoch-averaged max|rel|.
+    """Best-``n`` + worst-``n`` galaxy indices by their WORST epoch (minimax).
 
-    Galaxies with no finite epoch are excluded: NaN sorts last under argsort,
-    which would silently promote broken galaxies into the "worst" gallery.
+    Ranking by the epoch average let a "best" galaxy hide one bad epoch;
+    minimax makes the best gallery uniformly good. Galaxies with no finite
+    epoch are excluded: NaN sorts last under argsort, which would silently
+    promote broken galaxies into the "worst" gallery.
     """
     good = np.where(np.isfinite(mr).any(axis=1))[0]
-    order = good[np.argsort(np.nanmean(mr[good], axis=1))]
+    order = good[np.argsort(np.nanmax(mr[good], axis=1))]
     return list(order[:n]) + list(order[-n:])
 
 
@@ -390,12 +445,14 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
     edges = np.quantile(bin_by, [0, 1 / 3, 2 / 3, 1])
     fig, axes = plt.subplots(2, 3, figsize=(15.5, 7.5), sharex=True,
                              height_ratios=[2, 1])
+    rmax = 0.0
     for b in range(3):
         m = (bin_by >= edges[b]) & (bin_by <= edges[b + 1] + 1e-9)
         ax, rax = axes[0, b], axes[1, b]
         for k in range(nz):
             med_d, med_m, rel, rel_pin = _tercile_curves(model_cogs[m, k],
                                                          data_cogs[m, k])
+            rmax = max(rmax, np.nanmax(np.abs(rel)), np.nanmax(np.abs(rel_pin)))
             ax.plot(R, med_d, "-", c=cols[k], lw=1.8,
                     label=f"z={anchor_z[k]}" if b == 0 else None)
             ax.plot(R, med_m, "--", c=cols[k], lw=1.4)
@@ -404,15 +461,20 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
             rax.plot(R, rel_pin, ":", c=cols[k], lw=1.4,
                      label="amplitude-pinned (shape)" if (b == 0 and k == 0) else None)
         rax.axhline(0, c="0.6", lw=0.8)
-        for y in (-20, 20):
-            rax.axhline(y, c="0.8", lw=0.7, ls=":")
         if b == 0:
             rax.legend(fontsize=7, loc="upper right")
         ax.set(xscale="log",
                title=f"{bin_label} {edges[b]:.2f}-{edges[b+1]:.2f}  (n={m.sum()})")
-        rax.set(xscale="log", xlabel="R [kpc]", ylim=(-60, 60))
-    axes[0, 0].set(ylabel="median log$_{10}$ M$_*$(<R) [M$_\\odot$]")
-    axes[1, 0].set(ylabel="median (model$-$data)/data [%]")
+        rax.set(xscale="log", xlabel="R [kpc]")
+    # residual range follows the curves (a fixed +-60 dwarfed a good model);
+    # shared across panels for comparability
+    lim = float(np.clip(1.25 * rmax, 10.0, 60.0))
+    for b in range(3):
+        for y in (-10, 10):
+            axes[1, b].axhline(y, c="0.8", lw=0.7, ls=":")
+        axes[1, b].set_ylim(-lim, lim)
+    axes[0, 0].set(ylabel="median log$_{10}$ M$_*$($<$R) [M$_\\odot$]")
+    axes[1, 0].set(ylabel=f"median (model$-$data)/data [{_pct()}]")
     axes[0, 0].legend(fontsize=8, loc="lower right")
     fig.suptitle(f"QA [{name}] — CoGs by {bin_label} tercile "
                  "(data solid, model dashed)", fontsize=12)
@@ -441,11 +503,11 @@ def _cases_figure(model_cogs, data_cogs, R, anchor_z, mr, name, figdir):
             j = int(np.argmax(np.abs(rel)))
             rax.plot(R[j], rel[j], "o", c=cols[k], ms=5, mec="0.2", mew=0.5)
         rax.axhline(0, c="0.6", lw=0.8)
-        ax.set(xscale="log", title=f"{tag}: idx {i}, logM*={logms[i]:.2f}\n"
-               f"epoch-avg max|rel| {100*np.nanmean(mr[i]):.0f}%")
+        ax.set(xscale="log", title=f"{tag}: idx {i}, logM$_*$={logms[i]:.2f}\n"
+               f"worst-epoch max$|$rel$|$ {100*np.nanmax(mr[i]):.0f}{_pct()}")
         rax.set(xscale="log", xlabel="R [kpc]")
-    axes[0, 0].set(ylabel="log$_{10}$ M$_*$(<R) [M$_\\odot$]")
-    axes[1, 0].set(ylabel="(model$-$data)/data [%]")
+    axes[0, 0].set(ylabel="log$_{10}$ M$_*$($<$R) [M$_\\odot$]")
+    axes[1, 0].set(ylabel=f"(model$-$data)/data [{_pct()}]")
     axes[0, 0].legend(fontsize=8, loc="lower right")
     fig.suptitle(f"QA [{name}] — best/worst cases (data solid, model dashed; "
                  "dot = worst radius)", fontsize=12)
@@ -497,6 +559,21 @@ def demo():
     picks = _case_picks(mr_nan)
     assert len(picks) == 4 and 3 not in picks, \
         f"all-NaN galaxy ranked in the best/worst gallery: {picks}"
+    # the gallery ranks by the WORST epoch (minimax), not the epoch average:
+    # "best" must be uniformly good, not good-on-average with one bad epoch
+    mr_mix = np.array([[0.01, 0.01, 0.31],      # best AVERAGE, one bad epoch
+                       [0.12, 0.12, 0.12],      # uniformly decent -> best
+                       [0.30, 0.30, 0.30],
+                       [0.60, 0.60, 0.60]])     # -> worst
+    p_mix = _case_picks(mr_mix, n=1)
+    assert p_mix == [1, 3], f"gallery must rank by worst epoch, got {p_mix}"
+
+    # figure text must be LaTeX-text-mode safe: <, >, | render as inverted
+    # punctuation / dashes under usetex unless math-wrapped; % starts a comment
+    assert _tex("kpc:M(<30)") == "kpc:M($<$30)"
+    assert _tex("kpc:M(>50)") == "kpc:M($>$50)"
+    assert _tex("max|rel|") == "max$|$rel$|$"
+    assert _pct() in ("%", r"\%")
 
     # grid-edge queries must FLAG (NaN), not silently clamp to the last CoG
     # point (the real 24-point grid ends at 148.2 kpc < the 150-kpc annulus edge)
@@ -506,6 +583,15 @@ def demo():
     assert np.isfinite(m_short["kpc:M(<100)"]), "in-grid aperture must stay finite"
     assert np.isnan(m_short["kpc:M(100-150)"]), "annulus past the grid edge must flag NaN"
     assert np.isnan(m_short["Re:M(>4Re)"]), "Re envelope past the grid edge must flag NaN"
+    # ... and the mass figures must survive a quantity that is ALL-NaN on such
+    # a grid (an empty log-scaled panel crashes tight_layout otherwise)
+    import tempfile
+    truth_short = (amp * (1.0 - np.exp(-R_short[None, None, :] ** 2
+                                       / (2.0 * sig ** 2))))
+    evaluate(1.1 * truth_short, truth_short, R_short, [0.4, 1.0, 2.0],
+             name="short_grid", verbose=False, figures=True,
+             figdir=tempfile.mkdtemp(prefix="qa_demo_"),
+             draw_cogs=np.stack([1.05 * truth_short, 0.95 * truth_short]))
 
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)

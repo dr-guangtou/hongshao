@@ -147,6 +147,39 @@ levels, coverage = interval_coverage(Y.ravel(), mu.ravel(), sigma.ravel())
 For a quick sanity benchmark, `python -m hongshao.emulator` reproduces the TNG300
 reference numbers (CRPS ≈ 0.083, conditional-coverage gap ≈ 0.01).
 
+### 1.5 Multi-epoch profiles (`hongshao.multi_epoch`)
+
+To emulate the profile at ANY redshift in the fitted range (and to draw
+coherent multi-epoch histories), fit the multi-epoch product on per-epoch log
+CoGs `cogs_log` (n, E, R) at snapshot redshifts `z_grid`:
+
+```python
+from hongshao.multi_epoch import fit_multi_epoch
+
+mp = fit_multi_epoch(X, cogs_log, radii, z_grid)      # the block product (default)
+log_cog = mp.predict_cog(X_new, z=0.85)               # mean, ANY z in range
+draws = mp.sample_cogs(X_new, size=100, rng=0)        # (100, n, E, R) log CoGs
+```
+
+Two graduated products (exp37; its README holds the evidence table):
+
+* **`mode="block"` (default)** — predicts the kpc block masses
+  (2–10/10–30/30–50/50–100/100–R_max) directly plus a within-block shape;
+  every drawn CoG is monotone by construction, draws reproduce the truth's
+  2-D observational planes to ~the sampling floor through z=1, and the mean
+  path allocates the total-vs-parts gap by predictive uncertainty.
+* **`mode="cog"`** — the pooled-basis log-CoG product (K=3): the best
+  inner-region (<10 kpc) mean accuracy at z=0.4 (+1.8% vs block +3.5%), but
+  its per-radius draws are NOT guaranteed monotone — prefer it only for
+  mean-profile work centred on the inner regions at low z.
+
+Continuous z works by quadratic interpolation of the per-epoch core
+coefficients (held-epoch closure loses <=0.9 max|rel| points); cross-epoch
+draw coherence is an AR(1) latent in epoch index — measure `rho` from
+cross-epoch out-of-fold residual correlations with `fit_rho` and pass it to
+the fit (TNG300 reference: 0.62 with poly2 cores). Self-check:
+`python -m hongshao.multi_epoch`.
+
 ---
 
 ## Part 2 — Predicting observables
@@ -318,6 +351,18 @@ hongshao.profile_emulator
   ProfileEmulator.predict(X)            -> (mu, sigma)        # per radius
   ProfileEmulator.sample(X, size=1, rng=None) -> (size, N, R)
   ProfileEmulator.scores(X)             -> [anchor, PC1..PCK]
+
+hongshao.multi_epoch
+  fit_multi_epoch(X, cogs_log, radii, z_grid, mode="block", ...) -> product
+  fit_block_profile(X, cogs_log, radii, z_grid, n_modes=6, rho=0.0,
+                    mean="poly2", block_kpc=(10,30,50,100)) -> MultiEpochBlock
+  fit_shared_profile(X, profs, anchors, radii, z_grid, n_modes=3, rho=0.0,
+                     mean="poly2") -> MultiEpochProfile
+  MultiEpochBlock.predict_cog(X, z)                  -> (n, R) log CoG
+  MultiEpochBlock.sample_cogs(X, z=None, size, rng)  -> (size, n, E, R), monotone
+  MultiEpochProfile.at_z(z)                          -> ProfileEmulator
+  MultiEpochEmulator.at_z(z) / .predict(X, z) / .sample_epochs(X, ...)
+  fit_rho(C, idx=None) -> AR(1) rho from a cross-epoch correlation matrix
 
 hongshao.forward
   Deform(d0=0, d_slope=0, d_out=0, f_ab=0, s=1)      # defaults = identity baseline

@@ -150,11 +150,11 @@ def _fit_logvar(r, Z, ridge):
     r2 = r ** 2
 
     def nll(g):
-        s = A @ g
+        s = np.clip(A @ g, -700.0, 700.0)     # exp overflow guard (near-zero r2)
         return 0.5 * np.sum(s + r2 * np.exp(-s)) + 0.5 * ridge * np.sum(g[1:] ** 2)
 
     def grad(g):
-        s = A @ g
+        s = np.clip(A @ g, -700.0, 700.0)
         out = A.T @ (0.5 * (1.0 - r2 * np.exp(-s)))
         out[1:] += ridge * g[1:]
         return out

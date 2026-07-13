@@ -540,3 +540,50 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 - Background `uv run` commands buffer stdout through pipes; redirect to a file
   and read that, or block on the process, rather than polling a pipe.
 - `np.trapz` is gone in NumPy 2 — use `np.trapezoid`.
+
+## Figures / QA presentation
+
+- **This machine's matplotlibrc has `text.usetex: True`; raw `<`, `>`, `|`, `%`
+  in matplotlib text render as ¡, ¿, em-dash, or eat the rest of the label (%
+  is a LaTeX comment) — silently, no error (found 2026-07-13 in every qa.py
+  figure).** Route figure text through `hongshao.qa._tex()` (math-wraps <>|)
+  and `_pct()` (usetex-aware percent). Also: an axes with a log scale and NO
+  plotted data crashes `tight_layout` ("Data cannot be log-scaled") — give
+  all-NaN panels explicit finite limits. And the cividis ramp makes adjacent
+  epochs indistinguishable — `qa._zcolors` now uses a distinct ordered
+  Okabe-Ito subset (user request: visibly distinct epoch colors).
+
+- **The fit-space choice trades inner for outer accuracy in profile emulators
+  (exp37, 2026-07-14).** Head-to-head on the same folds and cores, the
+  log-density-space product's MEAN prediction is +6-7% biased inside 10 kpc
+  where the log-CoG-space product is +1.5-2% (and per-galaxy worst-radius
+  errors ~3 points worse), while the density space wins the shape/outskirt
+  metrics. Three structural reasons, all measured: (1) differencing amplifies
+  where the profile is steep — in CoG space the inner cumulative is a direct,
+  smooth target; in density space it is a sum of a few steep shells (small
+  denominator, compounded errors) — the exp26 lesson operating in reverse;
+  (2) pinning the total to the anchor EXPORTS shape error to the centre: any
+  outskirt deficit is compensated by a global rescale that biases the small
+  inner cumulative (K=3->8: outskirt bias +9.9%->+0.7% dragged the inner bias
+  +7.2%->+4.2% in lockstep); (3) mode-budget competition: pooled density
+  shapes are dominated by decades of outskirt dynamic range, so shared PCA
+  modes underserve the inner region — the cumulative compresses that range,
+  which is why K=3 sufficed in CoG space. Fix directions: segment-pinned
+  reconstruction (kpc-annulus masses as explicit coefficients, shape only
+  distributing WITHIN segments) or a hybrid (CoG-space mean + density-space
+  draws). Corollary: present a model's QA in the space it was FIT, alongside
+  the integrated deliverable.
+
+- **A monotone model curve cannot have all its parts AND its total
+  median-unbiased at once; choose where the inconsistency lands (exp37 block
+  product, 2026-07-14).** Summing median-predicted lognormal components
+  undershoots the median-predicted total (measured: +2.8% at z=0.4 -> +6.6%
+  at z=2 of rescale); a uniform rescale smears that deficit onto the
+  well-determined inner blocks (+5.6% inner bias), while trusting the raw sum
+  biases the total (-3.4 -> -6.9%). The fix is to allocate the deficit in
+  proportion to each block's EXPECTED median-vs-mean gap,
+  B_j (e^(sigma_ln^2/2) - 1) from the fitted heteroscedastic sigma — mass
+  lands where the uncertainty lives, tight blocks stay at their direct
+  predictions. Corollary for generative layers: drawing the ANNULUS masses
+  (block representation) reproduces near-empty high-z annuli that per-radius
+  log-CoG or log-density draws cannot, while keeping every draw monotone.

@@ -22,7 +22,10 @@ features (DiffMAH + `c_200c`), the N-target mean/scatter emulator
 (`hongshao/emulator.py`) with generative sampling, the **profile/target layer**
 (`hongshao/profile_emulator.py`) that graduates all four prediction modes (kpc
 apertures, Re apertures, the cumulative CoG, and the 1-D density profile) through
-that one core, and a thin, physically-labeled **deformation layer**
+that one core, the **multi-epoch layer** (`hongshao/multi_epoch.py`) — profiles
+at any z in the fitted range by coefficient interpolation, with an AR(1)-in-epoch
+latent for coherent multi-epoch draws (block-pinned product by default, log-CoG
+product kept alongside; exp37) — and a thin, physically-labeled **deformation layer**
 (`hongshao/forward.py`) — 5 knobs (`d0`, `d_slope`, `d_out`, `f_ab`, `s`) that
 deform any of the four modes (target-agnostic for apertures; `forward_profile`
 for the profile modes), with `Deform()` = the frozen baseline. The deformation
@@ -123,6 +126,12 @@ doc/             # science context, data reference, todo.md, lessons.md
 - Avoid software/PM jargon and tool names the user wouldn't know (e.g. YAGNI,
   CI/CD, DVC, Snakemake). If a term is genuinely important, define it in one
   plain sentence instead of assuming it.
+- (2026-07-14, user rule) This explicitly includes development-methodology
+  shorthand: say "write the check first, watch it fail, then code until it
+  passes" instead of "TDD"; "one build-and-verify round" instead of "a TDD
+  cycle"; describe what a change does rather than naming the methodology.
+  Astronomy language needs NO simplification — the user is the domain expert;
+  keep that side at full technical precision.
 
 ## Conventions
 
