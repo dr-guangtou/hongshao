@@ -140,6 +140,26 @@ Build plan refined by phase 0: (A) two-channel deposit + (B) theta
 conditioned on [logMh, c200c, fz2-or-t50] + (C) the statistical dressing,
 in that order, each against the fixed criteria below.
 
+## The build (`run.py`, 2026-07-14)
+
+    CoG_i = (1 - f_ex) B(log_s0, g, q; t_i) + f_ex B(log_s0_ex, g, q; t_i)
+    f_ex  = expit(fa + fb mh_std)
+
+- The ex channel shares the deposition-time scaling (g) and migration (q,
+  alpha == 1) and differs only in its width scale `log_s0_ex` — bounded by
+  the SAME physical box (<= 3.0): the point is that the wide role moves to a
+  channel that carries only f_ex of the mass, so the in-situ law can go
+  narrow instead of railing. Everything else (lognormal f(z), M(<500)
+  normalization, loss, folds) is exp35's, reused via the spawn-safe
+  worker pattern from phase 0.
+- Nesting contracts (demo-asserted, exact): f_ex = 0 reproduces
+  `exp35.model_cogs_total` to 1e-12; equal channel widths reduce to the base
+  model at any f_ex; the theta layer nests global -> slope -> cond.
+- Variants: `2ch-global` (8 params), `2ch-slope` (+logMh slopes on base5,
+  13), `2ch-cond` = (B): slopes on the standardized phase-0 conditioning
+  vector [logMh, c200c, fz2] (23). 10-fold CV, warm-started from the full
+  fit, exp32/33 fold convention.
+
 ## 5. Judged by (fixed before any fitting)
 
 - Held-out (exp32/33 folds) 148-pinned shape max|rel| R>5 at z=0.4 and
