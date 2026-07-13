@@ -573,3 +573,17 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   distributing WITHIN segments) or a hybrid (CoG-space mean + density-space
   draws). Corollary: present a model's QA in the space it was FIT, alongside
   the integrated deliverable.
+
+- **A monotone model curve cannot have all its parts AND its total
+  median-unbiased at once; choose where the inconsistency lands (exp37 block
+  product, 2026-07-14).** Summing median-predicted lognormal components
+  undershoots the median-predicted total (measured: +2.8% at z=0.4 -> +6.6%
+  at z=2 of rescale); a uniform rescale smears that deficit onto the
+  well-determined inner blocks (+5.6% inner bias), while trusting the raw sum
+  biases the total (-3.4 -> -6.9%). The fix is to allocate the deficit in
+  proportion to each block's EXPECTED median-vs-mean gap,
+  B_j (e^(sigma_ln^2/2) - 1) from the fitted heteroscedastic sigma — mass
+  lands where the uncertainty lives, tight blocks stay at their direct
+  predictions. Corollary for generative layers: drawing the ANNULUS masses
+  (block representation) reproduces near-empty high-z annuli that per-radius
+  log-CoG or log-density draws cannot, while keeping every draw monotone.

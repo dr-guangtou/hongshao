@@ -263,6 +263,126 @@ def fit_density_profile(X, cogs_log, radii, z_grid, n_modes=3, rho=0.0,
     return MultiEpochDensity(me, mean_shape, modes, np.asarray(radii, float))
 
 
+@dataclass
+class MultiEpochBlock:
+    """Option (b): the block-pinned density product.
+
+    The emulator predicts the log masses of the kpc BLOCKS directly — the
+    representation the aperture emulator already fits at <=1.4% bias — and the
+    density shape only distributes each block's mass across its own shells.
+    Compressed vector per epoch: [anchor, cfrac, log block-fraction masses
+    (one per block), K density-shape scores]. Block masses are positive by
+    construction and shells within a block are positive, so every
+    reconstructed CoG is monotone; radial detail is unchanged (the full shell
+    grid, shape modes acting within blocks).
+    """
+    me: MultiEpochEmulator
+    mean_shape: np.ndarray    # (R-1,) pooled amplitude-removed mean log density
+    modes: np.ndarray         # (K, R-1) shared PCA density-shape modes
+    radii: np.ndarray         # (R,) kpc — the CoG EDGE grid
+    block_idx: np.ndarray     # (nb+1,) indices into radii: block boundaries
+
+    @property
+    def _dA(self):
+        r = self.radii
+        return np.pi * (r[1:] ** 2 - r[:-1] ** 2)
+
+    def compress(self, cogs_log):
+        """(..., R) log CoGs -> (..., 2+nb+K) [anchor, cfrac, bfracs, scores]."""
+        cogs_log = np.asarray(cogs_log, float)
+        lead = cogs_log.shape[:-1]
+        anchor = cogs_log[..., -1]
+        cfrac = cogs_log[..., 0] - anchor
+        cum = 10.0 ** cogs_log
+        # a near-empty block can underflow to a zero linear difference; floor
+        # at 1 Msun (the _cum_to_bins convention) — negligible mass, keeps the
+        # target finite and the round-trip within float tolerance
+        bfracs = [np.log10(np.clip(cum[..., b] - cum[..., a], 1.0, None)) - anchor
+                  for a, b in zip(self.block_idx[:-1], self.block_idx[1:])]
+        log_sig, _ = density_from_cog(cogs_log.reshape(-1, cogs_log.shape[-1]),
+                                      self.radii)
+        shape = log_sig.reshape(*lead, -1) - anchor[..., None]
+        scores = (shape - self.mean_shape) @ self.modes.T
+        return np.concatenate([anchor[..., None], cfrac[..., None],
+                               np.stack(bfracs, axis=-1), scores], axis=-1)
+
+    def reconstruct(self, compressed, sigma=None):
+        """(..., 2+nb+K) -> (..., R) log CoGs, monotone by construction.
+
+        The sum of the (median-predicted) parts falls short of the predicted
+        total by the lognormal median-vs-mean gap. Without ``sigma`` the
+        deficit is spread uniformly (the draw path — each draw is a
+        realization, the rescale just enforces its own total). With ``sigma``
+        (the per-target predictive dex scatter, the MEAN path) the deficit is
+        allocated in proportion to each block's expected gap,
+        B_j (e^(sigma_ln^2 / 2) - 1): tight blocks stay at their direct
+        predictions, the uncertainty-dominated blocks absorb the missing mass.
+        """
+        compressed = np.asarray(compressed, float)
+        nb = len(self.block_idx) - 1
+        anchor = compressed[..., 0:1]
+        cfrac = compressed[..., 1:2]
+        bfracs = compressed[..., 2:2 + nb]
+        scores = compressed[..., 2 + nb:]
+        blocks = 10.0 ** (anchor + bfracs)                       # (..., nb)
+        cen = 10.0 ** (anchor + cfrac)
+        total = 10.0 ** anchor
+        w = 10.0 ** (anchor + self.mean_shape + scores @ self.modes) * self._dA
+        shells = np.empty_like(w)
+        for j, (a, b) in enumerate(zip(self.block_idx[:-1], self.block_idx[1:])):
+            wj = w[..., a:b]
+            shells[..., a:b] = (wj / wj.sum(axis=-1, keepdims=True)
+                                * blocks[..., j:j + 1])
+        cum = np.concatenate([cen, cen + np.cumsum(shells, axis=-1)], axis=-1)
+        if sigma is None:
+            return np.log10(cum * total / cum[..., -1:])
+        sig_ln = np.log(10.0) * np.asarray(sigma, float)[..., 2:2 + nb]
+        gap_w = blocks * (np.exp(0.5 * sig_ln ** 2) - 1.0) + 1e-30
+        deficit = total[..., 0] - cum[..., -1]
+        alloc = gap_w / gap_w.sum(-1, keepdims=True) * deficit[..., None]
+        factor = np.clip((blocks + alloc) / blocks, 1e-6, None)  # keep positive
+        for j, (a, b) in enumerate(zip(self.block_idx[:-1], self.block_idx[1:])):
+            shells[..., a:b] = shells[..., a:b] * factor[..., j:j + 1]
+        cum = np.concatenate([cen, cen + np.cumsum(shells, axis=-1)], axis=-1)
+        # positivity clamps can leave a residual; close it with the uniform
+        # rescale (tiny once the weighted allocation has done the work)
+        return np.log10(cum * total / cum[..., -1:])
+
+    def predict_cog(self, X, z):
+        mu, sig, _ = self.me.predict(X, z)
+        return self.reconstruct(mu, sigma=sig)
+
+    def sample_cogs(self, X, z=None, size=1, rng=None):
+        return self.reconstruct(self.me.sample_epochs(X, z=z, size=size, rng=rng))
+
+
+def fit_block_profile(X, cogs_log, radii, z_grid, n_modes=3, rho=0.0,
+                      mean="poly2", block_kpc=(10.0, 30.0, 50.0, 100.0)):
+    """Fit the block-pinned density product (see ``MultiEpochBlock``).
+
+    Block boundaries snap to the nearest grid radii; the outermost block ends
+    at the grid edge and the innermost starts at the central disk boundary.
+    """
+    cogs_log = np.asarray(cogs_log, float)
+    n, E, R_ = cogs_log.shape
+    radii = np.asarray(radii, float)
+    idx = [0] + [int(np.argmin(np.abs(radii - e))) for e in block_kpc] + [R_ - 1]
+    block_idx = np.array(sorted(set(idx)))
+    assert len(block_idx) == len(idx), f"block edges collide on this grid: {idx}"
+    anchor = cogs_log[..., -1]
+    log_sig, _ = density_from_cog(cogs_log.reshape(-1, R_), radii)
+    shape = log_sig.reshape(n, E, R_ - 1) - anchor[..., None]
+    mean_shape = shape.mean(axis=(0, 1))
+    _, _, Vt = np.linalg.svd((shape - mean_shape).reshape(-1, R_ - 1),
+                             full_matrices=False)
+    modes = Vt[:n_modes]
+    mpb = MultiEpochBlock(None, mean_shape, modes, radii, block_idx)
+    comp = mpb.compress(cogs_log)                      # (n, E, 2+nb+K)
+    emus = [emu_fit(X, comp[:, k], mean=mean) for k in range(E)]
+    mpb.me = MultiEpochEmulator(np.asarray(z_grid, float), emus, rho)
+    return mpb
+
+
 def progenitor_quality_mask(data, max_drop_dex=2.0, min_logm=9.0):
     """Flag broken progenitor CoGs in the population table.
 
@@ -283,7 +403,14 @@ def progenitor_quality_mask(data, max_drop_dex=2.0, min_logm=9.0):
 # real data: fit / qa / closure / report                                       #
 # --------------------------------------------------------------------------- #
 N_DRAW = 3
-NPZ = OUTDIR / "multi_epoch.npz"
+# the three selectable profile representations (user decision 2026-07-14:
+# keep them separately available; evidence decides which graduates)
+PMODES = ("cog", "dens", "block")
+PMODE_K = {"cog": 3, "dens": 6, "block": 6}
+
+
+def _npz(pmode):
+    return OUTDIR / f"multi_epoch_{pmode}.npz"
 
 
 def _load_data(dev=False):
@@ -323,12 +450,14 @@ def _cv_epoch(X, Yk, mean):
     return mu, sig
 
 
-def cmd_fit(dev=False, mean="poly2", n_modes=6):
+def cmd_fit(dev=False, mean="poly2", n_modes=None, pmode="block"):
     from hongshao.metrics import crps_gaussian
     X, Y, data, profs, anchors = _load_data(dev)
     n = len(X)
     R = _EPOCHS.R
-    print(f"exp37 fit (n={n}{', DEV' if dev else ''}, mean={mean}, K={n_modes})")
+    n_modes = PMODE_K[pmode] if n_modes is None else n_modes
+    print(f"exp37 fit (n={n}{', DEV' if dev else ''}, mean={mean}, "
+          f"profile-mode={pmode}, K={n_modes})")
 
     # (1) kpc mode: OOF per epoch (exp33-vi setup) + CRPS + cross-epoch rho
     mus = np.empty_like(Y)
@@ -344,34 +473,53 @@ def cmd_fit(dev=False, mean="poly2", n_modes=6):
           f"(exp33-vi 0.67); adjacent C: "
           + " ".join(f"{C[k, k+1]:+.2f}" for k in range(4)))
 
-    # (2) DENSITY-space profile product (monotone draws by construction):
-    # fold-clean OOF mean CoGs + anchor, and OOF generative CoG draws from
-    # the SAME fold-fitted products
+    # (2) the selected profile product: fold-clean OOF mean CoGs + anchor, and
+    # OOF generative CoG draws from the SAME fold-fitted products
     MU24 = np.empty((n, 5, 24))
-    DMU = np.empty((n, 5, 23))            # OOF mean log-density (the FIT space)
     AMU = np.empty_like(anchors)
     ASIG = np.empty_like(anchors)
     cog_draws = np.empty((N_DRAW, n, 5, 24))
     cogs_log = np.log10(data)
     for fi, fold in enumerate(_EPOCHS.folds_of(n)):
         tr = np.setdiff1d(np.arange(n), fold)
-        mpd = fit_density_profile(X[tr], cogs_log[tr], R, ZK, rho=rho,
-                                  mean=mean, n_modes=n_modes)
-        for k in range(5):
-            m, s, _ = mpd.me.emus[k].predict(X[fold])
-            AMU[fold, k], ASIG[fold, k] = m[:, 0], s[:, 0]
-            MU24[fold, k] = mpd.reconstruct(m)
-            DMU[fold, k] = (m[:, 0:1] + mpd.mean_shape
-                            + m[:, 1:-1] @ mpd.modes)
-        cog_draws[:, fold] = 10.0 ** mpd.sample_cogs(X[fold], size=N_DRAW,
-                                                     rng=100 + fi)
-    assert np.all(np.diff(cog_draws, axis=-1)
-                  > -1e-6 * cog_draws[..., 1:]), "non-monotone draw escaped"
+        if pmode == "cog":
+            mp = fit_shared_profile(X[tr], profs[tr], anchors[tr], R[:-1], ZK,
+                                    rho=rho, mean=mean, n_modes=n_modes)
+            A = np.column_stack([np.ones(len(mp.radii)), mp.modes.T])
+            for k in range(5):
+                m, s, _ = mp.me.emus[k].predict(X[fold])
+                AMU[fold, k], ASIG[fold, k] = m[:, 0], s[:, 0]
+                MU24[fold, k, :23] = m @ A.T + mp.mean_shape
+                MU24[fold, k, 23] = m[:, 0]
+            dc = mp.me.sample_epochs(X[fold], size=N_DRAW, rng=100 + fi)
+            cog_draws[:, fold] = np.concatenate(
+                [10.0 ** (dc @ A.T + mp.mean_shape), 10.0 ** dc[..., 0:1]],
+                axis=-1)
+        else:
+            fitter = fit_density_profile if pmode == "dens" else fit_block_profile
+            mpd = fitter(X[tr], cogs_log[tr], R, ZK, rho=rho, mean=mean,
+                         n_modes=n_modes)
+            for k in range(5):
+                m, s, _ = mpd.me.emus[k].predict(X[fold])
+                AMU[fold, k], ASIG[fold, k] = m[:, 0], s[:, 0]
+                MU24[fold, k] = (mpd.reconstruct(m, sigma=s)
+                                 if pmode == "block" else mpd.reconstruct(m))
+            cog_draws[:, fold] = 10.0 ** mpd.sample_cogs(X[fold], size=N_DRAW,
+                                                         rng=100 + fi)
+    if pmode != "cog":
+        assert np.all(np.diff(cog_draws, axis=-1)
+                      > -1e-6 * cog_draws[..., 1:]), "non-monotone draw escaped"
+    # fit-space view for every mode: the model's implied log density (the
+    # differenced model CoG; NaN where the cog-space mean is non-monotone)
+    dA = np.pi * (R[1:] ** 2 - R[:-1] ** 2)
+    dm = np.diff(10.0 ** MU24, axis=-1)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        DMU = np.where(dm > 0, np.log10(np.clip(dm, 1e-30, None) / dA), np.nan)
     OUTDIR.mkdir(exist_ok=True)
-    np.savez(NPZ, crps=crps, C=C, rho=rho, mu_kpc=mus, sig_kpc=sigs,
+    np.savez(_npz(pmode), crps=crps, C=C, rho=rho, mu_kpc=mus, sig_kpc=sigs,
              MU24=MU24, DMU=DMU, AMU=AMU, ASIG=ASIG, cog_draws=cog_draws,
-             dev=dev, n=n, mean=mean, n_modes=n_modes)
-    print(f"  wrote {NPZ}")
+             dev=dev, n=n, mean=mean, n_modes=n_modes, pmode=pmode)
+    print(f"  wrote {_npz(pmode)}")
 
 
 def _model_cogs(d):
@@ -379,15 +527,16 @@ def _model_cogs(d):
     return 10.0 ** d["MU24"]
 
 
-def cmd_qa(dev=False):
+def cmd_qa(dev=False, pmode="block"):
     from hongshao import qa
     X, Y, data, profs, anchors = _load_data(dev)
-    d = np.load(NPZ)
+    d = np.load(_npz(pmode))
     assert int(d["n"]) == len(X), "saved fit does not match the loaded sample"
+    name = f"exp37_{pmode}"
     R = _EPOCHS.R
     model = _model_cogs(d)
     FIGDIR.mkdir(exist_ok=True)
-    res = qa.evaluate(model, data, R, list(ZK), name="exp37_oof",
+    res = qa.evaluate(model, data, R, list(ZK), name=name,
                       figdir=FIGDIR, bin_by=X[:, 0], bin_label="dmah logmp",
                       draw_cogs=d["cog_draws"])
 
@@ -430,8 +579,8 @@ def cmd_qa(dev=False):
     for i, g in enumerate(ge):
         print(f"    draw {i}:          {g['energy_ratio']:.1f} | "
               f"{g['energy_ratio_centered']:.1f}")
-    _coherence_figure(d, C_draw, anchors, la)
-    _density_bins_figure(d["DMU"], data, R, X[:, 0], "exp37_oof")
+    _coherence_figure(d, C_draw, anchors, la, name)
+    _density_bins_figure(d["DMU"], data, R, X[:, 0], name)
     return res
 
 
@@ -482,7 +631,7 @@ def _density_bins_figure(DMU, data, R, bin_by, name):
     print("wrote", save_fig(fig, FIGDIR / f"qa_density_bins_{name}")[0])
 
 
-def _coherence_figure(d, C_draw, anchors, la):
+def _coherence_figure(d, C_draw, anchors, la, name="exp37"):
     import matplotlib.pyplot as plt
     from hongshao.plotting import set_style, save_fig
     set_style()
@@ -508,23 +657,24 @@ def _coherence_figure(d, C_draw, anchors, la):
     c.set(xlabel="log Mtot (z=2)", ylabel="log Mtot (z=0.4)",
           title="growth plane")
     c.legend(fontsize=8)
-    fig.suptitle(f"exp37 cross-epoch coherence (rho={float(d['rho']):.2f})",
+    fig.suptitle(f"[{name}] cross-epoch coherence (rho={float(d['rho']):.2f})",
                  fontsize=12)
     fig.tight_layout()
-    print("\nwrote", save_fig(fig, FIGDIR / "exp37_coherence")[0])
+    print("\nwrote", save_fig(fig, FIGDIR / f"coherence_{name}")[0])
 
 
-def cmd_closure(dev=False, mean="poly2", n_modes=6):
-    """Held-epoch closure in the SHARED-basis profile space (fold-clean over
-    galaxies AND epochs): basis + cores from the other four epochs, cores
-    interpolated to the held z. The product's continuous-z claim for profiles."""
+def cmd_closure(dev=False, mean="poly2", n_modes=None, pmode="block"):
+    """Held-epoch closure (fold-clean over galaxies AND epochs): basis + cores
+    from the other four epochs, cores interpolated to the held z. The
+    product's continuous-z claim for profiles, in the selected representation."""
     from hongshao import qa
     X, Y, data, profs, anchors = _load_data(dev)
     n = len(X)
     R = _EPOCHS.R
-    d = np.load(NPZ)
+    n_modes = PMODE_K[pmode] if n_modes is None else n_modes
+    d = np.load(_npz(pmode))
     model_direct = _model_cogs(d)
-    print(f"exp37 closure — shared-basis profile space (n={n}, mean={mean})")
+    print(f"exp37 closure — profile-mode={pmode} (n={n}, mean={mean}, K={n_modes})")
     print("  held z: CoG max|rel| median, direct shared-basis fit -> "
           "coefficient-interpolated (all R | R>5 kpc)")
     out = {}
@@ -534,9 +684,18 @@ def cmd_closure(dev=False, mean="poly2", n_modes=6):
         MU_i = np.empty((n, 24))
         for fold in _EPOCHS.folds_of(n):
             tr = np.setdiff1d(np.arange(n), fold)
-            mpd = fit_density_profile(X[tr], cogs_log[tr][:, others], R,
-                                      ZK[others], mean=mean, n_modes=n_modes)
-            MU_i[fold] = mpd.predict_cog(X[fold], ZK[k])
+            if pmode == "cog":
+                mp = fit_shared_profile(X[tr], profs[tr][:, others],
+                                        anchors[tr][:, others], R[:-1],
+                                        ZK[others], mean=mean, n_modes=n_modes)
+                MU_i[fold, :23] = mp.at_z(ZK[k]).predict(X[fold])[0]
+                MU_i[fold, 23] = mp.me.at_z(ZK[k]).predict(X[fold])[0][:, 0]
+            else:
+                fitter = (fit_density_profile if pmode == "dens"
+                          else fit_block_profile)
+                mpd = fitter(X[tr], cogs_log[tr][:, others], R, ZK[others],
+                             mean=mean, n_modes=n_modes)
+                MU_i[fold] = mpd.predict_cog(X[fold], ZK[k])
         cog_i = (10.0 ** MU_i)[:, None, :]
         truth_k = data[:, k][:, None, :]
         direct_k = model_direct[:, k][:, None, :]
@@ -549,21 +708,22 @@ def cmd_closure(dev=False, mean="poly2", n_modes=6):
         out[k] = rows
         print(f"    z={ZK[k]}: {rows[0][0]:5.1f}% | {rows[0][1]:5.1f}%  ->  "
               f"{rows[1][0]:5.1f}% | {rows[1][1]:5.1f}%")
-    np.savez(OUTDIR / "closure.npz",
+    np.savez(OUTDIR / f"closure_{pmode}.npz",
              held=np.array([[out[k][i][j] for i in range(2) for j in range(2)]
                             for k in (1, 2, 3)]))
-    print(f"  wrote {OUTDIR / 'closure.npz'}")
+    print(f"  wrote {OUTDIR / f'closure_{pmode}.npz'}")
 
 
-def cmd_report():
-    d = np.load(NPZ)
+def cmd_report(pmode="block"):
+    d = np.load(_npz(pmode))
     print("exp37 report — the multi-epoch statistical emulator "
-          f"(n={int(d['n'])}{', DEV' if bool(d['dev']) else ''})")
+          f"(n={int(d['n'])}{', DEV' if bool(d['dev']) else ''}, "
+          f"profile-mode={pmode}, K={int(d['n_modes'])})")
     print("  kpc CRPS per epoch : "
           + " ".join(f"{c:.4f}" for c in d["crps"])
           + "   (exp33-vi independent ceiling 0.081 -> 0.200)")
     print(f"  AR(1) rho          : {float(d['rho']):.3f}   (exp33-vi 0.67)")
-    cl = OUTDIR / "closure.npz"
+    cl = OUTDIR / f"closure_{pmode}.npz"
     if cl.exists():
         held = np.load(cl)["held"]
         print("  profile closure (held z, direct -> interpolated, "
@@ -702,12 +862,60 @@ def demo():
         "sampled CoGs must be monotone by construction"
     assert np.isfinite(dcog).all()
 
+    # (9) the BLOCK-PINNED density product (option b): the emulator predicts
+    # the log masses of the kpc blocks DIRECTLY (the well-fit representation),
+    # the density shape only distributes mass within each block. With the full
+    # mode set the round-trip is exact; every sampled CoG is monotone; and the
+    # compressed vector's block components equal the true log block masses.
+    mpb = fit_block_profile(Xd, cogs_syn, rg, ZK, n_modes=len(rg) - 1,
+                            rho=0.5, mean="linear")
+    cb = mpb.compress(cogs_syn)
+    rtb = mpb.reconstruct(cb)
+    err_b = np.abs(rtb - cogs_syn).max()
+    assert err_b < 1e-9, f"block round-trip not exact: {err_b:.2e}"
+    e0, e1 = mpb.block_idx[0], mpb.block_idx[1]
+    true_b0 = np.log10(10.0 ** cogs_syn[..., e1] - 10.0 ** cogs_syn[..., e0])
+    assert np.allclose(cb[..., 2] + cogs_syn[..., -1], true_b0, atol=1e-9), \
+        "compressed block component must be the true log block mass"
+    mpb3 = fit_block_profile(Xd, cogs_syn, rg, ZK, n_modes=3, rho=0.5,
+                             mean="linear")
+    assert mpb3.predict_cog(Xd, ZK[1]).shape == (ng, len(rg))
+    dcb = mpb3.sample_cogs(Xd[:100], size=30, rng=8)
+    assert dcb.shape == (30, 100, ne, len(rg))
+    assert np.all(np.diff(10.0 ** dcb, axis=-1) > -1e-6), \
+        "block-pinned sampled CoGs must be monotone"
+    # uncertainty-weighted deficit allocation (the mean path): with equal
+    # block masses and ONE uncertain block, the total-vs-parts gap must land
+    # in that block (the gap weight is B_j (e^(sigma_ln^2/2) - 1), so weight
+    # needs mass AND sigma), leaving the tight blocks at their predictions
+    nb = len(mpb3.block_idx) - 1
+    K3 = mpb3.modes.shape[0]
+    n_t = 20
+    comp_t = np.zeros((n_t, 2 + nb + K3))
+    comp_t[:, 0] = 11.0                                   # anchor
+    comp_t[:, 1] = -2.0                                   # central = 1% of total
+    comp_t[:, 2:2 + nb] = np.log10(0.18)                  # 5 equal blocks: sum 91%
+    sig_t = np.full_like(comp_t, 0.02)
+    sig_t[:, 2 + nb - 1] = 1.0                            # last block uncertain
+    rec = mpb3.reconstruct(comp_t, sigma=sig_t)
+    cum = 10.0 ** rec
+    assert np.allclose(rec[:, -1], comp_t[:, 0], atol=1e-9), \
+        "weighted allocation must keep the total exact"
+    assert np.all(np.diff(cum, axis=-1) > 0), "weighted allocation broke monotonicity"
+    bl = np.stack([np.log10(cum[:, b] - cum[:, a]) - comp_t[:, 0]
+                   for a, b in zip(mpb3.block_idx[:-1], mpb3.block_idx[1:])], -1)
+    assert np.allclose(bl[:, :-1], np.log10(0.18), atol=0.005), \
+        "tight blocks must stay at their direct predictions"
+    assert np.all(bl[:, -1] > np.log10(0.18) + 0.15), \
+        "the uncertain block must absorb the deficit"
+
     print("exp37 demo OK: AR(1) sampler exact (within R, cross rho^sep); "
           f"held-z coefficient recovery rms {rms:.4f}; draws AR(1)-coherent; "
           f"rho_hat {rho_hat:.3f}; shared-basis profile snapshot/held-z rms "
           f"{rms_snap:.4f}/{rms_h:.4f}; poly2 default + mean option; "
           "broken-progenitor mask flags the planted galaxy; density product: "
-          f"round-trip {err_rt:.1e}, all sampled CoGs monotone")
+          f"round-trip {err_rt:.1e}, all sampled CoGs monotone; block product: "
+          f"round-trip {err_b:.1e}, blocks exact, draws monotone")
 
 
 if __name__ == "__main__":
@@ -715,16 +923,20 @@ if __name__ == "__main__":
     dev = "--dev" in sys.argv
     mean = "linear" if "--linear-mean" in sys.argv else "poly2"
     n_modes = (int(sys.argv[sys.argv.index("--modes") + 1])
-               if "--modes" in sys.argv else 6)
+               if "--modes" in sys.argv else None)
+    pmode = (sys.argv[sys.argv.index("--profile-mode") + 1]
+             if "--profile-mode" in sys.argv else "block")
+    if pmode not in PMODES:
+        sys.exit(f"--profile-mode must be one of {PMODES}, got {pmode!r}")
     if cmd == "demo":
         demo()
     elif cmd == "fit":
-        cmd_fit(dev, mean, n_modes)
+        cmd_fit(dev, mean, n_modes, pmode)
     elif cmd == "qa":
-        cmd_qa(dev)
+        cmd_qa(dev, pmode)
     elif cmd == "closure":
-        cmd_closure(dev, mean, n_modes)
+        cmd_closure(dev, mean, n_modes, pmode)
     elif cmd == "report":
-        cmd_report()
+        cmd_report(pmode)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")

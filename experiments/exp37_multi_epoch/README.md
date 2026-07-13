@@ -106,6 +106,38 @@ below supersedes the linear Results section, which stays as reference.
   every epoch. The kpc-annuli draw planes at z>=1.5 (4–13x floor) remain
   gated by the non-monotonic-draw open item below.
 
+## Option (b) verdict — the BLOCK-PINNED product wins (2026-07-14)
+
+Three profile representations are now separately selectable
+(`--profile-mode cog|dens|block`, per-mode outputs/figures; user decision:
+keep all three available, evidence decides the default). Head-to-head, same
+folds and poly2 cores (n=2395):
+
+| metric | cog K=3 | dens K=6 | block K=6 |
+|---|---|---|---|
+| R<10 kpc bias, z=0.4 -> 2 | +1.8 -> -0.1% | +7.2 -> +2.8% | +3.5 -> -1.4% |
+| M(10-30) bias z=0.4 / z=2 | +1.2 / +13.4% | -1.4 / +2.4% | +0.9 / +2.1% |
+| M(50-100) bias z=0.4 / z=2 | +4.3 / +13.6% | +2.7 / -22.4% | +5.3 / +7.9% |
+| tier-3 R>5 kpc (avg) | 26.5% | 26.9% | 26.5% |
+| draw kpc planes z<=1 / z=2 | 0.8-4x / 7-13x | 1.0-1.3x / 7-8x | **0.4-0.9x / 1.8-3.5x** |
+| monotone draws | NO | yes | yes |
+| closure (held z, all-R cost) | <=0.3 pts | <=1.1 pts | <=0.9 pts |
+
+`MultiEpochBlock` predicts the log masses of the kpc blocks (2-10/10-30/
+30-50/50-100/100-148, snapped to grid radii) DIRECTLY, plus the central
+fraction and K=6 pooled density-shape scores that only distribute mass
+WITHIN blocks — monotone by construction, full radial resolution. Two
+mechanisms behind the win: (1) drawn block masses are lognormal per block,
+so draws CAN produce the truth's near-empty high-z annuli while staying
+monotone — the z=2 planes drop from ~7-12x floor to 1.8-3.5x (growth plane
+1.0-1.3x); (2) for the MEAN curve, the gap between the predicted total and
+the sum of median-predicted parts (a lognormal median-vs-mean effect,
+measured +2.8 -> +6.6% per epoch) is allocated in proportion to each
+block's expected gap B_j (e^(sigma_ln^2/2)-1) instead of uniformly — tight
+blocks stay at their direct predictions (demo-asserted), and the residual
+inner bias drops +5.6 -> +3.5% (z=0.4), beating cog at z>=1. Remaining
+edge for cog: the z=0.4 inner bias (+1.8 vs +3.5%). Default: block.
+
 ## Design
 
 - `run.py` subcommands: `demo` (synthetic self-checks, no data), `fit`
