@@ -40,17 +40,29 @@ draws.
    z=0.4 is ~10^11.8, e.g. idx 181, 2351) — a DATA-quality flag for the
    exp32 population table (broken progenitor match?), not model failure;
    the relative-to-truth metric explodes there by construction.
-7. **Open item — MEASURED cause**: the kpc annuli planes of the DRAWS degrade
-   with z (2–12x floor at z>=1) because some drawn CoGs are NON-MONOTONIC in
-   the far kpc outskirts at high z (per-radius sigma is large there:
-   M(50–100 kpc) is 15–30 R_half). The distribution CORE is right — draw
-   16/50/84th pct of logM(50-100) at z=1: 9.58/10.05/10.48 vs truth
-   9.56/10.02/10.51 — but a drawn M(<100) < M(<50) makes the annulus
-   negative -> floored to log M = 0, a spurious low tail (draw std 1.70 vs
-   truth 0.54 dex at z=1; 2.95 vs 0.82 at z=2). Fix before freezing the
-   product: draw in a monotonicity-preserving parameterization (or
-   rejection/repair of non-monotonic draws), NOT a wider clip — the Re-native
-   planes, which never hit this regime, pass at every epoch.
+7. **RESOLVED 2026-07-14 — monotonicity-preserving draws (the density-space
+   product)**. The mode-3 per-radius log-CoG draws could cross themselves
+   where sigma is large (drawn M(<100) < M(<50) -> annulus floored to
+   log M = 0, a spurious tail that blew the kpc planes to 2–12x floor at
+   z>=1). The stochastic layer now lives in LOG-DENSITY space (mode 4,
+   `fit_density_profile`/`MultiEpochDensity`): any real draw is a positive
+   shell mass summed outward (the exact `integrate_density` identity,
+   round-trip asserted at 1e-9 in the demo), total pinned to the drawn
+   anchor — every drawn CoG is monotone BY CONSTRUCTION (runtime-asserted
+   in `fit`). Compressed vector: [anchor, K=6 pooled density-shape scores,
+   central fraction]; K scanned 3/6/8 — K=6 adopted (low-z outskirt mean
+   bias +9.9% at K=3 -> +2.7%; K=8 marginal further gain).
+   Results (n=2395, poly2, K=6): draw kpc planes 0.9–1.3x floor through
+   z=1.0 (were 3–4x), growth plane draws 1.2–1.3x, rho in draws 0.632 vs
+   0.622 measured; tier-3 R>5 kpc avg improves 29.2 -> 26.9%. Two honest
+   caveats: (a) the MEAN reconstruction under-predicts the far kpc outskirts
+   at z>=1.5 (M(50-100) -22%, M(>100) -59% at z=2, the 15–30 R_half
+   near-empty regime; the Re-relative view — the honest one there, exp29
+   lesson — is <=2% biased in the envelopes at z=2); (b) the remaining z=2
+   kpc-plane residual (~7x floor) is now the OPPOSITE tail: the truth has
+   floored zero annuli that monotone lognormal shells can never produce —
+   irreducible in this model class and plausibly a resolution artifact of
+   the truth.
 
 ## Goal
 
