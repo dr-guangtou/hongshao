@@ -635,10 +635,15 @@ Cross-experiment plan. Mirrors the phase sequence in
   measured (37%/11% of late growth beyond 50/100 kpc, massive). Graduation:
   the stack stays as-is with its documented error budget; nothing new
   graduates; headroom belongs to new inputs only.
-- [ ] **(next A, product path) the multi-epoch statistical emulator from the
+- [ ] **(next A, product path -> exp37 IN PROGRESS 2026-07-13, branch
+  exp37-multi-epoch-emulator) the multi-epoch statistical emulator from the
   exp33-vi blueprint**: continuous-z coefficient interpolation + AR(1)-in-epoch
-  latent (rho=0.67) + generative sampling; judged by the full QA incl. planes
-  per epoch and cross-epoch coherence.
+  latent (rho=0.67, measured in-fit) + generative sampling; judged by the full
+  QA incl. planes per epoch and cross-epoch coherence (growth plane + rank
+  persistence). Design + fixed judging criteria: `experiments/exp37_multi_epoch/
+  README.md`. New ingredient beyond the blueprint: ONE pooled PCA shape basis
+  across epochs so the profile mode's coefficients interpolate in z (closure
+  re-tested in that space).
 - [x] **exp35 — the TOTAL-NORMALIZED transport refit COMPLETE (verdict in the
   README; branch exp35-total-norm).** M(<500) datum from exp34 power tails
   (form-sys 0.011 dex); aperture fraction fitted, not pinned. Physicality tax
