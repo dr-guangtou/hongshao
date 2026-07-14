@@ -681,6 +681,32 @@ Cross-experiment plan. Mirrors the phase sequence in
   the hybrid now tested (statistical = product, kernel = physics
   companion). Log-CoG residual draws reproduce exp37's high-z failure
   mode; the block-pinned product remains the generative layer.
+- [ ] **(NEXT, user direction 2026-07-15) exp38 — rethink the deposition
+  primitive.** The critical symptom: the extended channel's width scale sits
+  AT its allowed maximum (log s0 = 3.0, ~1000-kpc Gaussian deposits) in
+  every fit — unphysical in both simulations and observations; the
+  parameter is compensating for a wrong model form. Suspect: the centred
+  GAUSSIAN deposit itself. Three candidate directions, in escalating
+  departure from the current family:
+  1. **Non-Gaussian deposit shapes**: e.g. an exponential (or Sersic-like)
+     deposit profile — heavier outer wings at a FIXED physical scale could
+     supply the outskirt mass the Gaussian can only reach by inflating its
+     width to the bound.
+  2. **A data-driven deposit form**: build the deposit kernel from the
+     MEASURED epoch-to-epoch surface-density profile differences (the
+     stacked dlog Sigma between adjacent snapshots, exp26/exp34
+     machinery) instead of assuming a shape.
+  3. **Abandon deposition entirely — parameterize the profiles/CoGs
+     themselves**: find a functional form (possibly multi-component) that
+     fits the massive galaxies' stellar density profiles / CoGs
+     consistently well at EVERY epoch z=2.0 -> 0.4 with parameters that
+     vary SMOOTHLY with redshift; if such a family exists, tie
+     [DiffMAH(4), c200c] to the redshift evolution of its parameters
+     (the exp03 radial-DiffMAH single-epoch result and exp33-vi's smooth
+     coefficient-interpolation closure are the supporting priors).
+  Judged by: the same held-out pinned-shape marks (16.4/15.6 at z=0.4),
+  the differential-deposition curve, NO parameter at a bound, and the
+  low-mass outskirt tercile table.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes

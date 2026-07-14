@@ -117,6 +117,18 @@
 > value is the passed out-of-model tests (differential deposition, the
 > aperture fraction, mass conservation), not held-out accuracy, and
 > stacking a statistical layer on it does not change that.
+>
+> **User verdict on the round (2026-07-15):** the model does reasonably
+> well, but the extended channel's width scale sitting AT its allowed
+> maximum in every fit is a critical unphysical symptom (nothing in
+> simulations or observations behaves like a ~1000-kpc deposit scale) —
+> the parameter is compensating for something the model form gets wrong.
+> Next experiment: back to the drawing board on the deposition primitive
+> itself (see doc/todo.md — candidate directions: non-Gaussian deposit
+> shapes, e.g. exponential; a deposit form driven by the measured
+> epoch-to-epoch surface-density differences; or dropping the deposition
+> assumption entirely for a smooth-in-redshift parameterized profile/CoG
+> family tied to [DiffMAH, c200c]).
 
 Status: (A)+(B) built and validated at z=0.4 (2026-07-14). Goal reframed
 by the user: no physicality mandate — the primary goal is the best
