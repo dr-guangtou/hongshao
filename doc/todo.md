@@ -662,21 +662,25 @@ Cross-experiment plan. Mirrors the phase sequence in
   data 0.83) — the data want more outward transport at the massive end.
   Decision input: Path A stays the accuracy product; the transport kernel is
   the physics companion.
-- [ ] **(IN PROGRESS 2026-07-14, branch exp36-multi-epoch) exp36 multi-epoch
-  round.** Phase 1 (z=0.4, merged ed8c59e): 2ch-prune adopted — 14 params,
-  held-out pinned shape R>5 = 16.4% (marks 16.1/15.6), width law off the
-  rails, massive dlog f148 +0.0023. This round, fixed criteria set before
-  fitting: (1) joint 5-epoch fit + per-epoch CV of 2ch-prune (`fit/cv
-  --multi`); (2) the differential-deposition test must survive the new
-  freedom (massive tercile z0.7->0.4 data 0.37/0.11; exp35 passed at
-  0.40/0.12); (3) bounds-stress log_s0_ex 3.0->3.5 (railed in every fit):
-  deletion-channel re-opening vs benign rail priced by f_ex; (4) the
-  low-mass outskirt overshoot fix — `2ch-fa` conditions the split amplitude
-  on [logMh, c200c, fz2]; judged by the held-out tercile dlog Sigma table
-  (baseline T1 +0.12/+0.13 dex at 30-60/60-148 kpc must fall) WITHOUT
-  losing the 16.4%; (5) P4 efficiency-peak (mu) z04-vs-multi stability.
-  Then (C): exp37-style statistical dressing on the kernel spine
-  (compressed residual cores + AR(1)), with the flat-spine ablation guard.
+- [x] **exp36 multi-epoch round COMPLETE (2026-07-14, branch
+  exp36-multi-epoch; verdicts in the README).** (1) Joint 5-epoch fit:
+  multi 2ch-fa (16 params) held-out pinned shape 17.7/17.1/16.3/16.0/14.7%
+  (epoch avg 16.4 = the z04-only mark; exp35 marks 20.5/19.1) — the
+  consistency tax shrinks to +1.3 points. (2) The differential-deposition
+  test SURVIVES via fa (massive 0.40/0.14 vs data 0.37/0.11; prune alone
+  strains, 0.44/0.16). (3) Bounds-stress: log_s0_ex rails at 3.5 and spends
+  the freedom past the 500-kpc horizon (z<1 ex visibility 0.39 -> 0.06) —
+  the box stays at 3.0; fa is the structural fix. (4) The low-mass outskirt
+  overshoot FALLS (+0.117/+0.127 -> +0.029/+0.070 dex) — but only under
+  the JOINT constraint (the z04-only fa fit cannot see it; lesson logged).
+  (5) P4 peak drift halved (3.5 -> 4.1); 2ch-fa takes log_s0_ex off the
+  rail for the first time. **(C) built and judged: the flat-spine ablation
+  guard FAILS** — the dressing reaches the statistical wall from either
+  spine (kernel 15.6-10.8% vs flat 15.2-11.2%, a tie), so the spine earns
+  nothing on held-out accuracy; the two-model program verdict stands with
+  the hybrid now tested (statistical = product, kernel = physics
+  companion). Log-CoG residual draws reproduce exp37's high-z failure
+  mode; the block-pinned product remains the generative layer.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes

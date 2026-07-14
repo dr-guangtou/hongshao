@@ -88,9 +88,35 @@
 >    Note `2ch-fa` takes log_s0_ex OFF the 3.0 rail for the first time in
 >    the family (z04 2.88, multi 2.95).
 >
-> NEXT: (C) the statistical dressing on the multi 2ch-fa kernel spine
-> (exp37-style compressed residual cores + AR(1)), flat-spine ablation
-> guard as pre-registered in §5.
+> **(C) THE STATISTICAL DRESSING — BUILT; THE FLAT-SPINE ABLATION GUARD
+> FAILS (2026-07-14, `dressing.py`, n=2397, 5-fold OOF, K=4 pooled
+> residual modes, poly2 cores, AR(1) rho = 0.64).** The dressing itself
+> works: it pays the consistency tax and reaches the statistical wall at
+> every epoch (held-out pinned shape R>5: spine 17.7/17.1/16.3/16.0/14.7
+> -> dressed 15.6/15.0/14.2/12.7/10.8; the z=0.4 wall is 15.6). But the
+> SAME machinery on a flat spine (per-epoch train-median log CoG — no
+> kernel) ties it: 15.2/15.1/14.0/13.0/11.2, alternating sign, no epoch
+> where the kernel wins by more than 0.4 points. **Per the
+> pre-registration, the spine earns nothing on held-out accuracy** — the
+> kernel's residual information is reachable from the portable features
+> directly, exactly what phase 0 measured (the two models' residuals
+> share ~50% of their variance; the dressing climbs to that one wall
+> from either starting point). Supporting reads: (a) kernel-spine rho
+> 0.638 vs flat 0.700 — the kernel absorbs some epoch-coherent residual,
+> as a physical mean should; (b) the log-CoG-space residual DRAWS
+> reproduce exp37's failure mode (planes 0.9-1.2x floor at z<=0.7,
+> 5-21x at z>=1.5 where the outskirt annuli are near-empty) — the
+> block-pinned representation remains the generative product; (c) the
+> growth plane at 0.3x floor is NOT an exp37-beating result: the spine
+> is normalized to the measured M(<500) datum, so the draws inherit
+> real per-galaxy totals (exp37 predicts totals from features alone).
+>
+> **The two-model program verdict stands, now with the hybrid tested:**
+> the statistical emulator (exp37, graduated) is the accuracy/generative
+> product; the two-channel kernel is the physics companion — its unique
+> value is the passed out-of-model tests (differential deposition, the
+> aperture fraction, mass conservation), not held-out accuracy, and
+> stacking a statistical layer on it does not change that.
 
 Status: (A)+(B) built and validated at z=0.4 (2026-07-14). Goal reframed
 by the user: no physicality mandate — the primary goal is the best

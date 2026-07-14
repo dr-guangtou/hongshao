@@ -588,6 +588,31 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   (block representation) reproduces near-empty high-z annuli that per-radius
   log-CoG or log-density draws cannot, while keeping every draw monotone.
 
+- **A physical mean only earns held-out accuracy under a statistical
+  dressing if it carries information the dressing's features cannot reach —
+  run the flat-spine ablation before adopting a hybrid (exp36 C).** The
+  kernel-spine + residual-dressing model reached the statistical wall at
+  every epoch (15.6 -> 10.8% pinned shape), but the SAME dressing on a flat
+  spine (train-median log CoG, no kernel, no per-galaxy physics) tied it to
+  within +-0.4 points, alternating sign. The kernel's residual structure is
+  feature-reachable — phase 0 had already measured the shared wall (~50%
+  residual variance) — so the hybrid's accuracy is the dressing's, not the
+  spine's. The guard was pre-registered and cheap (one extra OOF pass);
+  without it the hybrid's wall-level numbers would have been credited to
+  the physics. Corollary: a spine normalized to a measured datum (M(<500))
+  leaks real totals into the draws — its growth-plane score (0.3x floor)
+  is not comparable to a feature-only emulator's (1.0-1.3x).
+- **A joint multi-epoch constraint can be the lever that fixes a
+  single-epoch residual (exp36 multi round).** The low-mass outskirt
+  overshoot (+0.12/+0.13 dex) did NOT fall when the split amplitude was
+  conditioned on c200c/fz2 at z=0.4 alone (the forgiving CoG loss cannot
+  see an outskirt density overshoot; loss moved 0.1544 -> 0.1543), but the
+  SAME parameters under the joint 5-epoch fit cut it to +0.03/+0.07 — the
+  cross-epoch consistency requirement is what forces the split to spend its
+  freedom on the outskirts. Corollary of the exp29 "fit the thing that
+  depends on the unknown" lesson: if a residual is invisible to the loss,
+  add the CONSTRAINT that prices it, not just the parameter that could fix
+  it.
 - **A nested model that loses to its own special case is an optimizer
   failure, not a result (exp36).** Warm-starting the 13-param two-channel
   slope fit from exp35's railed single-width theta left it stuck at exp35's
