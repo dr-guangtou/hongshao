@@ -132,6 +132,25 @@ doc/             # science context, data reference, todo.md, lessons.md
   cycle"; describe what a change does rather than naming the methodology.
   Astronomy language needs NO simplification — the user is the domain expert;
   keep that side at full technical precision.
+- (2026-07-14, user rule) **Result summaries must use plain, specific,
+  self-contained language.** Concretely:
+  - Every number quoted must say, in place: WHAT it measures (with units or
+    definition), what the REFERENCE value is (the data, a previous model, a
+    target), and whether it is better or worse — never a bare "(0.44/0.16)".
+  - No project-internal shorthand labels without an in-place plain-language
+    definition: not "P4" but "the known instability of the fitted
+    star-formation-efficiency peak between single-epoch and joint fits"; not
+    "the rail" but "the parameter pinned at its allowed bound"; not "the
+    growth plane" but "the total stellar mass at z=2 versus at z=0.4, one
+    point per galaxy". Experiment codenames and internal metric nicknames
+    reset between sessions — the reader should never need the git history to
+    decode a sentence.
+  - When describing a new model component, first say in one sentence WHAT was
+    done mechanically ("we fit a second, statistical model to the leftover
+    errors of the physical model"), then the shorthand name may be introduced
+    and used.
+  - End each judged result with the interpretation: what this means for the
+    model, in one plain sentence.
 
 ## Conventions
 

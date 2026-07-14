@@ -566,6 +566,32 @@ def cmd_anatomy(dev=False):
     print("wrote", save_fig(fig, FIGDIR / "exp36_relations")[0])
 
 
+def cmd_qa(dev=False, variants=("2ch-fa",), multi=True):
+    """The standard QA set (hongshao.qa.evaluate — mass tables in kpc and Re
+    apertures, observational planes, mass-tercile profile medians, best/worst
+    case gallery) on a variant's HELD-OUT CV model curves."""
+    from hongshao import qa
+    tag = "_dev" if dev else ""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    gals = _W["gals"]
+    e = _W["e"]
+    ks = KS_MULTI if multi else [0]
+    pf = "multi_" if multi else ""
+    d = np.load(_npz(tag))
+    data = np.stack([g["data"] for g in gals])
+    logmh = np.array([g["logmh"] for g in gals])
+    FIGDIR.mkdir(exist_ok=True)
+    for variant in variants:
+        key = f"cogs_{pf}{variant}"
+        if key not in d.files:
+            print(f"  no held-out cogs for {pf}{variant} — run cv first")
+            continue
+        qa.evaluate(d[key], data[:, ks], e.R, [e.ANCHOR_Z[k] for k in ks],
+                    name=f"exp36_{pf}{variant}{tag}", figdir=FIGDIR,
+                    figures=True, bin_by=logmh, bin_label="logMh")
+
+
 def cmd_report_multi(dev=False):
     """The multi-epoch round verdict figure: per-epoch held-out shape vs the
     marks, the overshoot terciles (baseline vs the fa fix), the massive-tercile
@@ -953,6 +979,9 @@ if __name__ == "__main__":
         cmd_report(dev)
     elif cmd == "report-multi":
         cmd_report_multi(dev)
+    elif cmd == "qa":
+        cmd_qa(dev, variants if "--variant" in sys.argv else ("2ch-fa",),
+               multi)
     elif cmd == "anatomy":
         cmd_anatomy(dev)
     elif cmd == "overshoot":
