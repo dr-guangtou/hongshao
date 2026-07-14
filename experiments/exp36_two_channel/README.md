@@ -50,6 +50,29 @@ statistical relation. New degrees of freedom that improve on the transport
 kernel should be explored; physical interpretability is a bonus, not a
 constraint.
 
+## Known residuals + definitional notes (user review, 2026-07-14)
+
+- **Low-mass outskirt overshoot (measured, the next target).** Paired median
+  dlog Sigma (model - data), z=0.4: lowest logM* tercile +0.13 dex at 30-60
+  kpc and +0.12 at 60-148 kpc, falling to -0.00/+0.07 in the massive tercile
+  — the wide channel carries too much mass at the LOW-mass end (f_ex only
+  falls to ~0.45 at logMh 13 with the current logMh-only split). Candidate
+  fixes for the multi-epoch round: condition fa on c200c/fz2, or steepen the
+  mass dependence; note the fit loss (CoG relative RMS) under-weights an
+  outskirt density overshoot (the cumulative is forgiving, exp29 lesson).
+- **The channel split is NOT TNG's particle-origin classification, by
+  construction.** Every deposit at every epoch is split by the same
+  (mass-dependent) fraction — there is no per-star provenance and no merger
+  delay. And the deposits are NOT z<2-dominated: with the fitted efficiency
+  (peak z ~ 3.3), a median 77% (16-84 pct: 57-87%) of the deposited budget
+  arrives from z>2, and those early deposits are split by f_ex like any
+  other. So the mapping to TNG's in-situ/ex-situ is loose on BOTH ends;
+  the comparison stays qualitative (the aperture-share flattening).
+- **Definitions**: "wide-channel share of M(<148)" = the fraction of the
+  stellar mass INSIDE 148 kpc that belongs to the wide channel (0.52 at
+  logMh ~ 14). The complementary containment — the fraction of the wide
+  channel's OWN mass inside 148 kpc — is 0.73 there.
+
 ## 1. The old model, reviewed (exp29 -> 30 -> 32/33 -> 35)
 
 The transport kernel deposits each MAH step `dM_i` at time `t_i` as a

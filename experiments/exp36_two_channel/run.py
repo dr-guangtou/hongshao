@@ -480,7 +480,7 @@ def cmd_anatomy(dev=False):
     ax.scatter(logmh, fexs, s=4, alpha=0.25, c="0.6", edgecolors="none",
                label="deposit share f$_{ex}$")
     ax.plot(*_binned_median(logmh, fex148), "-", c="#D55E00", lw=2.0,
-            label=r"wide-channel mass share ($<$148 kpc)")
+            label=r"wide-channel share OF M($<$148 kpc)")
     ax.set(xlabel=r"log M$_h$", ylabel="fraction", ylim=(0, 1))
     ax.legend(fontsize=8, loc="upper left")
     fig.suptitle(f"exp36 [{variant}] fitted parameter-halo relations "
