@@ -54,10 +54,48 @@ for the evolving-R_half self-similar profile family; RED for shell/off-axis
 deposits. Proceed to the stage-1 shootout with all candidates (the shell
 stays in as a falsification control).**
 
-## Stage 1 — single-epoch shootout (pending)
+## Stage 1 — single-epoch shootout (2026-07-15, dev100; CHECKPOINT)
 
-Deposit branch: population-level per-epoch fits (M(<500)-normalized, the
-regime where the Gaussian rails): gauss / sersic / shell / moffat /
-gausswing / empirical-kernel. Family branch: per-galaxy fits per epoch
-(slope-sigmoid, Sersic CoG, evolving-Re template) + the held-epoch
-quadratic-in-z closure test.
+Harness note: the deposit branch uses a SIMPLIFIED population model
+(pure additive deposits + lognormal efficiency + M(<500) normalization,
+one shared theta per epoch, fitted independently per epoch) so that only
+the deposit shape varies between candidates — comparisons are internal to
+this table; the winner is re-tested inside the full exp36 structure at
+stage 2. Loss = mean per-galaxy relative RMS of the model growth curve
+against the measured one (smaller = better). Figure:
+`stage1_deposit_tracks_dev`.
+
+| candidate | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | scale at a bound? |
+|---|---|---|---|---|---|---|
+| gauss (incumbent) | 0.2061 | 0.1959 | 0.1840 | 0.1621 | 0.1514 | UPPER rail, every epoch |
+| sersic (n free) | 0.2025 | 0.1870 | 0.1724 | 0.1458 | 0.1429 | LOWER rail 3/5 epochs (n-scale degeneracy; needs an R50 reparameterization) |
+| shell (p free) | 0.2069 | 0.1960 | 0.1840 | 0.1639 | 0.1525 | upper rail + p collapses to 0 — REJECTED (as stage 0 predicted) |
+| **moffat (power-law tail)** | **0.2001** | **0.1841** | 0.1697 | **0.1416** | **0.1384** | **NO scale bound at any epoch**; gamma ~ 1.3 flat in z; efficiency peak mu railed at 2/5 epochs (watch) |
+| **gausswing (core + n=1 wing)** | 0.1997 | 0.1838 | **0.1692** | 0.1418 | 0.1389 | off-rail 4/5 (z=1.5 rails); w falls 0.55 -> 0.24 smoothly; wing at ~5-7x the core scale |
+| empirical (stage-0 kernel) | 0.1858 | 0.1736 | 0.1661 | 0.1496 | 0.1507 | stretch railed at max every epoch — the adjacent-pair kernel is too compact for the cumulative role as-built (inconclusive, not promoted) |
+
+Family branch (per-galaxy direct fits per epoch; max|rel| over R>5 kpc of
+the fit itself; parity = z=2 median / z=0.4 median):
+
+| family | direct fit by epoch | parity | held-epoch closure (quad-in-z params) |
+|---|---|---|---|
+| slope-sigmoid (5p, exp03) | 0.6 / 0.6 / 0.6 / 0.6 / 0.5 % | 0.83 | 62-112% — raw params too degenerate to interpolate |
+| Sersic CoG (3p) | 12.7 -> 8.8% | 0.69 | 22-45% |
+| evolving-Re template (2p) | 6.4 / 6.5 / 6.7 / 6.4 / 6.1 % | 0.94 | 15-18% mid-epochs, 31/43% at the endpoints (extrapolation) |
+
+Reads: (1) the slope-sigmoid family has the CAPACITY (0.6% at every epoch
+including compact z=2 — one family fits both extremes), but its raw
+per-epoch parameters cannot be interpolated (the exp27/exp30 degeneracy
+lesson realized) — the stage-2b move is a JOINT all-epoch fit with
+parameters forced smooth in z through the data. (2) The 2-parameter
+evolving-Re template already reaches 6-7% at EVERY epoch with the best
+parity (0.94) — self-similarity is real per galaxy, and its two tracks
+(total mass, half-mass radius vs z) are exactly what [DiffMAH, c200c]
+should condition. (3) In the deposit branch, the two heavy-tail
+candidates (moffat, gausswing) beat the Gaussian at every epoch WITH the
+scale off the rail — the stage-0 diagnosis confirmed at population level.
+
+**Promotion recommendation (user decision pending): (a) moffat and (b)
+gausswing to stage 2a (the exp36 multi-epoch harness, shape swapped);
+(c) the family branch to stage 2b as a joint smooth-in-z slope-sigmoid
+fit anchored by the template's (Mtot, Rhalf) tracks.**
