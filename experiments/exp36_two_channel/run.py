@@ -47,7 +47,8 @@ def _load_by_path(name, path):
 OUTDIR, FIGDIR = HERE / "outputs", HERE / "figures"
 E35_DIR = ROOT / "experiments/exp35_total_norm"
 POP_NPZ = ROOT / "experiments/exp32_full_population/outputs/population.npz"
-VARIANTS = ("2ch-global", "2ch-slope", "2ch-cond")
+VARIANTS = ("2ch-global", "2ch-slope", "2ch-cond", "2ch-prune")
+_TAIL_I = {"2ch-global": 5, "2ch-slope": 10, "2ch-cond": 20, "2ch-prune": 11}
 NFOLD = 10
 _W = {}                                     # per-process worker state
 
@@ -88,6 +89,14 @@ def theta_of_2ch(p, g, variant):
     elif variant == "2ch-cond":
         base5 = p[:5] + p[5:20].reshape(5, 3) @ g["cond"]
         tail = p[20:23]
+    elif variant == "2ch-prune":
+        # the compact best-fit: condition only log_s0 and sig — the two rows
+        # the full cond fit actually used (ablation 2026-07-14)
+        S = np.zeros((5, 3))
+        S[0] = p[5:8]
+        S[4] = p[8:11]
+        base5 = p[:5] + S @ g["cond"]
+        tail = p[11:14]
     else:
         raise ValueError(f"unknown variant {variant!r}")
     return base5, tail[0], float(expit(tail[1] + tail[2] * g["cond"][0]))
@@ -116,10 +125,35 @@ def model_cogs_2ch(base5, ls_ex, f_ex, mah, m500, ks, e):
     return out
 
 
+def model_cogs_components(base5, ls_ex, f_ex, mah, m500, ks, e):
+    """Per-channel CoGs (compact, wide), sharing the TOTAL's M(<500)
+    normalization — their sum equals ``model_cogs_2ch`` exactly."""
+    w = e.weights(mah["z"], base5[3], base5[4])
+    dM = w * mah["dMh"]
+    if not np.isfinite(dM).all() or dM.sum() <= 0:
+        return None
+    dM = dM / dM.sum()
+    th_in = [base5[0], base5[1], 0.0, base5[2]]
+    th_ex = [ls_ex, base5[1], 0.0, base5[2]]
+    out = []
+    for k in ks:
+        mask = mah["snap"] <= e.ANCHOR_SNAP[k]
+        m_in = (1.0 - f_ex) * (e.basis_ext(th_in, mah["t"], mah["t_obs"],
+                                           e.pe.AT[k], e.R_EXT) @ (dM * mask))
+        m_ex = f_ex * (e.basis_ext(th_ex, mah["t"], mah["t_obs"],
+                                   e.pe.AT[k], e.R_EXT) @ (dM * mask))
+        tot = m_in[-1] + m_ex[-1]
+        if not np.isfinite(tot) or tot <= 0:
+            return None
+        s = m500[k] / tot
+        out.append((m_in[:-1] * s, m_ex[:-1] * s))
+    return out
+
+
 def penalty_2ch(p, variant):
     e = _W["e"]
     base = e.penalty(p[:5])
-    tail = p[{"2ch-global": 5, "2ch-slope": 10, "2ch-cond": 20}[variant]:]
+    tail = p[_TAIL_I[variant]:]
     lo_t = np.array([1.0, -6.0, -4.0])
     hi_t = np.array([3.0, 6.0, 4.0])
     return base + 30.0 * float(np.sum(np.clip(lo_t - tail, 0, None) ** 2
@@ -204,7 +238,7 @@ def _summarize_theta(variant, th):
     _w_init_cached()
     gals = _W["gals"]
     fex = np.array([theta_of_2ch(th, g, variant)[2] for g in gals])
-    i0 = {"2ch-global": 5, "2ch-slope": 10, "2ch-cond": 20}[variant]
+    i0 = _TAIL_I[variant]
     print(f"    base5 {np.round(th[:5], 2)}  log_s0_ex {th[i0]:.2f}  "
           f"fa/fb {th[i0+1]:+.2f}/{th[i0+2]:+.2f}  "
           f"f_ex pct16/50/84 = {np.percentile(fex, [16, 50, 84]).round(2)}")
@@ -239,12 +273,21 @@ def cmd_fit(dev=False, variants=VARIANTS):
                                np.concatenate([b_g, [2.9, -1.0, 1.0]]))
                 starts = [np.concatenate([t[:5], np.zeros(5), t[5:8]]),
                           np.concatenate([b_s, t[5:8]])]
-            else:                                       # 2ch-cond (B)
+            elif variant == "2ch-cond":                 # (B)
                 t = fitted.get("theta_2ch-slope",
                                np.concatenate([b_s, [2.9, -1.0, 1.0]]))
                 S = np.zeros((5, 3))
                 S[:, 0] = t[5:10]                       # logMh slopes carry over
                 starts = [np.concatenate([t[:5], S.ravel(), t[10:13]])]
+            else:                                       # 2ch-prune (compact B)
+                t = fitted.get("theta_2ch-cond")
+                if t is not None:
+                    S = t[5:20].reshape(5, 3)
+                    starts = [np.concatenate([t[:5], S[0], S[4], t[20:23]])]
+                else:
+                    tg = fitted.get("theta_2ch-global",
+                                    np.concatenate([b_g, [2.9, -1.0, 1.0]]))
+                    starts = [np.concatenate([tg[:5], np.zeros(6), tg[5:8]])]
             th, lo = fit_pop(variant, [0], starts,
                              max(int(4000 * scale), 80), pool, workers, variant)
             fitted[f"theta_{variant}"] = th
@@ -289,6 +332,20 @@ def cmd_cv(dev=False, variants=VARIANTS):
     print(f"wrote {_npz(tag)}")
 
 
+def _binned_median(x, y, nbin=30):
+    """Quantile-binned medians (a zero-padded running mean drags the curve
+    down at the array edges — the sparse massive end, exactly where it counts)."""
+    good = np.isfinite(x) & np.isfinite(y)
+    edges = np.quantile(x[good], np.linspace(0, 1, nbin + 1))
+    xc, yc = [], []
+    for a, b in zip(edges[:-1], edges[1:]):
+        m = good & (x >= a) & (x <= b)
+        if m.sum() >= 5:
+            xc.append(np.median(x[m]))
+            yc.append(np.median(y[m]))
+    return np.array(xc), np.array(yc)
+
+
 def cmd_report(dev=False):
     import matplotlib
     matplotlib.use("Agg")
@@ -324,17 +381,15 @@ def cmd_report(dev=False):
     f_data = data148 / m500
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.4))
     ax, bx = axes
-    order = np.argsort(logms)
+    best = ("2ch-prune" if "cogs_2ch-prune" in d.files else "2ch-cond")
     for label, cog_arr, c in (("exp35 z04-slope", tn["cogs_z04-slope"][rws, 0], "#D55E00"),
-                              ("exp36 2ch-cond", d.get("cogs_2ch-cond"), "#0072B2")):
+                              (f"exp36 {best}", d.get(f"cogs_{best}"), "#0072B2")):
         if cog_arr is None:
             continue
         cc = cog_arr[:, 0] if cog_arr.ndim == 3 else cog_arr
-        f_m = cc[:, -1] / m500
-        ax.plot(logms[order], np.convolve(f_m[order], np.ones(101) / 101, "same"),
-                "-", c=c, lw=1.6, label=label)
-    ax.plot(logms[order], np.convolve(f_data[order], np.ones(101) / 101, "same"),
-            "k-", lw=2.0, label="data")
+        ax.plot(*_binned_median(logms, cc[:, -1] / m500), "-", c=c, lw=1.6,
+                label=label)
+    ax.plot(*_binned_median(logms, f_data), "k-", lw=2.0, label="data")
     ax.set(xlabel=r"log M$_*$", ylabel="f148 = M($<$148)/M($<$500)",
            title="aperture fraction (running median-ish, held-out)")
     ax.legend(fontsize=8)
@@ -349,6 +404,90 @@ def cmd_report(dev=False):
     fig.tight_layout()
     FIGDIR.mkdir(exist_ok=True)
     print("wrote", save_fig(fig, FIGDIR / "exp36_two_channel")[0])
+
+
+def cmd_anatomy(dev=False):
+    """Sanity anatomy of the best fit: per-channel surface-density profiles by
+    stellar-mass tercile, and the fitted parameter-halo relations (user habit
+    rule: SHOW what a conditioned parameter does across the population)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from hongshao.plotting import set_style, save_fig
+    from hongshao.profile_emulator import density_from_cog
+    set_style()
+    tag = "_dev" if dev else ""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    gals = _W["gals"]
+    e = _W["e"]
+    d = np.load(_npz(tag))
+    variant = "2ch-prune" if "theta_2ch-prune" in d.files else "2ch-cond"
+    th = d[f"theta_{variant}"]
+    n = len(gals)
+    R = e.R
+    ci = np.full((n, len(R)), np.nan)
+    cx = np.full((n, len(R)), np.nan)
+    b5s = np.full((n, 5), np.nan)
+    fexs = np.full(n, np.nan)
+    for i, g in enumerate(gals):
+        b5, ls, fx = theta_of_2ch(th, g, variant)
+        b5s[i], fexs[i] = b5, fx
+        parts = model_cogs_components(b5, ls, fx, g["mah"], g["m500"], [0], e)
+        if parts is not None:
+            ci[i], cx[i] = parts[0]
+    pop = np.load(POP_NPZ)
+    logms = np.array([pop["logms"][g["row"]] for g in gals])
+    logmh = np.array([g["logmh"] for g in gals])
+    data0 = np.stack([g["data"][0] for g in gals])
+
+    # figure 1 — per-channel surface density by stellar-mass tercile
+    def med_dens(cogs, sel):
+        ok = sel & np.isfinite(cogs).all(1) & (cogs > 0).all(1)
+        ls_, mid = density_from_cog(np.log10(cogs[ok]), R)
+        return np.nanmedian(ls_, axis=0), mid
+
+    edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
+    fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.6), sharey=True)
+    for b, ax in enumerate(axes):
+        sel = (logms >= edges[b]) & (logms <= edges[b + 1] + 1e-9)
+        for cogs, lab, c, lw, st in ((data0, "data", "k", 2.0, "-"),
+                                     (ci + cx, "model total", "0.5", 1.5, "--"),
+                                     (ci, "compact channel", "#0072B2", 1.6, "-"),
+                                     (cx, "wide channel", "#D55E00", 1.6, "-")):
+            md, mid = med_dens(cogs, sel)
+            ax.plot(mid, md, st, c=c, lw=lw, label=lab if b == 0 else None)
+        ax.set(xscale="log", xlabel="R [kpc]",
+               title=f"logM$_*$ {edges[b]:.2f}-{edges[b+1]:.2f}")
+    axes[0].set_ylabel(r"median log$_{10}$ $\Sigma_*$ [M$_\odot$ kpc$^{-2}$]")
+    axes[0].legend(fontsize=8)
+    fig.suptitle(f"exp36 [{variant}] channel anatomy at z=0.4 "
+                 "(channel labels are placeholders pending hydro-sim checks)",
+                 fontsize=12)
+    fig.tight_layout()
+    FIGDIR.mkdir(exist_ok=True)
+    print("wrote", save_fig(fig, FIGDIR / "exp36_components")[0])
+
+    # figure 2 — the fitted parameter-halo relations + the two split fractions
+    names = [r"log s$_0$ [kpc]", "g", "q", r"$\mu$", r"$\sigma_f$"]
+    fig, axes = plt.subplots(2, 3, figsize=(14.5, 7.6))
+    for j, (nm, ax) in enumerate(zip(names, axes.ravel())):
+        ax.scatter(logmh, b5s[:, j], s=4, alpha=0.3, c="#0072B2",
+                   edgecolors="none")
+        ax.set(xlabel=r"log M$_h$", ylabel=nm)
+    ax = axes.ravel()[5]
+    fex148 = cx[:, -1] / (ci[:, -1] + cx[:, -1])
+    ax.scatter(logmh, fexs, s=4, alpha=0.25, c="0.6", edgecolors="none",
+               label="deposit share f$_{ex}$")
+    ax.plot(*_binned_median(logmh, fex148), "-", c="#D55E00", lw=2.0,
+            label=r"wide-channel mass share ($<$148 kpc)")
+    ax.set(xlabel=r"log M$_h$", ylabel="fraction", ylim=(0, 1))
+    ax.legend(fontsize=8, loc="upper left")
+    fig.suptitle(f"exp36 [{variant}] fitted parameter-halo relations "
+                 "(point spread at fixed M$_h$ = the c200c/fz2 conditioning)",
+                 fontsize=12)
+    fig.tight_layout()
+    print("wrote", save_fig(fig, FIGDIR / "exp36_relations")[0])
 
 
 # --------------------------------------------------------------------------- #
@@ -403,9 +542,30 @@ def demo():
     b2, _, _ = theta_of_2ch(p_c2, g, "2ch-cond")
     assert np.isclose(b2[0] - b_g[0], 0.3 * g["cond"][1])
 
+    # (5) components: the per-channel CoGs sum to the total exactly, and the
+    # prune variant nests (zero slopes -> global; equals cond with the other
+    # slope rows zeroed)
+    g = gals[1]
+    tot = model_cogs_2ch(p5, 3.0, 0.6, g["mah"], g["m500"], [0, 4], e)
+    parts = model_cogs_components(p5, 3.0, 0.6, g["mah"], g["m500"], [0, 4], e)
+    for t_, (ci, cx) in zip(tot, parts):
+        assert np.allclose(ci + cx, t_, rtol=1e-12), "components must sum to total"
+    p_p = np.concatenate([p5, np.zeros(6), [2.8, 0.5, 0.0]])
+    b_p, ls_p, fex_p = theta_of_2ch(p_p, g, "2ch-prune")
+    b_g2, ls_g2, fex_g2 = theta_of_2ch(np.concatenate([p5, [2.8, 0.5, 0.0]]),
+                                       g, "2ch-global")
+    assert np.allclose(b_p, b_g2) and ls_p == ls_g2 and fex_p == fex_g2
+    p_p2 = p_p.copy()
+    p_p2[5:8] = [0.1, 0.2, 0.3]                        # log_s0 slopes
+    p_c2 = np.concatenate([p5, np.zeros(15), [2.8, 0.5, 0.0]])
+    p_c2[5:8] = [0.1, 0.2, 0.3]
+    assert np.allclose(theta_of_2ch(p_p2, g, "2ch-prune")[0],
+                       theta_of_2ch(p_c2, g, "2ch-cond")[0])
+
     print("exp36 demo OK: f_ex=0 and equal-channel nesting exact vs exp35; "
           "wider ex channel moves mass outward; theta layer nests "
-          "global->slope->cond with the phase-0 conditioning vector")
+          "global->slope->cond->prune with the phase-0 conditioning vector; "
+          "channel components sum to the total exactly")
 
 
 if __name__ == "__main__":
@@ -421,5 +581,7 @@ if __name__ == "__main__":
         cmd_cv(dev, variants)
     elif cmd == "report":
         cmd_report(dev)
+    elif cmd == "anatomy":
+        cmd_anatomy(dev)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")

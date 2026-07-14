@@ -10,8 +10,25 @@
 > | exp35 z04-slope (single width) | 10 | 0.1756 | 19.6% | +0.0149 |
 > | 2ch-global | 8 | 0.1590 | 16.9% | +0.0145 |
 > | 2ch-slope | 13 | 0.1566 | 16.8% | +0.0053 |
-> | **2ch-cond (B)** | 23 | **0.1543** | **16.4%** | **+0.0024** |
+> | 2ch-cond (B) | 23 | 0.1543 | 16.4% | +0.0024 |
+> | **2ch-prune (adopted)** | **14** | **0.1544** | **16.4%** | **+0.0023** |
 > | marks | | | 16.1 (unconstr.) / 15.6 (statistical) | 0 = data |
+>
+> **2ch-prune** conditions only log_s0 and sig (the two rows the full cond
+> fit used; ablation: zeroing c200c/fz2 slopes degrades to 0.1571) — the
+> compact adopted form. Fitted relations (`exp36_relations` figure): the
+> compact-channel width scale falls 130 -> 70 kpc over logMh 13 -> 15; the
+> efficiency width sig rises 0.2 -> 0.5 (massive halos bring in stars over a
+> much broader redshift span), both with real c200c/fz2 scatter at fixed
+> Mh; g = 3.13, q = 0.64, efficiency peak z ~ 3.3 stay global. Channel
+> anatomy (`exp36_components`): a steep compact core + a flat extended
+> envelope taking over at ~15-30 kpc, crossover moving inward with mass.
+> The wide-channel DEPOSIT share rises monotonically 0.45 -> 0.77 over
+> logMh 13 -> 15, while the wide-channel mass share WITHIN 148 kpc flattens
+> at ~0.52 by the group scale — the extra brought-in mass at cluster scales
+> lands beyond the aperture (ICL-like), qualitatively the TNG picture
+> (Pillepich+18 Fig 12: to be eyeballed by the user; broad consistency is
+> the bar). Channel labels remain placeholders pending hydro-sim checks.
 >
 > For the first time in the family's history the width law sits OFF the
 > rails (log_s0 ~ 2.05 ~ 110 kpc, g ~ 3.1 interior): the wide role moved to
@@ -165,6 +182,20 @@ Before adding any DOF, measure what is left to win:
 Build plan refined by phase 0: (A) two-channel deposit + (B) theta
 conditioned on [logMh, c200c, fz2-or-t50] + (C) the statistical dressing,
 in that order, each against the fixed criteria below.
+
+## Terminology (user rule, 2026-07-14)
+
+The channel names "in-situ" / "ex-situ" are PLACEHOLDER labels until verified
+against hydro-simulation particle-origin data (e.g. TNG stellar assembly
+catalogs): what the model actually asserts is only that each halo-growth
+increment BRINGS NEW STARS to the central galaxy through a compact channel
+and a wide channel with a mass-dependent split. Comparison protocol for the
+labels: the model's wide-channel share (per deposit, and integrated within
+148 kpc) vs the TNG300 ex-situ fraction-halo mass relation (Pillepich et al.
+2018, MNRAS 475, 648, Fig 12) — broad consistency is the bar, not
+reproduction; the simulation relation flattens at high halo mass (our expit
+form can represent that) and scatters at fixed halo mass with MAH/halo
+properties (our conditioning vector is the natural home for that).
 
 ## The build (`run.py`, 2026-07-14)
 
