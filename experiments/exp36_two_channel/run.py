@@ -566,6 +566,116 @@ def cmd_anatomy(dev=False):
     print("wrote", save_fig(fig, FIGDIR / "exp36_relations")[0])
 
 
+def cmd_report_multi(dev=False):
+    """The multi-epoch round verdict figure: per-epoch held-out shape vs the
+    marks, the overshoot terciles (baseline vs the fa fix), the massive-tercile
+    differential curve, and the P4 efficiency-peak drift."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from hongshao.plotting import set_style, save_fig
+    from hongshao.profile_emulator import density_from_cog
+    from hongshao.qa import _pct, _tex
+    set_style()
+    tag = "_dev" if dev else ""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    gals = _W["gals"]
+    e = _W["e"]
+    d = np.load(_npz(tag))
+    data = np.stack([g["data"] for g in gals])
+    logms = np.array([g["logms"] for g in gals])
+    zs = [e.ANCHOR_Z[k] for k in KS_MULTI]
+    cols = {"multi_2ch-prune": "#0072B2", "multi_2ch-fa": "#D55E00"}
+
+    fig, axes = plt.subplots(1, 4, figsize=(19.0, 4.4))
+    a, b, c, p4 = axes
+
+    # (a) per-epoch held-out pinned shape vs the marks
+    for key, col in cols.items():
+        met = d[f"met_{key}"]
+        a.plot(zs, [100 * np.nanmedian(met[:, j, 2]) for j in range(5)],
+               "-o", c=col, lw=1.8, ms=4, label=key.replace("_", " "))
+    a.axhline(16.4, color="0.2", ls=":", lw=1.2)
+    a.text(1.55, 16.45, "z04-only 2ch-prune (16.4)", fontsize=7, color="0.2")
+    a.axhline(19.1, color="0.5", ls="--", lw=1.2)
+    a.text(1.55, 19.15, "exp35 unconstrained multi (19.1)", fontsize=7,
+           color="0.4")
+    a.set(xlabel="epoch z",
+          ylabel=_tex("held-out pinned shape max|rel| R>5") + f" [{_pct()}]",
+          title="joint 5-epoch fit, 10-fold CV")
+    a.legend(fontsize=8)
+
+    # (b) the judged overshoot terciles: baseline vs the multi fa fix
+    ls_d, mid = density_from_cog(np.log10(data[:, 0]), e.R)
+    bands = ((mid >= 30.0) & (mid < 60.0), (mid >= 60.0) & (mid <= 148.0))
+    edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
+    x = np.arange(3)
+    for off, (key, col) in zip((-0.18, 0.18),
+                               (("cogs_2ch-prune", "0.55"),
+                                ("cogs_multi_2ch-fa", "#D55E00"))):
+        cogs = d[key][:, 0]
+        ok = np.isfinite(cogs).all(1) & (cogs > 0).all(1)
+        ls_m = np.full_like(ls_d, np.nan)
+        ls_m[ok] = density_from_cog(np.log10(cogs[ok]), e.R)[0]
+        dl = ls_m - ls_d
+        for bi, (bm, hatch) in enumerate(zip(bands, (None, "//"))):
+            v = [np.nanmedian(dl[np.ix_(ok & (logms >= edges[t])
+                                        & (logms <= edges[t + 1] + 1e-9), bm)])
+                 for t in range(3)]
+            b.bar(x + off + (0.09 if bi else -0.09), v, width=0.16, color=col,
+                  hatch=hatch, edgecolor="w",
+                  label=(key.replace("cogs_", "").replace("_", " ")
+                         + (" 60-148" if bi else " 30-60")))
+    b.axhline(0, color="k", lw=0.8)
+    b.set_xticks(x)
+    b.set_xticklabels([f"T{t+1} {edges[t]:.1f}-{edges[t+1]:.1f}"
+                       for t in range(3)], fontsize=8)
+    b.set(ylabel=_tex("held-out median dlog Sigma (model - data) [dex]"),
+          title="the outskirt overshoot, z=0.4")
+    b.legend(fontsize=7)
+
+    # (c) massive-tercile differential curve, data vs the two multi fits
+    x4 = np.arange(4)
+    drawn_data = False
+    for key, col in cols.items():
+        cogs = _model_cogs_all(key.replace("multi_", ""),
+                               d[f"theta_{key}"], KS_MULTI)
+        _, rows_d = e.differential(cogs, data, logms)
+        if not drawn_data:
+            c.plot(x4, [rows_d[("data", 2, k)][0] for k in range(4)], "-o",
+                   c="0.2", lw=1.8, ms=4, label="measured")
+            drawn_data = True
+        c.plot(x4, [rows_d[("model", 2, k)][0] for k in range(4)], "--o",
+               c=col, lw=1.6, ms=4, label=key.replace("_", " "))
+    c.set_xticks(x4)
+    c.set_xticklabels([f"z{e.ANCHOR_Z[k+1]}$\\to$z{e.ANCHOR_Z[k]}"
+                       for k in range(4)], fontsize=8)
+    c.set(ylabel="median fraction of growth beyond 50 kpc",
+          title="differential deposition (massive tercile)")
+    c.legend(fontsize=8)
+
+    # (d) P4: the efficiency peak across fits
+    names, peaks = [], []
+    for variant in ("2ch-prune", "2ch-fa"):
+        for pf in ("", "multi_"):
+            key = f"theta_{pf}{variant}"
+            if key in d.files:
+                names.append(f"{pf or 'z04 '}{variant}".replace("_", " "))
+                peaks.append(np.expm1(d[key][3]))
+    p4.plot(peaks, np.arange(len(names)), "o", c="#0072B2", ms=7)
+    p4.set_yticks(np.arange(len(names)))
+    p4.set_yticklabels(names, fontsize=8)
+    p4.set(xlabel="efficiency peak z", title="P4: peak drift z04 vs multi")
+    p4.invert_yaxis()
+
+    fig.suptitle("exp36 multi-epoch round — the four judged results",
+                 fontsize=12)
+    fig.tight_layout()
+    FIGDIR.mkdir(exist_ok=True)
+    print("wrote", save_fig(fig, FIGDIR / "exp36_multi_round")[0])
+
+
 def cmd_overshoot(dev=False):
     """The judged tercile table for the low-mass outskirt overshoot: paired
     median dlog Sigma (model - data) in the 30-60 and 60-148 kpc bands by
@@ -841,6 +951,8 @@ if __name__ == "__main__":
         cmd_cv(dev, variants, multi)
     elif cmd == "report":
         cmd_report(dev)
+    elif cmd == "report-multi":
+        cmd_report_multi(dev)
     elif cmd == "anatomy":
         cmd_anatomy(dev)
     elif cmd == "overshoot":
