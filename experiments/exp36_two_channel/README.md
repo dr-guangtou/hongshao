@@ -43,6 +43,93 @@
 > NEXT: the multi-epoch fit + differential-deposition test, then (C) the
 > statistical dressing.
 
+> **MULTI-EPOCH ROUND (2026-07-14, branch exp36-multi-epoch, n=2397,
+> joint 5-epoch fit, 10-fold CV per epoch; figure
+> `exp36_multi_round`).** The two-channel kernel survives the multi-epoch
+> test and the fa-conditioned split (`2ch-fa`, 16 params: prune + the split
+> amplitude conditioned on the full [logMh, c200c, fz2] vector) is the
+> adopted multi-epoch spine:
+>
+> | model | in-sample | held-out pinned shape R>5 by z (0.4/0.7/1.0/1.5/2.0) | epoch avg |
+> |---|---|---|---|
+> | exp35 multi-slope | — | 20.5 at z=0.4 (physical); 19.1 unconstrained mark | — |
+> | multi 2ch-prune (14p) | 0.1499 | 17.8 / 17.4 / 16.9 / 17.1 / 16.1 | 17.1 |
+> | **multi 2ch-fa (16p)** | **0.1487** | **17.7 / 17.1 / 16.3 / 16.0 / 14.7** | **16.4** |
+>
+> The five judged results:
+> 1. **Joint 5-epoch fit**: beats the 19.1% unconstrained multi mark at
+>    every epoch; the consistency tax inside exp36 is +1.3 points at z=0.4
+>    (16.4 -> 17.7), vs the family's historical 3-5. The multi 2ch-fa
+>    epoch AVERAGE equals the z04-only mark (16.4%).
+> 2. **The differential-deposition test survives the new freedom — via fa.**
+>    Massive tercile z0.7->0.4 (data 0.37/0.11; exp35's pass 0.40/0.12):
+>    multi 2ch-fa 0.40/0.14 (pass), multi 2ch-prune 0.44/0.16 (strained).
+>    The lower terciles track well (fa: 0.31/0.10 vs data 0.34/0.10).
+> 3. **The low-mass outskirt overshoot FALLS** (held-out tercile dlog
+>    Sigma, 30-60 / 60-148 kpc): T1 +0.117/+0.127 (z04 prune baseline) ->
+>    **+0.029/+0.070** (multi 2ch-fa); T2 +0.032/+0.105 -> -0.026/+0.066.
+>    Two caveats: the z04-ONLY fa fit does NOT fix it (T1 +0.119/+0.132,
+>    loss 0.1543 ~ prune 0.1544 — the CoG loss cannot see the outskirt
+>    density; the JOINT constraint is what steers the split), and a mild
+>    massive-end 30-60 undershoot appears (T3 -0.048).
+> 4. **Bounds-stress log_s0_ex 3.0 -> 3.5: the rail is NOT benign — keep
+>    the box.** The stress fit rails at 3.50, gains 1.4% loss
+>    (0.1499 -> 0.1478) and moves the observables TOWARD the data (f148
+>    0.889 -> 0.874 vs data 0.883; differential 0.44/0.16 -> 0.38/0.13),
+>    but spends the freedom on the horizon: ex-channel z[0.4,1) visibility
+>    within 500 kpc crashes 0.39 -> 0.06 (94% of late wide deposits
+>    invisible even at the normalization radius) with f_ex dropping to
+>    ~0.34 to price it. The observable gains are the same corrections
+>    2ch-fa achieves WITHOUT deleting mass past the horizon, so the
+>    structural DOF (fa), not the looser bound, is the adopted fix
+>    (exp35's rail lesson, second confirmation).
+> 5. **P4 (efficiency-peak stability): drift halved, not closed.** Peak z
+>    z04 -> multi: prune 3.24 -> 4.08, fa 3.54 -> 4.10 (exp35: 2.7 -> 4.0).
+>    Note `2ch-fa` takes log_s0_ex OFF the 3.0 rail for the first time in
+>    the family (z04 2.88, multi 2.95).
+>
+> **(C) THE STATISTICAL DRESSING — BUILT; THE FLAT-SPINE ABLATION GUARD
+> FAILS (2026-07-14, `dressing.py`, n=2397, 5-fold OOF, K=4 pooled
+> residual modes, poly2 cores, AR(1) rho = 0.64).** The dressing itself
+> works: it pays the consistency tax and reaches the statistical wall at
+> every epoch (held-out pinned shape R>5: spine 17.7/17.1/16.3/16.0/14.7
+> -> dressed 15.6/15.0/14.2/12.7/10.8; the z=0.4 wall is 15.6). But the
+> SAME machinery on a flat spine (per-epoch train-median log CoG — no
+> kernel) ties it: 15.2/15.1/14.0/13.0/11.2, alternating sign, no epoch
+> where the kernel wins by more than 0.4 points. **Per the
+> pre-registration, the spine earns nothing on held-out accuracy** — the
+> kernel's residual information is reachable from the portable features
+> directly, exactly what phase 0 measured (the two models' residuals
+> share ~50% of their variance; the dressing climbs to that one wall
+> from either starting point). Supporting reads: (a) kernel-spine rho
+> 0.638 vs flat 0.700 — the kernel absorbs some epoch-coherent residual,
+> as a physical mean should; (b) the log-CoG-space residual DRAWS
+> reproduce exp37's failure mode (planes 0.9-1.2x floor at z<=0.7,
+> 5-21x at z>=1.5 where the outskirt annuli are near-empty) — the
+> block-pinned representation remains the generative product; (c) the
+> growth plane at 0.3x floor is NOT an exp37-beating result: the spine
+> is normalized to the measured M(<500) datum, so the draws inherit
+> real per-galaxy totals (exp37 predicts totals from features alone).
+>
+> **The two-model program verdict stands, now with the hybrid tested:**
+> the statistical emulator (exp37, graduated) is the accuracy/generative
+> product; the two-channel kernel is the physics companion — its unique
+> value is the passed out-of-model tests (differential deposition, the
+> aperture fraction, mass conservation), not held-out accuracy, and
+> stacking a statistical layer on it does not change that.
+>
+> **User verdict on the round (2026-07-15):** the model does reasonably
+> well, but the extended channel's width scale sitting AT its allowed
+> maximum in every fit is a critical unphysical symptom (nothing in
+> simulations or observations behaves like a ~1000-kpc deposit scale) —
+> the parameter is compensating for something the model form gets wrong.
+> Next experiment: back to the drawing board on the deposition primitive
+> itself (see doc/todo.md — candidate directions: non-Gaussian deposit
+> shapes, e.g. exponential; a deposit form driven by the measured
+> epoch-to-epoch surface-density differences; or dropping the deposition
+> assumption entirely for a smooth-in-redshift parameterized profile/CoG
+> family tied to [DiffMAH, c200c]).
+
 Status: (A)+(B) built and validated at z=0.4 (2026-07-14). Goal reframed
 by the user: no physicality mandate — the primary goal is the best
 parameterized model of the [MAH, halo properties] -> [stellar profile / CoG]

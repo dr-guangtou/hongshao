@@ -662,6 +662,51 @@ Cross-experiment plan. Mirrors the phase sequence in
   data 0.83) — the data want more outward transport at the massive end.
   Decision input: Path A stays the accuracy product; the transport kernel is
   the physics companion.
+- [x] **exp36 multi-epoch round COMPLETE (2026-07-14, branch
+  exp36-multi-epoch; verdicts in the README).** (1) Joint 5-epoch fit:
+  multi 2ch-fa (16 params) held-out pinned shape 17.7/17.1/16.3/16.0/14.7%
+  (epoch avg 16.4 = the z04-only mark; exp35 marks 20.5/19.1) — the
+  consistency tax shrinks to +1.3 points. (2) The differential-deposition
+  test SURVIVES via fa (massive 0.40/0.14 vs data 0.37/0.11; prune alone
+  strains, 0.44/0.16). (3) Bounds-stress: log_s0_ex rails at 3.5 and spends
+  the freedom past the 500-kpc horizon (z<1 ex visibility 0.39 -> 0.06) —
+  the box stays at 3.0; fa is the structural fix. (4) The low-mass outskirt
+  overshoot FALLS (+0.117/+0.127 -> +0.029/+0.070 dex) — but only under
+  the JOINT constraint (the z04-only fa fit cannot see it; lesson logged).
+  (5) P4 peak drift halved (3.5 -> 4.1); 2ch-fa takes log_s0_ex off the
+  rail for the first time. **(C) built and judged: the flat-spine ablation
+  guard FAILS** — the dressing reaches the statistical wall from either
+  spine (kernel 15.6-10.8% vs flat 15.2-11.2%, a tie), so the spine earns
+  nothing on held-out accuracy; the two-model program verdict stands with
+  the hybrid now tested (statistical = product, kernel = physics
+  companion). Log-CoG residual draws reproduce exp37's high-z failure
+  mode; the block-pinned product remains the generative layer.
+- [ ] **(NEXT, user direction 2026-07-15) exp38 — rethink the deposition
+  primitive.** The critical symptom: the extended channel's width scale sits
+  AT its allowed maximum (log s0 = 3.0, ~1000-kpc Gaussian deposits) in
+  every fit — unphysical in both simulations and observations; the
+  parameter is compensating for a wrong model form. Suspect: the centred
+  GAUSSIAN deposit itself. Three candidate directions, in escalating
+  departure from the current family:
+  1. **Non-Gaussian deposit shapes**: e.g. an exponential (or Sersic-like)
+     deposit profile — heavier outer wings at a FIXED physical scale could
+     supply the outskirt mass the Gaussian can only reach by inflating its
+     width to the bound.
+  2. **A data-driven deposit form**: build the deposit kernel from the
+     MEASURED epoch-to-epoch surface-density profile differences (the
+     stacked dlog Sigma between adjacent snapshots, exp26/exp34
+     machinery) instead of assuming a shape.
+  3. **Abandon deposition entirely — parameterize the profiles/CoGs
+     themselves**: find a functional form (possibly multi-component) that
+     fits the massive galaxies' stellar density profiles / CoGs
+     consistently well at EVERY epoch z=2.0 -> 0.4 with parameters that
+     vary SMOOTHLY with redshift; if such a family exists, tie
+     [DiffMAH(4), c200c] to the redshift evolution of its parameters
+     (the exp03 radial-DiffMAH single-epoch result and exp33-vi's smooth
+     coefficient-interpolation closure are the supporting priors).
+  Judged by: the same held-out pinned-shape marks (16.4/15.6 at z=0.4),
+  the differential-deposition curve, NO parameter at a bound, and the
+  low-mass outskirt tercile table.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
