@@ -95,7 +95,84 @@ should condition. (3) In the deposit branch, the two heavy-tail
 candidates (moffat, gausswing) beat the Gaussian at every epoch WITH the
 scale off the rail — the stage-0 diagnosis confirmed at population level.
 
-**Promotion recommendation (user decision pending): (a) moffat and (b)
-gausswing to stage 2a (the exp36 multi-epoch harness, shape swapped);
-(c) the family branch to stage 2b as a joint smooth-in-z slope-sigmoid
-fit anchored by the template's (Mtot, Rhalf) tracks.**
+**Promotion (user-approved 2026-07-15): (a) moffat and (b) gausswing to
+stage 2a; (c) the family branch to stage 2b (joint smooth-in-z fits +
+halo conditioning).**
+
+## Stage 2 — the promotion round (2026-07-15, full n=2397; CHECKPOINT)
+
+### 2a — the primitives inside the full multi-epoch harness
+
+Both variants keep the exp35/36 structure (lognormal efficiency, dyntrans
+transport, M(<500) normalization, joint 5-epoch fit, 10-fold CV) and swap
+only the deposit shape. Held-out 148-pinned shape max|rel| R>5 [%]
+(incumbent multi 2ch-fa: 17.7/17.1/16.3/16.0/14.7):
+
+| model | params | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | avg | bounds (joint fit) |
+|---|---|---|---|---|---|---|---|---|
+| 2ch-exp (wide channel exponential) | 16 | 17.8 | 17.0 | 16.4 | **15.8** | **14.5** | **16.3** | log_s0_ex at 3.0 — but the stress test shows a FINITE interior optimum (below) |
+| 1ch-mof (single-channel power-law tail) | **12** | 18.5 | 17.6 | 16.7 | 16.2 | **14.2** | 16.6 | **NONE** |
+
+The four judged tests:
+1. **Differential deposition** (massive tercile z0.7->0.4, data 0.37/0.11;
+   incumbent 0.40/0.14): 2ch-exp 0.39/0.14 (pass); **1ch-mof 0.39/0.12 —
+   the best pass in the program**, and it tracks the measured curve at
+   EVERY epoch pair (z2.0->1.5: 0.18/0.05 vs data 0.23/0.06, where the
+   incumbent overshot at 0.36/0.10).
+2. **Outskirt terciles** (dlog Sigma model-data, 30-60 / 60-148 kpc;
+   incumbent T1 +0.029/+0.070): 2ch-exp +0.023/+0.062 (comparable);
+   **1ch-mof +0.026/+0.019 with T2/T3 at the +-0.01-0.02 level — flat
+   residuals at every mass, no compensating undershoot.**
+3. **Bounds-stress, 2ch-exp** (log_s0_ex 3.0 -> 3.5): loss gain 0.02%
+   (0.1476 -> 0.1473) and the scale settles INTERIOR at 3.19 with the
+   observables unmoved (f148 0.873 vs data 0.883; differential 0.38/0.13).
+   Unlike the Gaussian — which re-railed at every box and bought its loss
+   through horizon deletion — the exponential's preferred wide scale is
+   finite and data-set; the 3.0 rail was a box clipping a nearly-flat
+   optimum. Not load-bearing.
+4. **Bounds-stress, 1ch-mof** (mu 3.0 -> 4.5): the mu box is irrelevant
+   (the peak stays at z~3.4), BUT the nudged start exposed a SECOND basin
+   at 4% better loss (0.1493 vs 0.1556) with the width time-exponent AT
+   its bound (g=4.0) — and there the physics degrades (differential
+   0.42/0.13, massive f148 overshoots to 0.892). The loss-optimal basin
+   pays for its loss in the physics tests; the bound-free basin is the
+   adopted one. (The program's core pattern, reproduced within one model.)
+
+### 2b — the smooth-in-z profile family + halo conditioning
+
+Joint per-galaxy fits (each family parameter quadratic in z, all 5 epochs
+at once, R>=5 kpc): the slope-sigmoid keeps 4.0-6.1% at every epoch
+(capacity survives the smoothness constraint; unconstrained per-epoch
+ceiling 0.6%); the 2-parameter template 7.6-11.6%. Held-epoch closure:
+mid-epochs 18-26% (sigmoid) / 15-20% (template); endpoints 46-58% / 32-46%
+(quadratic extrapolation, expected).
+
+Conditioning the per-galaxy coefficients on [DiffMAH(4), c200c] (poly2
+heteroscedastic cores, 5-fold held-out), scored as 148-pinned shape R>5:
+
+| family | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| sigmoid-z (15 coeffs) | 82.8 | 50.7 | 31.0 | 43.8 | 46.7 — FAIL (coefficients not feature-reachable) |
+| **template-z (6 coeffs)** | **16.3** | **16.0** | **15.3** | 17.0 | 18.8 |
+
+**The 6-coefficient evolving-Re template — one frozen population shape,
+two smooth tracks (total mass, half-mass radius vs z) predicted from the
+halo — matches or beats the 16-parameter kernel at z<=1 and approaches
+the 15.6% statistical wall at z=0.4.** Its weakness is z>=1.5 (17.0/18.8
+vs the kernel's 16.0-14.2), where the frozen shape drifts (stage 0.1:
+Re-coordinate shape scatter grows 0.019 -> 0.032 dex toward z=2).
+
+### Stage-2 verdict (pre-adoption; user checkpoint)
+
+- **1ch-mof is the recommended kernel successor**: 12 parameters (vs 16),
+  no split channel, NO parameter at a bound, the best
+  differential-deposition pass in the program, flat outskirt residuals at
+  every mass, and held-out accuracy within 0.5 points of the incumbent
+  (better at z=2). The Gaussian-era pathologies — the railed width scale,
+  the two-channel patch, the low-mass outskirt overshoot — all trace to
+  the missing power-law tail.
+- **2ch-exp** is the accuracy pick among deposition models (avg 16.3,
+  finite wide scale) if the two-channel architecture is retained.
+- **template-z** earns a place as the minimal statistical description:
+  massive-galaxy profile evolution z=2 -> 0.4 is, to 15-19%, "one shape,
+  two halo-predictable growth tracks".

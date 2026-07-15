@@ -279,6 +279,7 @@ def cmd_report(dev=False):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from hongshao.plotting import set_style, save_fig, OKABE_ITO
+    from hongshao.qa import _tex
     set_style()
     tag = "_dev" if dev else ""
     d = np.load(OUTDIR / f"stage2_family{tag}.npz")
@@ -295,12 +296,13 @@ def cmd_report(dev=False):
             mc = np.load(cnd)["met"]
             axes[1].plot(ZK, [100 * np.nanmedian(mc[:, k]) for k in range(5)],
                          "--s", ms=4, c=col, label=f"{fam} conditioned")
-    axes[0].set(xlabel="epoch z", ylabel="joint-fit max|rel| R>5 [percent]",
+    axes[0].set(xlabel="epoch z",
+                ylabel=_tex("joint-fit max|rel| R>5") + " [percent]",
                 title="smooth-in-z joint fit (capacity kept?)")
     axes[1].axhline(16.4, color="0.3", ls=":", lw=1.2)
     axes[1].axhline(15.6, color="0.6", ls=":", lw=1.2)
     axes[1].set(xlabel="epoch z",
-                ylabel="held-out / closure max|rel| R>5 [percent]",
+                ylabel=_tex("held-out / closure max|rel| R>5") + " [percent]",
                 title="closure + halo-conditioned (marks dotted)")
     for ax in axes:
         ax.legend(fontsize=7)
