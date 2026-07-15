@@ -561,16 +561,124 @@ def cmd_combined(dev=True, plain=False):
     print(f"wrote {OUTDIR / f'stage3_combined{tag}.npz'}")
 
 
+# --------------------------------------------------------------------------- #
+# the quenched core: f_core declines after a fitted cosmic time                #
+# --------------------------------------------------------------------------- #
+def model_cogs_qcore(p, g, ks, variant):
+    """1ch-mof + a QUENCHED dissipative core: deposit i feeds the compact
+    channel with fraction f_core * S(t_i), S = expit((t_q - t_i)/0.7 Gyr)
+    — core formation switches off after cosmic time t_q (in-situ
+    quenching). Theta = 12 stage-2 + [ca, cb, log_rc_core, t_q]; t_q large
+    recovers the constant-fraction core; f_core -> 0 nests stage 2."""
+    from scipy.special import expit
+    e = _W["e"]
+    s2 = _W["s2"]
+    mah = g["mah"]
+    base6, _, _ = s2.theta_of(p[:12], g, "1ch-mof")
+    f0 = float(expit(p[12] + p[13] * g["cond"][0]))
+    rc_core = 10.0 ** float(np.clip(p[14], -0.3, 0.9))
+    t_q = float(np.clip(p[15], 0.5, 14.0))
+    w = e.weights(mah["z"], base6[3], base6[4])
+    dM = w * mah["dMh"]
+    if not np.isfinite(dM).all() or dM.sum() <= 0:
+        return None
+    dM = dM / dM.sum()
+    gam = float(np.clip(base6[5], 1.06, 6.0))
+    th4 = [base6[0], base6[1], 0.0, base6[2]]
+    u_core = 1.0 + (e.R_EXT / rc_core) ** 2
+    cog_core = 1.0 - u_core ** (1.0 - gam)
+    fq = f0 * expit((t_q - mah["t"]) / 0.7)          # per-deposit core frac
+    out = []
+    for k in ks:
+        mask = mah["snap"] <= e.ANCHOR_SNAP[k]
+        B = s2.basis_mof(th4, gam, mah["t"], mah["t_obs"], e.pe.AT[k],
+                         e.R_EXT)
+        dMm = dM * mask
+        m = B @ (dMm * (1.0 - fq)) + cog_core * (dMm * fq).sum()
+        if not np.isfinite(m[-1]) or m[-1] <= 0 or m[-2] <= 0:
+            return None
+        out.append(m[:-1] * (g["m500"][k] / m[-1]))
+    return out
+
+
+def gal_loss_qcore(p, g, ks, variant):
+    cogs = model_cogs_qcore(p, g, ks, variant)
+    if cogs is None:
+        return 4.0
+    return float(np.mean([np.sqrt(np.mean(
+        ((c - g["data"][k]) / g["data"][k]) ** 2))
+        for c, k in zip(cogs, ks)]))
+
+
+def _chunk_qcore(args):
+    p, variant, ks, lo, hi = args
+    return sum(gal_loss_qcore(p, g, ks, variant) for g in _W["gals"][lo:hi])
+
+
+def _pen_qcore(p, variant):
+    s2 = _W["s2"]
+    return s2.penalty(p[:12], "1ch-mof") + 30.0 * float(
+        np.clip(-6.0 - p[12], 0, None) ** 2
+        + np.clip(p[12] - 6.0, 0, None) ** 2
+        + np.clip(abs(p[13]) - 4.0, 0, None) ** 2
+        + np.clip(-0.3 - p[14], 0, None) ** 2
+        + np.clip(p[14] - 0.9, 0, None) ** 2
+        + np.clip(0.5 - p[15], 0, None) ** 2
+        + np.clip(p[15] - 14.0, 0, None) ** 2)
+
+
+def cmd_qcore(dev=True):
+    from scipy.special import expit
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    _W["rows_arg"] = rows
+    d = np.load(OUTDIR / "stage2_multiepoch.npz")
+    dp = np.load(OUTDIR / "stage3_combined_plain.npz")
+    scale = 0.15 if dev else 1.0
+    # warm 1: the plain-loss constant-core fit + a mid t_q; warm 2: late t_q
+    w1 = np.concatenate([dp["theta"][:12], dp["theta"][13:16], [4.0]])
+    w2 = np.concatenate([dp["theta"][:12], dp["theta"][13:16], [10.0]])
+    print(f"exp38 stage 3 QUENCHED-core fit (n={len(_W['gals'])}"
+          f"{', DEV' if dev else ''}; plain loss; core formation switches "
+          "off after fitted t_q [Gyr]):")
+    th, lo = _fit("1ch-mof", [w1, w2], max(int(5000 * scale), 80),
+                  _pen_qcore, _chunk_qcore, "1ch-mof-qcore")
+    base_lo = float(d["loss_1ch-mof"])
+    print(f"  loss {lo:.4f} vs stage-2 {base_lo:.4f} vs constant-core "
+          f"{float(dp['loss']):.4f}; t_q = {th[15]:.2f} Gyr "
+          f"(z_q ~ {max(0.0, np.interp(th[15], _W['gals'][0]['mah']['t'][::-1], _W['gals'][0]['mah']['z'][::-1])):.1f}); "
+          f"rc_core = {10.0 ** th[14]:.2f} kpc; f0 pct50 = "
+          f"{np.median([float(expit(th[12] + th[13] * g['cond'][0])) for g in _W['gals']]):.3f}")
+    print("  inner bias (in-sample):")
+    _print_bias("stage-2 ", _inner_bias(d["theta_1ch-mof"], "1ch-mof"))
+    _print_bias("qcore   ", _inner_bias(th, "1ch-mof",
+                                        model_fn=model_cogs_qcore))
+    np.savez(OUTDIR / f"stage3_qcore{'_dev' if dev else ''}.npz",
+             theta=th, loss=lo)
+    print(f"wrote {OUTDIR / ('stage3_qcore' + ('_dev' if dev else '') + '.npz')}")
+
+
+_MODELS3 = {"combined": (model_cogs_comb, gal_loss_comb),
+            "qcore": (model_cogs_qcore, gal_loss_qcore)}
+
+
 def _cv_fold3(args):
-    fold, warm, maxiter, plain = args
+    fold, warm, maxiter, plain, mkey = args
     gals = _W["gals"]
     n = len(gals)
     train = [i for i in range(n) if i % 10 != fold]
-    r = minimize(lambda p: np.mean([gal_loss_comb(p, gals[i], KS, "1ch-mof",
-                                                  plain=plain)
-                                    for i in train]) + _pen_comb(p, "1ch-mof"),
-                 warm, method="Nelder-Mead",
+    if mkey == "qcore":
+        def tr_loss(p):
+            return np.mean([gal_loss_qcore(p, gals[i], KS, "1ch-mof")
+                            for i in train]) + _pen_qcore(p, "1ch-mof")
+    else:
+        def tr_loss(p):
+            return np.mean([gal_loss_comb(p, gals[i], KS, "1ch-mof",
+                                          plain=plain)
+                            for i in train]) + _pen_comb(p, "1ch-mof")
+    r = minimize(tr_loss, warm, method="Nelder-Mead",
                  options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-8))
+    model_fn = _MODELS3[mkey][0]
     e = _W["e"]
     i5, i10 = _i_at(5.0), _i_at(10.0)
     m = e.R > 5.0
@@ -579,7 +687,7 @@ def _cv_fold3(args):
         if i % 10 != fold:
             continue
         g = gals[i]
-        cogs = model_cogs_comb(r.x, g, KS, "1ch-mof")
+        cogs = model_fn(r.x, g, KS, "1ch-mof")
         if cogs is None:
             out.append((g["row"], np.full((5, 3), np.nan),
                         np.full((5, len(e.R)), np.nan)))
@@ -594,26 +702,31 @@ def _cv_fold3(args):
     return out
 
 
-def cmd_cv3(dev=False, plain=False):
+def cmd_cv3(dev=False, plain=False, mkey="combined"):
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     _w_init(rows)
     gals = _W["gals"]
     n = len(gals)
     e = _W["e"]
-    tag = ("_plain" if plain else "") + ("_dev" if dev else "")
-    warm = np.load(OUTDIR / f"stage3_combined{tag}.npz")["theta"]
+    if mkey == "qcore":
+        tag = "_qcore" + ("_dev" if dev else "")
+        warm = np.load(OUTDIR / f"stage3_qcore{'_dev' if dev else ''}.npz"
+                       )["theta"]
+    else:
+        tag = ("_plain" if plain else "") + ("_dev" if dev else "")
+        warm = np.load(OUTDIR / f"stage3_combined{tag}.npz")["theta"]
     workers = min(max(os.cpu_count() - 2, 2), 10)
     maxiter = 150 if dev else 1500
     row_to_i = {g["row"]: i for i, g in enumerate(gals)}
     met = np.full((n, 5, 3), np.nan)
     cogs = np.full((n, 5, len(e.R)), np.nan)
     t0 = time.time()
-    print(f"exp38 stage 3 10-fold CV of the COMBINED model (n={n}"
+    print(f"exp38 stage 3 10-fold CV [{mkey}] (n={n}"
           f"{', DEV' if dev else ''}"
           f"{', PLAIN loss' if plain else ''}; metrics: pinned shape R>5 | "
           "M(<5) bias | M(<10) bias):")
     with Pool(workers, initializer=_w_init, initargs=(rows,)) as pool:
-        jobs = [(f, warm, maxiter, plain) for f in range(10)]
+        jobs = [(f, warm, maxiter, plain, mkey) for f in range(10)]
         for part in pool.map(_cv_fold3, jobs):
             for row, m_, c_ in part:
                 met[row_to_i[row]] = m_
@@ -623,29 +736,35 @@ def cmd_cv3(dev=False, plain=False):
         f"{100*np.nanmedian(met[:, k, 1]):+.1f} | "
         f"{100*np.nanmedian(met[:, k, 2]):+.1f}"
         for k in range(5))
-    print(f"  combined: {line}  ({(time.time()-t0)/60:.1f} min)")
+    print(f"  {mkey}: {line}  ({(time.time()-t0)/60:.1f} min)")
     np.savez(OUTDIR / f"stage3_cv{tag}.npz", met=met, cogs=cogs)
     print(f"wrote {OUTDIR / f'stage3_cv{tag}.npz'}")
 
 
-def cmd_physics3(dev=False, plain=False):
-    """Differential-deposition + overshoot for the combined model."""
+def cmd_physics3(dev=False, plain=False, mkey="combined"):
+    """Differential-deposition + overshoot for a stage-3 model."""
     from hongshao.profile_emulator import density_from_cog
-    tag = ("_plain" if plain else "") + ("_dev" if dev else "")
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     _w_init(rows)
     gals = _W["gals"]
     e = _W["e"]
-    th = np.load(OUTDIR / f"stage3_combined{tag}.npz")["theta"]
+    if mkey == "qcore":
+        tag = "_qcore" + ("_dev" if dev else "")
+        th = np.load(OUTDIR / f"stage3_qcore{'_dev' if dev else ''}.npz"
+                     )["theta"]
+    else:
+        tag = ("_plain" if plain else "") + ("_dev" if dev else "")
+        th = np.load(OUTDIR / f"stage3_combined{tag}.npz")["theta"]
+    model_fn = _MODELS3[mkey][0]
     data = np.stack([g["data"] for g in gals])
     logms = np.array([g["logms"] for g in gals])
     cogs = np.full((len(gals), 5, len(e.R)), np.nan)
     for i, g in enumerate(gals):
-        out = model_cogs_comb(th, g, KS, "1ch-mof")
+        out = model_fn(th, g, KS, "1ch-mof")
         if out is not None:
             cogs[i] = out
     ed3, rows_d = e.differential(cogs, data, logms)
-    print("exp38 stage 3 combined-model physics (data -> model; marks: "
+    print(f"exp38 stage 3 [{mkey}] physics (data -> model; marks: "
           "data 0.37/0.11, stage-2 1ch-mof 0.39/0.12):")
     for b in range(3):
         cells = [f"z{e.ANCHOR_Z[k+1]}->z{e.ANCHOR_Z[k]}: "
@@ -721,6 +840,18 @@ def demo():
     err = max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
               for x, y in zip(b, a))
     assert err < 1e-9, f"combined nesting broken: {err:.2e}"
+    # (7) the quenched core: f0->0 nests stage 2; large t_q == constant core
+    b = model_cogs_qcore(np.concatenate([p, [-30.0, 0.0, 0.3, 7.0]]), g,
+                         [0, 4], "1ch-mof")
+    err = max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
+              for x, y in zip(b, a))
+    assert err < 1e-9, f"qcore f0=0 nesting broken: {err:.2e}"
+    c1 = model_cogs_qcore(np.concatenate([p, [-1.0, 0.0, 0.3, 13.9]]), g,
+                          [0], "1ch-mof")[0]
+    c2 = model_cogs_core(np.concatenate([p, [-1.0, 0.0, 0.3]]), g, [0],
+                         "1ch-mof")[0]
+    assert np.abs(c1 / c2 - 1.0).max() < 1e-3, \
+        "large t_q must recover the constant-fraction core"
     print("stage3 demo OK: f_ret=0 and f_core=0 both nest stage 2 exactly "
           "(alone and combined); retention and the core channel raise the "
           "inner mass monotonically; provenance splits sum to the total; "
@@ -742,9 +873,13 @@ if __name__ == "__main__":
         cmd_core(dev)
     elif cmd == "combined":
         cmd_combined(dev, plain="--plain" in sys.argv)
+    elif cmd == "qcore":
+        cmd_qcore(dev)
     elif cmd == "cv3":
-        cmd_cv3(dev, plain="--plain" in sys.argv)
+        cmd_cv3(dev, plain="--plain" in sys.argv,
+                mkey="qcore" if "--qcore" in sys.argv else "combined")
     elif cmd == "physics3":
-        cmd_physics3(dev, plain="--plain" in sys.argv)
+        cmd_physics3(dev, plain="--plain" in sys.argv,
+                     mkey="qcore" if "--qcore" in sys.argv else "combined")
     else:
         sys.exit(f"unknown subcommand {cmd!r}")
