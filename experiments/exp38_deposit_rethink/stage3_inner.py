@@ -328,6 +328,109 @@ def cmd_retention(dev=True):
     print(f"wrote {OUTDIR / ('stage3_retention' + ('_dev' if dev else '') + '.npz')}")
 
 
+# --------------------------------------------------------------------------- #
+# the dissipative-core component (the user's option 1, with a physical name)   #
+# --------------------------------------------------------------------------- #
+def model_cogs_core(p, g, ks, variant):
+    """1ch-mof + a compact core channel: a fraction f_core of every deposit
+    lands in a NON-MIGRATING compact component at fixed scale rc_core.
+    Physical reading: the dissipative in-situ core (compaction-formed,
+    bound, does not phase-mix outward). Theta = the 12 stage-2 parameters
+    + [logit-amplitude ca, cond slope cb (on logMh), log10 rc_core].
+    f_core -> 0 nests stage 2 exactly."""
+    from scipy.special import expit
+    e = _W["e"]
+    s2 = _W["s2"]
+    mah = g["mah"]
+    base6, _, _ = s2.theta_of(p[:12], g, "1ch-mof")
+    f_core = float(expit(p[12] + p[13] * g["cond"][0]))
+    rc_core = 10.0 ** float(np.clip(p[14], -0.3, 0.9))       # 0.5 - 8 kpc
+    w = e.weights(mah["z"], base6[3], base6[4])
+    dM = w * mah["dMh"]
+    if not np.isfinite(dM).all() or dM.sum() <= 0:
+        return None
+    dM = dM / dM.sum()
+    gam = float(np.clip(base6[5], 1.06, 6.0))
+    th4 = [base6[0], base6[1], 0.0, base6[2]]
+    u_core = 1.0 + (e.R_EXT / rc_core) ** 2
+    cog_core = 1.0 - u_core ** (1.0 - gam)                   # (25,)
+    out = []
+    for k in ks:
+        mask = mah["snap"] <= e.ANCHOR_SNAP[k]
+        B = s2.basis_mof(th4, gam, mah["t"], mah["t_obs"], e.pe.AT[k],
+                         e.R_EXT)
+        m = ((1.0 - f_core) * (B @ (dM * mask))
+             + f_core * cog_core * (dM * mask).sum())
+        if not np.isfinite(m[-1]) or m[-1] <= 0 or m[-2] <= 0:
+            return None
+        out.append(m[:-1] * (g["m500"][k] / m[-1]))
+    return out
+
+
+def gal_loss_core(p, g, ks, variant):
+    cogs = model_cogs_core(p, g, ks, variant)
+    if cogs is None:
+        return 4.0
+    e = _W["e"]
+    m_out = e.R > 5.0
+    i5, i10 = _i_at(5.0), _i_at(10.0)
+    tot = 0.0
+    for c, k in zip(cogs, ks):
+        d = g["data"][k]
+        rel = (c - d) / d
+        tot += (np.sqrt(np.mean(rel[m_out] ** 2))
+                + 0.5 * (abs(rel[i5]) + abs(rel[i10])))
+    return float(tot / len(ks))
+
+
+def _chunk_core(args):
+    p, variant, ks, lo, hi = args
+    return sum(gal_loss_core(p, g, ks, variant) for g in _W["gals"][lo:hi])
+
+
+def _pen_core(p, variant):
+    s2 = _W["s2"]
+    return s2.penalty(p[:12], "1ch-mof") + 30.0 * float(
+        np.clip(-6.0 - p[12], 0, None) ** 2
+        + np.clip(p[12] - 6.0, 0, None) ** 2
+        + np.clip(abs(p[13]) - 4.0, 0, None) ** 2
+        + np.clip(-0.3 - p[14], 0, None) ** 2
+        + np.clip(p[14] - 0.9, 0, None) ** 2)
+
+
+def cmd_core(dev=True):
+    from scipy.special import expit
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    _W["rows_arg"] = rows
+    d = np.load(OUTDIR / "stage2_multiepoch.npz")
+    scale = 0.15 if dev else 1.0
+    warm = np.concatenate([d["theta_1ch-mof"], [-2.5, 0.0, 0.3]])
+    nudge = warm.copy()
+    nudge[12] = -1.2
+    print(f"exp38 stage 3 core-component fit (n={len(_W['gals'])}"
+          f"{', DEV' if dev else ''}): 1ch-mof + a non-migrating compact "
+          "core channel (f_core, cond slope, rc_core); objective = R>5 "
+          "shape + M(<5)/M(<10) integral terms; f_core -> 0 nests stage 2:")
+    th, lo = _fit("1ch-mof", [warm, nudge], max(int(5000 * scale), 80),
+                  _pen_core, _chunk_core, "1ch-mof-core")
+    fcs = [float(expit(th[12] + th[13] * g["cond"][0])) for g in _W["gals"]]
+    print(f"  loss {lo:.4f}; f_core pct16/50/84 = "
+          f"{np.percentile(fcs, [16, 50, 84]).round(3)}; "
+          f"rc_core = {10.0 ** th[14]:.2f} kpc")
+    print("  inner bias (in-sample):")
+    _print_bias("stage-2", _inner_bias(d["theta_1ch-mof"], "1ch-mof"))
+    _print_bias("core   ", _inner_bias(th, "1ch-mof",
+                                       model_fn=model_cogs_core))
+    ab = _W["s2"]._at_bound(th[:12], "1ch-mof")
+    if not (-0.28 < th[14] < 0.88):
+        ab.append(f"rc_core={10.0 ** th[14]:.2f}")
+    print(f"  at bound: {', '.join(ab) if ab else 'NONE'}")
+    np.savez(OUTDIR / f"stage3_core{'_dev' if dev else ''}.npz",
+             theta=th, loss=lo)
+    print(f"wrote {OUTDIR / ('stage3_core' + ('_dev' if dev else '') + '.npz')}")
+
+
 def demo():
     rows = np.load(POP_NPZ)["dev100"][:8]
     _w_init(rows)
@@ -355,9 +458,24 @@ def demo():
     l_std = s2.gal_loss(p, g, [0], "1ch-mof")
     l_in = gal_loss_inner(p, g, [0], "1ch-mof")
     assert l_in > 0 and np.isfinite(l_in) and l_in >= 0.5 * l_std
-    print("stage3 demo OK: f_ret=0 nests stage 2 exactly; retention raises "
-          "the core monotonically; provenance splits sum to the total; the "
-          "inner objective is finite and binding")
+    # (5) f_core -> 0 nests stage 2 exactly; raising f_core raises the core
+    b = model_cogs_core(np.concatenate([p, [-30.0, 0.0, 0.3]]), g, [0, 4],
+                        "1ch-mof")
+    err = max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
+              for x, y in zip(b, a))
+    assert err < 1e-9, f"f_core=0 nesting broken: {err:.2e}"
+    i10 = _i_at(10.0)
+    v = [model_cogs_core(np.concatenate([p, [lgt, 0.0, 0.2]]), g, [0],
+                         "1ch-mof")[0][i10]
+         for lgt in (-30.0, -1.0, 2.0)]
+    frac = [x / model_cogs_core(np.concatenate([p, [lgt, 0.0, 0.2]]), g, [0],
+                                "1ch-mof")[0][-1]
+            for x, lgt in zip(v, (-30.0, -1.0, 2.0))]
+    assert frac[0] < frac[1] < frac[2], "f_core must raise the core"
+    print("stage3 demo OK: f_ret=0 and f_core=0 both nest stage 2 exactly; "
+          "retention and the core channel raise the inner mass "
+          "monotonically; provenance splits sum to the total; the inner "
+          "objective is finite and binding")
 
 
 if __name__ == "__main__":
@@ -371,5 +489,7 @@ if __name__ == "__main__":
         cmd_capacity(dev)
     elif cmd == "retention":
         cmd_retention(dev)
+    elif cmd == "core":
+        cmd_core(dev)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")
