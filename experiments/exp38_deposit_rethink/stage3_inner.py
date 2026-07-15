@@ -476,10 +476,14 @@ def model_cogs_comb(p, g, ks, variant):
     return out
 
 
-def gal_loss_comb(p, g, ks, variant):
+def gal_loss_comb(p, g, ks, variant, plain=False):
     cogs = model_cogs_comb(p, g, ks, variant)
     if cogs is None:
         return 4.0
+    if plain:                       # the exp35/36 convention (all radii)
+        return float(np.mean([np.sqrt(np.mean(
+            ((c - g["data"][k]) / g["data"][k]) ** 2))
+            for c, k in zip(cogs, ks)]))
     e = _W["e"]
     m_out = e.R > 5.0
     i5, i10 = _i_at(5.0), _i_at(10.0)
@@ -497,6 +501,12 @@ def _chunk_comb(args):
     return sum(gal_loss_comb(p, g, ks, variant) for g in _W["gals"][lo:hi])
 
 
+def _chunk_comb_plain(args):
+    p, variant, ks, lo, hi = args
+    return sum(gal_loss_comb(p, g, ks, variant, plain=True)
+               for g in _W["gals"][lo:hi])
+
+
 def _pen_comb(p, variant):
     s2 = _W["s2"]
     return s2.penalty(p[:12], "1ch-mof") + 30.0 * float(
@@ -508,7 +518,7 @@ def _pen_comb(p, variant):
         + np.clip(p[15] - 0.9, 0, None) ** 2)
 
 
-def cmd_combined(dev=True):
+def cmd_combined(dev=True, plain=False):
     from scipy.special import expit
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     _w_init(rows)
@@ -522,35 +532,42 @@ def cmd_combined(dev=True):
                          dc["theta"][12:15]])
     # warm 2: the fitted core theta + no retention (nesting reference)
     w2 = np.concatenate([dc["theta"][:12], [0.0], dc["theta"][12:15]])
+    obj = "PLAIN all-radius loss" if plain else "inner-aware objective"
     print(f"exp38 stage 3 COMBINED fit (n={len(_W['gals'])}"
           f"{', DEV' if dev else ''}): core + retention under the "
-          "inner-aware objective (completes the factorial):")
+          f"{obj}:")
     th, lo = _fit("1ch-mof", [w1, w2], max(int(5000 * scale), 80),
-                  _pen_comb, _chunk_comb, "1ch-mof-comb")
-    core_lo = float(dc["loss"])
-    flag = "" if (lo <= core_lo + 1e-9 or dev) else "  NESTING VIOLATION"
+                  _pen_comb, _chunk_comb_plain if plain else _chunk_comb,
+                  "1ch-mof-comb" + ("-plain" if plain else ""))
+    if plain:
+        base_lo = float(d["loss_1ch-mof"])
+        print(f"  loss {lo:.4f} vs stage-2 plain-loss {base_lo:.4f}"
+              + ("" if (lo <= base_lo + 1e-9 or dev)
+                 else "  NESTING VIOLATION"))
+    else:
+        core_lo = float(dc["loss"])
+        flag = "" if (lo <= core_lo + 1e-9 or dev) else "  NESTING VIOLATION"
+        print(f"  loss {lo:.4f} vs core-only {core_lo:.4f}{flag}")
     fcs = [float(expit(th[13] + th[14] * g["cond"][0])) for g in _W["gals"]]
-    print(f"  loss {lo:.4f} vs core-only {core_lo:.4f}{flag}; "
-          f"f_ret = {th[12]:.3f}; f_core pct16/50/84 = "
+    print(f"  f_ret = {th[12]:.3f}; f_core pct16/50/84 = "
           f"{np.percentile(fcs, [16, 50, 84]).round(3)}; "
           f"rc_core = {10.0 ** th[15]:.2f} kpc")
     print("  inner bias (in-sample):")
     _print_bias("stage-2 ", _inner_bias(d["theta_1ch-mof"], "1ch-mof"))
-    _print_bias("core    ", _inner_bias(dc["theta"], "1ch-mof",
-                                        model_fn=model_cogs_core))
-    _print_bias("combined", _inner_bias(th, "1ch-mof",
+    _print_bias("this fit", _inner_bias(th, "1ch-mof",
                                         model_fn=model_cogs_comb))
-    np.savez(OUTDIR / f"stage3_combined{'_dev' if dev else ''}.npz",
-             theta=th, loss=lo)
-    print(f"wrote {OUTDIR / ('stage3_combined' + ('_dev' if dev else '') + '.npz')}")
+    tag = ("_plain" if plain else "") + ("_dev" if dev else "")
+    np.savez(OUTDIR / f"stage3_combined{tag}.npz", theta=th, loss=lo)
+    print(f"wrote {OUTDIR / f'stage3_combined{tag}.npz'}")
 
 
 def _cv_fold3(args):
-    fold, warm, maxiter = args
+    fold, warm, maxiter, plain = args
     gals = _W["gals"]
     n = len(gals)
     train = [i for i in range(n) if i % 10 != fold]
-    r = minimize(lambda p: np.mean([gal_loss_comb(p, gals[i], KS, "1ch-mof")
+    r = minimize(lambda p: np.mean([gal_loss_comb(p, gals[i], KS, "1ch-mof",
+                                                  plain=plain)
                                     for i in train]) + _pen_comb(p, "1ch-mof"),
                  warm, method="Nelder-Mead",
                  options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-8))
@@ -577,13 +594,13 @@ def _cv_fold3(args):
     return out
 
 
-def cmd_cv3(dev=False):
+def cmd_cv3(dev=False, plain=False):
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     _w_init(rows)
     gals = _W["gals"]
     n = len(gals)
     e = _W["e"]
-    tag = "_dev" if dev else ""
+    tag = ("_plain" if plain else "") + ("_dev" if dev else "")
     warm = np.load(OUTDIR / f"stage3_combined{tag}.npz")["theta"]
     workers = min(max(os.cpu_count() - 2, 2), 10)
     maxiter = 150 if dev else 1500
@@ -592,10 +609,11 @@ def cmd_cv3(dev=False):
     cogs = np.full((n, 5, len(e.R)), np.nan)
     t0 = time.time()
     print(f"exp38 stage 3 10-fold CV of the COMBINED model (n={n}"
-          f"{', DEV' if dev else ''}; metrics: pinned shape R>5 | "
+          f"{', DEV' if dev else ''}"
+          f"{', PLAIN loss' if plain else ''}; metrics: pinned shape R>5 | "
           "M(<5) bias | M(<10) bias):")
     with Pool(workers, initializer=_w_init, initargs=(rows,)) as pool:
-        jobs = [(f, warm, maxiter) for f in range(10)]
+        jobs = [(f, warm, maxiter, plain) for f in range(10)]
         for part in pool.map(_cv_fold3, jobs):
             for row, m_, c_ in part:
                 met[row_to_i[row]] = m_
@@ -610,10 +628,10 @@ def cmd_cv3(dev=False):
     print(f"wrote {OUTDIR / f'stage3_cv{tag}.npz'}")
 
 
-def cmd_physics3(dev=False):
+def cmd_physics3(dev=False, plain=False):
     """Differential-deposition + overshoot for the combined model."""
     from hongshao.profile_emulator import density_from_cog
-    tag = "_dev" if dev else ""
+    tag = ("_plain" if plain else "") + ("_dev" if dev else "")
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     _w_init(rows)
     gals = _W["gals"]
@@ -723,10 +741,10 @@ if __name__ == "__main__":
     elif cmd == "core":
         cmd_core(dev)
     elif cmd == "combined":
-        cmd_combined(dev)
+        cmd_combined(dev, plain="--plain" in sys.argv)
     elif cmd == "cv3":
-        cmd_cv3(dev)
+        cmd_cv3(dev, plain="--plain" in sys.argv)
     elif cmd == "physics3":
-        cmd_physics3(dev)
+        cmd_physics3(dev, plain="--plain" in sys.argv)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")
