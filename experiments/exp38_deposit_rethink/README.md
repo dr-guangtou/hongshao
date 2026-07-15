@@ -209,6 +209,33 @@ fixes, all measured:
    M<10 -4.3/-3.2%) and the in-sample pinned shape improves
    (19.2 -> 16.1% at z=0.4, 14.1 -> 12.1% at z=2).**
 
-Next (the untested factorial cell): core + retention combined, fit under
-the inner-aware objective, then the held-out CV + physics tests for the
-adoption candidate.
+**The completed factorial + operating-point measurement (2026-07-16).**
+The combined (core + retention) fit kills the retention floor (f_ret -> 0
+under both objectives: the core channel does its job better), and the
+model was then measured at four operating points — held-out 10-fold CV,
+all pre-registered tests:
+
+| operating point | held-out pinned shape avg (z=0.4..2) | held-out M(<5) z=0.4 | differential massive z0.7->0.4 (data 0.37/0.11) | outskirt T1 [dex] |
+|---|---|---|---|---|
+| stage-2 1ch-mof (no core) | 16.6% (18.5-14.2) | ~-11% | **0.39/0.12 PASS** | **+0.026/+0.019** |
+| + core, plain loss (f_core=0.19, rc 2.1 kpc; loss 0.1471) | 15.9% (16.6-13.5) | -7.3% | 0.47/0.16 strained | +0.048/+0.058 |
+| + QUENCHED core (t_q=8.7 Gyr ~ z 0.5; loss 0.1465) | 15.9% (16.6-13.4) | -7.3% | 0.48/0.17 (unchanged) | +0.047/+0.057 |
+| + core, inner-aware objective | **15.0%** (16.4-11.4) | **-2.8%** | 0.53/0.19 FAIL | +0.054/+0.085 |
+
+**The headline structural finding: inner-mass accuracy and the
+differential-deposition physics are in genuine tension in this family.**
+The mechanistic hypothesis "late deposits feeding the core cause the
+physics break" was TESTED and FALSIFIED: switching core formation off
+after a fitted cosmic time (the quenched core, its own preferred
+t_q = 8.7 Gyr) leaves both the accuracy and the physics unchanged to the
+third decimal. The pressure is the OUTER kernel re-balancing (wider late
+deposits) whenever any core channel absorbs the inner mass — the loss
+surface trades the outskirt physics for the core, wherever the core's
+mass comes from. The quenching parameter is dropped (parsimony; a null).
+
+Adoption decision (user checkpoint): which operating point becomes the
+kernel — the physics-clean stage-2 model, or a core-channel point that
+buys held-out shape and inner masses at a measured physics cost. Note the
+program framing: for observation-facing MASS predictions the statistical
+emulator (exp37, M(<10) bias 1-2%) is the product; the kernel's unique
+value is the passed physics tests.

@@ -588,9 +588,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   (block representation) reproduces near-empty high-z annuli that per-radius
   log-CoG or log-density draws cannot, while keeping every draw monotone.
 
-- **A physical mean only earns held-out accuracy under a statistical
-  dressing if it carries information the dressing's features cannot reach —
-  run the flat-spine ablation before adopting a hybrid (exp36 C).** The
+- **A component added to fix one region can re-balance the REST of the
+  model into breaking an out-of-model test — measure every judged test at
+  every operating point, and test the mechanism before trusting it
+  (exp38 stage 3).** Adding a compact core channel fixed the inner-mass
+  deficit (M(<5) -11.7% -> -2.8%) and improved held-out shape at every
+  epoch, but broke the differential-deposition pass (0.39/0.12 ->
+  0.53/0.19 vs data 0.37/0.11) and re-opened the outskirt overshoot. The
+  obvious mechanism — late deposits feeding the core — was tested by
+  switching core formation off after a fitted cosmic time: NOTHING
+  changed (a clean null), so the pressure was the outer kernel
+  re-balancing itself once any core absorbed the inner mass. Corollary:
+  a fix's side effects live in the parameters it FREES, not only in the
+  component it adds; and a mechanistic story about a trade is a
+  hypothesis to test (one nested parameter), not a conclusion. The
   kernel-spine + residual-dressing model reached the statistical wall at
   every epoch (15.6 -> 10.8% pinned shape), but the SAME dressing on a flat
   spine (train-median log CoG, no kernel, no per-galaxy physics) tied it to
