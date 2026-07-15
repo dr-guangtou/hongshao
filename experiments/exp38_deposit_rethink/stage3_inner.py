@@ -431,6 +431,231 @@ def cmd_core(dev=True):
     print(f"wrote {OUTDIR / ('stage3_core' + ('_dev' if dev else '') + '.npz')}")
 
 
+# --------------------------------------------------------------------------- #
+# the combined model (core + retention) and its held-out validation            #
+# --------------------------------------------------------------------------- #
+def model_cogs_comb(p, g, ks, variant):
+    """1ch-mof + retention floor + dissipative core (16 params: the 12
+    stage-2 + [f_ret, ca, cb, log_rc_core]). f_ret = ca-> -inf = 0 nests
+    the stage-2 model; the two fixes address the two provenance regimes."""
+    from scipy.special import expit
+    e = _W["e"]
+    s2 = _W["s2"]
+    mah = g["mah"]
+    base6, _, _ = s2.theta_of(p[:12], g, "1ch-mof")
+    f_ret = float(np.clip(p[12], 0.0, 1.0))
+    f_core = float(expit(p[13] + p[14] * g["cond"][0]))
+    rc_core = 10.0 ** float(np.clip(p[15], -0.3, 0.9))
+    w = e.weights(mah["z"], base6[3], base6[4])
+    dM = w * mah["dMh"]
+    if not np.isfinite(dM).all() or dM.sum() <= 0:
+        return None
+    dM = dM / dM.sum()
+    gam = float(np.clip(base6[5], 1.06, 6.0))
+    rc0 = np.clip(10.0 ** base6[0] * (mah["t"] / mah["t_obs"]) ** base6[1],
+                  1e-4, 1e5)
+    u_core = 1.0 + (e.R_EXT / rc_core) ** 2
+    cog_core = 1.0 - u_core ** (1.0 - gam)
+    out = []
+    for k in ks:
+        mask = mah["snap"] <= e.ANCHOR_SNAP[k]
+        tk = e.pe.AT[k]
+        dt = np.clip(tk - mah["t"], 0.0, None)
+        fc = f_ret + (1.0 - f_ret) * np.exp(-dt / mah["t"])
+        rcw = np.clip(rc0 * (tk / mah["t"]) ** max(base6[2], 0.0), 1e-4, 1e5)
+
+        def cog(rc):
+            u = 1.0 + (e.R_EXT[:, None] / rc[None, :]) ** 2
+            return 1.0 - u ** (1.0 - gam)
+        B = fc[None, :] * cog(rc0) + (1.0 - fc)[None, :] * cog(rcw)
+        m = ((1.0 - f_core) * (B @ (dM * mask))
+             + f_core * cog_core * (dM * mask).sum())
+        if not np.isfinite(m[-1]) or m[-1] <= 0 or m[-2] <= 0:
+            return None
+        out.append(m[:-1] * (g["m500"][k] / m[-1]))
+    return out
+
+
+def gal_loss_comb(p, g, ks, variant):
+    cogs = model_cogs_comb(p, g, ks, variant)
+    if cogs is None:
+        return 4.0
+    e = _W["e"]
+    m_out = e.R > 5.0
+    i5, i10 = _i_at(5.0), _i_at(10.0)
+    tot = 0.0
+    for c, k in zip(cogs, ks):
+        d = g["data"][k]
+        rel = (c - d) / d
+        tot += (np.sqrt(np.mean(rel[m_out] ** 2))
+                + 0.5 * (abs(rel[i5]) + abs(rel[i10])))
+    return float(tot / len(ks))
+
+
+def _chunk_comb(args):
+    p, variant, ks, lo, hi = args
+    return sum(gal_loss_comb(p, g, ks, variant) for g in _W["gals"][lo:hi])
+
+
+def _pen_comb(p, variant):
+    s2 = _W["s2"]
+    return s2.penalty(p[:12], "1ch-mof") + 30.0 * float(
+        np.clip(-p[12], 0, None) ** 2 + np.clip(p[12] - 1.0, 0, None) ** 2
+        + np.clip(-6.0 - p[13], 0, None) ** 2
+        + np.clip(p[13] - 6.0, 0, None) ** 2
+        + np.clip(abs(p[14]) - 4.0, 0, None) ** 2
+        + np.clip(-0.3 - p[15], 0, None) ** 2
+        + np.clip(p[15] - 0.9, 0, None) ** 2)
+
+
+def cmd_combined(dev=True):
+    from scipy.special import expit
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    _W["rows_arg"] = rows
+    d = np.load(OUTDIR / "stage2_multiepoch.npz")
+    dc = np.load(OUTDIR / "stage3_core.npz")
+    dr = np.load(OUTDIR / "stage3_retention.npz")
+    scale = 0.15 if dev else 1.0
+    # warm 1: the fitted core theta + the fitted retention floor
+    w1 = np.concatenate([dc["theta"][:12], [float(dr["theta"][12])],
+                         dc["theta"][12:15]])
+    # warm 2: the fitted core theta + no retention (nesting reference)
+    w2 = np.concatenate([dc["theta"][:12], [0.0], dc["theta"][12:15]])
+    print(f"exp38 stage 3 COMBINED fit (n={len(_W['gals'])}"
+          f"{', DEV' if dev else ''}): core + retention under the "
+          "inner-aware objective (completes the factorial):")
+    th, lo = _fit("1ch-mof", [w1, w2], max(int(5000 * scale), 80),
+                  _pen_comb, _chunk_comb, "1ch-mof-comb")
+    core_lo = float(dc["loss"])
+    flag = "" if (lo <= core_lo + 1e-9 or dev) else "  NESTING VIOLATION"
+    fcs = [float(expit(th[13] + th[14] * g["cond"][0])) for g in _W["gals"]]
+    print(f"  loss {lo:.4f} vs core-only {core_lo:.4f}{flag}; "
+          f"f_ret = {th[12]:.3f}; f_core pct16/50/84 = "
+          f"{np.percentile(fcs, [16, 50, 84]).round(3)}; "
+          f"rc_core = {10.0 ** th[15]:.2f} kpc")
+    print("  inner bias (in-sample):")
+    _print_bias("stage-2 ", _inner_bias(d["theta_1ch-mof"], "1ch-mof"))
+    _print_bias("core    ", _inner_bias(dc["theta"], "1ch-mof",
+                                        model_fn=model_cogs_core))
+    _print_bias("combined", _inner_bias(th, "1ch-mof",
+                                        model_fn=model_cogs_comb))
+    np.savez(OUTDIR / f"stage3_combined{'_dev' if dev else ''}.npz",
+             theta=th, loss=lo)
+    print(f"wrote {OUTDIR / ('stage3_combined' + ('_dev' if dev else '') + '.npz')}")
+
+
+def _cv_fold3(args):
+    fold, warm, maxiter = args
+    gals = _W["gals"]
+    n = len(gals)
+    train = [i for i in range(n) if i % 10 != fold]
+    r = minimize(lambda p: np.mean([gal_loss_comb(p, gals[i], KS, "1ch-mof")
+                                    for i in train]) + _pen_comb(p, "1ch-mof"),
+                 warm, method="Nelder-Mead",
+                 options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-8))
+    e = _W["e"]
+    i5, i10 = _i_at(5.0), _i_at(10.0)
+    m = e.R > 5.0
+    out = []
+    for i in range(n):
+        if i % 10 != fold:
+            continue
+        g = gals[i]
+        cogs = model_cogs_comb(r.x, g, KS, "1ch-mof")
+        if cogs is None:
+            out.append((g["row"], np.full((5, 3), np.nan),
+                        np.full((5, len(e.R)), np.nan)))
+            continue
+        met = []
+        for c, k in zip(cogs, KS):
+            d = g["data"][k]
+            cs = c * (d[-1] / c[-1])
+            met.append([np.abs(cs[m] / d[m] - 1).max(),
+                        c[i5] / d[i5] - 1, c[i10] / d[i10] - 1])
+        out.append((g["row"], np.array(met), np.array(cogs)))
+    return out
+
+
+def cmd_cv3(dev=False):
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    gals = _W["gals"]
+    n = len(gals)
+    e = _W["e"]
+    tag = "_dev" if dev else ""
+    warm = np.load(OUTDIR / f"stage3_combined{tag}.npz")["theta"]
+    workers = min(max(os.cpu_count() - 2, 2), 10)
+    maxiter = 150 if dev else 1500
+    row_to_i = {g["row"]: i for i, g in enumerate(gals)}
+    met = np.full((n, 5, 3), np.nan)
+    cogs = np.full((n, 5, len(e.R)), np.nan)
+    t0 = time.time()
+    print(f"exp38 stage 3 10-fold CV of the COMBINED model (n={n}"
+          f"{', DEV' if dev else ''}; metrics: pinned shape R>5 | "
+          "M(<5) bias | M(<10) bias):")
+    with Pool(workers, initializer=_w_init, initargs=(rows,)) as pool:
+        jobs = [(f, warm, maxiter) for f in range(10)]
+        for part in pool.map(_cv_fold3, jobs):
+            for row, m_, c_ in part:
+                met[row_to_i[row]] = m_
+                cogs[row_to_i[row]] = c_
+    line = " ".join(
+        f"z{e.ANCHOR_Z[k]}: {100*np.nanmedian(met[:, k, 0]):.1f} | "
+        f"{100*np.nanmedian(met[:, k, 1]):+.1f} | "
+        f"{100*np.nanmedian(met[:, k, 2]):+.1f}"
+        for k in range(5))
+    print(f"  combined: {line}  ({(time.time()-t0)/60:.1f} min)")
+    np.savez(OUTDIR / f"stage3_cv{tag}.npz", met=met, cogs=cogs)
+    print(f"wrote {OUTDIR / f'stage3_cv{tag}.npz'}")
+
+
+def cmd_physics3(dev=False):
+    """Differential-deposition + overshoot for the combined model."""
+    from hongshao.profile_emulator import density_from_cog
+    tag = "_dev" if dev else ""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    gals = _W["gals"]
+    e = _W["e"]
+    th = np.load(OUTDIR / f"stage3_combined{tag}.npz")["theta"]
+    data = np.stack([g["data"] for g in gals])
+    logms = np.array([g["logms"] for g in gals])
+    cogs = np.full((len(gals), 5, len(e.R)), np.nan)
+    for i, g in enumerate(gals):
+        out = model_cogs_comb(th, g, KS, "1ch-mof")
+        if out is not None:
+            cogs[i] = out
+    ed3, rows_d = e.differential(cogs, data, logms)
+    print("exp38 stage 3 combined-model physics (data -> model; marks: "
+          "data 0.37/0.11, stage-2 1ch-mof 0.39/0.12):")
+    for b in range(3):
+        cells = [f"z{e.ANCHOR_Z[k+1]}->z{e.ANCHOR_Z[k]}: "
+                 f"{rows_d[('data', b, k)][0]:.2f}/"
+                 f"{rows_d[('data', b, k)][1]:.2f} -> "
+                 f"{rows_d[('model', b, k)][0]:.2f}/"
+                 f"{rows_d[('model', b, k)][1]:.2f}" for k in range(4)]
+        print(f"  logM* {ed3[b]:.2f}-{ed3[b+1]:.2f}: " + "  ".join(cells))
+    d_cv = np.load(OUTDIR / f"stage3_cv{tag}.npz")
+    cogs0 = d_cv["cogs"][:, 0]
+    ok = np.isfinite(cogs0).all(1) & (cogs0 > 0).all(1)
+    data0 = data[:, 0]
+    ls_d, mid = density_from_cog(np.log10(data0), e.R)
+    ls_m = np.full_like(ls_d, np.nan)
+    ls_m[ok] = density_from_cog(np.log10(cogs0[ok]), e.R)[0]
+    dl = ls_m - ls_d
+    bands = ((mid >= 30.0) & (mid < 60.0), (mid >= 60.0) & (mid <= 148.0))
+    edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
+    cells = []
+    for b in range(3):
+        sel = ok & (logms >= edges[b]) & (logms <= edges[b + 1] + 1e-9)
+        cells.append(" ".join(f"{np.nanmedian(dl[np.ix_(sel, bm)]):+.3f}"
+                              for bm in bands))
+    print("  held-out overshoot terciles [30-60 / 60-148 kpc] "
+          "(stage-2 1ch-mof: T1 +0.026/+0.019): "
+          + "  |  ".join(f"T{b+1} {c}" for b, c in enumerate(cells)))
+
+
 def demo():
     rows = np.load(POP_NPZ)["dev100"][:8]
     _w_init(rows)
@@ -472,10 +697,16 @@ def demo():
                                 "1ch-mof")[0][-1]
             for x, lgt in zip(v, (-30.0, -1.0, 2.0))]
     assert frac[0] < frac[1] < frac[2], "f_core must raise the core"
-    print("stage3 demo OK: f_ret=0 and f_core=0 both nest stage 2 exactly; "
-          "retention and the core channel raise the inner mass "
-          "monotonically; provenance splits sum to the total; the inner "
-          "objective is finite and binding")
+    # (6) the combined model nests: f_ret=0 + f_core->0 == stage 2 exactly
+    b = model_cogs_comb(np.concatenate([p, [0.0, -30.0, 0.0, 0.3]]), g,
+                        [0, 4], "1ch-mof")
+    err = max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
+              for x, y in zip(b, a))
+    assert err < 1e-9, f"combined nesting broken: {err:.2e}"
+    print("stage3 demo OK: f_ret=0 and f_core=0 both nest stage 2 exactly "
+          "(alone and combined); retention and the core channel raise the "
+          "inner mass monotonically; provenance splits sum to the total; "
+          "the inner objective is finite and binding")
 
 
 if __name__ == "__main__":
@@ -491,5 +722,11 @@ if __name__ == "__main__":
         cmd_retention(dev)
     elif cmd == "core":
         cmd_core(dev)
+    elif cmd == "combined":
+        cmd_combined(dev)
+    elif cmd == "cv3":
+        cmd_cv3(dev)
+    elif cmd == "physics3":
+        cmd_physics3(dev)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")

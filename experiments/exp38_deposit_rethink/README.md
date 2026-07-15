@@ -176,3 +176,39 @@ Re-coordinate shape scatter grows 0.019 -> 0.032 dex toward z=2).
 - **template-z** earns a place as the minimal statistical description:
   massive-galaxy profile evolution z=2 -> 0.4 is, to 15-19%, "one shape,
   two halo-predictable growth tracks".
+
+## Stage 3 — the inner-mass deficit (user-raised 2026-07-15; full n=2397)
+
+Both stage-2 winners under-predict the observation-facing inner masses
+(1ch-mof in-sample: M(<5 kpc) -11.7% / M(<10) -5.4% at z=0.4; -8.0/-5.8%
+at z=2) while over-filling 10-30 kpc — a placement error. Diagnosis and
+fixes, all measured:
+
+1. **Provenance** (model M(<10) decomposed by deposit epoch, fitted vs
+   FROZEN migration clock): at z=0.4 the frozen clock would deliver
+   1.47x the observed inner mass — compact material exists; the alpha=1
+   clock drains it (a retention knob is missing). At z=2 even frozen
+   reaches only 0.97x — deposits are BORN too wide there (the narrow
+   lognormal efficiency caps the z>4 ultra-compact budget).
+2. **Re-aimed objective alone** (fit R>5 shape + M(<5)/M(<10) integral
+   terms, the user's option 2): halves the deficit (M<5 -4.8/-3.6%) and
+   improves the outer shape — but rails the efficiency peak (mu = 3.0):
+   it buys the core by over-weighting the earliest deposits. Partly
+   allocational, but not a clean fix. (2ch-exp re-aims worse: -6.8%,
+   wide-channel scale re-rails.)
+3. **Retention floor alone** (fc' = f_ret + (1-f_ret) fc, plain loss):
+   f_ret = 0.084, overall loss 0.1556 -> 0.1494 (-4%, the physical
+   counterpart of the pathological g=4 basin) — a real model upgrade,
+   but the inner bias barely moves (the plain loss spends the retained
+   mass elsewhere).
+4. **The dissipative-core channel** (the user's option 1, physically
+   read as the compaction-formed in-situ core: a fraction f_core of
+   every deposit lands in a NON-migrating component at scale rc_core;
+   fit under the inner-aware objective): **f_core = 0.185, rc_core =
+   1.55 kpc, NO parameter at a bound, deficit halved (M<5 -5.3/-4.2%,
+   M<10 -4.3/-3.2%) and the in-sample pinned shape improves
+   (19.2 -> 16.1% at z=0.4, 14.1 -> 12.1% at z=2).**
+
+Next (the untested factorial cell): core + retention combined, fit under
+the inner-aware objective, then the held-out CV + physics tests for the
+adoption candidate.
