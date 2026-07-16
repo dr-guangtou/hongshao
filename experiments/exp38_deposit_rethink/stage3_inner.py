@@ -156,14 +156,22 @@ def _chunk_inner(args):
     return sum(gal_loss_inner(p, g, ks, variant) for g in _W["gals"][lo:hi])
 
 
-def _fit(variant, starts, maxiter, penalty_fn, chunk_fn, label):
+def _chunk_std(args):
+    """Module-level (spawn-picklable) chunk for the stage-2 plain loss at
+    an arbitrary epoch list."""
+    p, variant, ks, lo, hi = args
+    s2 = _W["s2"]
+    return sum(s2.gal_loss(p, g, ks, variant) for g in _W["gals"][lo:hi])
+
+
+def _fit(variant, starts, maxiter, penalty_fn, chunk_fn, label, ks=KS):
     n = len(_W["gals"])
     workers = max(os.cpu_count() - 2, 2)
     edges = np.linspace(0, n, workers + 1).astype(int)
     with Pool(workers, initializer=_w_init,
               initargs=(_W["rows_arg"],)) as pool:
         def loss(p):
-            parts = pool.map(chunk_fn, [(p, variant, KS, edges[i],
+            parts = pool.map(chunk_fn, [(p, variant, ks, edges[i],
                                          edges[i + 1])
                                         for i in range(workers)])
             return sum(parts) / n + penalty_fn(p, variant)
@@ -793,6 +801,63 @@ def cmd_physics3(dev=False, plain=False, mkey="combined"):
           + "  |  ".join(f"T{b+1} {c}" for b, c in enumerate(cells)))
 
 
+def cmd_single(dev=False):
+    """The user question (2026-07-16): the single-epoch fits show no inner
+    deficit; the joint fit does. Fit the FULL stage-2 structures to z=0.4
+    alone and z=2.0 alone and compare parameters + own-epoch inner bias
+    against the joint fit — which shared knob is the joint compromise
+    spending on the core?"""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    _W["rows_arg"] = rows
+    s2 = _W["s2"]
+    e = _W["e"]
+    gals = _W["gals"]
+    d2 = np.load(OUTDIR / "stage2_multiepoch.npz")
+    scale = 0.15 if dev else 1.0
+    names = {"1ch-mof": ["log_rc", "g", "q", "mu", "sig", "gamma"],
+             "2ch-exp": ["log_s0", "g", "q", "mu", "sig"]}
+    i5, i10 = _i_at(5.0), _i_at(10.0)
+    m = e.R > 5.0
+    out = {}
+    for variant in ("1ch-mof", "2ch-exp"):
+        multi = d2[f"theta_{variant}"]
+        thetas = {"joint": multi}
+        for k in (0, 4):
+            th, lo = _fit(variant, [multi], max(int(3000 * scale), 80),
+                          s2.penalty, _chunk_std,
+                          f"{variant}-z{e.ANCHOR_Z[k]}", ks=[k])
+            thetas[f"z{e.ANCHOR_Z[k]}-only"] = th
+            out[f"theta_{variant}_k{k}"] = th
+        npar = 6 if variant == "1ch-mof" else 5
+        print(f"\n  [{variant}] population parameters "
+              f"({'/'.join(names[variant])}):")
+        for lab, th in thetas.items():
+            print(f"    {lab:>10s}: {np.round(th[:npar], 2)}")
+        print("    own-epoch inner bias (median, %M<5 | %M<10 | pinned "
+              "shape R>5):")
+        for lab, th in thetas.items():
+            for k in (0, 4):
+                if lab.startswith("z") and f"z{e.ANCHOR_Z[k]}" not in lab:
+                    continue
+                b5, b10, shp = [], [], []
+                for g in gals:
+                    c = s2.model_cogs(th, g, [k], variant)
+                    if c is None:
+                        continue
+                    c = c[0]
+                    dat = g["data"][k]
+                    cs = c * (dat[-1] / c[-1])
+                    b5.append(c[i5] / dat[i5] - 1)
+                    b10.append(c[i10] / dat[i10] - 1)
+                    shp.append(np.abs(cs[m] / dat[m] - 1).max())
+                print(f"      {lab:>10s} at z={e.ANCHOR_Z[k]}: "
+                      f"{100*np.median(b5):+.1f} | {100*np.median(b10):+.1f}"
+                      f" | {100*np.median(shp):.1f}")
+    np.savez(OUTDIR / f"stage3_single{'_dev' if dev else ''}.npz", **out)
+    print(f"wrote {OUTDIR / ('stage3_single' + ('_dev' if dev else '') + '.npz')}")
+
+
 def cmd_report3(dev=False):
     """The stage-3 decision figures: (1) the standard tercile CoG QA for
     the two core-model operating points (held-out CV curves); (2) a
@@ -996,6 +1061,8 @@ if __name__ == "__main__":
         cmd_qcore(dev)
     elif cmd == "report3":
         cmd_report3(dev)
+    elif cmd == "single":
+        cmd_single(dev)
     elif cmd == "cv3":
         cmd_cv3(dev, plain="--plain" in sys.argv,
                 mkey="qcore" if "--qcore" in sys.argv else "combined")

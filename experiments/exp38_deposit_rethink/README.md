@@ -233,9 +233,10 @@ deposits) whenever any core channel absorbs the inner mass — the loss
 surface trades the outskirt physics for the core, wherever the core's
 mass comes from. The quenching parameter is dropped (parsimony; a null).
 
-Adoption decision (user checkpoint): which operating point becomes the
-kernel — the physics-clean stage-2 model, or a core-channel point that
-buys held-out shape and inner masses at a measured physics cost. Note the
-program framing: for observation-facing MASS predictions the statistical
-emulator (exp37, M(<10) bias 1-2%) is the product; the kernel's unique
-value is the passed physics tests.
+**ADOPTION DECISION (user, 2026-07-16): the stage-2 1ch-mof (12
+parameters, physics-clean) is the adopted kernel. The core-channel
+models are NOT graduated — parked for a later revisit** (the measured
+trade and the falsified quenching mechanism are the record to restart
+from). Note the program framing: for observation-facing MASS predictions
+the statistical emulator (exp37, M(<10) bias 1-2%) is the product; the
+kernel's unique value is the passed physics tests.
