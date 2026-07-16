@@ -712,10 +712,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   a ~10-25% relative boost that matches the +0.02-0.06 dex overshoot that
   failed the physics tests. (The quenched-core null had already ruled out
   the who-feeds-it mechanism; this is the what-shape-it-has mechanism.)
-  Restart with: (1) a dedicated CUSPY, STEEP-TAILED core form — an
-  exponential core at the same half-mass radius puts 0.0% beyond 30 kpc
-  (vs 8.3%); a Sersic n = 2-4 also raises the mass inside 2-5 kpc per
-  unit core mass (the cuspiness the flat-top Moffat lacks); (2) condition
+  Restart with: (1) a core-form SHOOTOUT over several steep-tailed
+  profiles (user 2026-07-16, not just one): a non-migrating GAUSSIAN
+  core (zero wings = zero outskirt leakage by construction — its
+  kernel-role failure is a core-role virtue), an exponential (0.0%
+  beyond 30 kpc at the fitted R50 vs the Moffat's 8.3%), and cuspier
+  Sersic n = 2-4 (more mass inside 2-5 kpc per unit core mass); all
+  closed forms in exp38 shapes.py (sersic_cog, n=0.5 == Gaussian);
+  (2) condition
   f_core on the halo mass AT z=2 (pop npz `logmh_zk_real[:, 4]`) instead
   of z=0.4 — the provenance measurement showed the model core is built by
   z = 2-4 deposits, so the early halo is the physically aligned regressor
