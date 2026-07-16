@@ -793,6 +793,125 @@ def cmd_physics3(dev=False, plain=False, mkey="combined"):
           + "  |  ".join(f"T{b+1} {c}" for b, c in enumerate(cells)))
 
 
+def cmd_report3(dev=False):
+    """The stage-3 decision figures: (1) the standard tercile CoG QA for
+    the two core-model operating points (held-out CV curves); (2) a
+    four-panel operating-point comparison (held-out shape, inner-mass
+    bias, the differential curve, the overshoot terciles)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from hongshao import qa
+    from hongshao.plotting import set_style, save_fig
+    from hongshao.profile_emulator import density_from_cog
+    set_style()
+    FIGDIR = HERE / "figures"
+    FIGDIR.mkdir(exist_ok=True)
+    tag = "_dev" if dev else ""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    gals = _W["gals"]
+    e = _W["e"]
+    data = np.stack([g["data"] for g in gals])
+    logms = np.array([g["logms"] for g in gals])
+    logmh = np.array([g["logmh"] for g in gals])
+    d2 = np.load(OUTDIR / "stage2_multiepoch.npz")
+    zs = [e.ANCHOR_Z[k] for k in KS]
+
+    # (1) standard QA figure sets on the held-out CV curves
+    sets = {"stage2": d2["cogs_1ch-mof"],
+            "core-plain": np.load(OUTDIR / f"stage3_cv_plain{tag}.npz")["cogs"],
+            "core-inner": np.load(OUTDIR / f"stage3_cv{tag}.npz")["cogs"]}
+    for name, cogs in sets.items():
+        qa.evaluate(cogs, data[:, KS], e.R, zs, name=f"exp38_s3_{name}{tag}",
+                    figdir=FIGDIR, figures=True, verbose=False,
+                    bin_by=logmh, bin_label="logMh")
+        print(f"wrote QA set exp38_s3_{name}{tag}", flush=True)
+
+    # (2) the operating-point comparison figure
+    i5 = _i_at(5.0)
+    m = e.R > 5.0
+    cols = {"stage2": "#0072B2", "core-plain": "#D55E00",
+            "core-inner": "#CC79A7"}
+    fig, axes = plt.subplots(1, 4, figsize=(19.0, 4.4))
+    a, b, c, o = axes
+    for name, cogs in sets.items():
+        shp = np.full((len(gals), 5), np.nan)
+        b5 = np.full((len(gals), 5), np.nan)
+        for i, g in enumerate(gals):
+            for k in KS:
+                ck = cogs[i, k]
+                if not np.isfinite(ck).all() or (ck <= 0).any():
+                    continue
+                dat = g["data"][k]
+                cs = ck * (dat[-1] / ck[-1])
+                shp[i, k] = np.abs(cs[m] / dat[m] - 1.0).max()
+                b5[i, k] = ck[i5] / dat[i5] - 1.0
+        a.plot(zs, 100 * np.nanmedian(shp, axis=0), "-o", ms=4,
+               c=cols[name], label=name)
+        b.plot(zs, 100 * np.nanmedian(b5, axis=0), "-o", ms=4,
+               c=cols[name], label=name)
+    a.axhline(15.6, color="0.5", ls=":", lw=1.2)
+    a.text(1.0, 15.7, "statistical wall (15.6)", fontsize=7, color="0.4")
+    a.set(xlabel="epoch z", ylabel="held-out pinned shape (percent)",
+          title="accuracy: worst radial error beyond 5 kpc")
+    a.legend(fontsize=8)
+    b.axhline(0, color="k", lw=0.8)
+    b.set(xlabel="epoch z", ylabel="held-out M(inside 5 kpc) bias (percent)",
+          title="the inner mass: median (model-data)/data")
+    # (c) the differential curve, massive tercile (in-sample model curves)
+    x4 = np.arange(4)
+    thetas = {"stage2": (d2["theta_1ch-mof"], _W["s2"].model_cogs),
+              "core-plain": (np.load(OUTDIR / f"stage3_combined_plain{tag}"
+                                     ".npz")["theta"], model_cogs_comb),
+              "core-inner": (np.load(OUTDIR / f"stage3_combined{tag}.npz"
+                                     )["theta"], model_cogs_comb)}
+    drawn = False
+    for name, (th, fn) in thetas.items():
+        cg = np.full((len(gals), 5, len(e.R)), np.nan)
+        for i, g in enumerate(gals):
+            out = fn(th, g, KS, "1ch-mof")
+            if out is not None:
+                cg[i] = out
+        _, rows_d = e.differential(cg, data, logms)
+        if not drawn:
+            c.plot(x4, [rows_d[("data", 2, k)][0] for k in range(4)], "-o",
+                   c="0.2", lw=1.8, ms=4, label="measured")
+            drawn = True
+        c.plot(x4, [rows_d[("model", 2, k)][0] for k in range(4)], "--o",
+               c=cols[name], lw=1.5, ms=4, label=name)
+        # (o) overshoot terciles from the HELD-OUT z=0.4 curves
+        cogs0 = sets[name][:, 0]
+        ok = np.isfinite(cogs0).all(1) & (cogs0 > 0).all(1)
+        ls_d, mid = density_from_cog(np.log10(data[:, 0]), e.R)
+        ls_m = np.full_like(ls_d, np.nan)
+        ls_m[ok] = density_from_cog(np.log10(cogs0[ok]), e.R)[0]
+        dl = ls_m - ls_d
+        band = (mid >= 30.0) & (mid <= 148.0)
+        edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
+        v = [np.nanmedian(dl[np.ix_(ok & (logms >= edges[t])
+                                    & (logms <= edges[t + 1] + 1e-9), band)])
+             for t in range(3)]
+        off = {"stage2": -0.22, "core-plain": 0.0, "core-inner": 0.22}[name]
+        o.bar(np.arange(3) + off, v, width=0.2, color=cols[name], label=name)
+    c.set_xticks(x4)
+    c.set_xticklabels([f"z{e.ANCHOR_Z[k+1]}$\\to$z{e.ANCHOR_Z[k]}"
+                       for k in range(4)], fontsize=8)
+    c.set(ylabel="fraction of growth beyond 50 kpc",
+          title="differential deposition (massive tercile)")
+    c.legend(fontsize=7)
+    o.axhline(0, color="k", lw=0.8)
+    o.set_xticks(np.arange(3))
+    o.set_xticklabels(["T1 (low mass)", "T2", "T3 (massive)"], fontsize=8)
+    o.set(ylabel="median dlog Sigma, 30-148 kpc [dex]",
+          title="held-out outskirt residual, z=0.4")
+    o.legend(fontsize=7)
+    fig.suptitle("exp38 stage 3 — the three operating points: accuracy and "
+                 "inner mass vs the outskirt physics", fontsize=12)
+    fig.tight_layout()
+    print("wrote", save_fig(fig, FIGDIR / f"stage3_decision{tag}")[0])
+
+
 def demo():
     rows = np.load(POP_NPZ)["dev100"][:8]
     _w_init(rows)
@@ -875,6 +994,8 @@ if __name__ == "__main__":
         cmd_combined(dev, plain="--plain" in sys.argv)
     elif cmd == "qcore":
         cmd_qcore(dev)
+    elif cmd == "report3":
+        cmd_report3(dev)
     elif cmd == "cv3":
         cmd_cv3(dev, plain="--plain" in sys.argv,
                 mkey="qcore" if "--qcore" in sys.argv else "combined")
