@@ -681,32 +681,46 @@ Cross-experiment plan. Mirrors the phase sequence in
   the hybrid now tested (statistical = product, kernel = physics
   companion). Log-CoG residual draws reproduce exp37's high-z failure
   mode; the block-pinned product remains the generative layer.
-- [ ] **(NEXT, user direction 2026-07-15) exp38 — rethink the deposition
-  primitive.** The critical symptom: the extended channel's width scale sits
-  AT its allowed maximum (log s0 = 3.0, ~1000-kpc Gaussian deposits) in
-  every fit — unphysical in both simulations and observations; the
-  parameter is compensating for a wrong model form. Suspect: the centred
-  GAUSSIAN deposit itself. Three candidate directions, in escalating
-  departure from the current family:
-  1. **Non-Gaussian deposit shapes**: e.g. an exponential (or Sersic-like)
-     deposit profile — heavier outer wings at a FIXED physical scale could
-     supply the outskirt mass the Gaussian can only reach by inflating its
-     width to the bound.
-  2. **A data-driven deposit form**: build the deposit kernel from the
-     MEASURED epoch-to-epoch surface-density profile differences (the
-     stacked dlog Sigma between adjacent snapshots, exp26/exp34
-     machinery) instead of assuming a shape.
-  3. **Abandon deposition entirely — parameterize the profiles/CoGs
-     themselves**: find a functional form (possibly multi-component) that
-     fits the massive galaxies' stellar density profiles / CoGs
-     consistently well at EVERY epoch z=2.0 -> 0.4 with parameters that
-     vary SMOOTHLY with redshift; if such a family exists, tie
-     [DiffMAH(4), c200c] to the redshift evolution of its parameters
-     (the exp03 radial-DiffMAH single-epoch result and exp33-vi's smooth
-     coefficient-interpolation closure are the supporting priors).
-  Judged by: the same held-out pinned-shape marks (16.4/15.6 at z=0.4),
-  the differential-deposition curve, NO parameter at a bound, and the
-  low-mass outskirt tercile table.
+- [x] **exp38 — rethink the deposition primitive: COMPLETE (2026-07-16,
+  branch exp38-deposit-rethink; full record in the README).** The Gaussian
+  rail explained by measurement (the added light has Sersic n ~ 2-3 wings
+  at 15-47 kpc; a Gaussian fakes them only by scale inflation). **ADOPTED:
+  the single-channel power-law-tail kernel (1ch-mof, 12 params)** — the
+  first bound-free joint fit in the family, held-out shape 18.5-14.2% by
+  epoch, the program's best differential-deposition pass (0.39/0.12 vs
+  data 0.37/0.11), flat outskirt terciles. 2ch-exp (16p) recorded as the
+  accuracy alternative (avg 16.3%, finite wide-channel optimum at 3.19 —
+  the exp35/36 rail dissolved by the tail). Profile-family branch: the
+  6-coefficient evolving-Re template conditioned on [DiffMAH, c200c]
+  reaches 16.3-18.8% (matches the kernel at z<=1; one shape + two
+  halo-predictable growth tracks); the 15-coefficient sigmoid family has
+  the capacity (0.6% per epoch) but is not feature-reachable. Stage 3:
+  the inner-mass deficit decomposed — mostly a population-sharing limit
+  (-5 to -8% in ANY shared single-epoch fit; ~0% per-galaxy) plus a
+  ~3-4-point multi-epoch transport tax (q = 0 fits z=0.4 alone; the
+  joint fit needs q ~ 0.9, which drains the core); the core-channel fix
+  works for the inner masses but failed the physics tests — parked with
+  the post-mortem (the inherited power-law tail leaks 8% of core mass
+  beyond 30 kpc; see the PARKED entry below).
+- [ ] **(PARKED, user 2026-07-16) the core channel, revisited — two
+  measured leads for the restart.** exp38 stage 3 parked the dissipative
+  core channel (fixed the inner masses, broke the outskirt physics). The
+  post-mortem found the smoking gun: as implemented, the core channel
+  INHERITED the kernel's power-law tail (gamma ~ 1.47 at rc = 2.1 kpc), so
+  41% of "core" mass lands beyond 5 kpc and 8.3% beyond 30 kpc — with
+  f_core = 0.19 that dumps 1.6% of ALL stellar mass into the outskirts,
+  a ~10-25% relative boost that matches the +0.02-0.06 dex overshoot that
+  failed the physics tests. (The quenched-core null had already ruled out
+  the who-feeds-it mechanism; this is the what-shape-it-has mechanism.)
+  Restart with: (1) a dedicated CUSPY, STEEP-TAILED core form — an
+  exponential core at the same half-mass radius puts 0.0% beyond 30 kpc
+  (vs 8.3%); a Sersic n = 2-4 also raises the mass inside 2-5 kpc per
+  unit core mass (the cuspiness the flat-top Moffat lacks); (2) condition
+  f_core on the halo mass AT z=2 (pop npz `logmh_zk_real[:, 4]`) instead
+  of z=0.4 — the provenance measurement showed the model core is built by
+  z = 2-4 deposits, so the early halo is the physically aligned regressor
+  (user suggestion); (3) per-galaxy core diversity beyond conditioning
+  (the population-sharing limit carries most of the remaining deficit).
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
