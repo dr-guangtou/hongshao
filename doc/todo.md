@@ -707,6 +707,25 @@ Cross-experiment plan. Mirrors the phase sequence in
   Judged by: the same held-out pinned-shape marks (16.4/15.6 at z=0.4),
   the differential-deposition curve, NO parameter at a bound, and the
   low-mass outskirt tercile table.
+- [ ] **(PARKED, user 2026-07-16) the core channel, revisited — two
+  measured leads for the restart.** exp38 stage 3 parked the dissipative
+  core channel (fixed the inner masses, broke the outskirt physics). The
+  post-mortem found the smoking gun: as implemented, the core channel
+  INHERITED the kernel's power-law tail (gamma ~ 1.47 at rc = 2.1 kpc), so
+  41% of "core" mass lands beyond 5 kpc and 8.3% beyond 30 kpc — with
+  f_core = 0.19 that dumps 1.6% of ALL stellar mass into the outskirts,
+  a ~10-25% relative boost that matches the +0.02-0.06 dex overshoot that
+  failed the physics tests. (The quenched-core null had already ruled out
+  the who-feeds-it mechanism; this is the what-shape-it-has mechanism.)
+  Restart with: (1) a dedicated CUSPY, STEEP-TAILED core form — an
+  exponential core at the same half-mass radius puts 0.0% beyond 30 kpc
+  (vs 8.3%); a Sersic n = 2-4 also raises the mass inside 2-5 kpc per
+  unit core mass (the cuspiness the flat-top Moffat lacks); (2) condition
+  f_core on the halo mass AT z=2 (pop npz `logmh_zk_real[:, 4]`) instead
+  of z=0.4 — the provenance measurement showed the model core is built by
+  z = 2-4 deposits, so the early halo is the physically aligned regressor
+  (user suggestion); (3) per-galaxy core diversity beyond conditioning
+  (the population-sharing limit carries most of the remaining deficit).
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
