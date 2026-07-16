@@ -240,3 +240,29 @@ trade and the falsified quenching mechanism are the record to restart
 from). Note the program framing: for observation-facing MASS predictions
 the statistical emulator (exp37, M(<10) bias 1-2%) is the product; the
 kernel's unique value is the passed physics tests.
+
+**Where the inner deficit lives (single-vs-joint decomposition,
+full n=2397, `cmd_single`).** Fitting the SAME stage-2 structures to one
+epoch alone vs all five jointly (own-epoch median bias):
+
+| fit | M(<5) z=0.4 | M(<5) z=2.0 | 1ch-mof params [log_rc, g, q, mu, sig, gamma] |
+|---|---|---|---|
+| per-galaxy (exp29/stage-0 reference) | ~0% | ~0% | 5-6 params PER galaxy |
+| z=0.4-only, population | -7.6% | — | [2.43, 3.09, **q=0.00**, 1.41, 0.23, 1.30] |
+| z=2.0-only, population | — | -5.2% | [2.54, 3.97, q=1.0, 1.34, 0.11, 1.41] |
+| joint, population | -11.7% | -8.0% | [2.37, 3.64, q=0.91, 1.47, 0.28, 1.38] |
+
+Reading: (1) **most of the deficit (-5 to -8%) is a POPULATION-SHARING
+limit, not a multi-epoch artifact** — it is present in every
+single-epoch population fit and absent only when each galaxy gets its
+own parameters (the exp25/exp30 "per-galaxy fits are not a population
+fit" lesson at the core: galaxy-to-galaxy core diversity + a cuspier
+inner shape than any shared flat-cored deposit sum reproduces).
+(2) The joint constraint adds ~3-4 points on top, and the parameters
+show HOW: fit z=0.4 alone and the migration envelope is unnecessary
+(q = 0.00 — the width law alone suffices at one late epoch); the joint
+fit needs q~0.9 and a steeper width law (g 3.1 -> 3.6) to connect the
+epochs, and exactly that transport drains the z=0.4 core (the
+provenance measurement: the fitted clock removes the 1.5x of compact
+mass that the frozen clock would keep). 2ch-exp shows the same
+deficit decomposition (-6.4/-5.1 single vs -7.6/-8.6 joint).
