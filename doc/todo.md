@@ -702,29 +702,39 @@ Cross-experiment plan. Mirrors the phase sequence in
   works for the inner masses but failed the physics tests — parked with
   the post-mortem (the inherited power-law tail leaks 8% of core mass
   beyond 30 kpc; see the PARKED entry below).
-- [ ] **(PARKED, user 2026-07-16) the core channel, revisited — two
-  measured leads for the restart.** exp38 stage 3 parked the dissipative
-  core channel (fixed the inner masses, broke the outskirt physics). The
-  post-mortem found the smoking gun: as implemented, the core channel
-  INHERITED the kernel's power-law tail (gamma ~ 1.47 at rc = 2.1 kpc), so
-  41% of "core" mass lands beyond 5 kpc and 8.3% beyond 30 kpc — with
-  f_core = 0.19 that dumps 1.6% of ALL stellar mass into the outskirts,
-  a ~10-25% relative boost that matches the +0.02-0.06 dex overshoot that
-  failed the physics tests. (The quenched-core null had already ruled out
-  the who-feeds-it mechanism; this is the what-shape-it-has mechanism.)
-  Restart with: (1) a core-form SHOOTOUT over several steep-tailed
-  profiles (user 2026-07-16, not just one): a non-migrating GAUSSIAN
-  core (zero wings = zero outskirt leakage by construction — its
-  kernel-role failure is a core-role virtue), an exponential (0.0%
-  beyond 30 kpc at the fitted R50 vs the Moffat's 8.3%), and cuspier
-  Sersic n = 2-4 (more mass inside 2-5 kpc per unit core mass); all
-  closed forms in exp38 shapes.py (sersic_cog, n=0.5 == Gaussian);
-  (2) condition
-  f_core on the halo mass AT z=2 (pop npz `logmh_zk_real[:, 4]`) instead
-  of z=0.4 — the provenance measurement showed the model core is built by
-  z = 2-4 deposits, so the early halo is the physically aligned regressor
-  (user suggestion); (3) per-galaxy core diversity beyond conditioning
-  (the population-sharing limit carries most of the remaining deficit).
+- [x] **exp39 — the core channel revisited: all three leads MEASURED
+  (2026-07-17, branch exp39-core-revisit, full n=2397).** (1) The
+  core-form shootout (mof/gauss/exp/ser2/ser3/ser4, all at a common
+  half-mass-radius parameterization) FALSIFIED the tail-leakage
+  mechanism: every form fits to the same loss (0.2540-0.2543) and every
+  form — including the zero-leakage Gaussian — fails the differential
+  test identically (0.53-0.56/0.18-0.19 vs data 0.37/0.11). The
+  outer-kernel re-balancing is THE breaker; no core form rescues the
+  free-kernel fit. The decisive follow-up: FREEZE the kernel at the
+  adopted stage-2 theta and fit only the 3 core parameters — a small
+  zero-wing Gaussian core (median f_core ~0.02-0.03, strongly
+  halo-dependent) is then a STRICT improvement on the adopted kernel:
+  held-out shape avg 16.1-16.5% vs 16.6%, held-out M(<5) -11 -> -4.4%
+  and M(<10) -5.4 -> -1.0% at z=0.4, physics untouched by construction
+  (the kernel's 12 parameters unchanged), nothing at a bound. The z=2
+  inner deficit (-6.2%) stays — deposits born too wide at high z is an
+  efficiency-side problem, not a retention one. (2) z=2-halo-mass
+  conditioning helps exactly where the core is usable: frozen point
+  0.2737 -> 0.2719 with better inner bias at both epochs (held-out avg
+  16.1%); free point 0.2546 vs 0.2540 + a mu rail — no gain. (3)
+  Per-galaxy core diversity is large (f_core 0.00-0.20 at 16-84 pct,
+  1.45 dex logit scatter; freeing it closes the median M(<5) to +2.1%)
+  but only weakly feature-predictable (best |Spearman rho| = 0.31,
+  logms) — the population-sharing limit is per-object information;
+  treat it as a statistical scatter layer in the emulator draws, not
+  as more conditioning.
+- [ ] **(decision pending, user) graduate the frozen-kernel + gauss-core
+  (z2-conditioned) operating point?** It strictly improves the adopted
+  kernel (same physics passes, same shape, inner deficit halved, +3
+  params: [ca, cb, log_r50] = the exp39 `frozen_z2.npz` theta). Open
+  design question if graduated: the statistical f_core scatter layer
+  (logit-normal around the z2-conditioned mean, ~1.4 dex) for the
+  generative product.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
