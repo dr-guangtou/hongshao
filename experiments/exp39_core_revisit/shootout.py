@@ -289,19 +289,113 @@ def cmd_fit(forms, dev=False):
 
 
 # --------------------------------------------------------------------------- #
+# frozen-kernel fit — the re-balancing mechanism isolated                      #
+# --------------------------------------------------------------------------- #
+def _chunk_frozen(args):
+    """Loss chunk with the kernel frozen: p = [ca, cb, log_r50] only; the
+    12 kernel params come from the worker-side stage-2 npz (constant)."""
+    p3, form, ks, lo, hi = args
+    p = np.concatenate([_W["th12"], p3])
+    return sum(gal_loss_form(p, g, ks, form) for g in _W["gals"][lo:hi])
+
+
+def _w_init_frozen(rows, cond_key="z0"):
+    _w_init(rows, cond_key)
+    _W["th12"] = np.load(E38_DIR / "outputs/stage2_multiepoch.npz"
+                         )["theta_1ch-mof"]
+
+
+def _pen_frozen(p3):
+    return 30.0 * float(
+        np.clip(CA_BOX[0] - p3[0], 0, None) ** 2
+        + np.clip(p3[0] - CA_BOX[1], 0, None) ** 2
+        + np.clip(abs(p3[1]) - CB_MAX, 0, None) ** 2
+        + np.clip(R50_BOX[0] - p3[2], 0, None) ** 2
+        + np.clip(p3[2] - R50_BOX[1], 0, None) ** 2)
+
+
+def cmd_frozen(forms, dev=False):
+    """Fit ONLY the 3 core params with the kernel FROZEN at the adopted
+    stage-2 theta. The kernel cannot re-balance: this measures how much
+    inner-mass win a core channel buys on its own, and what it does to
+    the physics tests when the outer kernel is pinned."""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init_frozen(rows, _W.get("cond_key", "z0"))
+    _W["rows_arg"] = rows
+    tag = _npz_tag(dev)
+    th12 = _W["th12"]
+    scale = 0.15 if dev else 1.0
+    maxiter = max(int(1500 * scale), 60)
+    workers = max(os.cpu_count() - 2, 2)
+    n = len(_W["gals"])
+    edges = np.linspace(0, n, workers + 1).astype(int)
+    starts3 = [np.array([-1.5, 0.0, 0.55]), np.array([-0.7, 0.0, 0.3])]
+    out_path = OUTDIR / f"frozen{tag}.npz"
+    OUTDIR.mkdir(exist_ok=True)
+    fitted = dict(np.load(out_path)) if out_path.exists() else {}
+    print(f"exp39 FROZEN-kernel core fit (n={n}{', DEV' if dev else ''}, "
+          f"cond={_W['cond_key']}; kernel pinned at the adopted stage-2 "
+          f"theta, only [ca, cb, log_r50] free; forms: {', '.join(forms)})",
+          flush=True)
+    with Pool(workers, initializer=_w_init_frozen,
+              initargs=(rows, _W["cond_key"])) as pool:
+        for form in forms:
+            def loss(p3):
+                parts = pool.map(_chunk_frozen,
+                                 [(p3, form, KS, edges[i], edges[i + 1])
+                                  for i in range(workers)])
+                return sum(parts) / n + _pen_frozen(p3)
+
+            best = None
+            for p0 in starts3:
+                t0 = time.time()
+                r = minimize(loss, p0, method="Nelder-Mead",
+                             options=dict(maxiter=maxiter, xatol=3e-4,
+                                          fatol=1e-8))
+                print(f"  [{form}] start: loss {r.fun:.4f} "
+                      f"({(time.time()-t0)/60:.1f} min)", flush=True)
+                if best is None or r.fun < best.fun:
+                    best = r
+            th = np.concatenate([th12, best.x])
+            gam_pop = float(np.clip(th[5], 1.06, 6.0))
+            fcs = [float(expit(th[12] + th[13] * _cond_of(g)))
+                   for g in _W["gals"]]
+            print(f"  [{form}] f_core pct16/50/84 = "
+                  f"{np.percentile(fcs, [16, 50, 84]).round(3)}; "
+                  f"R50_core = {10.0 ** th[14]:.2f} kpc; core mass beyond "
+                  f"30 kpc = {100 * core_leak(form, th[14], gam_pop):.1f}%")
+            _W["s3"]._print_bias(
+                f"[{form}] frozen", _W["s3"]._inner_bias(
+                    th, "1ch-mof", model_fn=_model_fn_of(form)))
+            fitted[f"theta_{form}"] = th
+            fitted[f"loss_{form}"] = best.fun
+            np.savez(out_path, **fitted)
+            print(f"  wrote {out_path} (+{form})", flush=True)
+
+
+# --------------------------------------------------------------------------- #
 # cv — 10-fold held-out (shape R>5 pinned + inner biases), exp38 cv3 protocol  #
 # --------------------------------------------------------------------------- #
 def _cv_fold_form(args):
-    fold, form, warm, maxiter = args
+    fold, form, warm, maxiter, frozen = args
     gals = _W["gals"]
     n = len(gals)
     train = [i for i in range(n) if i % 10 != fold]
 
-    def tr_loss(p):
-        return (np.mean([gal_loss_form(p, gals[i], KS, form)
-                         for i in train]) + _pen_form(p))
+    if frozen:                       # only [ca, cb, log_r50] refit per fold
+        def tr_loss(p3):
+            p = np.concatenate([_W["th12"], p3])
+            return (np.mean([gal_loss_form(p, gals[i], KS, form)
+                             for i in train]) + _pen_frozen(p3))
+        warm = warm[12:15]
+    else:
+        def tr_loss(p):
+            return (np.mean([gal_loss_form(p, gals[i], KS, form)
+                             for i in train]) + _pen_form(p))
     r = minimize(tr_loss, warm, method="Nelder-Mead",
                  options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-8))
+    if frozen:
+        r.x = np.concatenate([_W["th12"], r.x])
     e = _W["e"]
     i5, i10 = _i_at(5.0), _i_at(10.0)
     m = e.R > 5.0
@@ -325,14 +419,16 @@ def _cv_fold_form(args):
     return out
 
 
-def cmd_cv(forms, dev=False):
+def cmd_cv(forms, dev=False, frozen=False):
     rows = np.load(POP_NPZ)["dev100"] if dev else None
-    _w_init(rows, _W.get("cond_key", "z0"))
-    tag = _npz_tag(dev)
+    init_fn = _w_init_frozen if frozen else _w_init
+    init_fn(rows, _W.get("cond_key", "z0"))
+    tag = ("_frozen" if frozen else "") + _npz_tag(dev)
     gals = _W["gals"]
     n = len(gals)
     e = _W["e"]
-    d = np.load(OUTDIR / f"shootout{tag}.npz")
+    d = np.load(OUTDIR / f"{'frozen' if frozen else 'shootout'}"
+                f"{_npz_tag(dev)}.npz")
     workers = min(max(os.cpu_count() - 2, 2), 10)
     maxiter = 150 if dev else 1500
     row_to_i = {g["row"]: i for i, g in enumerate(gals)}
@@ -340,9 +436,9 @@ def cmd_cv(forms, dev=False):
         met = np.full((n, 5, 3), np.nan)
         cogs = np.full((n, 5, len(e.R)), np.nan)
         t0 = time.time()
-        with Pool(workers, initializer=_w_init,
+        with Pool(workers, initializer=init_fn,
                   initargs=(rows, _W["cond_key"])) as pool:
-            jobs = [(f, form, d[f"theta_{form}"], maxiter)
+            jobs = [(f, form, d[f"theta_{form}"], maxiter, frozen)
                     for f in range(10)]
             for part in pool.map(_cv_fold_form, jobs):
                 for row, m_, c_ in part:
@@ -362,14 +458,14 @@ def cmd_cv(forms, dev=False):
 # --------------------------------------------------------------------------- #
 # physics — differential deposition (in-sample) + overshoot (held-out)         #
 # --------------------------------------------------------------------------- #
-def cmd_physics(forms, dev=False):
+def cmd_physics(forms, dev=False, frozen=False):
     from hongshao.profile_emulator import density_from_cog
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     _w_init(rows, _W.get("cond_key", "z0"))
     tag = _npz_tag(dev)
     gals = _W["gals"]
     e = _W["e"]
-    d = np.load(OUTDIR / f"shootout{tag}.npz")
+    d = np.load(OUTDIR / f"{'frozen' if frozen else 'shootout'}{tag}.npz")
     data = np.stack([g["data"] for g in gals])
     logms = np.array([g["logms"] for g in gals])
     print("exp39 physics (marks: data 0.37/0.11; adopted kernel 0.39/0.12, "
@@ -390,7 +486,8 @@ def cmd_physics(forms, dev=False):
                      f"{rows_d[('model', b, k)][1]:.2f}" for k in range(4)]
             print(f"  [{form}] logM* {ed3[b]:.2f}-{ed3[b+1]:.2f}: "
                   + "  ".join(cells))
-        cv_path = OUTDIR / f"cv_{form}{tag}.npz"
+        cv_path = OUTDIR / (f"cv_{form}{'_frozen' if frozen else ''}"
+                            f"{tag}.npz")
         cogs0_src = ("held-out" if cv_path.exists() else "IN-SAMPLE")
         cogs0 = (np.load(cv_path)["cogs"][:, 0] if cv_path.exists()
                  else cogs[:, 0])
@@ -533,10 +630,12 @@ if __name__ == "__main__":
         demo()
     elif cmd == "fit":
         cmd_fit(forms, dev)
+    elif cmd == "frozen":
+        cmd_frozen(forms, dev)
     elif cmd == "cv":
-        cmd_cv(forms, dev)
+        cmd_cv(forms, dev, frozen="--frozen" in sys.argv)
     elif cmd == "physics":
-        cmd_physics(forms, dev)
+        cmd_physics(forms, dev, frozen="--frozen" in sys.argv)
     elif cmd == "table":
         cmd_table(dev)
     else:
