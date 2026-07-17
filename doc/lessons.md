@@ -632,21 +632,21 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   fitted SUB-model's basin (+ zeros for the new freedom), and use the
   nesting relation as the convergence check: fitted(superset) <=
   fitted(subset) or refit.
-- **When a component's side effects live in the parameters it frees, the
-  fix is to PIN those parameters, not to reshape the component (exp39).**
-  The exp38 core channel's physics break was blamed on its inherited
-  power-law tail (8.3% of core mass beyond 30 kpc — a plausible,
-  quantitatively matching story). The six-form shootout falsified it:
-  a zero-leakage Gaussian core breaks the differential test EXACTLY like
+- **A frozen-base fit is a DIAGNOSTIC, not a model; and a mechanism whose
+  numbers "match" is still just a hypothesis (exp39).** The exp38 core
+  channel's physics break was blamed on its inherited power-law tail
+  (8.3% of core mass beyond 30 kpc — a plausible story whose arithmetic
+  matched the overshoot). The six-form shootout falsified it: a
+  zero-leakage Gaussian core breaks the differential test EXACTLY like
   the leaky Moffat (0.54/0.19 vs 0.53/0.18; all six forms within noise
-  of each other on loss AND on the physics failure). The breaker was the
-  freed outer kernel re-balancing — so the cure was structural: freeze
-  the kernel at its adopted theta and fit only the core, which turned
-  the failed trade into a strict improvement (inner deficit halved,
-  physics untouched by construction, 3 params). Two corollaries: (1) a
-  mechanism whose numbers "match the overshoot" is still just a
-  hypothesis until the single-variable swap is run — the matching
-  arithmetic was real but causally irrelevant; (2) when an added
-  component must not perturb a validated base model, fit it with the
-  base FROZEN first — the freed-base fit measures the trade, the frozen
-  fit measures the component.
+  on loss AND on the failure). The breaker was the freed outer kernel
+  re-balancing, isolated by refitting with the kernel PINNED at its
+  adopted theta: the core alone then halves the inner deficit with the
+  physics untouched by construction. But that frozen fit did NOT
+  graduate (user): pinning is an ad-hoc restriction with no physical
+  mechanism — the same structure at its own joint optimum breaks the
+  physics, so the "improvement" exists only under the freeze. Use the
+  pair of fits as a measurement instrument — freed-base measures the
+  trade, frozen-base measures the component's standalone contribution —
+  and let neither substitute for a model that earns its behavior at a
+  true optimum.

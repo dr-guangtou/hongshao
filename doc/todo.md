@@ -728,13 +728,19 @@ Cross-experiment plan. Mirrors the phase sequence in
   logms) — the population-sharing limit is per-object information;
   treat it as a statistical scatter layer in the emulator draws, not
   as more conditioning.
-- [ ] **(decision pending, user) graduate the frozen-kernel + gauss-core
-  (z2-conditioned) operating point?** It strictly improves the adopted
-  kernel (same physics passes, same shape, inner deficit halved, +3
-  params: [ca, cb, log_r50] = the exp39 `frozen_z2.npz` theta). Open
-  design question if graduated: the statistical f_core scatter layer
-  (logit-normal around the z2-conditioned mean, ~1.4 dex) for the
-  generative product.
+- [x] **(user decision 2026-07-17) the core channel stays PARKED;
+  nothing graduates from exp39.** The frozen-kernel + gauss-core point
+  was rejected: pinning the kernel is an ad-hoc restriction with no
+  physical inspiration — the same structure fit jointly breaks the
+  physics, so the "improvement" exists only under the artificial
+  freeze. The durable exp39 outputs are mechanism knowledge: (a) the
+  physics break is kernel re-balancing, NOT core-tail leakage
+  (falsified by the six-form shootout); (b) z2-halo conditioning is
+  the better core regressor where a core is usable; (c) the remaining
+  inner deficit is per-object information (1.45 dex f_core diversity,
+  |rho| <= 0.31) — only a statistical scatter layer could represent
+  it. The adopted kernel remains exp38 1ch-mof unchanged; inner masses
+  remain the statistical emulator's product.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes

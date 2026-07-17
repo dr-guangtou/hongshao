@@ -153,7 +153,22 @@ do not carry. Design consequence: a STATISTICAL f_core scatter layer
 (logit-normal around the z2-conditioned mean) belongs in the generative
 emulator draws; the deterministic kernel keeps the shared -4.4%.
 
-## Verdict (2026-07-17)
+## FINAL DECISION (user, 2026-07-17): PARKED, nothing graduates
+
+The frozen-kernel operating point is NOT adopted: pinning the kernel is
+an ad-hoc constraint, not a physical mechanism — it adds parameters
+without model insight, and a joint fit of the same structure breaks the
+physics (i.e., the combined model is not better at its own optimum; the
+"improvement" exists only under an artificial restriction). The exp39
+record stands as MECHANISM knowledge, not as a model: the re-balancing
+diagnosis, the leakage falsification, the z2-conditioning result, and
+the per-object diversity measurement are the durable outputs. The
+adopted kernel remains the exp38 stage-2 1ch-mof, unchanged; the inner
+deficit remains documented as a population-sharing limit, and the
+observation-facing inner masses remain the statistical emulator's job
+(exp37, M(<10) bias 1-2%).
+
+## Measured verdicts (2026-07-17)
 
 1. **The core-form shootout falsifies the tail-leakage mechanism**: all
    six forms (leak 0.0-2.6%) break the differential test identically at
