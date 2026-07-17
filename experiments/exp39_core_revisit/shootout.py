@@ -510,6 +510,326 @@ def cmd_physics(forms, dev=False, frozen=False):
 
 
 # --------------------------------------------------------------------------- #
+# retention x inner-aware — the factorial cell exp38 never ran                 #
+# --------------------------------------------------------------------------- #
+# The provenance measurement located the z=0.4 inner deficit in the
+# migration clock (fc = exp(-dt/t_i), no floor: every deposit's compact
+# part eventually drains into the envelope, yet a frozen clock would
+# deliver 1.47x the observed inner mass). exp38 tested the retention
+# floor only under the inner-blind plain loss (loss -4%, inner bias
+# unmoved) and the core channel only under the inner-aware objective
+# (inner fixed, physics broken by kernel re-balancing). This cell fits
+# the RETENTION floor under the INNER-AWARE objective — mass-conserving
+# redistribution within the kernel's own deposits, no new channel.
+# Modes: 'global' f_ret = expit(a) shared (13 params); 'bound'
+# f_ret_i = expit(a + b*x_i) with x_i = log10(rc0(t_i)/R200(t_i)) + 2,
+# the deposit birth width relative to the halo virial radius at
+# deposition (violent relaxation strips loosely-bound material; deeply
+# deposited stars phase-mix out less) — 14 params. a -> -inf nests the
+# adopted kernel exactly; b = 0 nests 'global'.
+OMEGA_M = 0.3089                                  # TNG cosmology
+RHOC0 = 277.5 * 0.6774 ** 2                       # rho_crit(z=0) [Msun/kpc^3]
+
+
+def _w_init_ret(rows, cond_key="z0"):
+    _w_init(rows, cond_key)
+    for g in _W["gals"]:
+        mah = g["mah"]
+        lm = mah["logMh_full"][1:]                # logMh at the deposit times
+        e2 = OMEGA_M * (1.0 + mah["z"]) ** 3 + (1.0 - OMEGA_M)
+        r200 = (3.0 * 10.0 ** lm
+                / (4.0 * np.pi * 200.0 * RHOC0 * e2)) ** (1.0 / 3.0)
+        g["lr200"] = np.log10(r200)               # [kpc]
+
+
+def model_cogs_ret39(p, g, ks, mode):
+    """Adopted kernel + retention floor; see the block comment above."""
+    e = _W["e"]
+    s2 = _W["s2"]
+    mah = g["mah"]
+    base6, _, _ = s2.theta_of(p[:12], g, "1ch-mof")
+    w = e.weights(mah["z"], base6[3], base6[4])
+    dM = w * mah["dMh"]
+    if not np.isfinite(dM).all() or dM.sum() <= 0:
+        return None
+    dM = dM / dM.sum()
+    gam = float(np.clip(base6[5], 1.06, 6.0))
+    rc0 = np.clip(10.0 ** base6[0] * (mah["t"] / mah["t_obs"]) ** base6[1],
+                  1e-4, 1e5)
+    if mode == "bound":
+        xc = np.log10(rc0) - g["lr200"] + 2.0
+        fr = expit(p[12] + p[13] * xc)
+    else:
+        fr = expit(p[12])
+    out = []
+    for k in ks:
+        mask = mah["snap"] <= e.ANCHOR_SNAP[k]
+        tk = e.pe.AT[k]
+        dt = np.clip(tk - mah["t"], 0.0, None)
+        fc = fr + (1.0 - fr) * np.exp(-dt / mah["t"])
+        rcw = np.clip(rc0 * (tk / mah["t"]) ** max(base6[2], 0.0), 1e-4, 1e5)
+
+        def cog(rc):
+            u = 1.0 + (e.R_EXT[:, None] / rc[None, :]) ** 2
+            return 1.0 - u ** (1.0 - gam)
+        B = fc[None, :] * cog(rc0) + (1.0 - fc)[None, :] * cog(rcw)
+        m = B @ (dM * mask)
+        if not np.isfinite(m[-1]) or m[-1] <= 0 or m[-2] <= 0:
+            return None
+        out.append(m[:-1] * (g["m500"][k] / m[-1]))
+    return out
+
+
+def gal_loss_ret39(p, g, ks, mode):
+    """The same inner-aware objective as the core fits."""
+    cogs = model_cogs_ret39(p, g, ks, mode)
+    if cogs is None:
+        return 4.0
+    e = _W["e"]
+    m_out = e.R > 5.0
+    i5, i10 = _i_at(5.0), _i_at(10.0)
+    tot = 0.0
+    for c, k in zip(cogs, ks):
+        d = g["data"][k]
+        rel = (c - d) / d
+        tot += (np.sqrt(np.mean(rel[m_out] ** 2))
+                + 0.5 * (abs(rel[i5]) + abs(rel[i10])))
+    return float(tot / len(ks))
+
+
+A_BOX = (-8.0, 4.0)
+B_BOX = (-6.0, 6.0)
+
+
+def _pen_ret39(p, mode):
+    s2 = _W["s2"]
+    pen = s2.penalty(p[:12], "1ch-mof") + 30.0 * float(
+        np.clip(A_BOX[0] - p[12], 0, None) ** 2
+        + np.clip(p[12] - A_BOX[1], 0, None) ** 2)
+    if mode == "bound":
+        pen += 30.0 * float(np.clip(B_BOX[0] - p[13], 0, None) ** 2
+                            + np.clip(p[13] - B_BOX[1], 0, None) ** 2)
+    return pen
+
+
+def _chunk_ret39(args):
+    p, mode, ks, lo, hi = args
+    return sum(gal_loss_ret39(p, g, ks, mode) for g in _W["gals"][lo:hi])
+
+
+def _at_bound_ret39(p, mode):
+    out = _W["s2"]._at_bound(p[:12], "1ch-mof")
+    boxes = [(12, "a_ret", A_BOX)]
+    if mode == "bound":
+        boxes.append((13, "b_ret", B_BOX))
+    for i, nm, (lo, hi) in boxes:
+        w = hi - lo
+        if p[i] < lo + 0.02 * w or p[i] > hi - 0.02 * w:
+            out.append(f"{nm}={p[i]:.2f}")
+    return out
+
+
+def _ret_model_fn_of(mode):
+    def fn(p, g, ks, variant):
+        return model_cogs_ret39(p, g, ks, mode)
+    return fn
+
+
+def cmd_ret(dev=False):
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init_ret(rows, _W.get("cond_key", "z0"))
+    tag = "_dev" if dev else ""
+    scale = 0.15 if dev else 1.0
+    maxiter = max(int(5000 * scale), 80)
+    workers = max(os.cpu_count() - 2, 2)
+    n = len(_W["gals"])
+    edges = np.linspace(0, n, workers + 1).astype(int)
+    d2 = np.load(E38_DIR / "outputs/stage2_multiepoch.npz")
+    dr = np.load(E38_DIR / "outputs/stage3_retention.npz")
+    th12 = d2["theta_1ch-mof"]
+    f38 = float(np.clip(dr["theta"][12], 1e-3, 0.999))
+    a38 = float(np.log(f38 / (1.0 - f38)))        # exp38's plain-loss floor
+    out_path = OUTDIR / f"retention{tag}.npz"
+    OUTDIR.mkdir(exist_ok=True)
+    fitted = dict(np.load(out_path)) if out_path.exists() else {}
+    print(f"exp39 retention x inner-aware cell (n={n}"
+          f"{', DEV' if dev else ''}; modes global -> bound)", flush=True)
+    with Pool(workers, initializer=_w_init_ret,
+              initargs=(rows, _W["cond_key"])) as pool:
+        for mode in ("global", "bound"):
+            if mode == "global":
+                starts = [np.append(th12, a38),
+                          np.append(dr["theta"][:12], a38)]
+            else:
+                thg = fitted["theta_global"]
+                s1 = np.append(thg, 0.0)
+                s2_ = s1.copy()
+                s2_[13] = -1.5                     # more bound -> more retained
+                starts = [s1, s2_]
+
+            def loss(p):
+                parts = pool.map(_chunk_ret39,
+                                 [(p, mode, KS, edges[i], edges[i + 1])
+                                  for i in range(workers)])
+                return sum(parts) / n + _pen_ret39(p, mode)
+
+            best = None
+            for p0 in starts:
+                t0 = time.time()
+                r = minimize(loss, p0, method="Nelder-Mead",
+                             options=dict(maxiter=maxiter, xatol=3e-4,
+                                          fatol=1e-8))
+                print(f"  [{mode}] start: loss {r.fun:.4f} "
+                      f"({(time.time()-t0)/60:.1f} min)", flush=True)
+                if best is None or r.fun < best.fun:
+                    best = r
+            th = best.x
+            if mode == "bound":
+                frs = []
+                for g in _W["gals"]:
+                    b6, _, _ = _W["s2"].theta_of(th[:12], g, "1ch-mof")
+                    rc0 = np.clip(10.0 ** b6[0]
+                                  * (g["mah"]["t"] / g["mah"]["t_obs"])
+                                  ** b6[1], 1e-4, 1e5)
+                    xc = np.log10(rc0) - g["lr200"] + 2.0
+                    frs.append(np.median(expit(th[12] + th[13] * xc)))
+                print(f"  [{mode}] a = {th[12]:.2f}, b = {th[13]:.2f}; "
+                      f"per-galaxy median f_ret pct16/50/84 = "
+                      f"{np.percentile(frs, [16, 50, 84]).round(3)}")
+            else:
+                print(f"  [{mode}] f_ret = {float(expit(th[12])):.3f} "
+                      f"(exp38 plain-loss floor was {f38:.3f})")
+            ab = _at_bound_ret39(th, mode)
+            print(f"  [{mode}] at bound: {', '.join(ab) if ab else 'NONE'}")
+            _W["s3"]._print_bias(
+                f"[{mode}] inner", _W["s3"]._inner_bias(
+                    th, "1ch-mof", model_fn=_ret_model_fn_of(mode)))
+            fitted[f"theta_{mode}"] = th
+            fitted[f"loss_{mode}"] = best.fun
+            np.savez(out_path, **fitted)
+            print(f"  wrote {out_path} (+{mode})", flush=True)
+
+
+def cmd_ret_physics(dev=False):
+    from hongshao.profile_emulator import density_from_cog
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init_ret(rows, _W.get("cond_key", "z0"))
+    tag = "_dev" if dev else ""
+    gals = _W["gals"]
+    e = _W["e"]
+    d = np.load(OUTDIR / f"retention{tag}.npz")
+    data = np.stack([g["data"] for g in gals])
+    logms = np.array([g["logms"] for g in gals])
+    print("exp39 retention physics (marks: data 0.37/0.11; adopted kernel "
+          "0.39/0.12, T1 +0.026/+0.019; free-kernel core 0.54/0.19, "
+          "T1 +0.056/+0.093):")
+    for mode in ("global", "bound"):
+        if f"theta_{mode}" not in d.files:
+            continue
+        th = d[f"theta_{mode}"]
+        cogs = np.full((len(gals), 5, len(e.R)), np.nan)
+        for i, g in enumerate(gals):
+            out = model_cogs_ret39(th, g, KS, mode)
+            if out is not None:
+                cogs[i] = out
+        ed3, rows_d = e.differential(cogs, data, logms)
+        for b in range(3):
+            cells = [f"z{e.ANCHOR_Z[k+1]}->z{e.ANCHOR_Z[k]}: "
+                     f"{rows_d[('data', b, k)][0]:.2f}/"
+                     f"{rows_d[('data', b, k)][1]:.2f} -> "
+                     f"{rows_d[('model', b, k)][0]:.2f}/"
+                     f"{rows_d[('model', b, k)][1]:.2f}" for k in range(4)]
+            print(f"  [{mode}] logM* {ed3[b]:.2f}-{ed3[b+1]:.2f}: "
+                  + "  ".join(cells))
+        cv_path = OUTDIR / f"cv_ret_{mode}{tag}.npz"
+        cogs0_src = ("held-out" if cv_path.exists() else "IN-SAMPLE")
+        cogs0 = (np.load(cv_path)["cogs"][:, 0] if cv_path.exists()
+                 else cogs[:, 0])
+        ok = np.isfinite(cogs0).all(1) & (cogs0 > 0).all(1)
+        ls_d, mid = density_from_cog(np.log10(data[:, 0]), e.R)
+        ls_m = np.full_like(ls_d, np.nan)
+        ls_m[ok] = density_from_cog(np.log10(cogs0[ok]), e.R)[0]
+        dl = ls_m - ls_d
+        bands = ((mid >= 30.0) & (mid < 60.0),
+                 (mid >= 60.0) & (mid <= 148.0))
+        edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
+        cells = []
+        for b in range(3):
+            sel = ok & (logms >= edges[b]) & (logms <= edges[b + 1] + 1e-9)
+            cells.append(" ".join(
+                f"{np.nanmedian(dl[np.ix_(sel, bm)]):+.3f}" for bm in bands))
+        print(f"  [{mode}] overshoot terciles ({cogs0_src}, z=0.4, "
+              "[30-60 / 60-148 kpc]): "
+              + "  |  ".join(f"T{b+1} {c}" for b, c in enumerate(cells)))
+
+
+def _cv_fold_ret(args):
+    fold, mode, warm, maxiter = args
+    gals = _W["gals"]
+    n = len(gals)
+    train = [i for i in range(n) if i % 10 != fold]
+
+    def tr_loss(p):
+        return (np.mean([gal_loss_ret39(p, gals[i], KS, mode)
+                         for i in train]) + _pen_ret39(p, mode))
+    r = minimize(tr_loss, warm, method="Nelder-Mead",
+                 options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-8))
+    e = _W["e"]
+    i5, i10 = _i_at(5.0), _i_at(10.0)
+    m = e.R > 5.0
+    out = []
+    for i in range(n):
+        if i % 10 != fold:
+            continue
+        g = gals[i]
+        cogs = model_cogs_ret39(r.x, g, KS, mode)
+        if cogs is None:
+            out.append((g["row"], np.full((5, 3), np.nan),
+                        np.full((5, len(e.R)), np.nan)))
+            continue
+        met = []
+        for c, k in zip(cogs, KS):
+            d = g["data"][k]
+            cs = c * (d[-1] / c[-1])
+            met.append([np.abs(cs[m] / d[m] - 1).max(),
+                        c[i5] / d[i5] - 1, c[i10] / d[i10] - 1])
+        out.append((g["row"], np.array(met), np.array(cogs)))
+    return out
+
+
+def cmd_ret_cv(mode="bound", dev=False):
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init_ret(rows, _W.get("cond_key", "z0"))
+    tag = "_dev" if dev else ""
+    gals = _W["gals"]
+    n = len(gals)
+    e = _W["e"]
+    d = np.load(OUTDIR / f"retention{tag}.npz")
+    workers = min(max(os.cpu_count() - 2, 2), 10)
+    maxiter = 150 if dev else 1500
+    row_to_i = {g["row"]: i for i, g in enumerate(gals)}
+    met = np.full((n, 5, 3), np.nan)
+    cogs = np.full((n, 5, len(e.R)), np.nan)
+    t0 = time.time()
+    with Pool(workers, initializer=_w_init_ret,
+              initargs=(rows, _W["cond_key"])) as pool:
+        jobs = [(f, mode, d[f"theta_{mode}"], maxiter) for f in range(10)]
+        for part in pool.map(_cv_fold_ret, jobs):
+            for row, m_, c_ in part:
+                met[row_to_i[row]] = m_
+                cogs[row_to_i[row]] = c_
+    line = " ".join(
+        f"z{e.ANCHOR_Z[k]}: {100*np.nanmedian(met[:, k, 0]):.1f} | "
+        f"{100*np.nanmedian(met[:, k, 1]):+.1f} | "
+        f"{100*np.nanmedian(met[:, k, 2]):+.1f}"
+        for k in range(5))
+    print(f"  [ret-{mode}] held-out shape R>5 | M(<5) | M(<10): {line}  "
+          f"({(time.time()-t0)/60:.1f} min)", flush=True)
+    np.savez(OUTDIR / f"cv_ret_{mode}{tag}.npz", met=met, cogs=cogs)
+    print(f"  wrote {OUTDIR / f'cv_ret_{mode}{tag}.npz'}")
+
+
+# --------------------------------------------------------------------------- #
 # percore — lead 3: per-galaxy core diversity at the frozen operating point    #
 # --------------------------------------------------------------------------- #
 def _percore_one(args):
@@ -695,6 +1015,41 @@ def demo():
     v = np.array([g_["cond_z2"] for g_ in _W["gals"]])
     assert np.isfinite(v).all()
 
+    # (7) retention cell: a -> -inf nests the adopted kernel; global mode
+    # matches the exp38 retention model exactly at the same floor; b = 0
+    # nests global; a raises the inner mass; R200 history sane
+    _w_init_ret(np.load(POP_NPZ)["dev100"][:8])
+    g = _W["gals"][0]
+    got = model_cogs_ret39(np.append(p12, -30.0), g, [0, 4], "global")
+    err = max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
+              for x, y in zip(got, ref))
+    assert err < 1e-9, f"ret39 a=-inf nesting broken: {err:.2e}"
+    f38 = 0.31
+    a38 = np.log(f38 / (1.0 - f38))
+    got = model_cogs_ret39(np.append(p12, a38), g, [0, 4], "global")
+    want = s3.model_cogs_ret(np.append(p12, f38), g, [0, 4], "1ch-mof")
+    err = max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
+              for x, y in zip(got, want))
+    assert err < 1e-9, f"ret39 global != exp38 retention: {err:.2e}"
+    got_b = model_cogs_ret39(np.concatenate([p12, [a38, 0.0]]), g, [0, 4],
+                             "bound")
+    err = max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
+              for x, y in zip(got_b, got))
+    assert err < 1e-9, f"ret39 b=0 nesting broken: {err:.2e}"
+    i10 = _i_at(10.0)
+    fr = [model_cogs_ret39(np.append(p12, a), g, [0], "global")[0][i10]
+          / model_cogs_ret39(np.append(p12, a), g, [0], "global")[0][-1]
+          for a in (-30.0, -1.0, 1.5)]
+    assert fr[0] < fr[1] < fr[2], "retention must raise the inner mass"
+    for g_ in _W["gals"]:
+        assert np.isfinite(g_["lr200"]).all()
+        r200 = 10.0 ** g_["lr200"]
+        # the smooth DiffMAH curve starts at ~1e8 Msun halos at z >~ 10
+        # (R200 ~ 1 kpc, negligible deposit weight); late massive halos
+        # reach ~2 Mpc — only positivity and the upper end are meaningful
+        assert r200.min() > 0.0 and r200.max() < 5000.0, \
+            f"R200 history out of range: {r200.min():.1f}-{r200.max():.0f}"
+
     print("exp39 demo OK: mof form == the exp38 parked core exactly "
           "(rc -> R50 round trip); every form nests the adopted kernel at "
           "ca -> -inf; R50 parameterization exact to 0.1%; leakage beyond "
@@ -721,6 +1076,13 @@ if __name__ == "__main__":
         cmd_cv(forms, dev, frozen="--frozen" in sys.argv)
     elif cmd == "percore":
         cmd_percore(forms[0], dev)
+    elif cmd == "ret":
+        cmd_ret(dev)
+    elif cmd == "retphysics":
+        cmd_ret_physics(dev)
+    elif cmd == "retcv":
+        cmd_ret_cv(sys.argv[sys.argv.index("--mode") + 1]
+                   if "--mode" in sys.argv else "bound", dev)
     elif cmd == "physics":
         cmd_physics(forms, dev, frozen="--frozen" in sys.argv)
     elif cmd == "table":
