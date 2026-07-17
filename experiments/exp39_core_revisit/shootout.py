@@ -510,6 +510,91 @@ def cmd_physics(forms, dev=False, frozen=False):
 
 
 # --------------------------------------------------------------------------- #
+# percore — lead 3: per-galaxy core diversity at the frozen operating point    #
+# --------------------------------------------------------------------------- #
+def _percore_one(args):
+    """Per-galaxy core fraction: minimize the inner-aware loss over the
+    logit amplitude alone (kernel + core scale frozen). Returns
+    (row, f_core, loss0, loss1, bias5_before, bias5_after at z=0.4)."""
+    from scipy.optimize import minimize_scalar
+    gi, form, th = args
+    g = _W["gals"][gi]
+    i5 = _i_at(5.0)
+
+    def loss_of(ca):
+        p = th.copy()
+        p[12] = ca
+        p[13] = 0.0
+        return gal_loss_form(p, g, KS, form)
+
+    r = minimize_scalar(loss_of, bounds=(-9.0, 4.0), method="bounded",
+                        options=dict(xatol=1e-3))
+    shared_ca = float(th[12] + th[13] * _cond_of(g))
+
+    def bias5(ca):
+        p = th.copy()
+        p[12] = ca
+        p[13] = 0.0
+        c = model_cogs_form(p, g, [0], form)
+        if c is None:
+            return np.nan
+        d = g["data"][0]
+        return float(c[0][i5] / d[i5] - 1.0)
+
+    return (g["row"], float(expit(r.x)), float(loss_of(shared_ca)),
+            float(r.fun), bias5(shared_ca), bias5(float(r.x)))
+
+
+def cmd_percore(form="gauss", dev=False):
+    """Lead 3 probe: at the FROZEN operating point, give every galaxy its
+    own core fraction (kernel, core scale, everything else fixed at the
+    fitted frozen theta). Measures (1) how much of the remaining inner
+    deficit the population-sharing limit carries, (2) the f_core
+    diversity, (3) whether it is feature-predictable."""
+    from scipy.stats import spearmanr
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init_frozen(rows, _W.get("cond_key", "z0"))
+    tag = _npz_tag(dev)
+    th = np.load(OUTDIR / f"frozen{tag}.npz")[f"theta_{form}"]
+    gals = _W["gals"]
+    workers = max(os.cpu_count() - 2, 2)
+    t0 = time.time()
+    with Pool(workers, initializer=_w_init_frozen,
+              initargs=(rows, _W["cond_key"])) as pool:
+        res = pool.map(_percore_one,
+                       [(i, form, th) for i in range(len(gals))])
+    rows_, fc, l0, l1, b5_0, b5_1 = map(np.array, zip(*res))
+    pop = np.load(POP_NPZ)
+    feats = {"logmh_z04": pop["logmh"], "logmh_z2": pop["logmh_zk_real"][:, 4],
+             "c200c": pop["c200c"], "fz2": pop["fz2"], "t50": pop["t50"],
+             "logms": pop["logms"]}
+    print(f"exp39 lead-3 percore probe [{form}, frozen kernel] "
+          f"(n={len(gals)}{', DEV' if dev else ''}; "
+          f"{(time.time()-t0)/60:.1f} min):")
+    print(f"  per-galaxy f_core pct 16/50/84: "
+          f"{np.percentile(fc, [16, 50, 84]).round(3)} "
+          f"(shared-conditioning median was 0.026); "
+          f"logit-scale scatter {np.std(np.log10(np.clip(fc, 1e-4, 1))):.2f} dex")
+    print(f"  inner-aware loss: shared {np.mean(l0):.4f} -> per-galaxy "
+          f"{np.mean(l1):.4f}")
+    print(f"  M(<5) bias at z=0.4, median [pct16, 84]: shared "
+          f"{100*np.median(b5_0):+.1f}% [{100*np.percentile(b5_0, 16):+.1f}, "
+          f"{100*np.percentile(b5_0, 84):+.1f}] -> per-galaxy "
+          f"{100*np.median(b5_1):+.1f}% [{100*np.percentile(b5_1, 16):+.1f}, "
+          f"{100*np.percentile(b5_1, 84):+.1f}]")
+    lg = np.log10(np.clip(fc, 1e-4, 1.0))
+    print("  Spearman rho of log10 f_core vs halo/galaxy features "
+          "(feature-predictability of the diversity):")
+    for nm, v in feats.items():
+        vv = v[rows_]
+        ok = np.isfinite(vv) & np.isfinite(lg)
+        print(f"    {nm:10s} {spearmanr(lg[ok], vv[ok]).statistic:+.2f}")
+    np.savez(OUTDIR / f"percore_{form}{tag}.npz", row=rows_, f_core=fc,
+             loss_shared=l0, loss_per=l1, bias5_shared=b5_0, bias5_per=b5_1)
+    print(f"  wrote {OUTDIR / f'percore_{form}{tag}.npz'}")
+
+
+# --------------------------------------------------------------------------- #
 # table — the one-look decision summary across fitted forms                    #
 # --------------------------------------------------------------------------- #
 def cmd_table(dev=False):
@@ -634,6 +719,8 @@ if __name__ == "__main__":
         cmd_frozen(forms, dev)
     elif cmd == "cv":
         cmd_cv(forms, dev, frozen="--frozen" in sys.argv)
+    elif cmd == "percore":
+        cmd_percore(forms[0], dev)
     elif cmd == "physics":
         cmd_physics(forms, dev, frozen="--frozen" in sys.argv)
     elif cmd == "table":
