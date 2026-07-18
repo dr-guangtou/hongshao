@@ -106,6 +106,67 @@ def cmd_run(dev=False):
     cmd_report(dev)
 
 
+def _pair_one(args):
+    """One galaxy: joint 2-D refit of (log_rc, sig) vs the best single
+    component — the 1-D-subspace falsification test. Near-degenerate
+    single-component deltas are rank-correlated by construction; only a
+    joint fit can show whether a SECOND latent dof carries real loss."""
+    from scipy.optimize import minimize
+    (gi,) = args
+    s2 = _W["s2"]
+    g = _W["gals"][gi]
+    th0 = _W["th0"]
+    l_base = s2.gal_loss(th0, g, KS_FIT, "1ch-mof")
+    idx = (0, 4)                                # log_rc, sig
+
+    def f(x):
+        th = th0.copy()
+        th[idx[0]] = np.clip(x[0], LO6[idx[0]], HI6[idx[0]])
+        th[idx[1]] = np.clip(x[1], LO6[idx[1]], HI6[idx[1]])
+        return s2.gal_loss(th, g, KS_FIT, "1ch-mof")
+
+    best1 = np.inf
+    for j in idx:
+        def f1(x):
+            th = th0.copy()
+            th[j] = x
+            return s2.gal_loss(th, g, KS_FIT, "1ch-mof")
+        r1 = minimize_scalar(f1, bounds=(LO6[j], HI6[j]), method="bounded",
+                             options=dict(maxiter=80, xatol=1e-4))
+        best1 = min(best1, r1.fun)
+    r2 = minimize(f, np.array([th0[idx[0]], th0[idx[1]]]),
+                  method="Nelder-Mead",
+                  options=dict(maxiter=250, xatol=1e-4, fatol=1e-9))
+    return g["row"], l_base, min(best1, l_base), min(r2.fun, best1, l_base)
+
+
+def cmd_pair(dev=False):
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    tag = "_dev" if dev else ""
+    n = len(_W["gals"])
+    workers = max(os.cpu_count() - 2, 2)
+    t0 = time.time()
+    with Pool(workers, initializer=_w_init, initargs=(rows,)) as pool:
+        res = pool.map(_pair_one, [(i,) for i in range(n)])
+    row, l_base, l_1, l_2 = map(np.array, zip(*res))
+    imp1 = 1.0 - l_1 / l_base
+    imp2 = 1.0 - l_2 / l_base
+    extra = np.median(imp2 - imp1)
+    print(f"exp41 stage 0b — is the anatomy subspace 1-D? (n={n}"
+          f"{', DEV' if dev else ''}; joint (log_rc, sig) refit vs the "
+          f"better of the two single refits; {(time.time()-t0)/60:.1f} "
+          "min)")
+    print(f"    median loss improvement: best single {100*np.median(imp1):.1f}%"
+          f" -> joint 2-D {100*np.median(imp2):.1f}% "
+          f"(median extra from the 2nd dof: {100*extra:.1f} points)")
+    print("    read: extra ~< 2 points -> ONE latent factor carries the "
+          "per-galaxy individuality (design the layer 1-D); extra large "
+          "-> a second axis exists.")
+    np.savez(OUTDIR / f"anatomy_pair{tag}.npz", row=row, l_base=l_base,
+             l_1=l_1, l_2=l_2)
+
+
 def cmd_report(dev=False):
     from scipy.stats import spearmanr
     tag = "_dev" if dev else ""
@@ -193,6 +254,8 @@ if __name__ == "__main__":
         demo()
     elif cmd == "run":
         cmd_run(dev)
+    elif cmd == "pair":
+        cmd_pair(dev)
     elif cmd == "report":
         cmd_report(dev)
     else:

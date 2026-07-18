@@ -69,4 +69,35 @@ HONGSHAO_DATA_DIR=/Users/shuang/Desktop/tng300_mah_mprof`.
 
 ## Results
 
-(stage 0 pending)
+### Stage 0 — anatomy + alignment (2026-07-18, full n=2397): CHECKPOINT
+
+1. **The individuality is spread evenly across coordinates** — freeing
+   any ONE base component per galaxy buys 18.5-22.3% median loss
+   improvement (g 22.3, mu 22.2, log_rc 21.9, q 21.1, gamma 19.5,
+   sig 18.5): no privileged direction in raw coordinates.
+2. **All six single-component deltas are rank-correlated at |rho| =
+   0.92-1.00** — the six scans see ONE underlying per-galaxy axis
+   through degenerate coordinates. (Partly by construction for 1-D
+   refits; the honest dimensionality test is 0b below.)
+3. **ALIGNMENT: the kernel's own individuality axis IS the exp39
+   core-diversity axis** — every delta correlates with the per-galaxy
+   log10 f_core at |rho| = 0.78-0.87 (sig -0.87, gamma +0.85, log_rc
+   -0.83). The core diversity measured in exp39 lead 3 is reachable
+   INSIDE the kernel's parameter space; no core channel is needed for
+   the stochastic layer.
+4. **The axis is feature-orthogonal** (|Spearman rho| <= 0.20 vs
+   logmh, c200c, fz2, logms, logmh_z2) — consistent with exp39: this
+   is per-object information; essentially ALL of it belongs to the
+   stochastic layer, none to new conditioning.
+5. **Stage 0b, dimensionality (joint (log_rc, sig) refit vs best
+   single):** the per-galaxy median extra from the second dof is 1.9
+   points (vs 24.7% from the first) — 1-D for the typical galaxy —
+   BUT the gain is strongly skewed: 31% of galaxies gain > 5 points
+   and 19% gain > 10. A genuine second axis exists for a ~fifth of
+   the population.
+
+**Stage-1 design consequence:** build the deviation distribution in
+BOTH a 1-D and a 2-D variant (the second component small and
+heavy-tailed, or mixture-like per the 0b skew), and let the
+pre-registered plane criterion pick the smallest sufficient
+dimensionality.
