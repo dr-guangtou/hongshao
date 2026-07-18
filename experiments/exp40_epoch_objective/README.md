@@ -97,5 +97,14 @@ trying to pay the tax through the OBJECTIVE instead (test 2) buys the
 same inner masses but always at the physics' expense. The one genuine
 free lunch found: a z<=1.5 fit scope — same held-out accuracy, better
 physics, -1.5 points of inner deficit, and honest extrapolation to
-z=2. Whether the kernel's official scope should become z<=1.5 (with
-z=2 kept as an extrapolation diagnostic) is a user decision.
+z=2.
+
+## ADOPTION (user, 2026-07-18)
+
+**z<=1.5 is the kernel's OFFICIAL fit scope** (theta in
+`outputs/latestart.npz[theta_z15]`; the g = 4.0 rail is
+stress-verified benign). **The z<=2.0 five-epoch fit remains available
+as the comparison option** (exp38
+`outputs/stage2_multiepoch.npz[theta_1ch-mof]`). The inner-aware
+objective is NOT adopted for fitting (test 2); it remains an
+evaluation metric.

@@ -773,15 +773,20 @@ Cross-experiment plan. Mirrors the phase sequence in
   halved (M(<5) -6.4%) — but differential FAILS (0.48/0.15) with mu
   railed and the overshoot back: the exp39 objective-driven
   conclusion confirmed with zero added components; NOT adoptable.
-- [ ] **(decision pending, user) adopt z<=1.5 as the kernel's official
-  fit scope?** Same held-out accuracy on fitted epochs, better
-  physics (T1 +0.025/+0.028; the z2.0->1.5 pair at 0.21-0.23 vs data
-  0.23), -1.5 points of inner deficit, z=2 kept as an honest
-  extrapolation diagnostic (+1.2 shape points, 15.4 vs 14.2). The
-  physical reading: z>=1.5 mergers are dissipative and outside the
-  additive collisionless model's domain — restricting the fit scope
-  IS the physical statement. z<=1.0 is too short a lever arm (z>=1.5
-  extrapolation degrades: shape 17.9/17.7, M(<5) -14/-16).
+- [x] **(ADOPTED, user 2026-07-18) z<=1.5 is the kernel's OFFICIAL fit
+  scope; the z<=2.0 five-epoch fit stays available as the comparison
+  option.** Rationale: same held-out accuracy on fitted epochs, better
+  physics (overshoot T1 +0.025/+0.028; the extrapolated z2.0->1.5
+  differential pair at 0.21-0.23 vs data 0.23), -1.5 points of inner
+  deficit (held-out M(<5) -9.5% vs ~-11%), z=2 kept as an honest
+  extrapolation diagnostic (+1.2 shape points). The physical reading:
+  z>=1.5 mergers are dissipative and outside the additive collisionless
+  model's domain — the fit scope IS the physical statement. z<=1.0 is
+  too short a lever arm (z>=1.5 extrapolation degrades: shape
+  17.9/17.7, M(<5) -14/-16). Thetas: OFFICIAL =
+  exp40 `outputs/latestart.npz[theta_z15]` (params [2.74, 4.00, 0.91,
+  1.52, 0.24, 1.38]; the g=4.0 rail is stress-verified benign);
+  comparison = exp38 `outputs/stage2_multiepoch.npz[theta_1ch-mof]`.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
