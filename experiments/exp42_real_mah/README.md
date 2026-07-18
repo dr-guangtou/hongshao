@@ -60,6 +60,62 @@ the official theta + a weaker-envelope nudge; parent-side penalties);
 the real input (z=2.0 column = extrapolation). Long runs via
 nohup + caffeinate -im + disown with a log tail.
 
-## Results
+## Results (2026-07-19, full n=2397; `outputs/run_full.log`)
 
-(pending)
+**The earlier-generation verdict is REVERSED for the Moffat kernel: the
+real MAH no longer loses held-out accuracy — it ties at z<=1.0 and wins
+at z>=1.5 — but its refit strains the outskirt physics band.**
+
+| metric | DiffMAH (official, exp40) | real MAH (this exp) |
+|---|---|---|
+| joint z<=1.5 loss | 0.1538 | 0.1571 (both starts converge here) |
+| params [log_rc, g, q, mu, sig, gamma] | [2.74, 4.00g, 0.91, 1.52, 0.24, 1.38] | [1.56, 2.43, 0.79, 1.78, 0.52, 1.28] |
+| bounds | g=4.00 (stress-benign) | **NONE** |
+| held-out shape R>5 by epoch | 18.2/17.4/16.6/16.4 / 15.4* | 18.1/17.1/16.7/**15.5** / **13.6*** |
+| held-out M(<5) by epoch | -9.5/-8.0/-7.8/-10.6 / -11.8* | -8.9/-7.6/-7.4/**-8.2** / **-9.2*** |
+| differential massive z0.7->0.4 (data 0.37/0.11) | 0.40/0.13 | **0.37/0.11 — exact** |
+| differential earlier pairs (data 0.36/0.27/0.23) | 0.31/0.29/0.21-0.23 | 0.26/0.21/0.16 — undershoots |
+| overshoot T1 [30-60 / 60-148 kpc] | +0.028/+0.022 (in-sample) | +0.025/**+0.080** — 60-148 kpc OUT of band |
+
+(* = z=2.0, extrapolated, not in any fit. Shape = held-out 148-pinned
+max|rel| R>5 kpc, per-galaxy median, 10-fold CV; differential = median
+fraction of massive-tercile inter-epoch growth landing beyond 50/100
+kpc; overshoot = median model-data dlog Sigma at z=0.4 by stellar-mass
+tercile.)
+
+1. **The accuracy gap is gone.** The Gaussian-era 3-5-point real-MAH
+   penalty (exp30/32) does not survive the power-law-tail deposit: raw
+   loss +2% (0.1571 vs 0.1538), held-out shape equal at z<=1.0 and
+   better at z=1.5 (-0.9) and at the z=2.0 extrapolation (-1.8 points,
+   with M(<5) -9.2 vs -11.8). The Moffat tail absorbs the shape freedom
+   the bursty basis demanded, as hypothesized.
+2. **A different, bound-free basin.** The real input prefers a much
+   smaller, shallower-growing birth radius (log_rc 1.56, g 2.43), an
+   efficiency window peaking earlier (z=4.9 vs 3.6) and twice as broad
+   (sig 0.52 vs 0.24), and a slightly softer tail (gamma 1.28). The
+   g=4.0 rail vanishes — it was a property of the smooth basis, not of
+   the model.
+3. **The transfer cross isolates the input effect**: the official theta
+   dropped onto the real input unrefit loses 3.6 shape points at z=0.4
+   (21.8 vs 18.2) and mildly strains the differential (0.42/0.13); the
+   refit recovers everything — the two inputs genuinely demand
+   different transport configurations.
+4. **Physics: the flagship pair is an exact match, the rest strains.**
+   The refit reproduces the z0.7->0.4 differential exactly (0.37/0.11,
+   the program's best-ever pass) but undershoots every earlier pair
+   (0.26/0.21/0.16 vs data 0.36/0.27/0.23) and quadruples the low-mass
+   far-outskirt overshoot (60-148 kpc T1 +0.080 vs the adopted band
+   +0.02-0.03) with a massive-tercile undershoot appearing (-0.036).
+   Reading: the broad early window front-loads the deposit budget, so
+   late inter-epoch growth is carried by migration alone — right for
+   the latest pair, too weak earlier — and the bursty late deposits
+   that do arrive land too wide at low mass.
+
+**Verdict (recommendation; adoption unchanged pending user review): the
+DiffMAH configuration remains the operating point** — it stays inside
+the physics band everywhere, carries the differentiability, and the
+exp41 stochastic layer is calibrated on it — but the record now shows
+the real-MAH input is an accuracy PEER of the smooth input under the
+heavy-tailed deposit, with a strictly interior optimum. The tech-note-2
+caveat ("unverified extrapolation") is closed in both directions:
+accuracy verified equal-or-better, physics band verified strained.

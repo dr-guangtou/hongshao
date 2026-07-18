@@ -823,6 +823,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   kernel mirroring exp38 `basis_mof`, self-checked; usetex-safe
   labels, Okabe-Ito epoch colors). Audience: knows the motivation,
   not the experiments.
+- [x] **exp42 — the real-MAH head-to-head for the adopted kernel
+  COMPLETE (2026-07-19, branch exp42-real-mah-kernel).** The same
+  12-param 1ch-mof + z<=1.5 protocol with config="real": the
+  Gaussian-era 3-5-point real-MAH penalty does NOT survive the Moffat
+  tail — held-out shape ties at z<=1.0 and wins at z>=1.5
+  (18.1/17.1/16.7/15.5, z=2.0* 13.6 vs DiffMAH 15.4), from a bound-free
+  basin (log_rc 1.56, g 2.43 interior — the g=4.0 rail was a property
+  of the smooth basis; window peak z=4.9, sig 0.52). Physics mixed: the
+  z0.7->0.4 differential is an EXACT 0.37/0.11 (best-ever) but earlier
+  pairs undershoot and the low-mass 60-148 kpc overshoot hits +0.080
+  dex (out of band). Recommendation recorded (adoption unchanged
+  pending user review): DiffMAH stays the operating point (physics
+  band + differentiability + the exp41 layer's calibration); the
+  real input is now an accuracy peer, not a fallback. Tech-note-2 §7
+  caveat closed with the measured result.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
