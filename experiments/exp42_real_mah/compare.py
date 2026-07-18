@@ -217,6 +217,28 @@ def cmd_cv(dev=False):
     print(f"  wrote {OUTDIR / f'cv_real{tag}.npz'}")
 
 
+def cmd_report(dev=False):
+    """The standardized QA figure set on the held-out CV curves of the
+    real-MAH refit (the exp38 report convention: 10-fold CV cogs through
+    hongshao.qa — usetex-safe text, distinct epoch colors, logMh-binned
+    residuals). The z=2.0 column is extrapolation under the z<=1.5 scope."""
+    from hongshao import qa
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    tag = "_dev" if dev else ""
+    e = _W["e"]
+    gals = _W["gals"]
+    d = np.load(OUTDIR / f"cv_real{tag}.npz")
+    data = np.stack([g["data"] for g in gals])
+    logmh = np.array([g["logmh"] for g in gals])
+    figdir = HERE / "figures"
+    figdir.mkdir(exist_ok=True)
+    qa.evaluate(d["cogs"], data, e.R, [e.ANCHOR_Z[k] for k in KS_ALL],
+                name=f"exp42_real_z15{tag}", figdir=figdir, figures=True,
+                verbose=True, bin_by=logmh, bin_label="logMh")
+    print(f"wrote the standard QA set to {figdir}", flush=True)
+
+
 def demo():
     rows = np.load(POP_NPZ)["dev100"][:12]
     _w_init(rows)
@@ -278,5 +300,7 @@ if __name__ == "__main__":
         cmd_physics(dev)
     elif cmd == "cv":
         cmd_cv(dev)
+    elif cmd == "report":
+        cmd_report(dev)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")

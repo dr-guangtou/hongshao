@@ -111,7 +111,14 @@ tercile.)
    the latest pair, too weak earlier — and the bursty late deposits
    that do arrive land too wide at low mass.
 
-**Verdict (recommendation; adoption unchanged pending user review): the
+**DECISION (user, 2026-07-19): the real-MAH configuration does NOT
+become the new default — the DiffMAH configuration remains the
+operating point**, per the recommendation below. Standard QA figure set
+for the real-MAH refit (held-out CV curves, z=2.0 column =
+extrapolation): `figures/qa_*_exp42_real_z15.*`, regenerate with
+`compare.py report`.
+
+**The recommendation as recorded: the
 DiffMAH configuration remains the operating point** — it stays inside
 the physics band everywhere, carries the differentiability, and the
 exp41 stochastic layer is calibrated on it — but the record now shows
