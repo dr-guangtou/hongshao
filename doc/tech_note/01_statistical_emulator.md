@@ -357,6 +357,15 @@ draws = mp.sample_cogs(X_new, size=100, rng=0)     # (100, n, E, R), monotone,
                                                    # AR(1)-coherent histories
 ```
 
+**The standardized QA figure set** for this model — aperture and annulus
+masses truth-vs-model per epoch (kpc and $R_e$ bin sets), halo-mass-binned
+residuals, the 2-D observational planes with energy/floor scores, and the
+best/worst case gallery — is the `qa_*_exp37_block.*` set in
+`experiments/exp37_multi_epoch/figures/` (the adopted block product;
+`qa_*_exp37_oof.*` is the kpc-aperture core alone). Experiment figures are
+gitignored, so regenerate on a fresh checkout with
+`PYTHONPATH=. uv run python experiments/exp37_multi_epoch/run.py qa`.
+
 The full training recipe (feature building, target builders, validation
 protocol) is in `doc/emulator_manual.md`. The headline caveats:
 

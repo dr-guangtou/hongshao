@@ -393,7 +393,73 @@ like it degraded the Re plane (2.7× floor) when it is actually *at* the
 floor (1.0–1.4× at every epoch) under self-consistent apertures. Paired
 metrics for mean predictions; population metrics for draws.
 
-## 7. Honest limits
+**The standardized QA figure set** for the adopted operating point (the
+official $z \le 1.5$ kernel as the mean model, overlaid with drawn
+populations from this layer; the $z=2.0$ column labeled as extrapolation,
+§5) is the `qa_*_exp41_kernel_layer.*` set in
+`experiments/exp41_stochastic_layer/figures/` — seven figures: kpc and
+$R_e$ aperture/annulus masses truth-vs-model, halo-mass-binned residuals,
+the 2-D observational planes with energy/floor scores, and the best/worst
+case gallery. Experiment figures are gitignored; regenerate with
+`PYTHONPATH=. uv run python
+experiments/exp41_stochastic_layer/stage2_draws.py report`.
+
+## 7. Differentiability and the real-MAH input
+
+The history the kernel consumes is the **smooth DiffMAH reconstruction**
+of each halo's peak-mass curve (note 1, §2), sampled on ~99 evenly-spaced
+time steps — *not* the raw simulation history. This is a measured choice,
+and the raw-versus-DiffMAH comparison was run head-to-head at two levels
+with opposite outcomes:
+
+- **Per-galaxy fits: the real MAH is the honest input.** The smooth curve
+  erases merger bursts (real single-step halo growth reaches 7–18% of the
+  total, versus 2–3% for the fit) and *flatters* the model: swapping in
+  the real de-dipped peak history raised the per-galaxy joint multi-epoch
+  worst-radius error from 4.4% to 6.1% (measured on the Gaussian-deposit
+  generation of the model).
+- **Population-shared fits — the regime this kernel lives in: DiffMAH
+  wins.** With one shared parameter vector, the DiffMAH input is
+  consistently better held-out: 30.4% versus 35.2% epoch-averaged
+  worst-radius error ($n = 2397$, 10-fold CV, again on the earlier model
+  generation). The smooth, regular deposit basis suits a global theta;
+  the bursty, gappy real history demands per-galaxy adaptation a shared
+  fit cannot provide.
+- **The real MAH's one virtue** was population *diversity*: its drawn
+  populations had the most realistic spread (centered plane energy 3.5×
+  the split-half floor, the era's best) but a badly biased amplitude and
+  worse accuracy at every tier and mass quartile. That diversity job is
+  now done, differently, by the stochastic layer (§6).
+- **Caveat:** these head-to-heads predate the Moffat deposit; the adopted
+  1ch-mof has only ever been fitted in the DiffMAH configuration. The
+  population-level verdict held across three model generations, but for
+  1ch-mof specifically it is an (unverified, likely-safe) extrapolation.
+
+The DiffMAH input also buys **differentiability**. The whole forward map
+— the sigmoid-rolled power law $M_h(t)$, the accretion differences on a
+fixed grid, the window $w(z)$, the Moffat curve of growth, the birth and
+migration power laws, the clock exponential, the linear conditioning, the
+normalization ratio, the relative-RMS loss — is a composition of smooth
+analytic operations; the only non-smooth points are clip guards and the
+quadratic hinge box penalty (piecewise-differentiable), and the epoch
+mask $t_i \le t_k$ is fixed by the snapshot grid, not by parameters. A
+JAX port is therefore mechanical, and would enable gradient-based
+population fits (the current fits use derivative-free Nelder–Mead over
+hours), Hamiltonian Monte Carlo posteriors over theta, and inverse
+problems — gradients flow all the way back to the four DiffMAH numbers,
+so a halo's assembly history can be inferred from an observed profile, or
+the kernel embedded in the Diffmah/Diffstar family of differentiable
+forward models. Two caveats: the real-MAH configuration would forfeit
+exactly this (a measured history is data — theta-gradients survive,
+history-gradients do not); and the stochastic layer resamples an
+empirical pool, which as additive reparameterized noise passes
+theta-gradients through but has no differentiable density — if one is
+ever required, a Student-$t$ fit to the pool (measured tail weight:
+4–9 degrees of freedom) is the natural candidate, at the cost of
+re-running the plane checks (the Gaussian variant is measurably worse;
+a $t$ is untested).
+
+## 8. Honest limits
 
 - **The population-sharing wall.** Even fitted to $z=0.4$ alone, a
   12-parameter shared kernel under-predicts $M_\star(<5\,{\rm kpc})$ by

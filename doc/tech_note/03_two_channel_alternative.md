@@ -125,6 +125,17 @@ measured 0.37/0.11 (massive tercile, $z = 0.7 \to 0.4$), and the low-mass
 outskirt residual at $+0.02$/$+0.06$ dex (30–60 / 60–148 kpc) — comparable
 to its era's best.
 
+Its standardized QA figure set (same layout as the adopted kernel's:
+aperture/annulus masses per epoch, halo-mass-binned residuals, the
+observational planes, the case gallery) is `qa_*_exp38_2ch-exp.*` in
+`experiments/exp38_deposit_rethink/figures/`, alongside the matching
+`qa_*_exp38_1ch-mof.*` set at the same five-epoch scope for a like-for-like
+comparison. Experiment figures are gitignored; regenerate with
+`PYTHONPATH=. uv run python
+experiments/exp38_deposit_rethink/stage2_multiepoch.py report`. (Note both
+sets are the *five-epoch* fits — the adopted kernel's current QA at its
+official $z \le 1.5$ scope is the exp41 set of note 2, §6.)
+
 ## 4. Why the single heavy tail supersedes it
 
 The exp38 shape shootout asked a sharper question: is the *split* the
