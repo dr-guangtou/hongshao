@@ -153,6 +153,44 @@ do not carry. Design consequence: a STATISTICAL f_core scatter layer
 (logit-normal around the z2-conditioned mean) belongs in the generative
 emulator draws; the deterministic kernel keeps the shared -4.4%.
 
+### The retention x inner-aware cell (user-approved final task,
+### 2026-07-17): the factorial closes — the tension is objective-level
+
+The one untested cell from exp38: the retention floor (a fraction of
+every deposit never migrates; fc' = f_ret + (1-f_ret) fc, mass-
+conserving redistribution WITHIN the kernel's own deposits, no new
+channel) fit under the inner-aware objective. Two modes: a shared
+floor, and a boundness-conditioned floor f_ret,i = expit(a + b *
+log10(rc0(t_i)/R200(t_i))) with the virial-radius history derived from
+the measured halo mass history (the physically-motivated version:
+loosely-bound deposits strip; deeply-bound ones stay).
+
+| mode | loss | floor | at a bound | differential massive z0.7->0.4 (data 0.37/0.11) | outskirt T1 held-out [dex] |
+|---|---|---|---|---|---|
+| global | 0.2565 | f_ret = 0.564 | NONE | 0.53/0.17 FAIL | +0.065/+0.099 |
+| bound | 0.2528 | ~0.61, slope b = 0.10 (a null: +-1% variation) | mu = 3.00 | 0.48/0.15 FAIL | (in-sample +0.058/+0.072) |
+
+Held-out CV (global mode): pinned shape 16.2/16.7/16.1/13.7/11.1% by
+epoch — **avg 14.8%, the best held-out accuracy in the program**
+(parked core 15.0, free-kernel gauss core 15.1) — with M(<5) -3.5% at
+z=0.4 AND -2.3% at z=2 (the core channels never helped z=2; retention
+does, because it keeps the early deposits compact). The boundness
+slope is a measured null (b = 0.10; the loss gain over global comes
+from railing the efficiency peak, which disqualifies it).
+
+**The factorial is now closed: {six core forms} + {two retention
+modes}, all under the inner-aware objective, all fail the differential
+test in the same 0.48-0.56 band.** The re-balancing is driven by the
+OBJECTIVE, not by which component absorbs the inner mass: given any
+mechanism that can satisfy the inner terms — a new channel of any
+radial form, or retention inside the kernel's own transport — the
+jointly-fit kernel spends its freedom the same way and lands in the
+physics-breaking basin. The inner-mass / outskirt-physics tension is a
+structural property of this kernel family against these data, not an
+allocation artifact. (exp38's single-vs-joint decomposition says the
+same from the other side: the differential curve is carried by the
+transport that drains the core.)
+
 ## FINAL DECISION (user, 2026-07-17): PARKED, nothing graduates
 
 The frozen-kernel operating point is NOT adopted: pinning the kernel is
@@ -166,7 +204,12 @@ the per-object diversity measurement are the durable outputs. The
 adopted kernel remains the exp38 stage-2 1ch-mof, unchanged; the inner
 deficit remains documented as a population-sharing limit, and the
 observation-facing inner masses remain the statistical emulator's job
-(exp37, M(<10) bias 1-2%).
+(exp37, M(<10) bias 1-2%). The retention x inner-aware cell (run after
+this decision as the branch's approved final task) closes the
+factorial with the same physics failure and sharpens the conclusion:
+the tension is objective-level and structural — revisiting it would
+mean a different kernel family or a different consistency constraint,
+not another allocation mechanism.
 
 ## Measured verdicts (2026-07-17)
 

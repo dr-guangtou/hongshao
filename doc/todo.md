@@ -741,6 +741,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   |rho| <= 0.31) — only a statistical scatter layer could represent
   it. The adopted kernel remains exp38 1ch-mof unchanged; inner masses
   remain the statistical emulator's product.
+- [x] **(exp39 final task, user-approved 2026-07-17) the retention x
+  inner-aware cell — the exp38 factorial hole, now closed with a clean
+  negative.** The retention floor (mass-conserving redistribution
+  within the kernel's own deposits, targeting the measured clock-drain
+  cause) under the inner-aware objective: f_ret = 0.564, no bound,
+  best held-out shape in the program (avg 14.8%; parked core 15.0) and
+  the only model that also fixes z=2 (M(<5) -2.3% held-out) — yet the
+  SAME differential failure (0.53/0.17 vs data 0.37/0.11; outskirt T1
+  +0.065/+0.099). The boundness-conditioned floor (rc0/R200 from the
+  measured mass history) is a null (b = 0.10) that rails mu. With
+  {6 core forms + 2 retention modes} x inner-aware ALL failing in the
+  same band, the re-balancing is OBJECTIVE-driven: the inner-mass /
+  outskirt-physics tension is structural to the kernel family, not an
+  allocation artifact. Any future attack means a different kernel
+  family or consistency constraint, not another inner-mass mechanism.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
