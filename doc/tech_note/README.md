@@ -50,3 +50,14 @@ self-contained mirror of the kernel forward model (validated by its
 history without loading the experiment harness. Requirements beyond the
 repo: the processed catalog `data/processed/tng300_072_z0p4.fits` (note 1)
 and the experiment output files named above (notes 2–3).
+
+## PDF export
+
+```bash
+bash doc/tech_note/scripts/build_pdf.sh
+```
+
+renders each note plus a combined volume with a table of contents to
+`doc/tech_note/pdf/` (gitignored — derived artifacts; requires pandoc and
+xelatex). GIF animations are replaced by a representative static frame in
+the PDFs.
