@@ -198,3 +198,17 @@ refinement is unnecessary and rejected.
 - Form: 1-D (smallest sufficient), empirical mean-centered resampling
   of the measured heavy-tailed d_sig (Gaussian is uniformly worse),
   clipped to the physical box.
+
+## ADOPTION (user, 2026-07-18)
+
+**The 1-D empirical stochastic layer is ADOPTED as the kernel's
+generative companion.** Operating point: the official z<=1.5 kernel
+(exp40 `latestart.npz[theta_z15]`) + per-galaxy sig-deviations
+resampled (mean-centered, box-clipped) from the measured pool
+(`outputs/stage1_dist.npz[d_sig_2d]`; `stage2_draws.draw_deltas` +
+`drawn_cogs` are the reference implementation). Documented scope: kpc
+planes trusted to z<=0.7-1.0; the high-z plane residual and the z>=1.5
+low-mass ridge wing belong to the MEAN model; the Re plane must be
+scored self-consistently (paired-aperture scoring is for mean
+predictions only — see the lesson). Standard QA figure set (mean +
+draws) in `figures/qa_*_exp41_kernel_layer.*`.

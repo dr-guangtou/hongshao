@@ -448,6 +448,53 @@ def cmd_physics(dev=False, variant="2d-emp"):
           f"{dm[1]:+.4f} (criterion: ~0 — the mean model untouched)")
 
 
+def cmd_report(dev=False):
+    """The standard QA figure set for the ADOPTED operating point: the
+    official z<=1.5 kernel as the mean model + S drawn populations
+    from the 1-D empirical layer (full-sample pool; the held-out
+    calibration was stage 2's job — the figures show the adopted
+    product). Figures land in figures/ via hongshao.qa (usetex-safe
+    text, distinct epoch colors, logMh-binned residuals)."""
+    from hongshao import qa
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    tag = "_dev" if dev else ""
+    FIGDIR = HERE / "figures"
+    FIGDIR.mkdir(exist_ok=True)
+    d1 = np.load(OUTDIR / f"stage1_dist{tag}.npz")
+    gals = _W["gals"]
+    e = _W["e"]
+    n = len(gals)
+    row_to_i = {g["row"]: i for i, g in enumerate(gals)}
+    d_sig = np.zeros(n)
+    d_q = np.zeros(n)
+    for r, s, q in zip(d1["row"], d1["d_sig_2d"], d1["d_q_2d"]):
+        if int(r) in row_to_i:
+            i = row_to_i[int(r)]
+            d_sig[i], d_q[i] = s, q
+    pairs = np.column_stack([d_sig, d_q])
+    data = np.stack([g["data"] for g in gals])
+    logmh = np.array([g["logmh"] for g in gals])
+    s2 = _W["s2"]
+    th0 = _W["th0"]
+    mean_cogs = np.full((n, 5, len(e.R)), np.nan)
+    for i, g in enumerate(gals):
+        c = s2.model_cogs(th0, g, KS_ALL, "1ch-mof")
+        if c is not None:
+            mean_cogs[i] = c
+    S = 4
+    rng = np.random.default_rng(2026)
+    draws = np.full((S, n, 5, len(e.R)), np.nan)
+    for s in range(S):
+        deltas = draw_deltas("1d-emp", pairs, n, rng)
+        draws[s] = drawn_cogs(np.arange(n), deltas)
+    zs = [e.ANCHOR_Z[k] for k in KS_ALL]
+    qa.evaluate(mean_cogs, data, e.R, zs, name=f"exp41_kernel_layer{tag}",
+                figdir=FIGDIR, figures=True, verbose=True,
+                bin_by=logmh, bin_label="logMh", draw_cogs=draws)
+    print(f"wrote the standard QA set to {FIGDIR}", flush=True)
+
+
 def demo():
     rows = np.load(POP_NPZ)["dev100"][:12]
     _w_init(rows)
@@ -486,6 +533,8 @@ if __name__ == "__main__":
         cmd_refine(dev)
     elif cmd == "replane":
         cmd_replane(dev)
+    elif cmd == "report":
+        cmd_report(dev)
     elif cmd == "physics":
         cmd_physics(dev, sys.argv[sys.argv.index("--variant") + 1]
                     if "--variant" in sys.argv else "2d-emp")
