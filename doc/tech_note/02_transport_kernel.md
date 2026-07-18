@@ -430,10 +430,20 @@ with opposite outcomes:
   the split-half floor, the era's best) but a badly biased amplitude and
   worse accuracy at every tier and mass quartile. That diversity job is
   now done, differently, by the stochastic layer (§6).
-- **Caveat:** these head-to-heads predate the Moffat deposit; the adopted
-  1ch-mof has only ever been fitted in the DiffMAH configuration. The
-  population-level verdict held across three model generations, but for
-  1ch-mof specifically it is an (unverified, likely-safe) extrapolation.
+- **The head-to-head was re-run for 1ch-mof itself** (exp42, at the
+  official $z \le 1.5$ scope and protocol), and the old penalty did
+  *not* survive the power-law tail: the real-MAH refit ties the DiffMAH
+  fit held-out at $z \le 1.0$ and beats it at $z \ge 1.5$ (shape
+  18.1/17.1/16.7/15.5 vs 18.2/17.4/16.6/16.4; the $z=2.0$ extrapolation
+  13.6% vs 15.4%), from a different, entirely bound-free basin (smaller
+  birth radius, an efficiency window peaking at $z \approx 4.9$ and
+  twice as broad). The heavy tail absorbs the shape freedom the bursty
+  basis demands. The DiffMAH configuration remains the operating point
+  on the *physics*: the real-MAH refit matches the flagship
+  $z=0.7 \to 0.4$ differential exactly (0.37/0.11) but undershoots the
+  earlier pairs and pushes the low-mass far-outskirt residual to
+  $+0.08$ dex, outside the adopted band — and it forfeits the
+  differentiability below.
 
 The DiffMAH input also buys **differentiability**. The whole forward map
 — the sigmoid-rolled power law $M_h(t)$, the accretion differences on a

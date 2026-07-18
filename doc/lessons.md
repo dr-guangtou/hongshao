@@ -679,6 +679,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   z=2-anchored fit fit it (0.21-0.23 vs 0.18, data 0.23). A model
   should be fit where its assumptions hold and judged by
   extrapolation into the regime where they don't.
+- **A cross-generation "input X is worse" verdict can be a property of the
+  OLD model form — re-run the input test when the form changes (exp42).**
+  "The real MAH loses 3-5 held-out points to the smooth DiffMAH curve in
+  population-shared fits" held across three Gaussian-deposit generations
+  (exp30/32) and was carried as settled. Re-run on the adopted Moffat
+  kernel, it REVERSED: the real input ties at z<=1.0 and wins at z>=1.5
+  (13.6 vs 15.4 at the z=2 extrapolation), from a fully interior optimum —
+  the heavy tail supplies the shape freedom the bursty basis used to
+  demand per-galaxy. Bonus: the g=4.0 rail (stress-tested benign but
+  standing) simply vanishes on the real input — a rail can also be a
+  property of the INPUT basis, not the model or the box. The verdict that
+  survives is conditional, not absolute: "DiffMAH is the better input FOR
+  a shared theta on a wingless deposit." Record which ingredient a
+  comparison was conditioned on, and re-test when that ingredient changes.
 - **Score a generative model with population metrics, never paired
   ones — truth-anchored apertures punish exactly the diversity a draw
   is supposed to add (exp41; resolves the exp33 Re-coordinate
