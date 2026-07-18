@@ -101,3 +101,57 @@ BOTH a 1-D and a 2-D variant (the second component small and
 heavy-tailed, or mixture-like per the 0b skew), and let the
 pre-registered plane criterion pick the smallest sufficient
 dimensionality.
+
+### Stage 1 — the deviation distributions (full n=2397)
+
+d_sig (the main axis): robust sigma 0.076-0.081, HEAVY tails
+(Student-t dof 4-9, strong positive skew) — a Gaussian misses the
+extreme-diversity galaxies. d_q (the second axis): sigma 0.278,
+near-Gaussian, median -0.085 (the location-free price). Correlation
+d_sig x d_q = -0.31 (drawn jointly). Box pile-up ~2% — draws clipped
+to the physical box are safe. Loss ladder: 1-D 18.5% -> 2-D 32.3%
+(reproduces stage 0b).
+
+### Stage 2 — drawn populations, judged (CHECKPOINT before adoption)
+
+Held-out protocol: the deviation distribution is calibrated on one
+half of the sample and drawn deviations are applied to the OTHER
+half's galaxies (symmetrized, 8 realizations per direction). Centered
+plane energy / split-half floor (target ~1; "mean" = the
+deterministic kernel):
+
+| plane | model | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|---|
+| M(<30) vs M(30-50) | mean | 1.6 | 1.8 | 2.1 | 2.3 | 2.9 |
+| | 1d-emp | **1.1** | 1.4 | 1.6 | 1.8 | 2.6 |
+| M(<30) vs M(50-100) | mean | 1.6 | 2.1 | 2.3 | 2.5 | 3.0 |
+| | 1d-emp | **1.0** | 1.4 | 1.6 | 2.0 | 2.8 |
+| | 2d-emp | **0.9** | 1.3 | 1.5 | 2.1 | 2.8 |
+| M(<2Re) vs M(2-4Re) | mean | 2.0 | 1.9 | 2.0 | 1.7 | 1.2 |
+| | 1d-emp | 2.7 | 2.5 | 2.3 | 2.0 | 1.3 |
+
+Physics band on full drawn populations: **1d-emp PASSES** in the
+adopted band (differential 0.40/0.12; overshoot T1 +0.027/+0.031);
+2d-emp strains the overshoot (T1 +0.052/+0.061 — the wide-q draws
+inflate low-mass outskirts). Drawn-theta mean offsets ~0.002-0.005
+(the mean model untouched, criterion met). The Gaussian variants are
+uniformly equal-or-worse than empirical resampling — the heavy tails
+carry real plane signal.
+
+**Read:** the pre-registered target is MET at z=0.4 (1.0-1.1x floor,
+from the kernel's 1.6x) and nearly at z=0.7 (1.3-1.4x) on the kpc
+planes, with the 1-D empirical layer physics-clean — the first
+kernel-based drawn population to reach the floor on any plane. NOT
+met at z >= 1.5 (2.0-2.8x: the mean model's ridge-shape error
+dominates there — a scatter layer cannot fix a ridge; consistent with
+the z=2 epoch being extrapolation under the official scope), and the
+Re-coordinate plane DEGRADES under the layer (2.0 -> 2.7x at z=0.4):
+epoch-independent, size-uncorrelated deviations violate the
+R/R_half self-similarity the data obey (the exp38 stage-0
+measurement). Candidate refinements, not run: deviations applied in
+Re-preserving form, and/or epoch-coupled deviations (AR(1)-like, as
+exp37 does statistically).
+
+**Decision (user): adopt the 1-D empirical layer as-is (with its
+documented scope: kpc planes, z <= 0.7-1.0), iterate on the
+Re-preserving refinement, or park.**
