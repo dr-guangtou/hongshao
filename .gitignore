@@ -84,6 +84,7 @@ celerybeat-schedule
 /data/processed/
 /data/raw/
 /figures/
+doc/tech_note/pdf/
 scratch_*.py
 
 # Per-experiment artifacts: code + notes are committed, outputs are not
