@@ -787,6 +787,29 @@ Cross-experiment plan. Mirrors the phase sequence in
   exp40 `outputs/latestart.npz[theta_z15]` (params [2.74, 4.00, 0.91,
   1.52, 0.24, 1.38]; the g=4.0 rail is stress-verified benign);
   comparison = exp38 `outputs/stage2_multiepoch.npz[theta_1ch-mof]`.
+- [x] **exp41 — the stochastic layer (exp32 step 4) COMPLETE and
+  ADOPTED (user 2026-07-18, branch exp41-stochastic-layer).** Stage 0:
+  the kernel's per-galaxy individuality is ONE latent axis (all six
+  single-component deltas rank-correlate at |rho| >= 0.92), it IS the
+  exp39 core-diversity axis (|rho| = 0.78-0.87 vs per-galaxy f_core),
+  and it is feature-orthogonal (|rho| <= 0.20) — pure per-object
+  information; a real second axis exists for ~a fifth of galaxies but
+  adds nothing on the planes and strains the overshoot. Stage 1: the
+  sig-axis deviations are heavy-tailed (robust sigma 0.08, t-dof 4-9).
+  Stage 2 (held-out, symmetrized split): the 1-D empirical layer takes
+  the kpc planes from the kernel's 1.6-2.1x split-half floor to
+  1.0-1.4x at z<=0.7 (target ~1 MET at z=0.4 — the program's first
+  kernel-based drawn population at the floor), the Re plane scored
+  SELF-CONSISTENTLY is 1.0-1.4x at every epoch (the paired-aperture
+  "failure" was a metric artifact — resolves the exp33 Re-coordinate
+  puzzle; lesson recorded), physics in the adopted band, mean model
+  untouched. The Re-preserving refinement was built, measured, and
+  REJECTED (it trades the kpc gains for nothing; its failure exposed
+  that the layer's diversity is size diversity — the exp38
+  self-similarity from the model side). Known limits (documented, the
+  mean model's): kpc planes at z>=1.5 stay at 2.0-2.8x (ridge error).
+  ADOPTED operating point: official kernel + empirical d_sig resample
+  (exp41 `outputs/stage1_dist.npz`); QA figure set in exp41 figures/.
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes

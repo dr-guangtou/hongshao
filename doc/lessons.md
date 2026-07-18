@@ -679,3 +679,22 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   z=2-anchored fit fit it (0.21-0.23 vs 0.18, data 0.23). A model
   should be fit where its assumptions hold and judged by
   extrapolation into the regime where they don't.
+- **Score a generative model with population metrics, never paired
+  ones — truth-anchored apertures punish exactly the diversity a draw
+  is supposed to add (exp41; resolves the exp33 Re-coordinate
+  puzzle).** qa's Re-plane convention applies the TRUTH half-mass
+  radius to the model — right for a mean prediction, structurally
+  wrong for a draw that is (correctly) independent of the specific
+  truth realization: the 1-D layer read as 2.7x the plane floor
+  paired, but 1.0x — AT the floor — when both populations use their
+  OWN sizes. exp33's "generative draws fail only in Re coordinates"
+  was the same artifact, unexplained for two weeks. Two corollaries:
+  (1) before iterating on a model to fix a failed metric, check
+  whether the metric is even well-posed for that model class — the
+  Re-preserving refinement was built, run, and rejected before the
+  rescoring exposed that its target problem did not exist (though its
+  failure is what raised the question: pinning the size destroyed the
+  kpc gains, revealing the layer's diversity is mostly SIZE diversity,
+  the exp38 self-similarity from the model side); (2) a paired metric
+  is still the right tool for the MEAN prediction — keep both, label
+  which is which.
