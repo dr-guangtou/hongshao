@@ -234,6 +234,133 @@ def cmd_latephysics(dev=False):
             _physics_lines(d[f"theta_{scope}"], scope, ks)
 
 
+def cmd_latestress(dev=False):
+    """The exp35/38 bounds-stress protocol on the late-start g = 4.00
+    rail: loosen the width time-exponent box (4.0 -> 6.0), refit the
+    z<=1.5 scope, and ask HOW the freedom is spent — loss, parameters,
+    inner bias, and the physics tests. (Penalties are parent-side, so
+    the loosened box reaches the fit; workers compute raw loss only.)"""
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    s2 = _W["s2"]
+    e = _W["e"]
+    tag = "_dev" if dev else ""
+    d = np.load(OUTDIR / f"latestart{tag}.npz")
+    warm = d["theta_z15"]
+    nudge = warm.copy()
+    nudge[1] = 5.0
+    ks = SCOPES["z15"]
+    scale = 0.15 if dev else 1.0
+    maxiter = max(int(4000 * scale), 80)
+    workers = max(os.cpu_count() - 2, 2)
+    n = len(_W["gals"])
+    edges = np.linspace(0, n, workers + 1).astype(int)
+    e.HI = np.array([3.0, 6.0, 3.0, 3.0, 2.0])
+    print(f"exp40 late-start g-rail stress (z<=1.5 scope, g box 4 -> 6; "
+          f"n={n}{', DEV' if dev else ''}; baseline loss "
+          f"{float(d['loss_z15']):.4f}):", flush=True)
+    try:
+        with Pool(workers, initializer=_w_init, initargs=(rows,)) as pool:
+            def loss(p):
+                parts = pool.map(_chunk_plain,
+                                 [(p, ks, edges[i], edges[i + 1])
+                                  for i in range(workers)])
+                return sum(parts) / n + s2.penalty(p, "1ch-mof")
+
+            best = None
+            for p0 in (warm, nudge):
+                t0 = time.time()
+                r = minimize(loss, p0, method="Nelder-Mead",
+                             options=dict(maxiter=maxiter, xatol=3e-4,
+                                          fatol=1e-8))
+                print(f"  [stress] start: loss {r.fun:.4f} "
+                      f"({(time.time()-t0)/60:.1f} min)", flush=True)
+                if best is None or r.fun < best.fun:
+                    best = r
+        th = best.x
+        ab = s2._at_bound(th, "1ch-mof")
+        print(f"  [stress] params: {np.round(th[:6], 2)}; at bound: "
+              f"{', '.join(ab) if ab else 'NONE'}")
+        _bias_table(th, "stress", ks)
+        _physics_lines(th, "stress", ks)
+        np.savez(OUTDIR / f"latestress{tag}.npz", theta=th, loss=best.fun)
+        print(f"  wrote {OUTDIR / f'latestress{tag}.npz'}", flush=True)
+    finally:
+        e.HI = np.array([3.0, 4.0, 3.0, 3.0, 2.0])
+
+
+def _cv_fold_late(args):
+    fold, ks, warm, maxiter = args
+    s2 = _W["s2"]
+    gals = _W["gals"]
+    n = len(gals)
+    train = [i for i in range(n) if i % 10 != fold]
+
+    def tr_loss(p):
+        return (np.mean([s2.gal_loss(p, gals[i], ks, "1ch-mof")
+                         for i in train]) + s2.penalty(p, "1ch-mof"))
+    r = minimize(tr_loss, warm, method="Nelder-Mead",
+                 options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-8))
+    e = _W["e"]
+    i5, i10 = _i_at(5.0), _i_at(10.0)
+    m = e.R > 5.0
+    out = []
+    for i in range(n):
+        if i % 10 != fold:
+            continue
+        g = gals[i]
+        cogs = s2.model_cogs(r.x, g, KS_ALL, "1ch-mof")
+        if cogs is None:
+            out.append((g["row"], np.full((5, 3), np.nan),
+                        np.full((5, len(e.R)), np.nan)))
+            continue
+        met = []
+        for c, k in zip(cogs, KS_ALL):
+            d = g["data"][k]
+            cs = c * (d[-1] / c[-1])
+            met.append([np.abs(cs[m] / d[m] - 1).max(),
+                        c[i5] / d[i5] - 1, c[i10] / d[i10] - 1])
+        out.append((g["row"], np.array(met), np.array(cogs)))
+    return out
+
+
+def cmd_latecv(scope="z15", dev=False):
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    tag = "_dev" if dev else ""
+    gals = _W["gals"]
+    n = len(gals)
+    e = _W["e"]
+    ks = SCOPES[scope]
+    warm = np.load(OUTDIR / f"latestart{tag}.npz")[f"theta_{scope}"]
+    workers = min(max(os.cpu_count() - 2, 2), 10)
+    maxiter = 150 if dev else 1500
+    row_to_i = {g["row"]: i for i, g in enumerate(gals)}
+    met = np.full((n, 5, 3), np.nan)
+    cogs = np.full((n, 5, len(e.R)), np.nan)
+    t0 = time.time()
+    print(f"exp40 late-start 10-fold CV [{scope}] (n={n}"
+          f"{', DEV' if dev else ''}; * = epoch not in the fold fits; "
+          "stage-2 held-out marks 18.5/17.6/16.7/16.2/14.2, M(<5) ~-11):",
+          flush=True)
+    with Pool(workers, initializer=_w_init, initargs=(rows,)) as pool:
+        jobs = [(f, ks, warm, maxiter) for f in range(10)]
+        for part in pool.map(_cv_fold_late, jobs):
+            for row, m_, c_ in part:
+                met[row_to_i[row]] = m_
+                cogs[row_to_i[row]] = c_
+    line = " ".join(
+        f"z{e.ANCHOR_Z[k]}{'' if k in ks else '*'}: "
+        f"{100*np.nanmedian(met[:, k, 0]):.1f} | "
+        f"{100*np.nanmedian(met[:, k, 1]):+.1f} | "
+        f"{100*np.nanmedian(met[:, k, 2]):+.1f}"
+        for k in range(5))
+    print(f"  [{scope}] held-out shape R>5 | M(<5) | M(<10): {line}  "
+          f"({(time.time()-t0)/60:.1f} min)")
+    np.savez(OUTDIR / f"cv_{scope}{tag}.npz", met=met, cogs=cogs)
+    print(f"  wrote {OUTDIR / f'cv_{scope}{tag}.npz'}")
+
+
 # --------------------------------------------------------------------------- #
 # test 2 — the re-aimed fiducial, judged                                       #
 # --------------------------------------------------------------------------- #
@@ -368,6 +495,11 @@ if __name__ == "__main__":
         cmd_latestart(dev)
     elif cmd == "latephysics":
         cmd_latephysics(dev)
+    elif cmd == "latestress":
+        cmd_latestress(dev)
+    elif cmd == "latecv":
+        cmd_latecv(sys.argv[sys.argv.index("--scope") + 1]
+                   if "--scope" in sys.argv else "z15", dev)
     elif cmd == "reaim":
         cmd_reaim(dev)
     elif cmd == "reaimcv":
