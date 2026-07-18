@@ -663,3 +663,19 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   physically-dressed variant — retention conditioned on deposit
   boundness rc0/R200 — was a measured null, b = 0.10: physical
   plausibility does not create signal.)
+- **A railed value's meaning is scope-dependent — stress + physics
+  every time, never pattern-match the number (exp40).** g = 4.00 at
+  the box marked the PATHOLOGICAL second basin in the 5-epoch fit
+  (better loss, worse physics; the standing watch item) — yet the SAME
+  railed value in the 4-epoch late-start fit is benign: the stress
+  test settles interior (g = 4.37) for a 0.1% gain with the physics
+  unchanged-to-better. Had the watch item been applied as a
+  pattern-match ("g=4 -> bad basin, discard"), the branch's best
+  result would have been thrown away. Corollary (the fit-scope
+  finding itself): WHICH epochs a joint fit constrains is a physical
+  modeling choice, not bookkeeping — excluding the dissipative z>=1.5
+  era removed half the core deficit at BETTER physics, and the
+  late-anchored transport extrapolated up to z=2 better than the
+  z=2-anchored fit fit it (0.21-0.23 vs 0.18, data 0.23). A model
+  should be fit where its assumptions hold and judged by
+  extrapolation into the regime where they don't.

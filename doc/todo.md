@@ -756,6 +756,32 @@ Cross-experiment plan. Mirrors the phase sequence in
   outskirt-physics tension is structural to the kernel family, not an
   allocation artifact. Any future attack means a different kernel
   family or consistency constraint, not another inner-mass mechanism.
+- [x] **exp40 — the two scope tests (user plan 2026-07-18) COMPLETE;
+  verdicts in the exp40 README.** (1) LATE-START fits: the transport
+  tax lives in the dissipative era — M(<5) at z=0.4 shrinks -11.7%
+  (z<=2 fit) -> -9.5% (z<=1.5, held-out) -> -8.2% (z<=1.0, held-out)
+  toward the -7.6% population-sharing wall; the two late starts agree
+  on everything; physics IMPROVES (overshoot halved, differential
+  passes, and the late fits predict the unfitted z2.0->1.5 pair
+  better than the z=2-anchored fit trained on it); held-out accuracy
+  unchanged on fitted epochs; the shared g=4.0 rail is benign
+  (stress: interior 4.37 at 0.1% gain, physics unchanged — the SAME
+  railed value that marked the pathological 5-epoch basin; a rail's
+  meaning is scope-dependent). (2) The RE-AIMED FIDUCIAL (inner-aware
+  objective on the 12-param kernel, exp38 capacity theta, now fully
+  judged): best-tier held-out accuracy (14.9% avg) and the deficit
+  halved (M(<5) -6.4%) — but differential FAILS (0.48/0.15) with mu
+  railed and the overshoot back: the exp39 objective-driven
+  conclusion confirmed with zero added components; NOT adoptable.
+- [ ] **(decision pending, user) adopt z<=1.5 as the kernel's official
+  fit scope?** Same held-out accuracy on fitted epochs, better
+  physics (T1 +0.025/+0.028; the z2.0->1.5 pair at 0.21-0.23 vs data
+  0.23), -1.5 points of inner deficit, z=2 kept as an honest
+  extrapolation diagnostic (+1.2 shape points, 15.4 vs 14.2). The
+  physical reading: z>=1.5 mergers are dissipative and outside the
+  additive collisionless model's domain — restricting the fit scope
+  IS the physical statement. z<=1.0 is too short a lever arm (z>=1.5
+  extrapolation degrades: shape 17.9/17.7, M(<5) -14/-16).
 - [ ] **(superseded by the exp33 verdict) exp33 original step list.** Review
   finding: the graduated stack (`hongshao/emulator.py` heteroscedastic
   conditional Gaussian on [DiffMAH(4) + c200c]; `profile_emulator.py` modes
