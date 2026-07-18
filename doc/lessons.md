@@ -632,3 +632,34 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   fitted SUB-model's basin (+ zeros for the new freedom), and use the
   nesting relation as the convergence check: fitted(superset) <=
   fitted(subset) or refit.
+- **A frozen-base fit is a DIAGNOSTIC, not a model; and a mechanism whose
+  numbers "match" is still just a hypothesis (exp39).** The exp38 core
+  channel's physics break was blamed on its inherited power-law tail
+  (8.3% of core mass beyond 30 kpc — a plausible story whose arithmetic
+  matched the overshoot). The six-form shootout falsified it: a
+  zero-leakage Gaussian core breaks the differential test EXACTLY like
+  the leaky Moffat (0.54/0.19 vs 0.53/0.18; all six forms within noise
+  on loss AND on the failure). The breaker was the freed outer kernel
+  re-balancing, isolated by refitting with the kernel PINNED at its
+  adopted theta: the core alone then halves the inner deficit with the
+  physics untouched by construction. But that frozen fit did NOT
+  graduate (user): pinning is an ad-hoc restriction with no physical
+  mechanism — the same structure at its own joint optimum breaks the
+  physics, so the "improvement" exists only under the freeze. Use the
+  pair of fits as a measurement instrument — freed-base measures the
+  trade, frozen-base measures the component's standalone contribution —
+  and let neither substitute for a model that earns its behavior at a
+  true optimum. COMPLETION (retention x inner-aware cell): the failure
+  is OBJECTIVE-driven, not component-driven — {6 core forms} + {2
+  retention modes} under the inner-aware objective ALL fail the
+  differential test in the same 0.48-0.56 band (data 0.37/0.11),
+  including mass-conserving retention inside the kernel's own transport
+  that targets the measured clock-drain cause and delivers the
+  program's best held-out accuracy (14.8% avg) plus the only z=2 inner
+  gain. When every mechanism handed to an objective fails an out-of-
+  model test the same way, stop building mechanisms: the tension is
+  structural between the model family and the data, and the next move
+  is a different family or constraint, not another component. (The
+  physically-dressed variant — retention conditioned on deposit
+  boundness rc0/R200 — was a measured null, b = 0.10: physical
+  plausibility does not create signal.)
