@@ -154,4 +154,47 @@ exp37 does statistically).
 
 **Decision (user): adopt the 1-D empirical layer as-is (with its
 documented scope: kpc planes, z <= 0.7-1.0), iterate on the
-Re-preserving refinement, or park.**
+Re-preserving refinement, or park.** -> User picked the refinement
+round; its outcome below changed the verdict.
+
+### The Re-preserving refinement (user option 2): rejected — and it
+### exposed the real story
+
+The refinement (apply d_sig, then compensate log_rc so each drawn
+galaxy keeps its official z=0.4 half-mass radius) improved the paired
+Re plane only partially (2.7 -> 2.2, still worse than the mean's 2.0)
+while DESTROYING most of the kpc-plane gains (1.0-1.1 -> 1.4-1.5 vs
+the mean's 1.6). Physical reading: the layer's usable diversity IS
+largely size diversity — pin the size and little remains (the exp38
+R/R_half self-similarity, seen from the model side).
+
+That raised the fairness question: qa's Re apertures use the TRUTH
+half-mass radius applied to the model — a PAIRED metric, correct for
+a mean prediction but structurally punitive for a generative draw
+that is independent of the specific truth realization (the exp33
+"fails only in Re coordinates" pattern, now explained). Rescoring the
+Re plane SELF-CONSISTENTLY (truth masses through truth sizes, drawn
+masses through drawn sizes):
+
+| model | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| mean | 1.2 | 1.1 | 1.3 | 1.5 | 1.2 |
+| **1d-emp** | **1.0** | **1.0** | 1.3 | 1.4 | 1.1 |
+| 1d-re | 1.1 | 1.1 | 1.3 | 1.5 | 1.2 |
+
+**The plain 1-D empirical layer PASSES the Re plane at every epoch**
+(at the floor at z <= 0.7, never above 1.4x, and never worse than the
+mean model). The "degradation" was the paired-aperture artifact; the
+refinement is unnecessary and rejected.
+
+### Final stage-2 scorecard (the 1-D empirical layer)
+
+- kpc planes: 1.0-1.1x floor at z=0.4 (target MET), 1.3-1.4 at z=0.7,
+  degrading to 2.6-2.8 at z=2 — the residual is the MEAN model's
+  ridge error at high z, which no scatter layer can fix.
+- Re plane (self-consistent scoring): 1.0-1.4x at every epoch.
+- Physics: differential 0.40/0.12, overshoot T1 +0.027/+0.031 —
+  inside the adopted band. Mean model untouched (offsets ~0.002).
+- Form: 1-D (smallest sufficient), empirical mean-centered resampling
+  of the measured heavy-tailed d_sig (Gaussian is uniformly worse),
+  clipped to the physical box.
