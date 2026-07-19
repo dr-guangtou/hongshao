@@ -80,6 +80,71 @@ full 2-variant x 5-scope ladder from new + reused thetas, prints the
 bias tables and differential lines, and writes the extrapolation
 figure. Long runs via nohup + caffeinate -im + disown.
 
-## Results
+## Results (2026-07-19, full n=2397; `outputs/run_full.log`,
+## figure `figures/exp43_ladder`)
 
-(pending)
+**Headline: two epochs is the minimum viable fit scope, and for
+1ch-mof the PHYSICS extrapolates before the shape does — a z<=0.7 fit
+predicts the unfitted high-z differential-deposition pairs essentially
+exactly. 2ch-exp posts equal-or-better extrapolated SHAPE numbers but
+its high-z differential overshoots at every scope: the two-channel
+freedom extrapolates the metric, not the physics.**
+
+Extrapolated pinned shape / M(<5) at the two hardest epochs
+(z=1.5 / z=2.0; values marked * were never in the fit):
+
+| fit scope | 1ch-mof z=1.5 | 1ch-mof z=2.0 | 2ch-exp z=1.5 | 2ch-exp z=2.0 |
+|---|---|---|---|---|
+| z04 | 41.2* / -43.6* | 44.2* / -46.5* | 15.6* / +8.0* | 12.7* / +6.1* |
+| z07 | 20.8* / -19.7* | 21.1* / -21.1* | 19.2* / -14.6* | 19.1* / -15.5* |
+| z10 | 18.0* / -13.8* | 17.2* / -14.8* | 18.0* / -12.8* | 18.0* / -14.1* |
+| z15 | 16.3 / -10.7 (fitted) | 15.4* / -12.0* | 16.4 / -9.8 (fitted) | 15.8* / -10.3* |
+| z20 | 17.2 / -10.1 | 14.1 / -8.0 (fitted) | 15.8 / -8.7 | 14.6 / -8.6 (fitted) |
+
+1. **One epoch is not a fit scope — for either model, but they fail
+   in OPPOSITE, instructive ways.** 1ch-mof at z04 collapses honestly:
+   the migration envelope is unidentifiable (q -> 0), so extrapolation
+   up in z degrades monotonically to 44% shape / -47% inner mass, and
+   the differential trend comes out INVERTED (0.21 -> 0.28 rising with
+   z where the data fall 0.37 -> 0.23). 2ch-exp at z04 instead posts
+   the best z=2.0 extrapolated shape in the whole table (12.7%*) —
+   while its inner masses SIGN-FLIP (+3 to +8%) and the differential
+   nearest its own fitted epoch breaks badly (0.54/0.20 vs data
+   0.37/0.11): the split + q=1.41 degeneracy mimics the shape trend
+   for the wrong reasons. A flexible model can extrapolate a metric
+   while being wrong; judge extrapolation on the physics tests too.
+2. **The second epoch is the transformative one.** It makes the
+   transport clock identifiable (1ch q: 0.00 -> 0.66; 2ch q: 1.41 ->
+   0.74; both then converge monotonically, 0.79/0.91 and 0.74/0.83 up
+   the ladder), collapses the 1ch extrapolation error from 44 to 21
+   points at z=2, and — most striking — **the 1ch z07 fit predicts
+   the unfitted differential pairs at data precision: z1.5->z1.0*
+   0.27/0.08 (data 0.27/0.07) and z2.0->z1.5* 0.23/0.06 (data
+   0.23/0.06, EXACT)** — better than the z20 fit trained on those
+   epochs (0.18/0.05). The exp40 finding (late-anchored transport
+   extrapolates up better than high-z-anchored transport fits down)
+   extends all the way to a two-epoch anchor.
+3. **The third epoch buys most of the remaining shape.** z10 -> z=2.0*
+   at 17.2% (1ch), within 1.8 points of the five-epoch fit's own
+   14.1%; scope z15 adds ~1 more point. Diminishing returns beyond
+   three epochs.
+4. **2ch-exp's high-z physics does not extrapolate at ANY scope**: the
+   z2.0->z1.5 differential sits at 0.31-0.33 (data 0.23/0.06) for
+   every scope >= z07, fitted or not — the wide exponential channel
+   keeps feeding outskirt light at high z. 1ch-mof's late-anchored
+   fits hit 0.21-0.23 on the same pair.
+5. **Parameter stability along the 1ch ladder is excellent from z07
+   up** (log_rc 2.73/2.69/2.74, window peak/width nearly frozen);
+   only q walks (0.66 -> 0.79 -> 0.91) — consistent with the exp40
+   reading that the late epochs mostly refine the migration envelope.
+
+**Reading for the forward-modeling use case (the user's motivation):
+a 1ch-mof kernel anchored on two to three low-z epochs is a genuinely
+capable upward extrapolator — the transport physics locks in at two
+epochs and the shape at three — while 2ch-exp should not be trusted
+outside its fitted range despite (because of) its better-looking
+extrapolated shape numbers.** In-sample caveat: fitted-epoch numbers
+here are in-sample (~0-0.3 points optimistic vs the recorded CVs);
+extrapolated epochs are out-of-sample in the epoch direction by
+construction. CV of the z07/z10 rungs is the natural follow-up if a
+scope decision is to be made on them.
