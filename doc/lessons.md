@@ -693,6 +693,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   survives is conditional, not absolute: "DiffMAH is the better input FOR
   a shared theta on a wingless deposit." Record which ingredient a
   comparison was conditioned on, and re-test when that ingredient changes.
+- **A flexible model can EXTRAPOLATE a metric while being physically
+  wrong — judge extrapolation jointly on the target metric and the
+  out-of-model physics tests (exp43).** The 2ch-exp kernel fitted to
+  z=0.4 alone posted the best extrapolated z=2 shape number in the whole
+  ladder (12.7% pinned max|rel|, beating every fitted model) — while its
+  inner masses SIGN-FLIPPED (+3 to +8%) and the differential test
+  nearest its own fitted epoch broke at 0.54/0.20 vs data 0.37/0.11: the
+  split + a degenerate q=1.41 mimicked the shape trend for the wrong
+  reasons. The residual-vs-radius view exposed it instantly (a +30-40%
+  core overshoot canceling outer deficits under a worst-radius metric).
+  Meanwhile the HONEST failure (1ch at z04: q unidentifiable -> 0,
+  extrapolation degrading monotonically to 44%) is the diagnosable one.
+  Rank extrapolation candidates by metric + physics + residual anatomy
+  together; a single scalar invites accidental winners.
 - **Score a generative model with population metrics, never paired
   ones — truth-anchored apertures punish exactly the diversity a draw
   is supposed to add (exp41; resolves the exp33 Re-coordinate
