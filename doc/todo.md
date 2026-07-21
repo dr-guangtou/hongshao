@@ -823,6 +823,24 @@ Cross-experiment plan. Mirrors the phase sequence in
   kernel mirroring exp38 `basis_mof`, self-checked; usetex-safe
   labels, Okabe-Ito epoch colors). Audience: knows the motivation,
   not the experiments.
+- [x] **exp43 — the extrapolation ladder COMPLETE (2026-07-19/21,
+  branch exp43-extrapolation-ladder).** Both kernels x five low-z fit
+  scopes, everything unfitted judged (the observational
+  forward-modeling framing). TWO EPOCHS is the minimum viable scope:
+  z04-only fails both ways (1ch collapses honestly, q unidentifiable
+  -> 44%/-47% at z=2; 2ch posts the table's best extrapolated shape,
+  12.7%*, with SIGN-FLIPPED inner masses and a broken 0.54/0.20
+  differential — flexibility extrapolates the metric, not the
+  physics). The second epoch locks the transport clock (q 0->0.66,
+  then 0.79/0.91 monotone) and the 1ch z07 fit predicts the unfitted
+  high-z differential pairs at data precision (z2.0->1.5* 0.23/0.06
+  EXACT — better than the z20 fit trained there); the third epoch buys
+  most of the remaining shape (z=2.0* 17.2 vs 14.1). 2ch-exp's
+  z2.0->1.5 differential overshoots (~0.32 vs 0.23) at EVERY scope —
+  its high-z physics does not extrapolate. Adds an extrapolation
+  argument to the 1ch adoption. Demonstration figures + standard QA
+  for the z07 rung in exp43 figures/. Follow-up if a scope decision is
+  made on z07/z10: CV those rungs.
 - [x] **exp42 — the real-MAH head-to-head for the adopted kernel
   COMPLETE (2026-07-19, branch exp42-real-mah-kernel).** The same
   12-param 1ch-mof + z<=1.5 protocol with config="real": the
