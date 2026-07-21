@@ -286,6 +286,144 @@ def cmd_report(dev=False):
     plt.close(fig)
 
 
+SCOPE_COLORS = {"z04": "#CC79A7", "z07": "#D55E00", "z10": "#E69F00",
+                "z15": "#009E73", "z20": "#0072B2"}
+
+
+def cmd_figures(dev=False):
+    """The demonstration figures for the ladder conclusions:
+    exp43_differential — the measured differential-deposition curve vs
+    every (variant, scope), extrapolated pairs open;
+    exp43_residual_profiles — median pinned-shape residual vs radius at
+    the two extrapolated target epochs (z=1.5, 2.0) per scope;
+    plus the STANDARD QA set for the star rung, the 1ch-mof z07 fit
+    evaluated at all five epochs (qa_*_exp43_1ch-mof_z07)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from hongshao import qa
+    from hongshao.plotting import save_fig, set_style
+    set_style()
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    e = _W["e"]
+    s2 = _W["s2"]
+    gals = _W["gals"]
+    tag = "_dev" if dev else ""
+    rec = recorded_thetas(tag)
+    rep = np.load(OUTDIR / f"ladder_report{tag}.npz")
+    data = np.stack([g["data"] for g in gals])
+    logms = np.array([g["logms"] for g in gals])
+    logmh = np.array([g["logmh"] for g in gals])
+    FIGDIR.mkdir(exist_ok=True)
+
+    # (1) the differential-extrapolation figure
+    _, rows_dd = e.differential(data, data, logms)
+    d50 = [rows_dd[("data", 2, k)][0] for k in range(4)]
+    d100 = [rows_dd[("data", 2, k)][1] for k in range(4)]
+    x = np.arange(4)
+    pair_labels = [rf"z{e.ANCHOR_Z[k+1]:g}$\to$z{e.ANCHOR_Z[k]:g}"
+                   for k in range(4)]
+    fig, axes = plt.subplots(2, 2, figsize=(10.4, 7.2), sharex=True)
+    for col, variant in enumerate(VARIANTS):
+        for scope, ks in SCOPES.items():
+            key = f"diff_{variant}_{scope}"
+            if key not in rep.files:
+                continue
+            vals = rep[key]
+            fitted_pair = np.array([(k in ks and (k + 1) in ks)
+                                    for k in range(4)])
+            for row, j in ((0, 0), (1, 1)):
+                ax = axes[row, col]
+                color = SCOPE_COLORS[scope]
+                ax.plot(x, vals[:, j], "-", color=color, lw=1.4,
+                        label=f"fit {scope}" if row == 0 else None)
+                ax.plot(x[fitted_pair], vals[fitted_pair, j], "o",
+                        color=color, ms=6)
+                ax.plot(x[~fitted_pair], vals[~fitted_pair, j], "o",
+                        mfc="none", mec=color, ms=6)
+        for row, dd, lab in ((0, d50, r"beyond 50 kpc"),
+                             (1, d100, r"beyond 100 kpc")):
+            axes[row, col].plot(x, dd, "-s", color="0.1", lw=2.2, ms=6,
+                                zorder=5,
+                                label="measured" if row == 0 else None)
+            axes[row, col].set_ylabel("fraction of massive-tercile\n"
+                                      rf"growth {lab}")
+        axes[0, col].set_title(f"{variant}")
+        axes[1, col].set_xticks(x, pair_labels)
+        axes[1, col].set_xlabel("epoch pair")
+    axes[0, 0].legend(fontsize=8, ncol=2)
+    fig.suptitle("differential deposition: measured vs every fit scope "
+                 "(open markers = the pair was NOT in the fit)",
+                 fontsize=11)
+    fig.tight_layout()
+    print("wrote", save_fig(fig, FIGDIR / f"exp43_differential{tag}")[0])
+    plt.close(fig)
+
+    # (2) median pinned-shape residual vs radius at the extrapolated
+    # target epochs
+    targets = [3, 4]                                    # z=1.5, 2.0
+    fig, axes = plt.subplots(2, 2, figsize=(10.4, 7.2), sharex=True)
+    for col, variant in enumerate(VARIANTS):
+        med = {}
+        for scope in SCOPES:
+            if (variant, scope) not in rec:
+                continue
+            th = rec[(variant, scope)]
+            res = []
+            for g in gals:
+                cogs = s2.model_cogs(th, g, targets, variant)
+                if cogs is None:
+                    continue
+                per = []
+                for c, k in zip(cogs, targets):
+                    d = g["data"][k]
+                    per.append(c * (d[-1] / c[-1]) / d - 1.0)
+                res.append(per)
+            med[scope] = 100.0 * np.median(np.array(res), axis=0)
+        for row, k in enumerate(targets):
+            ax = axes[row, col]
+            for scope, ks in SCOPES.items():
+                if scope not in med:
+                    continue
+                ls = "-" if k in ks else "--"
+                ax.semilogx(e.R, med[scope][row], ls,
+                            color=SCOPE_COLORS[scope], lw=1.6,
+                            label=f"fit {scope}" if (row, col) == (0, 0)
+                            else None)
+            ax.axhline(0.0, color="0.8", lw=0.9, zorder=0)
+            ax.text(0.03, 0.06, rf"evaluated at $z={e.ANCHOR_Z[k]:g}$"
+                    + (" (extrapolated for open scopes)" if col == 0
+                       else ""),
+                    transform=ax.transAxes, fontsize=8, color="0.35")
+            if col == 0:
+                ax.set_ylabel(r"median pinned residual [$\%$]")
+        axes[0, col].set_title(f"{variant}")
+        axes[1, col].set_xlabel(r"$R$ [kpc]")
+    axes[0, 0].legend(fontsize=8, ncol=2)
+    fig.suptitle("where the extrapolation error lives: 148-pinned "
+                 "median residual vs radius (dashed = epoch not in the "
+                 "fit)", fontsize=11)
+    fig.tight_layout()
+    print("wrote",
+          save_fig(fig, FIGDIR / f"exp43_residual_profiles{tag}")[0])
+    plt.close(fig)
+
+    # (3) the standard QA set for the star rung: 1ch-mof fitted at z07,
+    # evaluated at ALL five epochs (three of them extrapolation)
+    th = rec[("1ch-mof", "z07")]
+    cogs = np.full((len(gals), 5, len(e.R)), np.nan)
+    for i, g in enumerate(gals):
+        out = s2.model_cogs(th, g, KS_ALL, "1ch-mof")
+        if out is not None:
+            cogs[i] = out
+    qa.evaluate(cogs, data, e.R, [e.ANCHOR_Z[k] for k in KS_ALL],
+                name=f"exp43_1ch-mof_z07{tag}", figdir=FIGDIR,
+                figures=True, bin_by=logmh, bin_label="logMh")
+    print(f"wrote the standard QA set for the z07 rung to {FIGDIR}",
+          flush=True)
+
+
 def demo():
     rows = np.load(POP_NPZ)["dev100"][:10]
     _w_init(rows)
@@ -332,5 +470,7 @@ if __name__ == "__main__":
         cmd_fit(dev)
     elif cmd == "report":
         cmd_report(dev)
+    elif cmd == "figures":
+        cmd_figures(dev)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")

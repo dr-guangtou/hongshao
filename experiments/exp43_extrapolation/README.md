@@ -138,6 +138,17 @@ Extrapolated pinned shape / M(<5) at the two hardest epochs
    only q walks (0.66 -> 0.79 -> 0.91) — consistent with the exp40
    reading that the late epochs mostly refine the migration envelope.
 
+**Demonstration figures** (`ladder.py figures`):
+`figures/exp43_differential` — the measured differential curve vs every
+(variant, scope), open markers = the pair was not in the fit (shows the
+z04 inversion, the z07 exactness, and the 2ch high-z overshoot);
+`figures/exp43_residual_profiles` — 148-pinned median residual vs
+radius at z=1.5/2.0 per scope (shows the error is inner-radius
+concentrated, the 1ch z04 collapse, and the 2ch z04 sign-flipped core);
+`figures/qa_*_exp43_1ch-mof_z07.*` — the STANDARD QA set for the star
+rung (the two-epoch fit evaluated at all five epochs, three of them
+extrapolation). Plus the ladder overview `figures/exp43_ladder`.
+
 **Reading for the forward-modeling use case (the user's motivation):
 a 1ch-mof kernel anchored on two to three low-z epochs is a genuinely
 capable upward extrapolator — the transport physics locks in at two
