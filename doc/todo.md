@@ -878,6 +878,45 @@ Cross-experiment plan. Mirrors the phase sequence in
   - Maintenance items still open from exp43: CV the z07/z10 rungs if a
     production fit-scope decision is made on them; two-start refit of
     the z04 rungs if any z04 conclusion becomes load-bearing.
+- [ ] **PINNED (user, 2026-07-21) — validate the stochastic layer as a
+  PREDICTIVE DISTRIBUTION, not just a population generator.** Raised
+  while discussing "predict a distribution, not a profile": that IS the
+  adopted exp41 design (per-galaxy best-fit deviations, empirical +
+  heavy-tailed, resampled at draw time; planes at 1.0-1.1x the
+  split-half floor at z=0.4). But three things it does NOT do, each
+  verified against the code, are unbuilt:
+  - **(a) It has never been scored as a calibrated predictive
+    distribution.** exp41 judged population fidelity only (2-D plane
+    energy vs floor); the per-object question — does the truth land
+    inside the predicted 68% interval 68% of the time — was never
+    asked. CRPS/PIT/interval-coverage machinery has only ever been run
+    for exp37 (the statistical emulator), never for any kernel
+    experiment. REQUIRED if P(profile | MAH) is to be used as a
+    LIKELIHOOD in forward modeling. Highest value; machinery already
+    exists in `hongshao.metrics`.
+  - **(b) The deviation spread is halo-INDEPENDENT.** The base theta is
+    conditioned, so the distribution's LOCATION moves with the halo,
+    but one global pool is drawn for a 1e13 and a 1e15 halo. The
+    decision to skip feature-dependent width rested on exp41 stage 0(d),
+    which tested whether the deviation VALUE correlates with features
+    (|Spearman rho| <= 0.20) — a test of the MEAN, not the SPREAD. A
+    quantity can be mean-uncorrelated with X while its VARIANCE depends
+    on X (exp14 precedent: heteroscedasticity barely moved marginal
+    CRPS but bought +0.24 nats and a ~10x smaller conditional-coverage
+    gap). CAUTION if built: the pool comes from per-galaxy BEST FITS,
+    so its width is an upper bound on the intrinsic scatter —
+    differential fitting noise across halo mass could manufacture a
+    spurious width trend; needs a noise control / deconvolution, not a
+    raw binned spread.
+  - **(c) The deviations are epoch-INDEPENDENT** — one delta per galaxy
+    at every epoch — while exp44 measured the individuality to be
+    epoch-local. -> BEING STARTED NOW as exp44 stage 2 (the
+    cross-epoch decorrelation measurement).
+  - Honest scope limit for the whole direction: a distribution cannot
+    repair a biased mean. exp41's own diagnosis of the z >= 1.5 plane
+    failure (2.0-2.8x floor) is that the MEAN model's ridge error
+    dominates there — a scatter layer cannot fix a ridge. Options
+    (B)/(C)/(D) are the levers for that.
 - [x] **exp43 — the extrapolation ladder COMPLETE (2026-07-19/21,
   branch exp43-extrapolation-ladder).** Both kernels x five low-z fit
   scopes, everything unfitted judged (the observational

@@ -693,6 +693,31 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   survives is conditional, not absolute: "DiffMAH is the better input FOR
   a shared theta on a wingless deposit." Record which ingredient a
   comparison was conditioned on, and re-test when that ingredient changes.
+- **When two independent model families measure the SAME latent constant,
+  it is a property of the data — use the disagreement-that-didn't-happen
+  as the control (exp44 stage 2).** The kernel's per-galaxy individuality
+  decorrelates across epochs as AR(1) with rho = 0.56-0.66; the exp37
+  statistical emulator's residual latent measures rho = 0.62 with the
+  identical estimator. The obvious sceptical reading of the kernel number
+  — "that is just its one-consistent-history constraint showing" — is
+  falsified by the agreement, because the emulator has NO consistency
+  constraint (independent per-epoch cores) and would have to show HIGHER
+  persistence under that hypothesis. Cross-family agreement on a fitted
+  constant is stronger evidence than either fit alone; look for a second
+  family that lacks the structure you suspect, and quote it.
+- **Separate "the signal decays" from "my estimate of it is noisy" before
+  believing a decay (exp44 stage 2).** A per-galaxy quantity fitted
+  independently at each epoch decorrelated to +0.09 across the full
+  baseline — which could equally have meant a persistent quantity
+  measured badly. Fitting each epoch on two DISJOINT halves of the
+  radial grid gives a split-half reliability (Spearman-Brown corrected
+  to full length); dividing the cross-epoch correlations by
+  sqrt(rel_a rel_b) disattenuates them. Here reliability was 0.96-1.00,
+  so the decay was real and the correction was a no-op — but that null
+  correction is exactly what made the decay claim safe to publish, and
+  it cost one extra pass. (Caveat to state: adjacent radii on a smooth
+  cumulative profile are redundant, so a radial split-half BOUNDS
+  estimation noise rather than fully characterizing it.)
 - **A flexible model can EXTRAPOLATE a metric while being physically
   wrong — judge extrapolation jointly on the target metric and the
   out-of-model physics tests (exp43).** The 2ch-exp kernel fitted to
