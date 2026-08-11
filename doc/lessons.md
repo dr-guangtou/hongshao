@@ -693,6 +693,21 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   survives is conditional, not absolute: "DiffMAH is the better input FOR
   a shared theta on a wingless deposit." Record which ingredient a
   comparison was conditioned on, and re-test when that ingredient changes.
+- **A suite of single-epoch metrics is structurally blind to cross-epoch
+  incoherence — no amount of them adds up to one (exp44 stage 3; now
+  `qa` tier 2c).** Every tier in the standard QA set scored one epoch at
+  a time, so a model whose per-epoch marginals are all correct could
+  evolve individual galaxies arbitrarily and score flawlessly. Measured:
+  the adopted stochastic layer held drawn galaxies at rank correlation
+  +0.97 between their z=0.4 and z=2.0 sizes where the truth sits at
+  +0.33 — a large defect that survived adoption unmeasured, and that the
+  planes CANNOT see (swapping the layer for a correctly-decorrelated one
+  moved every plane by <= 0.1, necessarily, since the two share their
+  single-epoch marginals by construction). Corollary for building the
+  metric: the interpretable rank-coherence number is the sharp
+  diagnostic; the 2-D energy distance is blunt here because it is
+  dominated by the marginals the two models share. When a model predicts
+  a SEQUENCE, at least one statistic must span the sequence.
 - **When two independent model families measure the SAME latent constant,
   it is a property of the data — use the disagreement-that-didn't-happen
   as the control (exp44 stage 2).** The kernel's per-galaxy individuality

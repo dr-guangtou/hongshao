@@ -340,6 +340,29 @@ by rho, and nearly every real application is single-epoch (a survey
 observes each galaxy once), so the change would buy nothing there while
 costing differential-deposition fidelity.
 
+### Graduated: the growth plane is now `hongshao.qa` tier 2c
+
+The blind spot this stage exposed was structural, not specific to the
+layer — the standard QA set contained NO cross-epoch statistic at all,
+which is how a 0.97-vs-0.33 defect survived exp41's adoption unmeasured.
+`qa.growth_planes()` now ships as **tier 2c**, reported by `evaluate()`
+and drawn as `qa_growth_<name>`, self-checked against a synthetic
+over-coherent model whose single-epoch marginals are IDENTICAL to the
+truth's (so no other tier can separate them) and validated to reproduce
+this experiment's numbers exactly.
+
+Its first run on an unrelated model was immediately informative: the
+**deterministic** exp43 z07 kernel — no stochastic layer at all — posts
+size coherence +1.00/+1.00/+1.00/+0.96 against the truth's
++0.82/+0.68/+0.50/+0.33. So the mean model alone is almost perfectly
+size-coherent, and the stochastic layer's over-persistence is the
+smaller half of the problem: even a perfectly decorrelated deviation
+cannot loosen a deterministic backbone. That reinforces the standing
+verdict that the MEAN model, not the scatter layer, is the ceiling —
+and it is a defect no previous QA tier could have shown. (The `Mtot`
+rows behave exactly as the documented caveat predicts: E/floor 0.4,
+degenerate, because the kernel's totals are pinned to the data.)
+
 **`ar1` is the documented option for cross-epoch work** — lightcones,
 progenitor-linked mocks, anything where the same object appears at
 several epochs. There it is markedly more faithful (size coherence

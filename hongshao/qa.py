@@ -12,6 +12,13 @@ anchor_z)``, reports three tiers:
    Plus the **observational planes**: joint 2-D distributions (e.g. M*(<30 kpc)
    vs M*[50,100 kpc]) — the predicted population must reproduce the truth's
    relation (slope/scatter), because that plane is what observations use.
+2c. **Cross-epoch growth planes** (``growth_planes``) — the SAME object at two
+   epochs (R_half now, M_tot now). Every tier above is a single-epoch
+   statistic, so a model with perfect per-epoch marginals can still evolve
+   individual galaxies incoherently and score flawlessly; measured instance
+   (exp44): a stochastic layer holding drawn galaxies at rank correlation
+   +0.97 between their z=0.4 and z=2.0 sizes where the truth sits at +0.33.
+   No per-epoch metric can ever see that, which is why this tier exists.
 3. **Profile** — worst-radius max|rel| quoted over ALL radii AND R>5 kpc (the
    inner 2-5 kpc is marginally resolved; exp07), with two visual products:
    median CoG by stellar-mass tercile with residual profiles, and a
@@ -20,7 +27,10 @@ anchor_z)``, reports three tiers:
 Conventions: CoGs are linear masses, shape (n, nz, nr); R_half is measured on
 the TRUTH CoG and shared by model and truth (isolates mass error from size
 error); relative errors are (model-truth)/truth; dex scatter is the std of
-log10(model/truth) over galaxies.
+log10(model/truth) over galaxies. ONE deliberate exception: tier 2c takes the
+model's R_half from the MODEL CoG, because a cross-epoch coherence statistic
+asks how the model's OWN galaxies evolve — importing truth sizes would erase
+the quantity under test (the exp41 paired-vs-population lesson).
 
 Use: ``from hongshao import qa; res = qa.evaluate(model, truth, R, ANCHOR_Z,
 name="...", figdir=...)`` — returns a dict of all per-galaxy measurements and
@@ -45,6 +55,7 @@ RE_ANN = [(1.0, 2.0), (2.0, 4.0)]
 RE_ENV = [2.0, 4.0]                            # M*(>k R_half)
 PLANES = [("kpc:M(<30)", "kpc:M(30-50)"), ("kpc:M(<30)", "kpc:M(50-100)"),
           ("Re:M(<2Re)", "Re:M(2-4Re)")]
+GROWTH_QUANTITIES = ("R_half", "Mtot")         # tier 2c, cross-epoch
 RMIN_KPC = 5.0                                 # inner 2-5 kpc marginally resolved
 
 
@@ -181,6 +192,78 @@ def plane_energy(truth_xy, model_xy, n_split=8, seed=0):
                 energy_ratio_centered=e_c / floor)
 
 
+def _safe_rhalf(cogs, R):
+    """(n, nz) half-mass radii, NaN where the CoG is unusable."""
+    n, nz = cogs.shape[:2]
+    out = np.full((n, nz), np.nan)
+    for i in range(n):
+        for j in range(nz):
+            c = cogs[i, j]
+            if np.isfinite(c).all() and c[-1] > 0 and np.all(np.diff(c) >= 0):
+                out[i, j] = half_mass_radius(c, R)
+    return out
+
+
+def growth_planes(model_cogs, data_cogs, R, ref=0,
+                  quantities=GROWTH_QUANTITIES):
+    """Tier 2c — CROSS-EPOCH planes: a quantity at the reference epoch vs at
+    each other epoch, for the SAME object. Returns {(quantity, ref, j): stats}.
+
+    Every plane in ``PLANES`` is a SINGLE-EPOCH statistic, so a model whose
+    per-epoch marginals are all correct can still evolve individual galaxies
+    incoherently and score perfectly. Measured instance (exp44 stage 3): the
+    adopted stochastic layer held drawn galaxies at rank correlation +0.97
+    between their z=0.4 and z=2.0 sizes where the truth sits at +0.33 — a
+    large defect that was invisible to every existing tier, and that no
+    per-epoch metric can ever see. This tier closes that blind spot.
+
+    SELF-CONSISTENT BY DESIGN, deliberately unlike ``measure_all``: the
+    model's R_half is taken from the MODEL CoG, not the truth's. A
+    cross-epoch coherence statistic asks whether the model's own galaxies
+    evolve like real ones, so importing truth sizes would erase the very
+    quantity under test (the exp41 paired-vs-population lesson: paired
+    apertures are right for a mean prediction, structurally wrong for a
+    population/draw comparison).
+
+    ``coherence_*`` is the Spearman rank correlation between the two epochs
+    — the interpretable number ("how loyal is a galaxy to its rank"). The
+    energy ratio scores the full 2-D cloud against the truth's split-half
+    floor, as elsewhere.
+
+    Caveat on ``Mtot``: it is degenerate for models normalized to a measured
+    total at each epoch (the transport-kernel family) — those totals ARE the
+    data, so the plane trivially matches. It is informative only for models
+    that predict totals from features (the statistical emulator).
+    """
+    model_cogs, data_cogs = np.asarray(model_cogs), np.asarray(data_cogs)
+    nz = data_cogs.shape[1]
+    out = {}
+    if nz < 2:
+        return out
+    cache = {}
+    for qname in quantities:
+        if qname == "Mtot":
+            t_q, m_q = data_cogs[..., -1], model_cogs[..., -1]
+        elif qname == "R_half":
+            if "rh" not in cache:
+                cache["rh"] = (_safe_rhalf(data_cogs, R),
+                               _safe_rhalf(model_cogs, R))
+            t_q, m_q = cache["rh"]
+        else:
+            raise ValueError(f"unknown growth quantity {qname!r}")
+        t = np.log10(np.clip(t_q, 1e-30, None))
+        m = np.log10(np.clip(m_q, 1e-30, None))
+        for j in range(nz):
+            if j == ref:
+                continue
+            st = plane_energy(np.column_stack([t[:, ref], t[:, j]]),
+                              np.column_stack([m[:, ref], m[:, j]]))
+            st["coherence_truth"] = plane_stats(t[:, ref], t[:, j])["rho"]
+            st["coherence_model"] = plane_stats(m[:, ref], m[:, j])["rho"]
+            out[(qname, ref, j)] = st
+    return out
+
+
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
              verbose=True, figures=True, bin_by=None, bin_label=None,
@@ -212,6 +295,7 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                 np.column_stack([lm["x"][:, j], lm["y"][:, j]])))
             per_epoch.append((st, sm))
         planes[(kx, ky)] = per_epoch
+    growth = growth_planes(model_cogs, data_cogs, R)
 
     if verbose:
         print(f"\n=== QA [{name}]  (n={n}) ===")
@@ -238,6 +322,18 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                       f"{mo['slope']:+.2f}/{mo['scatter']:.3f}/{mo['rho']:+.2f} | "
                       f"E/floor {mo['energy_ratio']:.1f} "
                       f"(centered {mo['energy_ratio_centered']:.1f})")
+        if growth:
+            print("\n  tier 2c — cross-epoch growth planes (SAME object at two "
+                  "epochs, model sizes from the MODEL): rank coherence truth "
+                  "-> model | energy-distance ratio to floor")
+            for (qn, ref, j), st in growth.items():
+                note = ("  [degenerate if totals are pinned to data]"
+                        if qn == "Mtot" else "")
+                print(f"    {qn} z={anchor_z[ref]} vs z={anchor_z[j]}: "
+                      f"{st['coherence_truth']:+.2f} -> "
+                      f"{st['coherence_model']:+.2f} | E/floor "
+                      f"{st['energy_ratio']:.1f} (centered "
+                      f"{st['energy_ratio_centered']:.1f}){note}")
         print("\n  tier 3 — profile max|rel| median per epoch (all R | R>5 kpc):")
         row_a = " | ".join(f"{100*np.nanmedian(mr_all[:, j]):5.1f}%" for j in range(nz))
         row_o = " | ".join(f"{100*np.nanmedian(mr_out[:, j]):5.1f}%" for j in range(nz))
@@ -257,9 +353,59 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
                      bin_by=bin_by, bin_label=bin_label)
         _cases_figure(model_cogs, data_cogs, R, anchor_z, mr_all, name, figdir)
+        if growth:
+            _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name,
+                           figdir)
 
     return dict(truth=truth, model=model, rhalf=rhalf, keys=keys,
-                mr_all=mr_all, mr_out=mr_out, planes=planes)
+                mr_all=mr_all, mr_out=mr_out, planes=planes, growth=growth)
+
+
+def _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name, figdir):
+    """Tier 2c visual: the cross-epoch cloud, truth vs model, one column per
+    non-reference epoch. Over-coherent models collapse onto the 1:1-like
+    ridge; incoherent ones smear off it."""
+    pairs = sorted({(qn, ref, j) for qn, ref, j in growth})
+    quants = sorted({p[0] for p in pairs})
+    cols = sorted({p[2] for p in pairs})
+    if not cols:
+        return
+    nz = data_cogs.shape[1]
+    rh_t, rh_m = _safe_rhalf(data_cogs, R), _safe_rhalf(model_cogs, R)
+    fig, axes = plt.subplots(len(quants), len(cols), squeeze=False,
+                             figsize=(3.2 * len(cols), 3.3 * len(quants)))
+    cols_z = _zcolors(nz)
+    for ri, qn in enumerate(quants):
+        if qn == "Mtot":
+            t_q, m_q = data_cogs[..., -1], model_cogs[..., -1]
+            lab = r"$\log_{10} M_{\star,\rm tot}$"
+        else:
+            t_q, m_q = rh_t, rh_m
+            lab = r"$\log_{10} R_{\rm half}$ [kpc]"
+        t = np.log10(np.clip(t_q, 1e-30, None))
+        m = np.log10(np.clip(m_q, 1e-30, None))
+        for ci, j in enumerate(cols):
+            ax = axes[ri][ci]
+            ref = growth_ref = pairs[0][1]
+            ax.scatter(t[:, ref], t[:, j], s=4, c="0.6", alpha=0.5, lw=0,
+                       label="truth")
+            ax.scatter(m[:, ref], m[:, j], s=4, alpha=0.5, lw=0,
+                       c=cols_z[j % len(cols_z)], label="model")
+            st = growth[(qn, growth_ref, j)]
+            ax.set_title(_tex(f"z={anchor_z[ref]:g} vs z={anchor_z[j]:g}")
+                         + "\n" + _tex(f"coh {st['coherence_truth']:+.2f}"
+                                       f" -> {st['coherence_model']:+.2f}"),
+                         fontsize=9)
+            ax.set_xlabel(_tex(f"{lab} at z={anchor_z[ref]:g}"))
+            if ci == 0:
+                ax.set_ylabel(_tex(f"{lab} at the later epoch"))
+            if ri == 0 and ci == 0:
+                ax.legend(fontsize=7, markerscale=2)
+    fig.suptitle(_tex(f"QA [{name}] — tier 2c cross-epoch growth planes "
+                      "(same object, two epochs)"), fontsize=11)
+    fig.tight_layout()
+    save_fig(fig, Path(figdir) / f"qa_growth_{name}")
+    plt.close(fig)
 
 
 # --- figures ---------------------------------------------------------------------
@@ -592,6 +738,75 @@ def demo():
              name="short_grid", verbose=False, figures=True,
              figdir=tempfile.mkdtemp(prefix="qa_demo_"),
              draw_cogs=np.stack([1.05 * truth_short, 0.95 * truth_short]))
+
+    # --- tier 2c: the cross-epoch growth plane must catch what every
+    # single-epoch tier is structurally blind to (exp44 stage 3). Build a
+    # truth whose galaxies only weakly keep their size rank across epochs,
+    # and an OVER-COHERENT model that keeps it perfectly while having the
+    # SAME per-epoch size distribution — the per-epoch tiers cannot tell
+    # them apart, this one must.
+    rg = np.random.default_rng(11)
+    ng, nzg = 400, 3
+    fac = np.array([1.0, 0.6, 0.35])                     # sizes shrink with z
+    V = np.sort(10.0 ** rg.normal(0.9, 0.22, ng))[:, None] * fac[None, :]
+
+    def _assign(latent):
+        """Rank-map latents onto the FIXED per-epoch marginals V, so every
+        construction below has identical single-epoch size distributions and
+        differs only in cross-epoch rank coherence."""
+        out = np.empty_like(V)
+        for j in range(nzg):
+            out[np.argsort(latent[:, j]), j] = V[:, j]
+        return out
+
+    def _latent(rc):
+        return (rc * rg.normal(size=(ng, 1))
+                + np.sqrt(1 - rc ** 2) * rg.normal(size=(ng, nzg)))
+
+    s_coh = _assign(np.repeat(rg.normal(size=(ng, 1)), nzg, axis=1))
+    s_inc = _assign(_latent(0.55))                       # -> coherence ~0.3
+    s_mat = _assign(_latent(0.55))                       # matched, indep. draw
+    Rg = np.geomspace(1.0, 200.0, 30)
+    amp_g = 10.0 ** rg.normal(11.0, 0.25, (ng, 1, 1)) * np.ones((1, nzg, 1))
+
+    def _cog_from_size(s):
+        return amp_g * (1.0 - np.exp(-Rg[None, None, :] ** 2
+                                     / (2.0 * (s[:, :, None] / 1.1774) ** 2)))
+
+    truth_g, model_g = _cog_from_size(s_inc), _cog_from_size(s_coh)
+    # the per-epoch size distributions are identical by construction, so no
+    # single-epoch tier can separate these two populations
+    for j in range(nzg):
+        assert np.allclose(np.sort(s_inc[:, j]), np.sort(s_coh[:, j])), j
+    g_res = growth_planes(model_g, truth_g, Rg)
+    g_mat = growth_planes(_cog_from_size(s_mat), truth_g, Rg)
+    key = ("R_half", 0, nzg - 1)
+    # the coherence number is the SHARP diagnostic (the energy distance is
+    # dominated by the marginals, which are identical here by construction)
+    assert g_res[key]["coherence_model"] > 0.99, "over-coherent model must show it"
+    assert g_res[key]["coherence_truth"] < 0.6, g_res[key]["coherence_truth"]
+    assert abs(g_mat[key]["coherence_model"]
+               - g_mat[key]["coherence_truth"]) < 0.15, "matched must match"
+    # and the tier must RANK them correctly: an over-coherent model scores
+    # worse than one whose cross-epoch coherence is right, even though the
+    # two have identical single-epoch marginals (which is exactly why no
+    # per-epoch tier can separate them)
+    assert g_res[key]["energy_ratio"] > 1.5, g_res[key]["energy_ratio"]
+    assert g_res[key]["energy_ratio"] > 1.3 * g_mat[key]["energy_ratio"], \
+        (g_res[key]["energy_ratio"], g_mat[key]["energy_ratio"])
+    # identity is at the floor, and model sizes really do come from the MODEL
+    g_id = growth_planes(truth_g, truth_g, Rg)
+    assert g_id[key]["energy_ratio"] < 2.0, g_id[key]["energy_ratio"]
+    assert abs(g_id[key]["coherence_model"]
+               - g_id[key]["coherence_truth"]) < 1e-9
+    # Mtot is degenerate when the model's totals ARE the data (the pinned
+    # kernel family) — the documented caveat, pinned here
+    m_pin = truth_g * 1.0
+    m_pin = m_pin * (truth_g[..., -1:] / m_pin[..., -1:])
+    assert growth_planes(m_pin, truth_g, Rg)[("Mtot", 0, nzg - 1)][
+        "energy_ratio"] < 2.0, "pinned totals must make the Mtot plane trivial"
+    # a single-epoch input must not raise, just return nothing to score
+    assert growth_planes(truth_g[:, :1], truth_g[:, :1], Rg) == {}
 
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)
