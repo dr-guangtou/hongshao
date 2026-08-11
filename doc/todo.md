@@ -823,6 +823,61 @@ Cross-experiment plan. Mirrors the phase sequence in
   kernel mirroring exp38 `basis_mof`, self-checked; usetex-safe
   labels, Okabe-Ito epoch colors). Audience: knows the motivation,
   not the experiments.
+- [ ] **THE OPTION MENU for improving 1ch/2ch (reviewed 2026-07-21,
+  user asked for options; recorded for later reference).** Where the
+  model stands: adopted 1ch-mof z<=1.5 (held-out shape
+  18.2/17.4/16.6/16.4, z=2.0* 15.4; M(<5) -9.5%; differential
+  0.40/0.13 vs data 0.37/0.11; no bound but the benign g rail). THREE
+  MEASURED WALLS bound any further work: (i) the population-sharing
+  wall (M(<5) ~ -8% in every shared-theta fit, even single-epoch —
+  only per-object freedom crosses it); (ii) the accuracy wall (15.6%
+  statistical vs kernel 18.2 at z=0.4 — but exp36 showed that gap is
+  feature-reachable from a FLAT spine, so it is not the kernel's to
+  win); (iii) the inner-mass vs differential-physics tension (exp39,
+  structural to the family). THREE UNTESTED INHERITANCES: the
+  conditioning rows (chosen by the exp36 TWO-channel ablation,
+  inherited wholesale by 1ch-mof), the lognormal efficiency window
+  (exp36's proposal (D) — a monotone 3-4-knot spline — was never
+  built), and the single global tail index gamma.
+  - **(A) "Calibrate low, predict high" — per-object low-z anchoring.**
+    Fit each galaxy's individuality parameter (the exp41 axis, ONE
+    number) against its OBSERVED low-z profile, freeze everything else,
+    predict z >= 1.0. Neither fully shared (hits the sharing wall) nor
+    mean-zero scatter (fixes distributions, not per-object accuracy).
+    Grounding: exp41 (one freed component buys 18.5-22.3% median
+    per-galaxy improvement, feature-orthogonal = genuinely per-object)
+    + exp43 (the transport clock locks in from two epochs). Untested
+    question: does per-galaxy information learned at low z TRANSFER
+    upward in z? Cheap (exp41 stage-0 anatomy ran the full sample in
+    0.6 min). -> STARTED as exp44.
+  - **(B) Re-derive the conditioning structure for 1ch-mof.** Only
+    log_rc and sig carry halo slopes, on rows selected for 2ch-exp;
+    exp42's lesson is that such verdicts are conditional on the
+    deposit form. Test slopes on q and gamma, drop rows that do not
+    earn their slot, try epoch-matched features. Cheap; decides
+    whether the current twelve parameters are the right twelve.
+  - **(C) Free the efficiency window** (exp36's parked (D), never
+    built). Two numbers currently encode the whole efficiency history.
+    Load-bearing evidence: exp42's real-MAH refit DOUBLED sig
+    (0.24 -> 0.52) and moved the peak; mild scope drift along the
+    exp43 ladder. Monotone 3-4-knot spline or a skewed form. Medium
+    cost; bounds-stress any new freedom before reading it.
+  - **(D) Mass-dependent deposit shape.** gamma is one global number,
+    yet exp38 stage 0.2 measured the added-light kernel half-mass
+    radius growing 15 -> 47 kpc with mass AND cosmic time and Sersic
+    index 2.1-3.1 across mass/epoch cells. Honest counter-evidence:
+    stage-1 per-epoch fits found gamma ~ 1.3 FLAT IN Z — so MASS, not
+    redshift, is the better-motivated axis. Small (1-3 params);
+    targets the residual outskirt structure.
+  - **(E) JAX port — the enabler** (tech-note-2 section 7 documents
+    feasibility). Derivative-free Nelder-Mead is the binding
+    constraint on model richness (minutes per start, 40-60 min per
+    CV); gradients make (A)-(D) jointly explorable and unlock HMC
+    posteriors over the recurring degeneracies (q x g, gamma x
+    log_rc). Not an improvement itself — it changes what is reachable.
+  - Maintenance items still open from exp43: CV the z07/z10 rungs if a
+    production fit-scope decision is made on them; two-start refit of
+    the z04 rungs if any z04 conclusion becomes load-bearing.
 - [x] **exp43 — the extrapolation ladder COMPLETE (2026-07-19/21,
   branch exp43-extrapolation-ladder).** Both kernels x five low-z fit
   scopes, everything unfitted judged (the observational
