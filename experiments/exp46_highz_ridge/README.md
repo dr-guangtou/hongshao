@@ -344,6 +344,40 @@ enters); (c) accept the residual as stochastic and give the layer the
 right compactness width — which is the pinned, never-started
 "halo-dependent deviation WIDTH" item.
 
+## Stage 1e addendum — a concentration HISTORY is available locally
+## (user question, 2026-08-12; `outputs/conc_history_probe.npz`)
+
+The `c200c` used above is measured at **z=0.4**, so its null result says
+nothing about concentration at the epoch that matters. A concentration
+history needs **no new download**:
+`experiments/exp27_tng_api_crossmatch/outputs/mpb_cache/<subhalo_id>.hdf5`
+already holds **3388 galaxies x 72 snapshots x 91 fields**, including
+`SubhaloVmax`, `SubhaloVmaxRad`, `Group_M_Crit200`, `Group_R_Crit200`.
+Index -> subhalo via `outputs/crossmatch.fits`; the profile epochs are
+snapshots 72 / 59 / 50 / 40 / 33. All 2397 galaxies resolve, none missing.
+
+Two standard NFW proxies were computed and cross-validated:
+
+| z | c from R_max | c from V_max | Spearman between them | median N_DM per halo |
+|---|---|---|---|---|
+| 0.4 | 4.85 | 5.37 | +0.46 | 333 000 |
+| 0.7 | 5.32 | 5.38 | +0.55 | 245 000 |
+| 1.0 | 5.03 | 5.52 | +0.62 | 198 000 |
+| 1.5 | 5.32 | 6.35 | +0.61 | 129 000 |
+| 2.0 | 7.69 | 7.26 | +0.60 | 83 000 |
+
+Validated against the catalog's own `c_200c` at z=0.4: Spearman **+0.71**
+(radius-based) and **+0.55** (velocity-based); medians 4.85 / 5.37 against
+the catalog's 6.15.
+
+**Honest reading: available, but noisy.** Resolution is not the limit
+(83 000 dark-matter particles per halo even at z=2), so the disagreement
+is the proxies themselves, not the simulation. A derived c(z=2) would
+carry enough error to dilute a real correlation, so a null measured with
+it would NOT be conclusive. Use the radius-based proxy (better
+validated), quote +0.71 as the noise ceiling, or obtain a properly fitted
+NFW concentration — which is not a standard TNG group-catalog field.
+
 ## Next (stage 2, not started)
 
 1. Test the unified hypothesis directly: per galaxy, is the plane
