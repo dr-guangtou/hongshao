@@ -68,6 +68,66 @@ more than an order of magnitude at low z, so their scores are NOT directly
 comparable. Every sub-population score is therefore reported against a
 size-matched random subsample of the full population.
 
+## Stage 1b — the gate: proposals 2 and 4 apply at DIFFERENT epochs
+## (`residual_predictability.py`, no kernel fitting)
+
+Proposals 2 and 4 prescribe opposite fixes for the tilt — change the
+deterministic model, or accept the residual as stochastic. The deciding
+question is whether the across-ridge residual is predictable from halo
+properties at all: the kernel is already a function of those properties,
+so anything a halo feature can still predict is information the current
+model is leaving on the table.
+
+5-fold cross-validated R^2 (shuffle control in brackets — the same design
+matrix with features permuted across galaxies):
+
+**Target: the across-ridge plane residual**
+
+| z | A: current conditioning | B: + DiffMAH shape | C: + early head start | D: + concentration history |
+|---|---|---|---|---|
+| 0.4 | 0.031 [-0.003] | 0.038 | 0.038 | 0.083 |
+| 0.7 | -0.003 [-0.003] | 0.053 | 0.056 | 0.071 |
+| 1.0 | 0.037 [-0.002] | **0.154** | 0.154 | 0.168 |
+| 1.5 | 0.194 [-0.001] | **0.256** | 0.253 | 0.257 |
+| 2.0 | 0.279 [-0.003] | **0.311** | 0.316 | 0.319 |
+
+**Target: the M\*(<5 kpc) bias** — same shape: A gives 0.058 / 0.016 /
+0.036 / 0.138 / 0.136, B gives 0.057 / 0.068 / **0.121** / 0.159 / 0.158.
+
+Set A is the kernel's current conditioning vector `[logMh, c200c, fz2]`;
+B adds DiffMAH shape `[logtc, early, late]`; C adds the exp46 head start;
+D adds the fitted concentration history as a negative control.
+
+**Four conclusions, and they resolve the proposal menu:**
+
+1. **At z <= 0.7 the residual is essentially UNPREDICTABLE** from halo
+   properties (R^2 0.03-0.08 against a ~0.00 shuffle). No deterministic
+   halo-conditioned model can fix the low-redshift plane residual, however
+   it is reparameterized. **Proposal 4 (the stochastic width) is the only
+   route there** — this is now a measurement, not a preference.
+2. **At z >= 1.0 it IS substantially predictable** (R^2 0.15-0.32).
+   Roughly a third of the z=2 across-ridge residual is halo-predictable
+   and is currently being left on the table. **Proposal 2 has real
+   headroom, but only at high redshift.**
+3. **The missing ingredient is DiffMAH SHAPE.** Going from set A to set B
+   is the whole gain (0.037 -> 0.154 at z=1.0; 0.194 -> 0.256 at z=1.5;
+   0.279 -> 0.311 at z=2). The kernel ingests the full MAH but conditions
+   its parameters only on `[logMh, c200c, fz2]` — the shape of the history
+   never reaches the conditioning.
+4. **The exp46 head start adds nothing beyond DiffMAH shape** (set C is
+   flat against B: 0.154 / 0.253 / 0.316). Not a contradiction — the head
+   start IS largely what `logtc`/`early`/`late` encode, so exp46's
+   discovery is already reachable through parameters we hold. And the
+   concentration control behaves: nothing at high z, a small +0.03-0.05 at
+   z <= 0.7 where everything is near zero anyway.
+
+**Verdict: the two proposals are complementary, not competing, and the
+epoch decides which applies.** The concrete, cheap model change this
+implies is to extend the conditioning vector with DiffMAH shape
+parameters — a strictly smaller step than restructuring the efficiency
+window, and one that stays inside the portability criterion since the
+kernel already takes the MAH as input.
+
 ## Stage 2 — free the efficiency window (held until 1 and 3 land)
 
 The window is narrow (mu = 1.52, sigma = 0.24 -> peak z ~ 3.6, half-max
