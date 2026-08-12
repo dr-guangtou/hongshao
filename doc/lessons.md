@@ -693,6 +693,46 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   survives is conditional, not absolute: "DiffMAH is the better input FOR
   a shared theta on a wingless deposit." Record which ingredient a
   comparison was conditioned on, and re-test when that ingredient changes.
+- **A suite of single-epoch metrics is structurally blind to cross-epoch
+  incoherence — no amount of them adds up to one (exp44 stage 3; now
+  `qa` tier 2c).** Every tier in the standard QA set scored one epoch at
+  a time, so a model whose per-epoch marginals are all correct could
+  evolve individual galaxies arbitrarily and score flawlessly. Measured:
+  the adopted stochastic layer held drawn galaxies at rank correlation
+  +0.97 between their z=0.4 and z=2.0 sizes where the truth sits at
+  +0.33 — a large defect that survived adoption unmeasured, and that the
+  planes CANNOT see (swapping the layer for a correctly-decorrelated one
+  moved every plane by <= 0.1, necessarily, since the two share their
+  single-epoch marginals by construction). Corollary for building the
+  metric: the interpretable rank-coherence number is the sharp
+  diagnostic; the 2-D energy distance is blunt here because it is
+  dominated by the marginals the two models share. When a model predicts
+  a SEQUENCE, at least one statistic must span the sequence.
+- **When two independent model families measure the SAME latent constant,
+  it is a property of the data — use the disagreement-that-didn't-happen
+  as the control (exp44 stage 2).** The kernel's per-galaxy individuality
+  decorrelates across epochs as AR(1) with rho = 0.56-0.66; the exp37
+  statistical emulator's residual latent measures rho = 0.62 with the
+  identical estimator. The obvious sceptical reading of the kernel number
+  — "that is just its one-consistent-history constraint showing" — is
+  falsified by the agreement, because the emulator has NO consistency
+  constraint (independent per-epoch cores) and would have to show HIGHER
+  persistence under that hypothesis. Cross-family agreement on a fitted
+  constant is stronger evidence than either fit alone; look for a second
+  family that lacks the structure you suspect, and quote it.
+- **Separate "the signal decays" from "my estimate of it is noisy" before
+  believing a decay (exp44 stage 2).** A per-galaxy quantity fitted
+  independently at each epoch decorrelated to +0.09 across the full
+  baseline — which could equally have meant a persistent quantity
+  measured badly. Fitting each epoch on two DISJOINT halves of the
+  radial grid gives a split-half reliability (Spearman-Brown corrected
+  to full length); dividing the cross-epoch correlations by
+  sqrt(rel_a rel_b) disattenuates them. Here reliability was 0.96-1.00,
+  so the decay was real and the correction was a no-op — but that null
+  correction is exactly what made the decay claim safe to publish, and
+  it cost one extra pass. (Caveat to state: adjacent radii on a smooth
+  cumulative profile are redundant, so a radial split-half BOUNDS
+  estimation noise rather than fully characterizing it.)
 - **A flexible model can EXTRAPOLATE a metric while being physically
   wrong — judge extrapolation jointly on the target metric and the
   out-of-model physics tests (exp43).** The 2ch-exp kernel fitted to
