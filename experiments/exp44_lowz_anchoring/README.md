@@ -387,13 +387,26 @@ wrong-deviation null); the z >= 1.5 predictions are no better than the
 plain population kernel. Anchoring is worth doing — it is nearly free —
 but it is not a route past the sharing wall at high z.
 
-The decay pattern itself is the finding: the kernel's per-galaxy axis
-DECORRELATES with epoch separation, which is precisely the structure
-exp37 measured statistically for the emulator (an AR(1)-in-epoch latent
-with rho = 0.62). The natural follow-up is to measure that decorrelation
-directly for the kernel — fit the axis at each epoch INDEPENDENTLY and
-measure the cross-epoch correlation matrix — which would (a) quantify
-the reach exactly rather than through anchored-vs-oracle proxies, and
-(b) hand the kernel an epoch-coupled individuality model instead of the
-current epoch-independent one (the exp41 layer's known limitation, and
-the reason its high-z planes stall at 2.0-2.8x the floor).
+The decay pattern itself is the finding, and stages 2-3 followed it to
+the end: the axis decorrelates as AR(1) with rho ~ 0.56 (stage 2, and
+both model families agree on the constant), the reach limit is therefore
+fundamental rather than instrumental, and an epoch-coupled layer built
+at the measured rho fixes the cross-epoch coherence (stage 3) at a cost
+in the differential-deposition physics — so the fiducial keeps the
+adopted persistent layer and `ar1` ships as the cross-epoch option.
+
+## Status: exp44 is COMPLETE (2026-08-12)
+
+Stages 1-3 all run at full n=2397, recorded above, each with a figure;
+the growth plane graduated to `hongshao.qa` tier 2c. Two closing notes:
+
+- **The Gate-1 "negative growth" rate is a DATA property, not a model
+  artifact** (checked after the fact): the TRUTH profiles show 33.45% of
+  (galaxy, pair, radius) cells and 13.78% of total-mass growths negative
+  between adjacent epochs, against the model's 33.7% / 15.2%. Both
+  layer modes simply inherit it. Real progenitors do lose measured mass
+  between snapshots (mergers, stripping, and scatter in the M(<500)
+  tail extrapolation), and the kernel reproduces the rate faithfully.
+- Nothing is in flight. The `ar1` mode lives in `ar1_layer.py` as the
+  documented option; graduating it to the library alongside the exp41
+  reference implementation is a user decision, not a pending task.

@@ -878,6 +878,51 @@ Cross-experiment plan. Mirrors the phase sequence in
   - Maintenance items still open from exp43: CV the z07/z10 rungs if a
     production fit-scope decision is made on them; two-start refit of
     the z04 rungs if any z04 conclusion becomes load-bearing.
+- [x] **exp44 — option (A), per-object low-z anchoring: COMPLETE
+  (2026-07-21/08-12, branch exp44-lowz-anchoring), three stages.**
+  - **Stage 1 (anchoring):** fitting ONE per-galaxy coordinate against
+    observed low-z epochs and predicting the rest. The ORACLE (same
+    coordinate fitted on all five epochs) is worth 3.0-7.6 shape points
+    and halves the inner deficit — the sharing wall IS a per-object
+    information limit. Anchoring realizes that at its own epoch (z=0.4
+    shape 18.2 -> 8.4%) and recovers ~1/3 of it at the ADJACENT
+    unanchored epoch (shuffle margin +6 points), decaying to ~0 beyond
+    (+0.3). The apparent inner-mass gain at distant epochs is an
+    asymmetric-pool MEAN SHIFT, not transfer — the shuffle control
+    caught it. Aperture-only anchoring (the observationally honest arm)
+    works at ~2/3 strength; the axis choice is irrelevant.
+  - **Stage 2 (decorrelation):** the axis fitted INDEPENDENTLY per epoch
+    decorrelates as AR(1), rho = 0.56 (sig) / 0.66 (log_rc); split-half
+    reliability is 0.96-1.00 so disattenuation is a no-op and the decay
+    is REAL, not noisy estimation — the stage-1 reach limit is
+    fundamental, richer low-z data cannot extend it. KEYSTONE: exp37's
+    statistical emulator measures rho = 0.62 with the identical
+    estimator despite having NO consistency constraint, so rho ~ 0.6 is
+    a property of the GALAXIES, not of the kernel's one-history
+    structure.
+  - **Stage 3 (the AR(1) layer, built as an OPTION; default
+    unchanged):** Gaussian AR(1) rank-mapped onto the measured
+    empirical pool, so every epoch's marginal is identical to the
+    adopted layer's. Every qa tier-2b plane is SINGLE-EPOCH and
+    therefore structurally blind to rho (identical scores) — which
+    FALSIFIED the stage-2 guess that over-persistence contributes to
+    the high-z plane stall. The cross-epoch size-growth plane does see
+    it: the adopted layer holds drawn galaxies at size coherence +0.97
+    vs a TRUE +0.33; ar1 tracks the truth closely (0.74/0.63/0.54/0.48
+    vs 0.82/0.68/0.50/0.33). Cost: the flagship differential pair
+    degrades 0.41 -> 0.29 (data 0.37). VERDICT: keep `persistent`
+    fiducial (single-epoch applications are provably rho-blind); ship
+    `ar1` for lightcone / progenitor-linked mocks.
+  - **GRADUATED: `hongshao.qa` tier 2c** (`growth_planes`, reported by
+    `evaluate`, figure `qa_growth_<name>`) — the standard set contained
+    NO cross-epoch statistic, which is how a 0.97-vs-0.33 defect
+    survived exp41's adoption. First run on the DETERMINISTIC exp43
+    kernel: size coherence +1.00/+1.00/+1.00/+0.96 vs truth
+    +0.82/+0.68/+0.50/+0.33 — **the mean model, not the scatter layer,
+    is the dominant source of over-coherence.** New, previously
+    unmeasurable defect; a natural selection metric for options B/C/D.
+  - Closing note: the ~15% negative epoch-to-epoch growth rate is a
+    DATA property (truth 13.78%), faithfully inherited, not an artifact.
 - [ ] **PINNED (user, 2026-07-21) — validate the stochastic layer as a
   PREDICTIVE DISTRIBUTION, not just a population generator.** Raised
   while discussing "predict a distribution, not a profile": that IS the
