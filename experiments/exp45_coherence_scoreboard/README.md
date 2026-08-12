@@ -136,11 +136,68 @@ adopted layer's 6.5x. **The trade is a genuine decision for the user,
 not a settled question:** differential-deposition fidelity versus
 cross-epoch realism, with no configuration achieving both.
 
-Two follow-ups this suggests, neither started:
-- **Why do the inner-aware objective and the real MAH produce the same
-  +0.45?** Two unrelated interventions landing on an identical curve
-  suggests they relieve the same underlying constraint; identifying it
-  might point at a structural fix that does not carry their costs.
-- **Score the exp37 emulator on the differential-deposition test.** If
-  the family that wins cross-epoch coherence also passes the physics,
-  the two-model program's division of labour deserves revisiting.
+## Follow-up 1 — the lever is the EFFICIENCY WINDOW WIDTH (`followups.py sweep`)
+
+The two low-coherence fits share three features against the pack (broad
+`sig`, small `log_rc`, shallow `g`), which covary in a fit. Sweeping ONE
+coordinate at a time off the adopted theta separates them — coherence at
+the widest baseline (adopted +0.96, truth +0.33):
+
+| coordinate | swept range | widest-baseline coherence |
+|---|---|---|
+| **`sig`** (window width) | 0.24 -> 1.20 | **+0.96 -> +0.79 -> +0.74 -> +0.69 -> +0.67** |
+| `g` (width-law exponent) | 4.00 -> 2.00 | +0.96 -> +0.96 -> +0.96 -> +0.96 -> +0.87 |
+| `q` (migration exponent) | 0.20 -> 1.20 | +0.96 at EVERY value — inert |
+| `log_rc` (birth radius) | 2.00 -> 3.00 | +0.96-0.97 — inert |
+
+**Only the efficiency-window width moves it.** The migration exponent —
+the model's explicit "how fast does mass move outward" knob — is
+completely inert, which is counter-intuitive and worth stating: cross-
+epoch size coherence is set by WHEN the stars arrive, not by how they
+are transported afterwards. The mechanism is physical: a narrow window
+delivers every galaxy's stars in the same brief cosmic era, so all
+galaxies' sizes are driven by the same shared clock and their tracks
+stay locked together; a broad window samples more of each galaxy's own
+accretion history, decorrelating them.
+
+**But the lever saturates well short of the target.** Even at
+`sig` = 1.20 — five times the adopted value, and beyond any fitted value
+in the program — coherence only reaches +0.67 against the truth's +0.33.
+So menu option (C), the flexible efficiency window, is now targeted
+rather than speculative, and would genuinely help — but it cannot close
+this gap alone. That is consistent with the main result: the defect is
+structural to a family in which one galaxy is one theta plus one history.
+
+## Follow-up 2 — the emulator does NOT take over the physics
+## (`followups.py emulator_physics`)
+
+Differential deposition on exp37's three saved draws (massive tercile,
+fraction of inter-epoch growth landing beyond 50 / 100 kpc):
+
+| epoch pair | data | adopted kernel | exp37 emulator (3 draws) |
+|---|---|---|---|
+| z0.7 -> z0.4 | 0.37/0.11 | **0.40/0.13** | 0.32/0.09, 0.30/0.08, 0.31/0.09 |
+| z1.0 -> z0.7 | 0.36/0.10 | 0.31/0.09 | 0.25/0.07, 0.27/0.08, 0.26/0.08 |
+| z1.5 -> z1.0 | 0.27/0.07 | 0.27/0.08 | 0.23/0.06, 0.24/0.06, 0.24/0.06 |
+| z2.0 -> z1.5 | 0.23/0.06 | 0.21/0.06 | 0.15/0.04, 0.16/0.03, 0.15/0.03 |
+
+The emulator UNDERSHOOTS at every pair and in every draw, and badly at
+the highest (0.15 vs 0.23). The kernel is closer to the data at three of
+the four pairs and much closer at the extreme one.
+
+**So the two-model division of labour SURVIVES intact, now measured on
+both axes**: the emulator owns accuracy and cross-epoch coherence, the
+kernel owns the deposition physics, and neither dominates. That was the
+program's founding framing, asserted from accuracy alone; it now has a
+second, independent leg.
+
+## Remaining follow-ups (not started)
+- **The mass-size plane has never been scored.** The judged set contains
+  M(<30) vs M(30-50), M(<30) vs M(50-100) and the Re annuli — but NOT
+  M_star vs R_half, even though the model's own size distribution is
+  precisely what a size-related claim rests on. Adding it to
+  `qa.PLANES` would be a small change with the same broad reach as
+  tier 2c.
+- Menu option (C), the flexible efficiency window, is now TARGETED by
+  follow-up 1 — with the honest caveat that the lever saturates at
+  ~+0.67 coherence and so cannot close the gap alone.
