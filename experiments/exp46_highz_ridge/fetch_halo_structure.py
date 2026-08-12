@@ -67,45 +67,54 @@ def _get(url, key, timeout=180):
 
 
 def cmd_list():
+    """The catalog is a DIRECTORY endpoint whose members are named by
+    snapshot (halo_structure.<snap>.hdf5), so list one level deeper."""
     key = api_key()
-    body, _ = _get(BASE, key)
-    try:
-        data = json.loads(body)
-    except json.JSONDecodeError:
-        print(body.decode("utf-8", "replace")[:4000])
-        return
-    print(json.dumps(data, indent=2)[:8000])
-    names = data if isinstance(data, list) else list(data)
-    hits = [n for n in names
-            if any(s in str(n).lower()
-                   for s in ("halo_structure", "structure", "concentration",
-                             "anbajagane"))]
-    print("\ncandidates for the Halo Structure catalog:",
-          hits or "none matched — inspect the listing above")
+    body, _ = _get(BASE + "halo_structure/", key)
+    files = json.loads(body)["files"]
+    snaps = sorted(int(f.rstrip("/").split(".")[-2]) for f in files)
+    print(f"halo_structure: {len(files)} files, by snapshot:\n  {snaps}")
+    have = [s for _, s in EPOCH_SNAPS]
+    print(f"\nprofile epochs needed: {have}")
+    print("all present:", set(have) <= set(snaps))
 
 
-def cmd_get(name):
+def cmd_get(which):
     key = api_key()
     CACHE.mkdir(parents=True, exist_ok=True)
-    dst = CACHE / name
-    if dst.exists() and dst.stat().st_size > 0:
-        print(f"already cached: {dst} ({dst.stat().st_size / 1e6:.1f} MB)")
-        return
-    body, hdr = _get(BASE + name, key, timeout=1800)
-    dst.write_bytes(body)
-    print(f"wrote {dst}  ({len(body) / 1e6:.1f} MB, "
-          f"content-type {hdr.get('Content-Type')})")
-    if name.endswith((".hdf5", ".h5")):
-        import h5py
-        with h5py.File(dst, "r") as f:
-            print("top-level keys:", list(f.keys())[:40])
+    snaps = ([s for _, s in EPOCH_SNAPS] if which == "epochs"
+             else [int(which)])
+    for s in snaps:
+        name = f"halo_structure.{s}.hdf5"
+        dst = CACHE / name
+        if dst.exists() and dst.stat().st_size > 0:
+            print(f"  cached  {name}  ({dst.stat().st_size / 1e6:.1f} MB)")
+            continue
+        body, _ = _get(BASE + name, key, timeout=1800)
+        tmp = dst.with_suffix(".part")
+        tmp.write_bytes(body)
+        tmp.rename(dst)          # never leave a truncated file at the real name
+        print(f"  fetched {name}  ({len(body) / 1e6:.1f} MB)")
+    import h5py
+    with h5py.File(CACHE / f"halo_structure.{snaps[-1]}.hdf5", "r") as f:
+        print(f"\nstructure of halo_structure.{snaps[-1]}.hdf5:")
+
+        def show(name, obj):
+            if isinstance(obj, h5py.Dataset):
+                print(f"   {name:<44s} {str(obj.shape):>14s} {obj.dtype}")
+        f.visititems(show)
+        if f.attrs:
+            print("   attrs:", dict(list(f.attrs.items())[:10]))
+
+
+EPOCH_SNAPS = ((0.4, 72), (0.7, 59), (1.0, 50), (1.5, 40), (2.0, 33))
 
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "list"
     if cmd == "list":
         cmd_list()
-    elif cmd == "get" and len(sys.argv) > 2:
-        cmd_get(sys.argv[2])
+    elif cmd == "get":
+        cmd_get(sys.argv[2] if len(sys.argv) > 2 else "epochs")
     else:
         raise SystemExit(__doc__)

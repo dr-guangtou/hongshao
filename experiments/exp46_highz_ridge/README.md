@@ -458,19 +458,84 @@ fitted concentration, so it is attenuated. But +0.01 is flat enough that
 a strong signal is unlikely to be hiding — a modest one could be. That is
 what the fitted catalog below would settle.
 
-### Getting a directly fitted concentration history (`fetch_halo_structure.py`)
+## Stage 1g — the FITTED concentration history: a definitive negative
+## (`fetch_halo_structure.py`, `conc_history.py`)
 
-**Blocked on one thing only: there is no API key on this machine.**
-`~/.tng_api_key` does not exist (exp27's key is gone), and supplementary
-catalog downloads need it. Registration is free at
-https://www.tng-project.org/users/ ; then
-`echo 'TNG_API_KEY=<key>' > ~/.tng_api_key`.
+Downloaded and tested. The TNG supplementary catalog is **"Halo
+Structure"** (Header: `CatalogName = HaloStructure`, `Reference = Dhayaa
+et al. (2021)` = Anbajagane et al., arXiv:2109.02713), one file per
+snapshot; **72 / 59 / 50 / 40 / 33 are exactly our five profile epochs**.
+Each file is ~2.7-3.0 GB (18.5M FoF groups); `conc_history.py` reduces
+them to a 770 kB table, after which the 13 GB were deleted.
 
-Second, smaller issue: the exact catalog FILENAME is not recoverable from
-the public specification page (it truncates before section 5q). So the
-script has a `list` command that queries the API for the available
-supplementary files and reports the candidates, rather than guessing a
-URL. With a key, `list` then `get <name>` is the whole procedure.
+**Provenance CONFIRMED, no longer an inference:** joining on `catgrp_id`
+reproduces the project's existing z=0.4 `c200c` for all 2397 galaxies with
+**max |difference| = 0.0** (100% exact). The other four epochs are
+therefore the same quantity under the same definition and drop straight
+into the existing feature pipeline. Cross-snapshot join key is
+`SubhaloGrNr` from exp27's cached trees (equals `catgrp_id` at snap 72,
+400/400 spot-checked). `GroupFlag == 1` marks the 459 972 of 18.5M halos
+with a valid structural fit; **all ~2390 of our galaxies are valid at
+every epoch**. Median fitted c200c: 6.15 / 6.24 / 6.16 / 5.95 / 5.90.
+
+**Per-epoch — no separation at any epoch:**
+
+| fitted c200c at | Cliff's delta | rho(R50) | rho(c_in) |
+|---|---|---|---|
+| z=0.4 | +0.04 | +0.07 | -0.17 |
+| z=0.7 | +0.09 | +0.07 | -0.12 |
+| z=1.0 | +0.08 | +0.05 | -0.09 |
+| z=1.5 | -0.01 | -0.05 | +0.10 |
+| z=2.0 | +0.06 | -0.12 | **+0.20** |
+
+**As a HISTORY — also nothing:**
+
+| feature | Cliff's delta | rho(c_in) |
+|---|---|---|
+| c(z=2)/c(z=0.4) | +0.03 | **+0.26** |
+| log c(z=2) - log c(z=0.4) | +0.03 | +0.26 |
+| mean c over 5 epochs | +0.06 | -0.01 |
+| scatter of c over 5 epochs | +0.01 | +0.15 |
+| max c over history | +0.05 | +0.09 |
+
+**And multivariate, the decisive number** — R^2 in predicting compactness
+from the FULL 5-epoch concentration vector, at fixed progenitor mass:
+
+| target | from concentration history | from MAH features (stage 1e) |
+|---|---|---|
+| log R50 (z=2) | **0.012** | 0.135 |
+| c_in (z=2) | **0.037** | 0.220 |
+
+**Verdict: halo concentration cannot separate the compact galaxies — in
+any form.** Not at z=0.4, not at z=2, not as a ratio, growth rate, mean,
+scatter or maximum, and not as a 5-epoch vector. The full history is an
+ORDER OF MAGNITUDE weaker than the MAH features, which is the same
+conclusion the fit-free M500c/M200c proxy reached (+0.01) — but now with
+a properly fitted NFW concentration, so the "the proxy was too noisy"
+escape is closed.
+
+The one real (if weak) trend worth noting: `rho(c_in)` flips sign with
+epoch, from -0.17 at z=0.4 to +0.20 at z=2, and the strongest single
+number in the whole set is c(z=2)/c(z=0.4) at +0.26 — the physically
+sensible direction (galaxies that are compact at z=2 sit in haloes that
+were relatively more concentrated then than now). Real, but far too weak
+to act on.
+
+**Reading, set against the MAH result:** these galaxies are distinguished
+by **when their mass arrived** (head start delta +0.35, R^2 0.135-0.220),
+not by **how concentrated their halo is** (delta ~0.0-0.09, R^2
+0.012-0.037), at any epoch. For the model, that argues for spending the
+conditioning budget on MAH-shape information rather than on structural
+halo properties.
+
+### The download procedure, for the record (`fetch_halo_structure.py`)
+
+Needs an API key at `~/.tng_api_key` (line `TNG_API_KEY=...`), exp27's
+convention — free registration at https://www.tng-project.org/users/.
+`halo_structure` is a DIRECTORY endpoint, not a single file, so `list`
+queries one level deeper and prints the available snapshots; `get epochs`
+then fetches the five we need. Do NOT keep the raw files: they are ~2.7-3.0
+GB each and `conc_history.py` reduces them to 770 kB.
 
 ### Other halo-property histories on disk (OUT OF SCOPE, kept for the record)
 
