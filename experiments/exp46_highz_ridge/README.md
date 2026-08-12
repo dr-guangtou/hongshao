@@ -411,9 +411,72 @@ snapshots in the cache, and present in essentially every N-body halo
 catalog — so it meets the portability criterion better than anything
 requiring a profile fit.
 
-### Other halo-property histories already on disk, free
+## Stage 1f — SO mass histories, and concentration AT THE RIGHT EPOCH
+## (`so_history.py`, scope set by the user 2026-08-12)
 
-All at 72 snapshots for all 2397 galaxies, all directly measured, all
+Scope, per the user: **MAH via different SO masses, plus concentration
+history — nothing else.** Centre offset, spin and substructure counts are
+dropped deliberately: their definitions are tied to a specific simulation
++ halo finder combination, which fails the portability criterion.
+
+SO masses at all 73 snapshot slots for all 2397 galaxies, extracted from
+exp27's cache (0 unresolved; >=99.6% coverage at every profile epoch).
+
+**Validation at z=0.4 against the catalog's own fitted c200c:**
+
+| proxy | Spearman |
+|---|---|
+| **M500c / M200c** | **+0.700** |
+| R500c / R200c | +0.700 |
+| M200m / M200c | -0.183 |
+| MTopHat / M200c | -0.258 |
+
+Only the *critical*-overdensity pair tracks concentration. `M200m/M200c`
+and `MTopHat/M200c` are dominated by the redshift evolution of the
+overdensity threshold itself (medians 1.213 -> 1.030 and 1.146 -> 1.058
+from z=0.4 to z=2), not by halo structure — do not use them as
+concentration proxies.
+
+**THE TEST — and it is a clean NEGATIVE.** Does concentration measured at
+z=2 do what z=0.4 concentration could not, i.e. separate the compact
+progenitors from their stellar-mass-matched control?
+
+| quantity | Cliff's delta |
+|---|---|
+| c200c (z=0.4, catalog fit) | +0.04 |
+| M500c/M200c (z=0.4) | +0.07 |
+| **M500c/M200c (z=2.0)** | **+0.01** |
+
+**Measuring concentration at the right epoch does not rescue it.** The
+compact z=2 progenitors are not distinguished by their halo concentration
+at z=2 either. Set against the same galaxies' MAH head start (delta
+**+0.35** at t=1 Gyr), the story is coherent: what separates them is
+*when their mass arrived*, not *how centrally concentrated the halo is*.
+
+Caveat, stated honestly: the proxy validates at only +0.700 against a
+fitted concentration, so it is attenuated. But +0.01 is flat enough that
+a strong signal is unlikely to be hiding — a modest one could be. That is
+what the fitted catalog below would settle.
+
+### Getting a directly fitted concentration history (`fetch_halo_structure.py`)
+
+**Blocked on one thing only: there is no API key on this machine.**
+`~/.tng_api_key` does not exist (exp27's key is gone), and supplementary
+catalog downloads need it. Registration is free at
+https://www.tng-project.org/users/ ; then
+`echo 'TNG_API_KEY=<key>' > ~/.tng_api_key`.
+
+Second, smaller issue: the exact catalog FILENAME is not recoverable from
+the public specification page (it truncates before section 5q). So the
+script has a `list` command that queries the API for the available
+supplementary files and reports the candidates, rather than guessing a
+URL. With a key, `list` then `get <name>` is the whole procedure.
+
+### Other halo-property histories on disk (OUT OF SCOPE, kept for the record)
+
+Excluded by the user on portability grounds (halo-finder dependent), but
+recorded since they are free: all at 73 snapshot slots for all 2397
+galaxies, all directly measured, all
 standard across N-body halo finders:
 
 | quantity | fields | what it captures |
