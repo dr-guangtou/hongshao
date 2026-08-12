@@ -266,9 +266,30 @@ the kernel currently conditions on.
 Compact progenitors have `dmah_early` 2.18 vs 2.73 (delta **-0.40** raw,
 **-0.43 / -0.56** at fixed mass for R50 / c_in), with later transition
 times (`dmah_logtc` 0.444 vs 0.300) and faster late growth (`dmah_late`
-0.737 vs 0.390). The physical reading: **compact z=2 progenitors sit in
-later-assembling haloes.** `dmah_early` is NOT in the kernel's
-conditioning vector, which is `[logMh, c200c, fz2]`.
+0.737 vs 0.390). `dmah_early` is NOT in the kernel's conditioning vector,
+which is `[logMh, c200c, fz2]`.
+
+**CORRECTION (stage 1e-fig, same day).** This was first read as "compact
+progenitors sit in LATER-assembling haloes". That reading was wrong: it
+came from comparing against the unmatched remainder. Against the
+stellar-mass-matched control (below), and measured on the halo histories
+directly rather than through a fitted shape parameter, the sign reverses
+— **their haloes had an EARLY HEAD START and then converged**:
+
+| median log M_h(t) - log M_h(final) | t=1 Gyr | t=2 Gyr | t=3 Gyr | t=5 Gyr |
+|---|---|---|---|---|
+| compact decile (real MAH) | -1.83 | -1.07 | -0.75 | -0.35 |
+| mass-matched control | -2.11 | -1.19 | -0.77 | -0.36 |
+| **Cliff's delta** | **+0.35** | **+0.23** | +0.03 | +0.02 |
+
+DiffMAH agrees (+0.36 / +0.26 / +0.20), so this is not an artifact of
+either input. Halo half-mass assembly time is **identical** between the
+groups (per-galaxy t50 delta +0.00 real, -0.10 DiffMAH) — the head start
+is confined to the first ~2-3 Gyr and is too early to move t50. The low
+`dmah_early` is consistent with this once read correctly: `early` is a
+log-SLOPE, and a halo that has already banked its mass grows more slowly
+afterwards. **The user's original intuition was right — the compact ones
+formed early.**
 
 **4. But the ceiling is low.** Linear prediction of compactness from all
 eight halo/MAH features, at fixed progenitor stellar mass:
@@ -297,6 +318,19 @@ groups' z=2 stellar masses are all but identical (log M\* 10.88 vs 10.93,
 delta -0.05) — consistent with the truth's mass-size slope collapsing to
 +0.08 by z=2. The imprint persists but weakens: at z=0.4 the same
 galaxies have median R50 8.30 vs 11.89 kpc (delta -0.37).
+
+**7. The figure** (`compact_figure.py`, `figures/exp46_compact_mah`):
+the z=2 mass-size plane with the compact decile and its
+stellar-mass-matched control (match quality: Cliff's delta on log M\* =
+-0.000, medians 10.878 vs 10.877), then both groups' DiffMAH and real
+halo histories over all 2397 haloes, each with a residual strip showing
+the head start. Two caveats are on the figure itself: the compact decile
+lies **entirely** below the 2 kpc CoG grid start, so every R50 in it is
+extrapolated — and the head start reproduces under the fully on-grid
+c_in definition (+0.29 real / +0.31 DiffMAH at t=1 Gyr) even though only
+82 of 240 galaxies are shared between the two definitions; and the real
+MAH bands are drawn only where >=80% of galaxies have a tree (t >= 0.7
+Gyr), since merger trees begin at different times.
 
 **Reading.** Of the two routes for a "compactness-aware" term, the one
 that conditions on halo features is largely closed by measurement — the
