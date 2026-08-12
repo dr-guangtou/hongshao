@@ -248,6 +248,55 @@ model's high-z galaxies are too big and too uniform; that single
 statement covers the z>=1.5 plane residual, the size offset, and the
 missing compact tail.
 
+## Follow-up 4 — R80/R90 added, and the size offset IS the inner deficit
+## (user hypothesis, 2026-08-12: CONFIRMED)
+
+`qa.enclosed_radius(cog, R, frac)` generalizes `half_mass_radius`, and
+tier 2d now scores **R50 / R80 / R90** (`SIZE_FRACTIONS`). The point is
+diagnostic: R50 is set by where the INNER mass sits, R80/R90 by the outer
+profile, so their relative offsets separate an inner-mass defect from a
+uniform size error.
+
+**Median dlog R (model - truth), adopted product:**
+
+| z | R50 | R80 | R90 | R50-R90 gap |
+|---|---|---|---|---|
+| 0.4 | **+0.024** | -0.009 | -0.001 | +0.025 |
+| 0.7 | **+0.038** | +0.002 | +0.007 | +0.031 |
+| 1.0 | **+0.053** | +0.017 | +0.017 | +0.036 |
+| 1.5 | **+0.084** | +0.054 | +0.046 | +0.038 |
+| 2.0 | +0.087 | **+0.116** | **+0.112** | **-0.025** |
+
+**Per-galaxy, the link is essentially deterministic:** Spearman
+correlation between a galaxy's dlog R50 and its M*(<5 kpc) bias is
+**-0.96 / -0.96 / -0.97 / -0.95 / -0.89** across the five epochs. The
+galaxies whose centres the model under-fills are exactly the galaxies
+whose R50 it over-predicts. (R90 correlates too, at -0.74 to -0.81 — it
+inherits part of the inner error through the total normalization.)
+
+Two conclusions:
+
+1. **At z <= 1.5 the mass-size offset is NOT an independent defect — it
+   is the known inner-mass deficit re-expressed in size units.** R50 is
+   biased while R80/R90 sit near zero, and that reading is CONSERVATIVE:
+   the CoG is nearly flat near R90, so R90 amplifies any real outer mass
+   error (measured on a synthetic: an inner-only deficit biasing R50 by
+   +0.048 dex still drags R90 by +0.042). R90 nonetheless coming out
+   unbiased is therefore strong evidence the cause is inner-localized.
+   *This corrects the earlier follow-up-3 reading, which listed "sizes
+   ~25-30% too large at z >= 1.5" as a new defect; at z=1.5 it is mostly
+   the old one wearing different units.*
+2. **At z = 2.0 the ordering FLIPS** (R80/R90 +0.116/+0.112 above R50's
+   +0.087): there IS a genuine, separate OUTER over-extension there, on
+   top of the inner deficit. That is a distinct high-z effect and the
+   only part of the size story that is new — worth keeping separate in
+   the high-z discussion, since the two have different causes and
+   probably different fixes.
+
+Adding R80/R90 therefore paid for itself twice: it confirmed the
+inner-deficit mechanism and it split a single reported "high-z size
+defect" into two effects that a half-mass radius alone conflates.
+
 ## Remaining follow-ups (not started)
 - Menu option (C), the flexible efficiency window, is now TARGETED by
   follow-up 1 — with the honest caveat that the lever saturates at
