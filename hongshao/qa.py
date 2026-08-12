@@ -19,6 +19,10 @@ anchor_z)``, reports three tiers:
    (exp44): a stochastic layer holding drawn galaxies at rank correlation
    +0.97 between their z=0.4 and z=2.0 sizes where the truth sits at +0.33.
    No per-epoch metric can ever see that, which is why this tier exists.
+2d. **The mass-size plane** (``size_planes``) — log M* vs log R_half per
+   epoch. ``PLANES`` pairs measured MASSES with each other, so the model's
+   own SIZE distribution was never compared to the truth's; this closes
+   that. Same self-consistency exception as 2c (model sizes from the MODEL).
 3. **Profile** — worst-radius max|rel| quoted over ALL radii AND R>5 kpc (the
    inner 2-5 kpc is marginally resolved; exp07), with two visual products:
    median CoG by stellar-mass tercile with residual profiles, and a
@@ -27,10 +31,10 @@ anchor_z)``, reports three tiers:
 Conventions: CoGs are linear masses, shape (n, nz, nr); R_half is measured on
 the TRUTH CoG and shared by model and truth (isolates mass error from size
 error); relative errors are (model-truth)/truth; dex scatter is the std of
-log10(model/truth) over galaxies. ONE deliberate exception: tier 2c takes the
-model's R_half from the MODEL CoG, because a cross-epoch coherence statistic
-asks how the model's OWN galaxies evolve — importing truth sizes would erase
-the quantity under test (the exp41 paired-vs-population lesson).
+log10(model/truth) over galaxies. ONE deliberate exception: tiers 2c and 2d
+take the model's R_half from the MODEL CoG, because both ask about the
+model's OWN sizes — importing truth sizes would erase the quantity under
+test (the exp41 paired-vs-population lesson).
 
 Use: ``from hongshao import qa; res = qa.evaluate(model, truth, R, ANCHOR_Z,
 name="...", figdir=...)`` — returns a dict of all per-galaxy measurements and
@@ -56,17 +60,44 @@ RE_ENV = [2.0, 4.0]                            # M*(>k R_half)
 PLANES = [("kpc:M(<30)", "kpc:M(30-50)"), ("kpc:M(<30)", "kpc:M(50-100)"),
           ("Re:M(<2Re)", "Re:M(2-4Re)")]
 GROWTH_QUANTITIES = ("R_half", "Mtot")         # tier 2c, cross-epoch
+SIZE_FRACTIONS = (0.5, 0.8, 0.9)               # tier 2d: R50 / R80 / R90
 RMIN_KPC = 5.0                                 # inner 2-5 kpc marginally resolved
 
 
-def half_mass_radius(cog, R):
-    """Half-mass radius from a (monotonic) CoG; log-log extrapolation below the
-    grid for compact high-z galaxies whose R_half < R[0]."""
-    target = 0.5 * cog[-1]
+def enclosed_radius(cog, R, frac=0.5):
+    """Radius enclosing ``frac`` of the CoG's total; log-log extrapolation
+    below the grid for compact high-z galaxies whose radius < R[0].
+
+    Sizes are APERTURE-relative: the total is the CoG's last point (148 kpc
+    on the standard grid), so R80/R90 are 80/90% of the measured aperture
+    mass, not of an extrapolated infinite total. They are always inside the
+    grid by construction (the target is a fraction of the grid total), so
+    unlike ``measure`` there is no clamping hazard here.
+
+    Why more than one: R50 is set by where the INNER mass sits, R80/R90 by
+    the outer profile, so their RELATIVE offsets separate an inner-mass
+    defect (R50 biased more than R90) from a uniform size error (all three
+    move together).
+
+    Interpretation caveat, measured: the discrimination is real but WEAK in
+    magnitude, because the CoG is nearly flat near R90 — a small fractional
+    mass error there produces a large radius shift. A synthetic inner-only
+    deficit that biases R50 by +0.048 dex still drags R90 by +0.042. So
+    read the ORDERING (R50 > R80 > R90 implicates the inner region), not
+    the size of the gap, and never conclude "the outskirts are wrong"
+    from an R90 offset alone.
+    """
+    target = float(frac) * cog[-1]
     if target <= cog[0]:
         sl = (np.log(cog[1]) - np.log(cog[0])) / (np.log(R[1]) - np.log(R[0]))
         return float(max(R[0] * np.exp((np.log(target) - np.log(cog[0])) / max(sl, 1e-3)), 0.3))
     return float(np.interp(target, cog, R))
+
+
+def half_mass_radius(cog, R):
+    """Half-mass radius (``enclosed_radius`` at frac=0.5) — the shared size
+    convention for the Re-relative bins."""
+    return enclosed_radius(cog, R, 0.5)
 
 
 def measure(cog, R, rhalf):
@@ -192,15 +223,15 @@ def plane_energy(truth_xy, model_xy, n_split=8, seed=0):
                 energy_ratio_centered=e_c / floor)
 
 
-def _safe_rhalf(cogs, R):
-    """(n, nz) half-mass radii, NaN where the CoG is unusable."""
+def _safe_rhalf(cogs, R, frac=0.5):
+    """(n, nz) enclosed radii at ``frac``, NaN where the CoG is unusable."""
     n, nz = cogs.shape[:2]
     out = np.full((n, nz), np.nan)
     for i in range(n):
         for j in range(nz):
             c = cogs[i, j]
             if np.isfinite(c).all() and c[-1] > 0 and np.all(np.diff(c) >= 0):
-                out[i, j] = half_mass_radius(c, R)
+                out[i, j] = enclosed_radius(c, R, frac)
     return out
 
 
@@ -264,6 +295,47 @@ def growth_planes(model_cogs, data_cogs, R, ref=0,
     return out
 
 
+def size_planes(model_cogs, data_cogs, R, fractions=SIZE_FRACTIONS):
+    """Tier 2d — the MASS-SIZE plane per epoch: log M*(<R_max) vs
+    log R_half. Returns {j: stats}.
+
+    The mass-size relation is one of the two planes any population claim
+    about this model rests on, and it was NOT in ``PLANES``: that set pairs
+    measured MASSES with each other, so the model's own SIZE distribution
+    had never been compared to the truth's at any epoch.
+
+    SELF-CONSISTENT, the same deliberate exception as ``growth_planes``:
+    the model's R_half comes from the MODEL CoG. Using the truth's size
+    for the model (the ``measure_all`` convention, right for paired mass
+    comparisons) would make half the plane correct by construction and
+    erase the quantity under test.
+
+    Both axes are genuine predictions for the transport-kernel family:
+    those models are normalized at 500 kpc, so M*(<R_max = 148 kpc) on
+    the reported grid is a fitted prediction, not a pinned datum.
+    """
+    model_cogs, data_cogs = np.asarray(model_cogs), np.asarray(data_cogs)
+    nz = data_cogs.shape[1]
+    out = {}
+    for frac in fractions:
+        key = f"R{int(round(100 * frac))}"
+        rh_t = _safe_rhalf(data_cogs, R, frac)
+        rh_m = _safe_rhalf(model_cogs, R, frac)
+        for j in range(nz):
+            tx = np.log10(np.clip(data_cogs[:, j, -1], 1.0, None))
+            mx = np.log10(np.clip(model_cogs[:, j, -1], 1.0, None))
+            ty, my = np.log10(rh_t[:, j]), np.log10(rh_m[:, j])
+            st = plane_stats(tx, ty)
+            sm = plane_stats(mx, my)
+            sm.update(plane_energy(np.column_stack([tx, ty]),
+                                   np.column_stack([mx, my])))
+            sm["median_logR_truth"] = float(np.nanmedian(ty))
+            sm["median_logR_model"] = float(np.nanmedian(my))
+            sm["median_dlogR"] = float(np.nanmedian(my - ty))
+            out[(key, j)] = (st, sm)
+    return out
+
+
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
              verbose=True, figures=True, bin_by=None, bin_label=None,
@@ -296,6 +368,7 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
             per_epoch.append((st, sm))
         planes[(kx, ky)] = per_epoch
     growth = growth_planes(model_cogs, data_cogs, R)
+    sizes = size_planes(model_cogs, data_cogs, R)
 
     if verbose:
         print(f"\n=== QA [{name}]  (n={n}) ===")
@@ -334,6 +407,18 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                       f"{st['coherence_model']:+.2f} | E/floor "
                       f"{st['energy_ratio']:.1f} (centered "
                       f"{st['energy_ratio_centered']:.1f}){note}")
+        print("\n  tier 2d — the MASS-SIZE planes (log M* vs log R50/R80/R90, "
+              "model sizes from the MODEL): slope/scatter truth -> model | "
+              "median dlog R (model-truth) | energy ratio")
+        for key in [f"R{int(round(100 * f))}" for f in SIZE_FRACTIONS]:
+            for j in range(nz):
+                t, mo = sizes[(key, j)]
+                print(f"    {key} z={anchor_z[j]}: "
+                      f"{t['slope']:+.2f}/{t['scatter']:.3f}"
+                      f" -> {mo['slope']:+.2f}/{mo['scatter']:.3f} | "
+                      f"median dlogR {mo['median_dlogR']:+.3f} | E/floor "
+                      f"{mo['energy_ratio']:.1f} "
+                      f"(centered {mo['energy_ratio_centered']:.1f})")
         print("\n  tier 3 — profile max|rel| median per epoch (all R | R>5 kpc):")
         row_a = " | ".join(f"{100*np.nanmedian(mr_all[:, j]):5.1f}%" for j in range(nz))
         row_o = " | ".join(f"{100*np.nanmedian(mr_out[:, j]):5.1f}%" for j in range(nz))
@@ -356,9 +441,70 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         if growth:
             _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name,
                            figdir)
+        _size_figure(model_cogs, data_cogs, R, anchor_z, sizes, name, figdir)
 
     return dict(truth=truth, model=model, rhalf=rhalf, keys=keys,
-                mr_all=mr_all, mr_out=mr_out, planes=planes, growth=growth)
+                mr_all=mr_all, mr_out=mr_out, planes=planes,
+                growth=growth, sizes=sizes)
+
+
+def _size_figure(model_cogs, data_cogs, R, anchor_z, sizes, name, figdir):
+    """Tier 2d visual. Row 1: the mass-size relation (R50), truth vs model,
+    each side its OWN sizes. Row 2: the median size offset vs mass for
+    R50/R80/R90 together — the discriminator between an INNER-mass defect
+    (R50 biased, R90 not) and a genuine size error (all three move)."""
+    nz = data_cogs.shape[1]
+    cols = _zcolors(nz)
+    keys = [f"R{int(round(100 * f))}" for f in SIZE_FRACTIONS]
+    fr_styles = dict(zip(keys, ["-o", "--s", ":^"]))
+    rt = {k: _safe_rhalf(data_cogs, R, f)
+          for k, f in zip(keys, SIZE_FRACTIONS)}
+    rm = {k: _safe_rhalf(model_cogs, R, f)
+          for k, f in zip(keys, SIZE_FRACTIONS)}
+    fig, axes = plt.subplots(2, nz, squeeze=False, figsize=(3.0 * nz, 6.4),
+                             gridspec_kw=dict(height_ratios=[2.0, 1.2]))
+    for j in range(nz):
+        ax = axes[0][j]
+        tx = np.log10(np.clip(data_cogs[:, j, -1], 1.0, None))
+        mx = np.log10(np.clip(model_cogs[:, j, -1], 1.0, None))
+        ax.scatter(tx, np.log10(rt["R50"][:, j]), s=4, c="0.65", alpha=0.5,
+                   lw=0, label="truth")
+        ax.scatter(mx, np.log10(rm["R50"][:, j]), s=4, c=cols[j], alpha=0.5,
+                   lw=0, label="model")
+        t, mo = sizes[("R50", j)]
+        ax.set_title(_tex(f"z={anchor_z[j]}") + "\n"
+                     + _tex(f"R50 slope {t['slope']:+.2f} -> "
+                            f"{mo['slope']:+.2f}, E/floor "
+                            f"{mo['energy_ratio']:.1f}"), fontsize=8.5)
+        ax.set_xlabel(_tex(r"$\log_{10} M_\star(<R_{\max})$"))
+        if j == 0:
+            ax.set_ylabel(_tex(r"$\log_{10} R_{50}$ [kpc]"))
+            ax.legend(fontsize=7, markerscale=2.5)
+        bx = axes[1][j]
+        edges = np.nanpercentile(tx, np.linspace(2, 98, 8))
+        for k in keys:
+            ctr, dd = [], []
+            for a, b in zip(edges[:-1], edges[1:]):
+                st = (tx >= a) & (tx < b)
+                sm = (mx >= a) & (mx < b)
+                if st.sum() > 5 and sm.sum() > 5:
+                    ctr.append(0.5 * (a + b))
+                    dd.append(np.nanmedian(np.log10(rm[k][sm, j]))
+                              - np.nanmedian(np.log10(rt[k][st, j])))
+            if ctr:
+                bx.plot(ctr, dd, fr_styles[k], color=cols[j], lw=1.5, ms=4,
+                        alpha=1.0 if k == "R50" else 0.65, label=k)
+        bx.axhline(0.0, color="0.8", lw=0.9, zorder=0)
+        bx.set_xlabel(_tex(r"$\log_{10} M_\star(<R_{\max})$"))
+        if j == 0:
+            bx.set_ylabel(_tex(r"median $\Delta \log R$ (model$-$truth)"))
+            bx.legend(fontsize=7, ncol=3)
+    fig.suptitle(_tex(f"QA [{name}] — tier 2d mass-size planes; row 2 "
+                      "separates an inner-mass defect from a size error"),
+                 fontsize=11)
+    fig.tight_layout()
+    save_fig(fig, Path(figdir) / f"qa_size_{name}")
+    plt.close(fig)
 
 
 def _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name, figdir):
@@ -807,6 +953,47 @@ def demo():
         "energy_ratio"] < 2.0, "pinned totals must make the Mtot plane trivial"
     # a single-epoch input must not raise, just return nothing to score
     assert growth_planes(truth_g[:, :1], truth_g[:, :1], Rg) == {}
+
+    # --- tier 2d: the mass-size plane must use each side's OWN sizes, so a
+    # model with correct masses but SYSTEMATICALLY WRONG sizes is flagged
+    # (under the truth-shared-R_half convention it would score perfectly)
+    s_off = _assign(np.repeat(rg.normal(size=(ng, 1)), nzg, axis=1)) * 1.6
+    model_off = _cog_from_size(s_off)
+    sp_id = size_planes(truth_g, truth_g, Rg)
+    sp_off = size_planes(model_off, truth_g, Rg)
+    assert sp_id[("R50", 0)][1]["energy_ratio"] < 2.0
+    assert abs(sp_id[("R50", 0)][1]["median_dlogR"]) < 1e-9
+    assert sp_off[("R50", 0)][1]["median_dlogR"] > 0.15, "1.6x offset must show"
+    assert sp_off[("R50", 0)][1]["energy_ratio"] > \
+        3.0 * sp_id[("R50", 0)][1]["energy_ratio"], \
+        "tier 2d must flag a size-offset model that has the RIGHT masses"
+    # a UNIFORM size offset moves R50, R80 and R90 together...
+    for k in ("R50", "R80", "R90"):
+        assert sp_off[(k, 0)][1]["median_dlogR"] > 0.15, k
+    # ...and a UNIFORM dilation moves them by the SAME amount, so the
+    # R50-vs-R90 GAP (not either alone) is what implicates the inner region
+    g_off = (sp_off[("R50", 0)][1]["median_dlogR"]
+             - sp_off[("R90", 0)][1]["median_dlogR"])
+    assert abs(g_off) < 0.01, f"uniform dilation must not open a gap: {g_off}"
+    # an inner-localized deficit at fixed total DOES open one. Suppress the
+    # cumulative on a scale comparable to R50, taper to zero outside, then
+    # restore the total. (Scaling the cumulative inside some radius instead
+    # would be a no-op on R50 whenever R50 lies outside it — the curve
+    # beyond is untouched; that mistake cost a debugging cycle.)
+    sup = 1.0 - 0.25 * np.exp(-(Rg / 12.0) ** 2)
+    inner_poor = truth_g * sup[None, None, :]
+    inner_poor = inner_poor * (truth_g[..., -1:] / inner_poor[..., -1:])
+    sp_in = size_planes(inner_poor, truth_g, Rg)
+    d50 = sp_in[("R50", 0)][1]["median_dlogR"]
+    d80 = sp_in[("R80", 0)][1]["median_dlogR"]
+    d90 = sp_in[("R90", 0)][1]["median_dlogR"]
+    assert d50 > d80 > d90 > 0.0, (d50, d80, d90)
+    assert d50 - d90 > 0.004, f"inner deficit must open an R50-R90 gap: {d50-d90}"
+    # enclosed_radius is monotone in the fraction, and R50 is half_mass_radius
+    c0 = truth_g[0, 0]
+    rr = [enclosed_radius(c0, Rg, f) for f in (0.5, 0.8, 0.9)]
+    assert rr[0] < rr[1] < rr[2], rr
+    assert abs(rr[0] - half_mass_radius(c0, Rg)) < 1e-12
 
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)
