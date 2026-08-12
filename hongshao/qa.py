@@ -19,6 +19,10 @@ anchor_z)``, reports three tiers:
    (exp44): a stochastic layer holding drawn galaxies at rank correlation
    +0.97 between their z=0.4 and z=2.0 sizes where the truth sits at +0.33.
    No per-epoch metric can ever see that, which is why this tier exists.
+2d. **The mass-size plane** (``size_planes``) — log M* vs log R_half per
+   epoch. ``PLANES`` pairs measured MASSES with each other, so the model's
+   own SIZE distribution was never compared to the truth's; this closes
+   that. Same self-consistency exception as 2c (model sizes from the MODEL).
 3. **Profile** — worst-radius max|rel| quoted over ALL radii AND R>5 kpc (the
    inner 2-5 kpc is marginally resolved; exp07), with two visual products:
    median CoG by stellar-mass tercile with residual profiles, and a
@@ -27,10 +31,10 @@ anchor_z)``, reports three tiers:
 Conventions: CoGs are linear masses, shape (n, nz, nr); R_half is measured on
 the TRUTH CoG and shared by model and truth (isolates mass error from size
 error); relative errors are (model-truth)/truth; dex scatter is the std of
-log10(model/truth) over galaxies. ONE deliberate exception: tier 2c takes the
-model's R_half from the MODEL CoG, because a cross-epoch coherence statistic
-asks how the model's OWN galaxies evolve — importing truth sizes would erase
-the quantity under test (the exp41 paired-vs-population lesson).
+log10(model/truth) over galaxies. ONE deliberate exception: tiers 2c and 2d
+take the model's R_half from the MODEL CoG, because both ask about the
+model's OWN sizes — importing truth sizes would erase the quantity under
+test (the exp41 paired-vs-population lesson).
 
 Use: ``from hongshao import qa; res = qa.evaluate(model, truth, R, ANCHOR_Z,
 name="...", figdir=...)`` — returns a dict of all per-galaxy measurements and
@@ -264,6 +268,43 @@ def growth_planes(model_cogs, data_cogs, R, ref=0,
     return out
 
 
+def size_planes(model_cogs, data_cogs, R):
+    """Tier 2d — the MASS-SIZE plane per epoch: log M*(<R_max) vs
+    log R_half. Returns {j: stats}.
+
+    The mass-size relation is one of the two planes any population claim
+    about this model rests on, and it was NOT in ``PLANES``: that set pairs
+    measured MASSES with each other, so the model's own SIZE distribution
+    had never been compared to the truth's at any epoch.
+
+    SELF-CONSISTENT, the same deliberate exception as ``growth_planes``:
+    the model's R_half comes from the MODEL CoG. Using the truth's size
+    for the model (the ``measure_all`` convention, right for paired mass
+    comparisons) would make half the plane correct by construction and
+    erase the quantity under test.
+
+    Both axes are genuine predictions for the transport-kernel family:
+    those models are normalized at 500 kpc, so M*(<R_max = 148 kpc) on
+    the reported grid is a fitted prediction, not a pinned datum.
+    """
+    model_cogs, data_cogs = np.asarray(model_cogs), np.asarray(data_cogs)
+    nz = data_cogs.shape[1]
+    rh_t, rh_m = _safe_rhalf(data_cogs, R), _safe_rhalf(model_cogs, R)
+    out = {}
+    for j in range(nz):
+        tx = np.log10(np.clip(data_cogs[:, j, -1], 1.0, None))
+        mx = np.log10(np.clip(model_cogs[:, j, -1], 1.0, None))
+        ty, my = np.log10(rh_t[:, j]), np.log10(rh_m[:, j])
+        st = plane_stats(tx, ty)
+        sm = plane_stats(mx, my)
+        sm.update(plane_energy(np.column_stack([tx, ty]),
+                               np.column_stack([mx, my])))
+        sm["median_logR_truth"] = float(np.nanmedian(ty))
+        sm["median_logR_model"] = float(np.nanmedian(my))
+        out[j] = (st, sm)
+    return out
+
+
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
              verbose=True, figures=True, bin_by=None, bin_label=None,
@@ -296,6 +337,7 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
             per_epoch.append((st, sm))
         planes[(kx, ky)] = per_epoch
     growth = growth_planes(model_cogs, data_cogs, R)
+    sizes = size_planes(model_cogs, data_cogs, R)
 
     if verbose:
         print(f"\n=== QA [{name}]  (n={n}) ===")
@@ -334,6 +376,17 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                       f"{st['coherence_model']:+.2f} | E/floor "
                       f"{st['energy_ratio']:.1f} (centered "
                       f"{st['energy_ratio_centered']:.1f}){note}")
+        print("\n  tier 2d — the MASS-SIZE plane (log M* vs log R_half, "
+              "model sizes from the MODEL): slope/scatter, truth -> model | "
+              "median log R_half | energy ratio")
+        for j in range(nz):
+            t, mo = sizes[j]
+            print(f"    z={anchor_z[j]}: {t['slope']:+.2f}/{t['scatter']:.3f}"
+                  f" -> {mo['slope']:+.2f}/{mo['scatter']:.3f} | "
+                  f"{mo['median_logR_truth']:+.2f} -> "
+                  f"{mo['median_logR_model']:+.2f} | E/floor "
+                  f"{mo['energy_ratio']:.1f} "
+                  f"(centered {mo['energy_ratio_centered']:.1f})")
         print("\n  tier 3 — profile max|rel| median per epoch (all R | R>5 kpc):")
         row_a = " | ".join(f"{100*np.nanmedian(mr_all[:, j]):5.1f}%" for j in range(nz))
         row_o = " | ".join(f"{100*np.nanmedian(mr_out[:, j]):5.1f}%" for j in range(nz))
@@ -356,9 +409,61 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         if growth:
             _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name,
                            figdir)
+        _size_figure(model_cogs, data_cogs, R, anchor_z, sizes, name, figdir)
 
     return dict(truth=truth, model=model, rhalf=rhalf, keys=keys,
-                mr_all=mr_all, mr_out=mr_out, planes=planes, growth=growth)
+                mr_all=mr_all, mr_out=mr_out, planes=planes,
+                growth=growth, sizes=sizes)
+
+
+def _size_figure(model_cogs, data_cogs, R, anchor_z, sizes, name, figdir):
+    """Tier 2d visual: the mass-size relation, truth vs model, per epoch,
+    with each side's own sizes and a median-size track underneath."""
+    nz = data_cogs.shape[1]
+    rh_t, rh_m = _safe_rhalf(data_cogs, R), _safe_rhalf(model_cogs, R)
+    cols = _zcolors(nz)
+    fig, axes = plt.subplots(2, nz, squeeze=False,
+                             figsize=(3.0 * nz, 6.2),
+                             gridspec_kw=dict(height_ratios=[2.2, 1]))
+    for j in range(nz):
+        ax = axes[0][j]
+        tx = np.log10(np.clip(data_cogs[:, j, -1], 1.0, None))
+        mx = np.log10(np.clip(model_cogs[:, j, -1], 1.0, None))
+        ax.scatter(tx, np.log10(rh_t[:, j]), s=4, c="0.65", alpha=0.5, lw=0,
+                   label="truth")
+        ax.scatter(mx, np.log10(rh_m[:, j]), s=4, c=cols[j], alpha=0.5, lw=0,
+                   label="model")
+        t, mo = sizes[j]
+        ax.set_title(_tex(f"z={anchor_z[j]}") + "\n"
+                     + _tex(f"slope {t['slope']:+.2f} -> {mo['slope']:+.2f}, "
+                            f"E/floor {mo['energy_ratio']:.1f}"), fontsize=8.5)
+        ax.set_xlabel(_tex(r"$\log_{10} M_\star(<R_{\max})$"))
+        if j == 0:
+            ax.set_ylabel(_tex(r"$\log_{10} R_{\rm half}$ [kpc]"))
+            ax.legend(fontsize=7, markerscale=2.5)
+        bx = axes[1][j]
+        edges = np.nanpercentile(tx, np.linspace(2, 98, 8))
+        ctr, dt, dm = [], [], []
+        for a, b in zip(edges[:-1], edges[1:]):
+            st = (tx >= a) & (tx < b)
+            sm = (mx >= a) & (mx < b)
+            if st.sum() > 5 and sm.sum() > 5:
+                ctr.append(0.5 * (a + b))
+                dt.append(np.nanmedian(np.log10(rh_t[st, j])))
+                dm.append(np.nanmedian(np.log10(rh_m[sm, j])))
+        if ctr:
+            bx.plot(ctr, np.array(dm) - np.array(dt), "-o", color=cols[j],
+                    lw=1.6, ms=4)
+        bx.axhline(0.0, color="0.8", lw=0.9, zorder=0)
+        bx.set_xlabel(_tex(r"$\log_{10} M_\star(<R_{\max})$"))
+        if j == 0:
+            bx.set_ylabel(_tex(r"median $\Delta \log R_{\rm half}$"
+                               " (model$-$truth)"))
+    fig.suptitle(_tex(f"QA [{name}] — tier 2d the mass-size plane "
+                      "(each side its OWN sizes)"), fontsize=11)
+    fig.tight_layout()
+    save_fig(fig, Path(figdir) / f"qa_size_{name}")
+    plt.close(fig)
 
 
 def _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name, figdir):
@@ -807,6 +912,21 @@ def demo():
         "energy_ratio"] < 2.0, "pinned totals must make the Mtot plane trivial"
     # a single-epoch input must not raise, just return nothing to score
     assert growth_planes(truth_g[:, :1], truth_g[:, :1], Rg) == {}
+
+    # --- tier 2d: the mass-size plane must use each side's OWN sizes, so a
+    # model with correct masses but SYSTEMATICALLY WRONG sizes is flagged
+    # (under the truth-shared-R_half convention it would score perfectly)
+    s_off = _assign(np.repeat(rg.normal(size=(ng, 1)), nzg, axis=1)) * 1.6
+    model_off = _cog_from_size(s_off)
+    sp_id = size_planes(truth_g, truth_g, Rg)
+    sp_off = size_planes(model_off, truth_g, Rg)
+    assert sp_id[0][1]["energy_ratio"] < 2.0, sp_id[0][1]["energy_ratio"]
+    assert abs(sp_id[0][1]["median_logR_model"]
+               - sp_id[0][1]["median_logR_truth"]) < 1e-9
+    assert sp_off[0][1]["median_logR_model"] - \
+        sp_off[0][1]["median_logR_truth"] > 0.15, "a 1.6x size offset must show"
+    assert sp_off[0][1]["energy_ratio"] > 3.0 * sp_id[0][1]["energy_ratio"], \
+        "tier 2d must flag a size-offset model that has the RIGHT masses"
 
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)

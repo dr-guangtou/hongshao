@@ -191,13 +191,64 @@ kernel owns the deposition physics, and neither dominates. That was the
 program's founding framing, asserted from accuracy alone; it now has a
 second, independent leg.
 
+## Follow-up 3 — the MASS-SIZE plane, now scored (graduated as qa tier 2d)
+
+The user's stated success criterion is "the distributions on the
+inner-vs-outer stellar mass **or the mass-size** plane". The first was
+scored; the second was not in `qa.PLANES` at all, because that set pairs
+measured MASSES with each other. `qa.size_planes()` now ships as **tier
+2d** (log M*(<R_max) vs log R_half, per epoch, reported by `evaluate`,
+figure `qa_size_<name>`), with the same self-consistency exception as
+2c — the model's R_half comes from the MODEL CoG, since using the
+truth's would make half the plane correct by construction. Its
+self-check pins that: a model with the RIGHT masses and a 1.6x size
+offset must be flagged, where the truth-shared convention would score it
+perfectly.
+
+**Result: the adopted product does NOT pass this plane** (n=2397; the
+deterministic kernel and then the adopted kernel + stochastic layer):
+
+| z | truth slope / scatter | + layer, model | median log R_half, truth -> model | E/floor (centered) |
+|---|---|---|---|---|
+| 0.4 | +0.50 / 0.173 | +0.34 / 0.148 | +1.06 -> +1.07 | **3.1** (2.9) |
+| 0.7 | +0.50 / 0.182 | +0.30 / 0.160 | +0.96 -> +0.97 | 4.0 (3.7) |
+| 1.0 | +0.46 / 0.192 | +0.28 / 0.166 | +0.85 -> +0.87 | 3.5 (2.7) |
+| 1.5 | +0.30 / 0.200 | +0.19 / 0.154 | +0.64 -> **+0.74** | 5.8 (2.2) |
+| 2.0 | +0.08 / 0.195 | +0.06 / 0.115 | +0.48 -> **+0.59** | **7.8** (3.6) |
+
+(Without the layer the deterministic kernel's scatter is roughly HALF
+the truth's — 0.072 vs 0.173 at z=0.4 — and E/floor 5.1-10.2. The layer
+recovers most of the low-z scatter, as exp41's "the layer's diversity IS
+size diversity" finding predicts, but little at z=2.)
+
+Four defects, three of them new:
+
+1. **The relation is too FLAT at every epoch** (+0.34 vs +0.50 at
+   z=0.4). The residual panel shows why it is a genuine tilt, not an
+   offset: sizes are ~+0.07 dex too LARGE at the low-mass end and
+   ~-0.04 dex too SMALL at the high-mass end, crossing zero near
+   log M* ~ 11.25.
+2. **Sizes are systematically ~25-30% too large at z >= 1.5**
+   (+0.10 dex median, at ALL masses) — the model does not shrink its
+   galaxies fast enough toward high redshift.
+3. **The compact tail is missing entirely.** The truth cloud extends to
+   log R_half ~ 0.2 at z=0.4 and below 0 at z=2; the model's has a hard
+   lower edge well above it. (Part of the truth's low-mass tail is the
+   known near-empty-progenitor data population, so the honest statement
+   is the mass-binned median in the residual panel, which is robust.)
+4. Even at its best epoch the plane sits at **3.1x the split-half
+   floor**, against the 1.0-1.1x the inner-vs-outer mass planes reach at
+   z=0.4 with the same layer.
+
+**Reading:** by the user's own criterion — get the observational planes
+right — the mass-size plane is now the WEAKEST scored deliverable, and
+its high-z behavior (defect 2) is the same phenomenon as the "high-z
+ridge error" that exp41 identified as the limit on the mass planes. The
+model's high-z galaxies are too big and too uniform; that single
+statement covers the z>=1.5 plane residual, the size offset, and the
+missing compact tail.
+
 ## Remaining follow-ups (not started)
-- **The mass-size plane has never been scored.** The judged set contains
-  M(<30) vs M(30-50), M(<30) vs M(50-100) and the Re annuli — but NOT
-  M_star vs R_half, even though the model's own size distribution is
-  precisely what a size-related claim rests on. Adding it to
-  `qa.PLANES` would be a small change with the same broad reach as
-  tier 2c.
 - Menu option (C), the flexible efficiency window, is now TARGETED by
   follow-up 1 — with the honest caveat that the lever saturates at
   ~+0.67 coherence and so cannot close the gap alone.
