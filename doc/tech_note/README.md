@@ -34,6 +34,29 @@ notes 1 and 2 are self-contained.
 
 ## The standardized QA figure sets
 
+**Two tiers were added in 2026-08 and are now part of every
+`qa.evaluate()` call** (so any set regenerated from here on includes
+them; sets produced before that date do not):
+
+- **tier 2c — cross-epoch growth planes** (`growth_planes`, figure
+  `qa_growth_<name>`): the SAME object at two epochs. Every other tier
+  is a single-epoch statistic, so a model with perfect per-epoch
+  marginals can evolve individual galaxies incoherently and still score
+  flawlessly. Measured instance: the adopted stochastic layer holds
+  drawn galaxies at size rank correlation $+0.97$ between $z=0.4$ and
+  $z=2.0$ where the truth sits at $+0.33$.
+- **tier 2d — the mass-size planes** (`size_planes`, figure
+  `qa_size_<name>`): $\log M_\star$ against $\log R_{50}$, $R_{80}$ and
+  $R_{90}$ per epoch. The judged set previously paired measured *masses*
+  with each other, so the model's own *size* distribution was never
+  compared to the truth's. Reporting three enclosed radii is what
+  separates an inner-mass defect (which biases $R_{50}$ while leaving
+  $R_{90}$ alone) from a genuine size error (which moves all three).
+
+Both take the model's radii from the **model** curve of growth — the one
+deliberate exception to the module's truth-shared-$R_{\rm half}$
+convention, because both tiers ask about the model's own sizes.
+
 The pedagogical figures in these notes are *not* the QA record. The most
 up-to-date standardized QA sets (the `hongshao.qa` layout: kpc and $R_e$
 aperture/annulus masses truth-vs-model per epoch, halo-mass-binned

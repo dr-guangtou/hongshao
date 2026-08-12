@@ -923,6 +923,50 @@ Cross-experiment plan. Mirrors the phase sequence in
     unmeasurable defect; a natural selection metric for options B/C/D.
   - Closing note: the ~15% negative epoch-to-epoch growth rate is a
     DATA property (truth 13.78%), faithfully inherited, not an artifact.
+- [x] **exp45 — the cross-epoch coherence scoreboard + two new STANDARD
+  QA tiers: COMPLETE (2026-08-12, branch exp45-coherence-scoreboard).**
+  Retro-scored 13 recorded thetas + both layer modes + the exp37
+  emulator's saved draws on tier 2c; no new fitting.
+  - **The over-coherence defect is UNIVERSAL to the kernel family.**
+    Eleven deterministic variants spanning both channel counts and all
+    five fit scopes are indistinguishable (excess +0.49 to +0.66, energy
+    8.7-12.3x floor). Two partial exceptions land at the SAME excess
+    +0.45 (the inner-aware objective, 1ch only; the real-MAH input),
+    both previously rejected on other grounds. exp44's `ar1` beats every
+    structural choice (+0.15, 4.7x). **The exp37 statistical emulator
+    does not have the defect at all** (-0.16, 2.1x): it carries an AR(1)
+    latent by design, where a kernel galaxy is one theta plus one
+    history and so is near-deterministic. -> the fix cannot come from
+    re-parameterizing the kernel; the exp44 ar1 trade is a LIVE
+    decision, not settled.
+  - **Follow-up 1: the lever is the EFFICIENCY WINDOW WIDTH.** Sweeping
+    one coordinate at a time, only `sig` moves coherence (+0.96 ->
+    +0.67 over 0.24 -> 1.20); the migration exponent q is COMPLETELY
+    INERT, as is log_rc — coherence is set by WHEN stars arrive, not by
+    how they are transported. But it saturates at ~+0.67 vs truth
+    +0.33, so menu option (C) is now targeted yet cannot close the gap.
+  - **Follow-up 2: the emulator does NOT take over the physics** — its
+    draws undershoot the differential test at every pair (0.32/0.09 vs
+    data 0.37/0.11 at the flagship; 0.15/0.04 vs 0.23/0.06 at the
+    highest, where the kernel is 0.40/0.13 and 0.21/0.06). The
+    two-model division of labour survives with an independent 2nd leg.
+  - **GRADUATED: `qa` tier 2c** (`growth_planes`) and **tier 2d**
+    (`size_planes`, R50/R80/R90 via the new `enclosed_radius`), both in
+    `evaluate()` with figures `qa_growth_*` / `qa_size_*`. Tech-note
+    README documents them as standard.
+  - **Follow-up 4 (user hypothesis, CONFIRMED): the mass-size offset IS
+    the inner-mass deficit re-expressed.** Per-galaxy Spearman between
+    dlog R50 and the M(<5) bias is -0.89 to -0.97 at EVERY epoch. At
+    z<=1.5 R50 is biased (+0.024 to +0.084) while R80/R90 sit near zero
+    — and that is conservative, since R90 AMPLIFIES outer errors (the
+    CoG is flat there; documented + self-checked). **At z=2.0 the
+    ordering FLIPS** (R80/R90 +0.116/+0.112 vs R50 +0.087): a genuine,
+    SEPARATE outer over-extension. So the high-z size story is TWO
+    effects, which a half-mass radius alone conflates.
+  - Standing gap by the user's own criterion: the adopted product does
+    NOT pass the mass-size plane (E/floor 3.1 at best, 7.8 at z=2, vs
+    1.0-1.1 on the mass planes); the relation is too FLAT at every epoch
+    (+0.34 vs +0.50 at z=0.4) and the compact tail is missing.
 - [ ] **PINNED (user, 2026-07-21) — validate the stochastic layer as a
   PREDICTIVE DISTRIBUTION, not just a population generator.** Raised
   while discussing "predict a distribution, not a profile": that IS the
