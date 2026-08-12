@@ -238,6 +238,78 @@ Only p is interpretable; the raw value falls for free when n shrinks.
   but as a statement about *compact galaxies*, which merely happen to be
   concentrated at high z.
 
+## Stage 1e — are the compact z=2 progenitors special in their HALOES?
+## (user question, 2026-08-12; `compact_anatomy.py`, `outputs/compact_anatomy.log`)
+
+Stage 1d made this decisive: the kernel sees halo properties only, so a
+halo-conditioned fix exists only if compact galaxies have distinguishable
+haloes. "Very compact" = the smallest decile of truth R50 at z=2
+(R50 <= 1.84 kpc, n=240). Two compactness measures are carried
+throughout, because R50 is below the 2.0 kpc CoG grid start for 13% of
+z=2 galaxies: **R50** itself, and **c_in = log M\*(<10 kpc)/M\*(<148
+kpc)**, a concentration index that is entirely on-grid. They agree
+(Spearman -0.77) and every conclusion below holds for both.
+
+**1. They are not a separate population.** The z=2 R50 distribution is
+smooth and unimodal — counts in [0,1,1.5,2,3,4,5,7,10,inf) kpc are
+23 / 68 / 223 / 859 / 601 / 280 / 230 / 86 / 27. The compact galaxies are
+the low tail of a continuous distribution, not a clump.
+
+**2. Halo concentration carries essentially nothing.** Cliff's delta
+between compact and rest is **-0.02** for `c200c` (+1 = wholly separated,
+0 = no separation); at fixed progenitor mass, +0.02 for R50 and +0.14 for
+c_in. Rank correlations +0.07 (R50) and -0.17 (c_in). This is the
+sharpest negative in the set — and `c200c` is one of the three variables
+the kernel currently conditions on.
+
+**3. One MAH feature does carry signal: the DiffMAH early-growth index.**
+Compact progenitors have `dmah_early` 2.18 vs 2.73 (delta **-0.40** raw,
+**-0.43 / -0.56** at fixed mass for R50 / c_in), with later transition
+times (`dmah_logtc` 0.444 vs 0.300) and faster late growth (`dmah_late`
+0.737 vs 0.390). The physical reading: **compact z=2 progenitors sit in
+later-assembling haloes.** `dmah_early` is NOT in the kernel's
+conditioning vector, which is `[logMh, c200c, fz2]`.
+
+**4. But the ceiling is low.** Linear prediction of compactness from all
+eight halo/MAH features, at fixed progenitor stellar mass:
+
+| target | R^2 raw | R^2 from mass alone | **R^2 at fixed mass** |
+|---|---|---|---|
+| log R50 (z=2) | 0.180 | 0.025 | **0.135** |
+| c_in (z=2) | 0.430 | 0.158 | **0.220** |
+
+So even a perfect linear halo-feature term reaches ~14% of the size
+variance (22% of the concentration variance). ~85% of the compactness
+diversity is not available to ANY halo-conditioned deterministic model
+through these features. (Caveat: this is a linear ceiling — a nonlinear
+term could do better. It does not rescue `c200c`, whose Cliff's delta is
+nonparametric and still ~0.)
+
+**5. The user's "unreliable MAH" hypothesis is not supported.** If these
+haloes had overestimated masses or broken histories, the DiffMAH fit
+should be worse for them. It is not: `dmah_rms` is **0.078 vs 0.077**
+(identical), and the real-vs-DiffMAH halo-mass disagreement at z=2 is
+**smaller** for the compact group (0.072 vs 0.095 dex, delta -0.17). If
+anything their halo histories are slightly better behaved than average.
+
+**6. Compactness at z=2 is a genuinely separate axis from mass.** The two
+groups' z=2 stellar masses are all but identical (log M\* 10.88 vs 10.93,
+delta -0.05) — consistent with the truth's mass-size slope collapsing to
++0.08 by z=2. The imprint persists but weakens: at z=0.4 the same
+galaxies have median R50 8.30 vs 11.89 kpc (delta -0.37).
+
+**Reading.** Of the two routes for a "compactness-aware" term, the one
+that conditions on halo features is largely closed by measurement — the
+best available feature (`dmah_early`) is real but caps out near 14% of
+the variance, and the feature the kernel already uses (`c200c`) is the
+worst of the set. What remains: (a) add `dmah_early` to the conditioning
+vector — cheap, directly motivated, but bounded by that ceiling;
+(b) a transport term that responds to the model's OWN evolving state
+(still a pure function of the halo history, so no galaxy information
+enters); (c) accept the residual as stochastic and give the layer the
+right compactness width — which is the pinned, never-started
+"halo-dependent deviation WIDTH" item.
+
 ## Next (stage 2, not started)
 
 1. Test the unified hypothesis directly: per galaxy, is the plane
