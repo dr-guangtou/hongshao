@@ -372,11 +372,65 @@ the catalog's 6.15.
 
 **Honest reading: available, but noisy.** Resolution is not the limit
 (83 000 dark-matter particles per halo even at z=2), so the disagreement
-is the proxies themselves, not the simulation. A derived c(z=2) would
-carry enough error to dilute a real correlation, so a null measured with
-it would NOT be conclusive. Use the radius-based proxy (better
-validated), quote +0.71 as the noise ceiling, or obtain a properly fitted
-NFW concentration — which is not a standard TNG group-catalog field.
+is the proxies themselves, not the simulation.
+
+### Is a DIRECT concentration measurement available anywhere? (checked)
+
+**Not in anything we hold, and not in the standard TNG catalogs.** All 91
+fields of the cached SubLink trees were listed: no concentration, NFW,
+scale-radius or profile-fit field. The official TNG specification page
+confirms the same for both the FoF Group catalog and the Subhalo catalog.
+
+**Yes in a TNG supplementary catalog, not yet downloaded.** "Halo
+Structure" (Anbajagane et al., [arXiv:2109.02713]) fits an NFW profile
+with free r_s and reports c200c = R200c / r_s, for **twenty epochs up to
+z = 12** — covering all five profile epochs.
+
+Strong inference, worth verifying: **our existing z=0.4 `c_200c` probably
+came from that catalog.** The bundle carries `c_200c`, `c_to_a_3d`,
+`b_to_a_3d`, `v_sigma_3d`, `acc_rate` — an almost exact match to that
+paper's five properties (velocity dispersion, NFW concentration, density-
+and velocity-space shapes, formation time). If so, extending to z=0.7-2.0
+means downloading the same product at four more snapshots, and the result
+is directly comparable to the feature the model already uses.
+
+### A fit-free alternative that validates as well as the NFW proxies
+
+**M500c / M200c** — a ratio of two directly measured spherical-overdensity
+masses, no fitting, no Vmax, no NFW assumption:
+
+| proxy | Spearman vs catalog c_200c at z=0.4 |
+|---|---|
+| **M500c / M200c** | **+0.700** |
+| c from R_max | +0.709 |
+| c from V_max | +0.551 |
+
+Median M500c/M200c is remarkably stable with epoch (0.682 / 0.674 / 0.666
+/ 0.665 / 0.670 at z = 0.4 ... 2.0, scatter ~0.075), available at all 72
+snapshots in the cache, and present in essentially every N-body halo
+catalog — so it meets the portability criterion better than anything
+requiring a profile fit.
+
+### Other halo-property histories already on disk, free
+
+All at 72 snapshots for all 2397 galaxies, all directly measured, all
+standard across N-body halo finders:
+
+| quantity | fields | what it captures |
+|---|---|---|
+| SO mass ratios | `Group_M_Crit500/200`, `_Mean200`, `_TopHat200` | concentration, fit-free |
+| centre offset | `GroupPos` - `SubhaloPos`, / `Group_R_Crit200` | relaxedness / dynamical state |
+| halo spin | `SubhaloSpin`, with `Group_M/R_Crit200` | angular momentum |
+| velocity dispersion | `SubhaloVelDisp` | dynamical state, sigma / V200c |
+| DM half-mass radius | `SubhaloHalfmassRadType[1]` / `Group_R_Crit200` | direct size, no fit |
+| substructure | `GroupNsubs`, `SubhaloLen` | merger activity |
+
+Precedent that this direction pays: exp16 found `c_200c` is only ~25%
+MAH-determined and still added a real +2.7% CRPS on top of the full
+MAH-PCA(4) — concentration carries information the MAH does not. The
+AGENTS.md rule applies: measure each property's incremental value with a
+shuffle control rather than reasoning from "it correlates with formation
+time".
 
 ## Next (stage 2, not started)
 
