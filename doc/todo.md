@@ -923,6 +923,62 @@ Cross-experiment plan. Mirrors the phase sequence in
     unmeasurable defect; a natural selection metric for options B/C/D.
   - Closing note: the ~15% negative epoch-to-epoch growth rate is a
     DATA property (truth 13.78%), faithfully inherited, not an artifact.
+- [x] **exp46 stage 1 — "the high-z ridge" is the model failing on
+  COMPACT galaxies, not on high redshift (2026-08-12, branch
+  exp46-highz-ridge).** Opened after the 2026-08-12 discussion, which
+  split the phenomenon in three — (A) the plane residual, an
+  *under-dispersion* failure (truth scatter 0.170 -> 0.338 dex with z
+  while the model's falls 0.077 -> 0.067 and its slope collapses
+  +1.41 -> +1.07); (B) per-object accuracy, which does NOT degrade at
+  high z; (C) the size story, an R50-only offset at z<=1.5 plus a
+  separate outer over-extension at z=2 — and **falsified the fit-scope
+  explanation for (A) twice from logs already on disk**: the z<=2.0 fit,
+  with z=2 IN the loss, scores centered E/floor 4.8 at z=2, identical to
+  the z<=1.5 fit extrapolating there (slope +1.07 both), and the exp37
+  emulator fits every epoch separately and still breaks at exactly those
+  epochs. exp40's dissipative-era finding is about the mean profile's
+  INNER MASS and does not address (A).
+  - **Design correction recorded**: measuring "how much of the high-z
+    diversity is predictable from halo features" is impossible with this
+    metric — `plane_energy` compares POPULATIONS and is blind to which
+    halo produced which galaxy, so any feature-conditioned resampler
+    scores at the floor by construction (now a self-check assertion).
+    The question sharpens to **"is the spread REAL"**, since a model can
+    always match a wide target by injecting scatter.
+  - **Every "not real" candidate died**: stellar shot noise at z=2 is
+    0.027 dex (95th pct 0.094) against 0.338 measured; the excess sits
+    in EVERY inner-mass quartile (best quartile 0.288 at z=2 vs 0.163 at
+    z=0.4), not just a tail; near-empty progenitors are 0.1%.
+  - **The result, which none of the three pre-registered outcomes
+    covered**: trimming to truth R50 >= 5 kpc is significant at
+    **p = 0.00 at EVERY epoch** (24 random same-n trims as the control),
+    including z=0.4 where it drops just 6.3% of galaxies and still moves
+    2.2 -> 1.5. The apparent high-z localization is pure demographics —
+    the R50 < 5 kpc fraction runs 6.3 / 14.0 / 27.4 / 60.7 / 85.2%.
+    The failure is about SIZE, not MASS: the top inner-mass quartile is
+    *worse* than random at z>=1.5 (p = 0.96-1.00), consistent with the
+    truth's mass-size slope collapsing to +0.08 by z=2.
+  - **One genuine artifact, confined to tier 2d**: the 13.0% of z=2
+    galaxies with R50 below the 2.0 kpc CoG grid start (size by log-log
+    extrapolation) carry 5.0 -> 3.5 of the mass-size plane (p = 0.04)
+    and NOTHING of tier 2b (p = 0.21/0.17). ~1.5 of tier 2d's z=2 score
+    should not be chased; none of tier 2b's 4.8 is an artifact.
+  - **Metric hygiene**: removing ONE galaxy moved z=1.5 from 3.5 to 4.1
+    (worse than all 24 random one-galaxy removals) — `plane_energy`
+    standardizes by the truth's per-axis std and estimates its floor
+    from 8 half-splits, so single objects move it. Report p, not deltas.
+  - **Consequence for the option menu**: the efficiency-window
+    hypothesis predicts a high-z-SPECIFIC defect and so cannot alone
+    explain an equally significant z=0.4 cut. Leading unified
+    hypothesis for stage 2: the compact-galaxy plane failure and the
+    known inner-mass deficit are ONE defect (exp45 measured per-galaxy
+    Spearman(dlog R50, M(<5) bias) = -0.89 to -0.97 at every epoch),
+    which would partially rehabilitate exp40 — as a statement about
+    compact galaxies, not about redshift.
+  - Stage 2 (not started): (1) test that unification per galaxy;
+    (2) re-run the exp45 sigma sweep under trimmed scoring; (3) score
+    the z<=2.0 and z=2.0-only thetas on tier 2d — still the one open
+    fit-scope question, since tier 2d postdates exp38.
 - [x] **exp45 — the cross-epoch coherence scoreboard + two new STANDARD
   QA tiers: COMPLETE (2026-08-12, branch exp45-coherence-scoreboard).**
   Retro-scored 13 recorded thetas + both layer modes + the exp37

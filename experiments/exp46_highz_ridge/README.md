@@ -156,6 +156,96 @@ PYTHONPATH=. uv run python experiments/exp46_highz_ridge/target_audit.py \
 `demo` is the self-check (synthetic populations with known answers, incl.
 the pairing-blindness assertion that killed the twin-matching design).
 
-## Results
+## Results (2026-08-12, full n=2397; `outputs/run_full.log`)
 
-(not run yet)
+Pipeline validation: the untrimmed row reproduces the record exactly —
+2.2 / 2.6 / 2.8 / 3.5 / 4.8 and 2.2 / 2.7 / 2.9 / 3.7 / 4.5 on the two
+kpc planes, matching exp41 `outputs/qa_regen.log`.
+
+**Headline: the z >= 1.5 plane failure is NOT a high-z phenomenon. It is
+the model's failure on COMPACT galaxies, which is present at EVERY epoch
+and dominates at high z only because high-z galaxies are compact.** None
+of the three pre-registered outcomes covers this; the fourth is recorded
+here as measured.
+
+### 1a-1c — every "the target is not real" candidate died
+
+| | measured | verdict |
+|---|---|---|
+| stellar shot noise, M(30-50) at z=2 | **0.027 dex** median, 0.094 at the 95th pct, against **0.338** measured | 0.6% of the variance. Dead. |
+| is the excess a low-mass tail? | at z=2 the BEST inner-mass quartile is still 0.288 dex (0.163 at z=0.4); Q1 0.455 | a bulk shift with an extra tail, not a tail alone |
+| near-empty progenitors (exp37, >2 dex) | 0.1% at z=2 (4.8% beyond 1 dex) | negligible |
+
+So the truth's growing high-z plane diversity is real structure: the
+scatter on M(<30) vs M(30-50) rises 0.170 -> 0.338 dex, and on
+M(<30) vs M(50-100) 0.204 -> 0.539, in every mass quartile.
+
+### 1d — the trimmed re-score (p = fraction of 24 random same-n trims scoring at or below)
+
+Only p is interpretable; the raw value falls for free when n shrinks.
+
+| trim (tier 2b, M(<30) vs M(30-50)) | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| all | 2.2 | 2.6 | 2.8 | 3.5 | 4.8 |
+| R50 >= 2 kpc (on grid) | 2.3 [1.00] | 2.7 [0.67] | 2.9 [0.08] | 3.4 [0.83] | 3.3 [0.21] |
+| **R50 >= 5 kpc (resolved)** | **1.5 [0.00]** | **1.7 [0.00]** | **1.6 [0.00]** | **1.1 [0.00]** | **1.0 [0.00]** |
+| top inner-mass quartile | 1.4 [0.96] | 1.1 [0.00] | 1.8 [0.75] | 2.3 [0.96] | 2.6 [1.00] |
+
+1. **The resolved-size cut is significant at p = 0.00 at EVERY epoch**,
+   including z = 0.4 where it drops only 6.3% of galaxies and still takes
+   2.2 -> 1.5. That is what rules out a high-z-specific artifact: the
+   same cut helps just as decisively at the anchor epoch, where sizes
+   (median R50 11.6 kpc) are nowhere near a resolution limit. The reason
+   it looks like a high-z problem is pure demographics — the fraction of
+   the population with R50 < 5 kpc runs **6.3 / 14.0 / 27.4 / 60.7 /
+   85.2%** across the five epochs.
+2. **The failure is about SIZE, not MASS.** Restricting to the top
+   inner-mass quartile does NOT help — at z >= 1.5 it is *worse* than a
+   random subsample of the same size (p = 0.96 / 1.00 on plane 1,
+   1.00 / 1.00 on plane 2). Consistent with the truth's mass-size slope
+   collapsing to +0.08 by z = 2: size and mass are nearly independent
+   there, and only the size axis carries the failure.
+3. **The one genuine measurement artifact is real but confined to tier
+   2d.** Dropping the 13.0% of z=2 galaxies whose R50 falls below the
+   2.0 kpc CoG grid start (size obtained by log-log extrapolation) moves
+   the mass-size plane 5.0 -> 3.5 (p = 0.04) while leaving tier 2b
+   untouched (p = 0.21 / 0.17). Exactly as it should: tier 2b measures
+   masses at 30-100 kpc, which do not care about R50. **So ~1.5 of tier
+   2d's 5.0 at z=2 is an extrapolation artifact and should not be
+   chased; none of tier 2b's 4.8 is.**
+4. Metric hygiene, worth recording: removing a SINGLE galaxy (the 2-dex
+   progenitor cut, n 2397 -> 2396) moved z=1.5 from 3.5 to 4.1, worse
+   than all 24 random one-galaxy removals. `plane_energy` standardizes by
+   the truth's per-axis std and estimates its floor from 8 half-splits,
+   so single influential objects move it. This is why the whole table is
+   reported as p rather than as a delta.
+
+### Verdict
+
+- **The tier-2b target is REAL.** No measurement artifact was found that
+  explains any of it; the machinery campaign is justified on this metric.
+- **But the problem is mis-named.** "The high-z ridge" is the model
+  failing on compact galaxies. The efficiency-window hypothesis (high-z
+  galaxies have no spread of arrival times to differ in) predicts a
+  high-z-specific defect and therefore does **not**, on its own, explain
+  a z=0.4 cut that is equally significant.
+- **The leading unified hypothesis for stage 2**: compact galaxies are
+  exactly the galaxies whose centres the model under-fills — exp45
+  measured per-galaxy Spearman(dlog R50, M\*(<5 kpc) bias) = **-0.89 to
+  -0.97 at every epoch**. If the compact-galaxy plane failure and the
+  known inner-mass deficit are one defect, then exp40's dissipative-era
+  finding is partially rehabilitated: not as a statement about *redshift*
+  but as a statement about *compact galaxies*, which merely happen to be
+  concentrated at high z.
+
+## Next (stage 2, not started)
+
+1. Test the unified hypothesis directly: per galaxy, is the plane
+   residual predicted by the M\*(<5 kpc) bias? If yes, the high-z ridge
+   and the inner deficit are one problem and the option menu collapses.
+2. Re-run the exp45 sigma sweep with the trimmed scoring, to see whether
+   the efficiency-window lever acts on compact galaxies specifically or
+   only shifts the population as a whole.
+3. Score the z<=2.0 and z=2.0-only thetas on tier 2d (still the one open
+   fit-scope question — tier 2d postdates exp38, and the z=2 R80/R90
+   flip has never been tested against scope). Both thetas are on disk.
