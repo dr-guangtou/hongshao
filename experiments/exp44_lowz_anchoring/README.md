@@ -340,6 +340,14 @@ by rho, and nearly every real application is single-epoch (a survey
 observes each galaxy once), so the change would buy nothing there while
 costing differential-deposition fidelity.
 
+Figure: `figures/exp44_ar1_verdict` (`ar1_layer.py figures`) — the cloud,
+the coherence decay, and the single-epoch scores side by side. Panel 2 is
+the result: the truth decays 0.82 -> 0.68 -> 0.50 -> 0.33 with epoch
+separation, `persistent` sits flat at ~1.00, and `ar1` tracks the truth
+closely (0.74 / 0.63 / 0.54 / 0.48) — well calibrated out to three
+epochs, only mildly over-coherent at the full baseline. Panel 3 shows
+the two layers superposed, the blindness made visual.
+
 ### Graduated: the growth plane is now `hongshao.qa` tier 2c
 
 The blind spot this stage exposed was structural, not specific to the

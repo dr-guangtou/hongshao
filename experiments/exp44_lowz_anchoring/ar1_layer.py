@@ -349,6 +349,91 @@ def cmd_growth(dev=False):
     print(f"  wrote {OUTDIR / f'ar1_growth{tag}.npz'}")
 
 
+def cmd_figures(dev=False):
+    """The stage-3 verdict in one figure: (a) the cross-epoch size cloud
+    where the modes differ, (b) the coherence decay against the truth's,
+    (c) the single-epoch plane scores, which are identical because those
+    metrics are structurally blind to rho."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from hongshao import qa
+    from hongshao.plotting import save_fig, set_style
+    from hongshao.qa import _tex
+    set_style()
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    tag = "_dev" if dev else ""
+    d1 = np.load(E41_DIR / f"outputs/stage1_dist{tag}.npz")
+    gals, e = _W["gals"], _W["e"]
+    n = len(gals)
+    row_to_i = {g["row"]: i for i, g in enumerate(gals)}
+    pool = np.zeros(n)
+    for r, s_ in zip(d1["row"], d1["d_sig_2d"]):
+        if int(r) in row_to_i:
+            pool[row_to_i[int(r)]] = s_
+    data = np.stack([g["data"] for g in gals])
+    cols = {"persistent": "#D55E00", "ar1": "#0072B2"}
+    growth, sizes = {}, {}
+    for mode in MODES:
+        rng = np.random.default_rng(100)
+        cogs = drawn_cogs(np.arange(n), draw_deltas(mode, pool, n, rng,
+                                                    rho_s=_W["rho_s"]))
+        growth[mode] = qa.growth_planes(cogs, data, e.R)
+        sizes[mode] = qa._safe_rhalf(cogs, e.R)
+    rh_t = qa._safe_rhalf(data, e.R)
+
+    FIGDIR = HERE / "figures"
+    FIGDIR.mkdir(exist_ok=True)
+    fig, axes = plt.subplots(1, 3, figsize=(13.4, 4.3))
+    ax = axes[0]
+    ax.scatter(np.log10(rh_t[:, 0]), np.log10(rh_t[:, 4]), s=5, c="0.65",
+               alpha=0.5, lw=0, label="truth")
+    for mode in MODES:
+        ax.scatter(np.log10(sizes[mode][:, 0]), np.log10(sizes[mode][:, 4]),
+                   s=5, c=cols[mode], alpha=0.5, lw=0, label=mode)
+    ax.set(xlabel=_tex(r"$\log_{10} R_{\rm half}$ at $z=0.4$ [kpc]"),
+           ylabel=_tex(r"$\log_{10} R_{\rm half}$ at $z=2.0$ [kpc]"),
+           title="cross-epoch size cloud")
+    ax.legend(fontsize=8, markerscale=2.5)
+
+    bx = axes[1]
+    zs = [e.ANCHOR_Z[j] for j in KS_ALL[1:]]
+    ct = [growth["persistent"][("R_half", 0, j)]["coherence_truth"]
+          for j in KS_ALL[1:]]
+    bx.plot(zs, ct, "-s", color="0.2", lw=2.2, ms=7, label="truth")
+    for mode in MODES:
+        cm = [growth[mode][("R_half", 0, j)]["coherence_model"]
+              for j in KS_ALL[1:]]
+        bx.plot(zs, cm, "-o", color=cols[mode], lw=1.8, ms=6, label=mode)
+    bx.set(xlabel=r"later epoch $z$", ylim=(0, 1.05),
+           ylabel=r"size rank coherence vs $z=0.4$",
+           title="how loyal a galaxy stays to its size")
+    bx.legend(fontsize=8)
+
+    cx = axes[2]
+    pl = np.load(OUTDIR / f"ar1_planes{tag}.npz")
+    kx, ky = qa.PLANES[1]
+    zall = [e.ANCHOR_Z[j] for j in KS_ALL]
+    for mode in ("mean",) + MODES:
+        y = [np.median(pl[f"{mode}_{kx}_{ky}_{j}"]) for j in KS_ALL]
+        cx.plot(zall, y, "-o", lw=1.8, ms=6,
+                color="0.2" if mode == "mean" else cols[mode], label=mode)
+    cx.axhline(1.0, color="0.8", lw=1.0, ls="--", zorder=0)
+    cx.set(xlabel=r"epoch $z$", ylabel="centered energy / split-half floor",
+           title=_tex(f"single-epoch plane ({kx} vs {ky})"))
+    cx.text(0.04, 0.06, "the two layers overlap: single-epoch\nmetrics "
+            "cannot see " + r"$\rho$", transform=cx.transAxes, fontsize=8,
+            color="0.35")
+    cx.legend(fontsize=8)
+    fig.suptitle("exp44 stage 3 — the AR(1) layer fixes cross-epoch "
+                 "coherence, which no single-epoch metric scores",
+                 fontsize=11)
+    fig.tight_layout()
+    print("wrote", save_fig(fig, FIGDIR / f"exp44_ar1_verdict{tag}")[0])
+    plt.close(fig)
+
+
 def demo():
     rows = np.load(POP_NPZ)["dev100"][:10]
     _w_init(rows)
@@ -415,5 +500,7 @@ if __name__ == "__main__":
         cmd_physics(dev)
     elif cmd == "growth":
         cmd_growth(dev)
+    elif cmd == "figures":
+        cmd_figures(dev)
     else:
         sys.exit(f"unknown subcommand {cmd!r}")
