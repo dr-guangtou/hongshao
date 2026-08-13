@@ -189,6 +189,76 @@ Thetas on disk: `stage3_core.npz`, `stage3_retention.npz`,
 `stage3_capacity.npz[theta_inner_1ch-mof]`; forward models in
 `exp38 stage3_inner.py`.
 
+## Step 1 RESULT — every parked fix is a LOCATION fix for a SPREAD problem
+
+Full n=2397, pure evaluation. Two things came out, and the second
+reframes the whole search.
+
+### 1a. The "-10% inner-mass deficit" is a population average hiding a 4x worse failure
+
+M\*(<5 kpc) bias for the ADOPTED kernel, by sub-population:
+
+| z | compact | extended | gap |
+|---|---|---|---|
+| 0.4 | **-43.6%** | -11.2% | 32.4 |
+| 1.0 | **-27.4%** | -0.2% | 27.2 |
+| 1.5 | **-21.2%** | **+6.9%** | 28.1 |
+| 2.0 | **-16.4%** | **+21.3%** | 37.7 |
+
+The record has quoted "~-10% M\*(<5 kpc)" for years. That number is the
+population average. **The model under-fills compact galaxies' centres by
+30-44% and, at z >= 1.5, OVER-fills extended galaxies' centres by up to
++21%.** The two sub-populations have errors of opposite sign at high z.
+
+That is the stage-1 tilt in its most direct form, and it explains why the
+tilt correlation strengthens with redshift: the gap between the two
+sub-populations is widest at z=2.
+
+### 1b. The parked components correct the LOCATION and leave the SPREAD
+
+| model | z=2 compact | z=2 extended | gap | differential GATE |
+|---|---|---|---|---|
+| adopted | -16.4% | +21.3% | 37.7 | 0.40/0.13 PASS |
+| core channel | -7.2% | +25.3% | 32.5 | 0.48/0.16 FAIL |
+| combined (inner-aware) | -7.5% | +24.2% | 31.7 | 0.53/0.19 FAIL |
+| re-aimed fiducial | -6.1% | +27.2% | 33.3 | 0.48/0.15 FAIL |
+| retention floor | (z=0.4 -44.3 / -12.3) | | 32.0 | 0.43/0.14 FAIL |
+
+Every one of them shifts BOTH sub-populations up by a similar amount. The
+gap moves from 37.7 to 31.7-33.3 — barely — while the extended population
+is pushed further into overshoot. And the plane scores follow: compact
+z=1.0 goes 2.0 -> 1.9, z=2.0 goes 3.8 -> 3.1-3.4, while every differential
+gate fails.
+
+**Reading: these components add central mass to everyone. The defect is
+that compact galaxies need much more of it than extended ones.** A uniform
+correction cannot fix a spread, which is why they improved the average,
+left the planes, and broke the physics.
+
+The pre-registered question ("is the differential failure concentrated in
+the extended sub-population?") could not be answered as posed — the
+differential estimator bins by stellar-mass tercile, not by compactness,
+so there is no compact/extended split of that statistic without rebuilding
+it. The rejection therefore stands, but **for a different and more useful
+reason than exp38 recorded**: not "inner accuracy and the physics are in
+structural tension", but "the correction had the wrong shape".
+
+### What this implies for the next step
+
+`f_core` in the exp38 core channel is
+`expit(p[12] + p[13] * cond[0])` — conditioned on **logMh alone**. That is
+why it acts almost uniformly. The direct fix is to condition it on
+information that predicts compactness, which stage 1b identified as
+**DiffMAH shape** (the whole R^2 gain at z >= 1.0).
+
+This also yields a falsifiable prediction about the gate. exp38 diagnosed
+the physics break as "the OUTER kernel re-balancing (wider late deposits)
+whenever any core channel absorbs the inner mass". If the core is applied
+mainly to compact galaxies — 6.3% of the sample at z=0.4 — that
+re-balancing pressure should be far smaller, and the differential gate
+should survive where the uniform core channel failed. **If it does not,
+the tension is structural after all and exp38 was right.**
+
 ## Stage 2 — free the efficiency window (held until 1 and 3 land)
 
 The window is narrow (mu = 1.52, sigma = 0.24 -> peak z ~ 3.6, half-max
