@@ -205,30 +205,36 @@ def _penalty(p, family):
     return pen
 
 
-def fit(family, cfg, p0, maxiter, label):
-    from objective import _simplex12, reduce_galaxies
+def fit(family, cfg, p0, maxiter, label, pool, edges):
+    """One fit against an EXISTING pool.
+
+    The pool is created once for the whole run and passed in. Creating and
+    tearing one down per fit hung the first full-scale attempt: fit 1
+    finished, fit 2's pool came up with no live workers, and `pool.map`
+    blocked forever at 0% CPU. Each worker's initializer path-loads the
+    whole exp38 harness, so repeated spawn cycles are both the expensive
+    part and the fragile one — doing it once removes both.
+    """
+    from objective import reduce_galaxies
     n = len(_W["gals"])
-    workers = max(os.cpu_count() - 2, 2)
-    edges = np.linspace(0, n, workers + 1).astype(int)
     step = np.maximum(0.05 * np.abs(p0), 0.02)
     if family == "cuspy":
         step[12] = 0.3            # alpha starts at 0 -> needs a real span
     sx = np.vstack([p0] + [p0 + step[i] * np.eye(len(p0))[i]
                            for i in range(len(p0))])
-    with Pool(workers, initializer=_w_init,
-              initargs=(_W["rows_arg"],)) as pool:
-        def loss(p):
-            parts = pool.map(_chunk, [(p, KS, cfg, family, edges[i],
-                                       edges[i + 1])
-                                      for i in range(workers)])
-            v = np.empty(n)
-            for lo, blk in parts:
-                v[lo:lo + len(blk)] = blk
-            return reduce_galaxies(v, cfg["galaxy"]) + _penalty(p, family)
-        t0 = time.time()
-        r = minimize(loss, p0, method="Nelder-Mead",
-                     options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-10,
-                                  initial_simplex=sx))
+
+    def loss(p):
+        parts = pool.map(_chunk, [(p, KS, cfg, family, edges[i], edges[i + 1])
+                                  for i in range(len(edges) - 1)])
+        v = np.empty(n)
+        for lo, blk in parts:
+            v[lo:lo + len(blk)] = blk
+        return reduce_galaxies(v, cfg["galaxy"]) + _penalty(p, family)
+
+    t0 = time.time()
+    r = minimize(loss, p0, method="Nelder-Mead",
+                 options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-10,
+                              initial_simplex=sx))
     extra = "" if len(r.x) == 12 else f"  alpha={r.x[12]:+.3f}"
     print(f"  [{label}] own-loss {r.fun:.5f} "
           f"({(time.time()-t0)/60:.1f} min, {r.nit} it){extra}", flush=True)
@@ -261,22 +267,31 @@ def cmd_fit(dev=False, objective_name=None):
     print(f"exp48 step C shootout — {len(FAMILIES)} families x "
           f"{len(cfgs)} objectives, FULL kernel "
           f"(n={len(_W['gals'])}{', DEV' if dev else ''})", flush=True)
-    for oname, cfg in cfgs.items():
-        for family in FAMILIES:
-            key = f"{family}::{oname}"
-            if f"theta::{key}" in done:
-                print(f"  [{key}] cached", flush=True)
-                continue
-            th, lo = fit(family, cfg, start_vector(family), it, key)
-            done[f"theta::{key}"] = th
-            done[f"loss::{key}"] = np.array([lo])
-            done[f"cfg::{key}"] = np.array([json.dumps(cfg)])
-            np.savez(store, **done)
+    n = len(_W["gals"])
+    workers = max(os.cpu_count() - 2, 2)
+    edges = np.linspace(0, n, workers + 1).astype(int)
+    with Pool(workers, initializer=_w_init,
+              initargs=(_W["rows_arg"],)) as pool:
+        for oname, cfg in cfgs.items():
+            for family in FAMILIES:
+                key = f"{family}::{oname}"
+                if f"theta::{key}" in done:
+                    print(f"  [{key}] cached", flush=True)
+                    continue
+                th, lo = fit(family, cfg, start_vector(family), it, key,
+                             pool, edges)
+                done[f"theta::{key}"] = th
+                done[f"loss::{key}"] = np.array([lo])
+                done[f"cfg::{key}"] = np.array([json.dumps(cfg)])
+                np.savez(store, **done)
     print(f"\n  wrote {store}")
 
 
 def _lookup_cfg(name, tag):
-    for st in (f"factorial{tag}.npz", f"screen{tag}.npz"):
+    # fall back to the FULL stores: a --dev smoke test still needs the
+    # winning config, which is only ever produced by a full step-B run
+    for st in (f"factorial{tag}.npz", f"screen{tag}.npz",
+               "factorial.npz", "screen.npz"):
         p = OUTDIR / st
         if p.exists():
             d = dict(np.load(p, allow_pickle=True))
