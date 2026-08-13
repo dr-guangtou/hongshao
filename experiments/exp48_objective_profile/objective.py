@@ -237,6 +237,69 @@ def screen_configs():
     return out
 
 
+SHORT = dict(quantity="q", residual="res", radial="rad", weight="w",
+             galaxy="gal")       # NOT k[0]: residual and radial collide
+
+
+def cname(cfg):
+    """Canonical, order-stable cell name so the store caches correctly."""
+    return "|".join(f"{SHORT[k]}={cfg[k]}" for k in
+                    ("quantity", "residual", "radial", "weight", "galaxy"))
+
+
+def factorial_configs():
+    """The focused factorial, chosen by the screen.
+
+    The screen's four best cells were residual=abs (2.49), radial=absmean
+    (2.57), galaxy=median (2.59) and residual=log (2.69), all beating the
+    baseline's 2.72. They share one property: each REDUCES the objective's
+    sensitivity to a few extreme fractional residuals. The cell that
+    increases it — galaxy=cvar20 — was the worst of the sane cells (2.89).
+    So the factorial crosses the three robustness axes.
+
+    Plus two cells giving `density` a fair test: it collapsed in the
+    screen (14.37) only when paired with a FRACTIONAL residual, which
+    diverges wherever Sigma is small in the outermost bins. Paired with
+    abs or log it may behave.
+    """
+    out = []
+    for residual in ("abs", "log"):
+        for radial in ("rms", "absmean"):
+            for galaxy in ("mean", "median"):
+                out.append(dict(BASELINE, residual=residual, radial=radial,
+                                galaxy=galaxy))
+    for residual in ("abs", "log"):
+        out.append(dict(BASELINE, quantity="density", residual=residual))
+    return [(cname(c), c) for c in out]
+
+
+def _run_cells(cfgs, store, dev):
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    _w_init(rows)
+    p0 = np.asarray(np.load(E40)["theta_z15"], float)[:12]
+    it = max(int(4000 * (0.05 if dev else 1.0)), 100)
+    OUTDIR.mkdir(exist_ok=True)
+    done = dict(np.load(store, allow_pickle=True)) if store.exists() else {}
+    for name, cfg in cfgs:
+        if f"theta::{name}" in done:
+            print(f"  [{name}] cached", flush=True)
+            continue
+        th, lo = fit(cfg, p0, it, name)
+        done[f"theta::{name}"] = th
+        done[f"loss::{name}"] = np.array([lo])
+        done[f"cfg::{name}"] = np.array([json.dumps(cfg)])
+        np.savez(store, **done)       # save after EVERY fit (unattended)
+    print(f"\n  wrote {store}")
+
+
+def cmd_factorial(dev=False):
+    tag = "_dev" if dev else ""
+    cfgs = factorial_configs()
+    print(f"exp48 step B factorial — {len(cfgs)} cells "
+          f"({', DEV' if dev else 'full'})", flush=True)
+    _run_cells(cfgs, OUTDIR / f"factorial{tag}.npz", dev)
+
+
 def cmd_screen(dev=False):
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     tag = "_dev" if dev else ""
@@ -277,7 +340,10 @@ def cmd_report(dev=False):
     pop = np.load(POP_NPZ)
     logms = np.array([pop["logms"][g["row"]] for g in gals])
     r50_t = qa._safe_rhalf(data_cogs, R, 0.5)
-    d = dict(np.load(OUTDIR / f"screen{tag}.npz", allow_pickle=True))
+    d = {}
+    for st in (f"screen{tag}.npz", f"factorial{tag}.npz"):
+        if (OUTDIR / st).exists():
+            d.update(dict(np.load(OUTDIR / st, allow_pickle=True)))
     names = [k.split("::", 1)[1] for k in d if k.startswith("theta::")]
     rowsout = {}
     for name in names:
@@ -370,6 +436,8 @@ if __name__ == "__main__":
         demo()
     elif cmd == "screen":
         cmd_screen(is_dev)
+    elif cmd == "factorial":
+        cmd_factorial(is_dev)
     elif cmd == "report":
         cmd_report(is_dev)
     else:
