@@ -61,6 +61,11 @@ PLANES = [("kpc:M(<30)", "kpc:M(30-50)"), ("kpc:M(<30)", "kpc:M(50-100)"),
           ("Re:M(<2Re)", "Re:M(2-4Re)")]
 GROWTH_QUANTITIES = ("R_half", "Mtot")         # tier 2c, cross-epoch
 SIZE_FRACTIONS = (0.5, 0.8, 0.9)               # tier 2d: R50 / R80 / R90
+# tier 2e: the masses whose POPULATION DISTRIBUTION is reported. A subset,
+# not every key -- one inner aperture, one mid and one outer annulus, and
+# the two Re-relative quantities -- so the table and figure stay readable.
+CDF_KEYS = ("kpc:M(<10)", "kpc:M(<30)", "kpc:M(30-50)", "kpc:M(50-100)",
+            "Re:M(<2Re)", "Re:M(2-4Re)")
 RMIN_KPC = 5.0                                 # inner 2-5 kpc marginally resolved
 
 
@@ -223,6 +228,91 @@ def plane_energy(truth_xy, model_xy, n_split=8, seed=0):
                 energy_ratio_centered=e_c / floor)
 
 
+def cdf_distances(truth_v, model_v, n_split=8, seed=0):
+    """KS and 1-Wasserstein between two 1-D samples, each against the
+    truth's own split-half floor (the ``plane_energy`` convention).
+
+    Two statistics because they fail differently: KS is the largest
+    VERTICAL gap between the CDFs, so it is blind to how far apart they
+    are once separated; W1 is the mean HORIZONTAL gap, in dex, so it
+    reports magnitude but is insensitive to a narrow, tall discrepancy.
+    A model can look fine on one and bad on the other.
+
+    Interpretation caveat: both are normalized by the TRUTH's own
+    split-half floor, so a quantity whose truth distribution is very
+    narrow has a near-zero floor and an inflated, unstable ratio. That is
+    a property of the target, not of the model — check the raw ``ks`` /
+    ``w1`` before believing a large ratio on a tight quantity. (Seen in
+    the self-check's self-similar synthetic, where M(<2Re) is identical
+    for every galaxy by construction.)
+    """
+    t = np.asarray(truth_v, float)
+    m = np.asarray(model_v, float)
+    t, m = t[np.isfinite(t)], m[np.isfinite(m)]
+    if len(t) < 8 or len(m) < 8:
+        return dict(ks=np.nan, w1=np.nan, ks_floor=np.nan, w1_floor=np.nan,
+                    ks_ratio=np.nan, w1_ratio=np.nan, n=len(t))
+
+    def _pair(a, b):
+        grid = np.union1d(a, b)
+        fa = np.searchsorted(np.sort(a), grid, side="right") / len(a)
+        fb = np.searchsorted(np.sort(b), grid, side="right") / len(b)
+        ks = float(np.max(np.abs(fa - fb)))
+        # W1 on equal-count quantiles: robust to unequal sample sizes
+        q = (np.arange(1, min(len(a), len(b)) + 1) - 0.5) / min(len(a), len(b))
+        w1 = float(np.mean(np.abs(np.quantile(a, q) - np.quantile(b, q))))
+        return ks, w1
+
+    ks, w1 = _pair(t, m)
+    rng = np.random.default_rng(seed)
+    fk, fw = [], []
+    for _ in range(n_split):
+        perm = rng.permutation(len(t))
+        h = len(t) // 2
+        a, b = _pair(t[perm[:h]], t[perm[h:]])
+        fk.append(a)
+        fw.append(b)
+    ks_f = max(float(np.median(fk)), 1e-12)
+    w1_f = max(float(np.median(fw)), 1e-12)
+    return dict(ks=ks, w1=w1, ks_floor=ks_f, w1_floor=w1_f,
+                ks_ratio=ks / ks_f, w1_ratio=w1 / w1_f, n=len(t))
+
+
+def mass_cdf_distance(model_cogs, data_cogs, R, quantities=None,
+                      truth=None, model=None):
+    """Tier 2e — the POPULATION DISTRIBUTION of every aperture/annulus
+    mass, per epoch, as a CDF comparison. Returns {(quantity, j): dict}.
+
+    Tiers 1-2 report a median bias and a dex scatter per quantity, which
+    are two moments of a distribution that may differ in shape, tails or
+    skew while matching both. This tier compares the distributions
+    themselves.
+
+    Like ``plane_energy`` and for the same reason, this is PAIRING-BLIND:
+    it compares populations, so a model that emitted the truth's own
+    galaxies in a shuffled order would score perfectly. It measures
+    whether the right population is produced, never whether the right
+    galaxy got the right profile — read it alongside the per-object
+    tiers, never instead of them.
+    """
+    if truth is None or model is None:
+        truth, model, _, _ = measure_all(model_cogs, data_cogs, R)
+    keys = list(quantities) if quantities is not None else list(truth)
+    nz = data_cogs.shape[1]
+    out = {}
+    for k in keys:
+        for j in range(nz):
+            tv = np.log10(np.clip(truth[k][:, j], 1.0, None))
+            mv = np.log10(np.clip(model[k][:, j], 1.0, None))
+            # a quantity that left the measured grid is NaN by convention
+            # in ``measure``; the truth-floor clip would turn it into a
+            # spike at 0, so drop those rows instead.
+            ok_t = np.isfinite(truth[k][:, j]) & (truth[k][:, j] > 1.0)
+            ok_m = np.isfinite(model[k][:, j]) & (model[k][:, j] > 1.0)
+            out[(k, j)] = cdf_distances(tv[ok_t], mv[ok_m], seed=j)
+    return out
+
+
 def _safe_rhalf(cogs, R, frac=0.5):
     """(n, nz) enclosed radii at ``frac``, NaN where the CoG is unusable."""
     n, nz = cogs.shape[:2]
@@ -369,6 +459,8 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         planes[(kx, ky)] = per_epoch
     growth = growth_planes(model_cogs, data_cogs, R)
     sizes = size_planes(model_cogs, data_cogs, R)
+    cdfs = mass_cdf_distance(model_cogs, data_cogs, R, quantities=CDF_KEYS,
+                             truth=truth, model=model)
 
     if verbose:
         print(f"\n=== QA [{name}]  (n={n}) ===")
@@ -419,6 +511,20 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                       f"median dlogR {mo['median_dlogR']:+.3f} | E/floor "
                       f"{mo['energy_ratio']:.1f} "
                       f"(centered {mo['energy_ratio_centered']:.1f})")
+        print("\n  tier 2e — mass DISTRIBUTIONS per epoch (log10 mass CDFs, "
+              "population-level):\n    KS / W1[dex], each as a ratio to the "
+              "truth's split-half floor (~1 = indistinguishable)")
+        print(f"    {'quantity':>16s} | "
+              + " | ".join(f"z={z}".rjust(13) for z in anchor_z))
+        for k in CDF_KEYS:
+            cells = []
+            for j in range(nz):
+                d = cdfs[(k, j)]
+                cells.append("     n/a     " if not np.isfinite(d["ks_ratio"])
+                             else f"{d['ks_ratio']:5.1f}/{d['w1_ratio']:5.1f}")
+            print(f"    {_tex(k):>16s} | " + " | ".join(c.rjust(13)
+                                                        for c in cells))
+
         print("\n  tier 3 — profile max|rel| median per epoch (all R | R>5 kpc):")
         row_a = " | ".join(f"{100*np.nanmedian(mr_all[:, j]):5.1f}%" for j in range(nz))
         row_o = " | ".join(f"{100*np.nanmedian(mr_out[:, j]):5.1f}%" for j in range(nz))
@@ -442,10 +548,55 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
             _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name,
                            figdir)
         _size_figure(model_cogs, data_cogs, R, anchor_z, sizes, name, figdir)
+        _cdf_figure(truth, model, anchor_z, name, figdir)
 
     return dict(truth=truth, model=model, rhalf=rhalf, keys=keys,
                 mr_all=mr_all, mr_out=mr_out, planes=planes,
-                growth=growth, sizes=sizes)
+                growth=growth, sizes=sizes, cdfs=cdfs)
+
+
+def _cdf_figure(truth, model, anchor_z, name, figdir):
+    """Tier 2e visual: the population CDF of each mass, truth vs model, with
+    a residual strip. The residual is what the KS statistic maximizes, so
+    the strip shows exactly where the reported number comes from."""
+    nz = len(anchor_z)
+    cols = len(CDF_KEYS)
+    fig, axes = plt.subplots(2, cols, figsize=(3.1 * cols, 5.6),
+                             sharex="col",
+                             gridspec_kw=dict(height_ratios=[3, 1.35]))
+    axes = np.atleast_2d(axes)
+    colors = _zcolors(nz)
+    for c, k in enumerate(CDF_KEYS):
+        ax, rax = axes[0, c], axes[1, c]
+        for j in range(nz):
+            tv = np.sort(np.log10(np.clip(truth[k][:, j], 1.0, None)))
+            mv = np.sort(np.log10(np.clip(model[k][:, j], 1.0, None)))
+            tv, mv = tv[tv > 0], mv[mv > 0]
+            if len(tv) < 8 or len(mv) < 8:
+                continue
+            ft = np.arange(1, len(tv) + 1) / len(tv)
+            fm = np.arange(1, len(mv) + 1) / len(mv)
+            ax.plot(tv, ft, color=colors[j], lw=1.6, alpha=0.9,
+                    label=f"z={anchor_z[j]}" if c == 0 else None)
+            ax.plot(mv, fm, color=colors[j], lw=1.4, ls="--", alpha=0.9)
+            grid = np.union1d(tv, mv)
+            rax.plot(grid,
+                     np.interp(grid, mv, fm) - np.interp(grid, tv, ft),
+                     color=colors[j], lw=1.2)
+        ax.set_title(_tex(k), fontsize=9)
+        ax.set_ylim(0, 1)
+        rax.axhline(0.0, color="0.5", lw=0.8)
+        rax.set_ylim(-0.35, 0.35)
+        rax.set_xlabel(_tex(f"log10 {k}"), fontsize=8)
+        if c == 0:
+            ax.set_ylabel("CDF (solid truth, dashed model)", fontsize=8)
+            rax.set_ylabel("model - truth", fontsize=8)
+            ax.legend(fontsize=7, loc="upper left", framealpha=0.9)
+    fig.suptitle(_tex(f"QA [{name}] — tier 2e mass distributions; the "
+                      "residual strip is what KS maximizes"), fontsize=11)
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    save_fig(fig, str(Path(figdir) / f"qa_cdf_{name}"))
+    plt.close(fig)
 
 
 def _size_figure(model_cogs, data_cogs, R, anchor_z, sizes, name, figdir):
@@ -995,6 +1146,41 @@ def demo():
     assert rr[0] < rr[1] < rr[2], rr
     assert abs(rr[0] - half_mass_radius(c0, Rg)) < 1e-12
 
+    # --- tier 2e: the mass DISTRIBUTIONS -----------------------------------
+    rg2 = np.random.default_rng(5)
+    base = rg2.normal(11.0, 0.25, 3000)
+    # identity sits at the floor on both statistics
+    d_id = cdf_distances(base, base.copy())
+    assert d_id["ks_ratio"] < 1.5 and d_id["w1_ratio"] < 1.5, d_id
+    # a pure SHIFT is caught by both
+    d_sh = cdf_distances(base, base + 0.12)
+    assert d_sh["ks_ratio"] > 5 and d_sh["w1_ratio"] > 5, d_sh
+    # a too-TIGHT distribution with the right median is caught: this is the
+    # kernel's actual failure mode, and tiers 1-2 (median bias + dex
+    # scatter) report the median as perfect
+    d_tt = cdf_distances(base, 11.0 + 0.4 * (base - 11.0))
+    assert d_tt["ks_ratio"] > 5, d_tt
+    # KS and W1 are NOT redundant, and the case that separates them is the
+    # one this project cares about: a small fraction of galaxies placed FAR
+    # from where they belong (a missing tail). KS only sees the fraction —
+    # capped at ~0.10 here — while W1 sees the distance as well.
+    tail = base.copy()
+    tail[:300] += 3.0                       # 10% displaced by 3 dex
+    d_tl = cdf_distances(base, tail)
+    assert d_tl["w1_ratio"] > 3.0 * d_tl["ks_ratio"], \
+        (d_tl["ks_ratio"], d_tl["w1_ratio"])
+    # THE CAVEAT, pinned: tier 2e is PAIRING-BLIND, exactly like
+    # plane_energy. A "model" that emits the truth's own values in a
+    # different order scores perfectly, so this tier can never say whether
+    # the right galaxy got the right profile.
+    d_shuf = cdf_distances(base, rg2.permutation(base))
+    assert d_shuf["ks_ratio"] < 1.5, d_shuf
+    assert d_shuf["ks"] < 1e-12, "a permutation is the SAME sample"
+    # and it survives NaNs (a quantity that left the measured grid)
+    holed = base.copy()
+    holed[:300] = np.nan
+    assert np.isfinite(cdf_distances(base, holed)["ks_ratio"])
+
     res2 = evaluate(1.1 * truth, truth, R, [0.4, 1.0, 2.0], name="x1.1",
                     verbose=False, figures=False)
     for k in res2["keys"]:
@@ -1006,12 +1192,18 @@ def demo():
     assert np.allclose(res2["mr_all"], 0.1, atol=1e-9)
     mr_rmin = profile_maxrel(1.1 * truth, truth, R, rmin=RMIN_KPC)
     assert np.allclose(mr_rmin, 0.1, atol=1e-9)
+    # tier 2e must be present in the standard report
+    assert "cdfs" in res2 and (CDF_KEYS[0], 0) in res2["cdfs"]
+
     print("qa.demo OK: identity exact, +10% scaling -> +10% bias everywhere, "
           "0 dex scatter, 10% max|rel| (all-R and R>5); energy distance: 0 on "
           f"identity; shift {shift['energy_ratio']:.0f} (centered "
           f"{shift['energy_ratio_centered']:.1f}); resample "
           f"{same['energy_ratio']:.1f}; over-tight centered "
-          f"{tight['energy_ratio_centered']:.0f}")
+          f"{tight['energy_ratio_centered']:.0f}; tier 2e KS/floor: "
+          f"identity {d_id['ks_ratio']:.1f}, shift {d_sh['ks_ratio']:.0f}, "
+          f"too-tight {d_tt['ks_ratio']:.0f}, shuffled {d_shuf['ks_ratio']:.1f} "
+          "(pairing-blind, as documented)")
 
 
 if __name__ == "__main__":
