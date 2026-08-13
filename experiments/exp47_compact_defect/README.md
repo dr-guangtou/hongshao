@@ -128,6 +128,67 @@ parameters — a strictly smaller step than restructuring the efficiency
 window, and one that stays inside the portability criterion since the
 kernel already takes the MAH as input.
 
+## THE EXPLORATION PLAN (user direction 2026-08-13: systematic, this branch)
+
+Stages 1, 1b and 3 settled what the problem is and where each class of fix
+can possibly work. The remaining work is a search over solutions, ordered
+by **cost ascending**, with each step's outcome informing the next.
+
+| step | what | cost | why here |
+|---|---|---|---|
+| **0** | `judge.py` — ONE verdict function every candidate passes through | build once | comparability; without it each candidate gets judged on a different battery |
+| **1** | re-judge the PARKED exp38 models (core channel, retention floor, combined, inner-aware) under compact/extended-aware scoring | **free** — thetas on disk, pure evaluation | may reopen a parked decision at zero cost |
+| **2** | extend the conditioning vector with DiffMAH shape | one refit (~20 min) | stage 1b says this is exactly the information being discarded |
+| **3** | the efficiency window: widen sigma's box, and condition sigma on MAH shape | fits | exp45 (sigma is the only lever) x stage 1b (shape is the missing input) |
+| **4** | compactness-aware stochastic width | layer refit | stage 1b proves it is the ONLY route at z <= 0.7 |
+| **5** | synthesis and verdict | — | best combination, full battery |
+
+### Step 0 — the judge
+
+Every candidate is scored on the same things, and the physics tests are
+GATES rather than tie-breakers (exp38's lesson: inner-mass accuracy and
+the differential-deposition physics are in genuine tension in this
+family, so a candidate that buys the first by breaking the second is not
+an improvement):
+
+- tier 2b centered E/floor, full sample **and** compact/extended split
+  with size-matched random controls;
+- tier 2d (R50/R80/R90), noting the z=2 below-grid artifact is not to be
+  chased;
+- M\*(<5 kpc) and M\*(<10 kpc) bias, **reported per sub-population** —
+  the whole point of stage 3;
+- **GATE** differential deposition, massive tercile (data 0.37/0.11 at
+  z0.7->0.4, adopted band 0.39-0.40/0.12-0.13);
+- **GATE** outskirt overshoot T1 (adopted band +0.02 to +0.03 dex);
+- the across-ridge tilt from stage 1 (rho against the M\*(<5 kpc) bias,
+  and rho against compactness) — a fix should FLATTEN the tilt, and this
+  is the statistic that says whether it did.
+
+### Step 1 — re-judge what was already rejected
+
+The record's standing puzzle: exp38's core channel (`f_core` = 0.185,
+`rc_core` = 1.55 kpc) and retention floor (`f_ret` = 0.084) both halved
+the inner-mass deficit and were then rejected for "breaking the
+differential physics" (0.47-0.53/0.16-0.19 against data 0.37/0.11).
+
+Stage 3 gives a concrete reason to re-open that: at z=0.4 the compact
+galaxies those models were built to fix are **6.3%** of the sample, so
+both the loss and the physics tests are dominated by the 94% the model
+already fits well. A component that helps the minority and mildly
+disturbs the majority would look exactly like "halved the deficit, broke
+the physics".
+
+Pre-registered reading: if the core channel's differential-deposition
+failure is concentrated in the EXTENDED sub-population while the compact
+one improves, the rejection was a scoring artifact and the core channel
+returns as a live candidate. If it breaks the physics for compact
+galaxies too, the rejection stands and step 2 proceeds unencumbered.
+
+Thetas on disk: `stage3_core.npz`, `stage3_retention.npz`,
+`stage3_combined.npz`, `stage3_combined_plain.npz`, `stage3_qcore.npz`,
+`stage3_capacity.npz[theta_inner_1ch-mof]`; forward models in
+`exp38 stage3_inner.py`.
+
 ## Stage 2 — free the efficiency window (held until 1 and 3 land)
 
 The window is narrow (mu = 1.52, sigma = 0.24 -> peak z ~ 3.6, half-max
