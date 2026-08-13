@@ -259,6 +259,92 @@ re-balancing pressure should be far smaller, and the differential gate
 should survive where the uniform core channel failed. **If it does not,
 the tension is structural after all and exp38 was right.**
 
+## Step 2 RESULT — rebalancing the OBJECTIVE is most of the fix, and it
+## overturns exp38's "structural tension" verdict
+
+Four models, all with exp38's core channel, differing only in objective
+and in whether `f_core` may depend on DiffMAH shape:
+
+| model | objective | shape slopes | loss |
+|---|---|---|---|
+| adopted (no core) | plain | — | 0.1556 |
+| **A** | plain | free | 0.1512 |
+| **C** | balanced | frozen at 0 | 0.1507 |
+| **B** | balanced | free | **0.1475** |
+
+### Centered E/floor, full sample (~1 = indistinguishable from real)
+
+| z | adopted | A | **C** | **B** |
+|---|---|---|---|---|
+| 0.4 | 2.2 | 2.1 | **1.1** | **0.7** |
+| 0.7 | 2.6 | 2.6 | **1.8** | **1.6** |
+| 1.0 | 2.8 | 2.8 | **1.9** | **1.6** |
+| 1.5 | 3.5 | 3.4 | **3.1** | **2.8** |
+| 2.0 | 4.8 | 4.5 | **4.3** | 4.7 |
+
+### M\*(<5 kpc) bias, compact sub-population
+
+| z | adopted | C | B |
+|---|---|---|---|
+| 0.4 | **-43.6%** | -23.8% | **-20.5%** |
+| 1.0 | -27.4% | -18.6% | -17.3% |
+| 2.0 | -16.4% | -4.6% | -6.3% |
+
+### The GATES
+
+| model | differential (data 0.37/0.11) | outskirt T1 |
+|---|---|---|
+| exp38 core channel (uniform) | 0.48/0.16 **FAIL** | +0.050/+0.108 |
+| A plain + shape | 0.47/0.15 **FAIL** | +0.037/+0.035 |
+| **C balanced, no shape** | **0.44/0.15 PASS** | -0.010/-0.016 |
+| **B balanced + shape** | **0.42/0.14 PASS** | -0.016/-0.053 |
+
+### Four conclusions
+
+1. **exp38's "structural tension" is NOT structural.** The record states
+   that "inner-mass accuracy and the differential-deposition physics are
+   in genuine tension in this family". The pre-registered prediction —
+   that a core aimed at compact galaxies would not trigger the outer
+   re-balancing that broke the uniform version — **held**. The same core
+   channel that failed at 0.48/0.16 passes at 0.42-0.44 once the
+   objective stops being dominated by galaxies that never needed it. The
+   tension was an artifact of the objective, not a property of the model
+   family.
+2. **The OBJECTIVE is doing most of the work.** C changes no inputs and
+   adds no parameters — it only reweights compact and extended galaxies
+   to contribute equally — and it takes the planes from 2.2/2.6/2.8/3.5
+   to 1.1/1.8/1.9/3.1, halves the compact central deficit
+   (-43.6% -> -23.8%), and passes both gates. This is proposal 3
+   vindicated in its strongest form.
+3. **The shape conditioning is real but secondary.** B beats C at
+   z <= 1.5 (0.7 vs 1.1 at z=0.4) and is worth 0.0032 in loss — a real
+   margin against exp38's whole core channel being worth 0.0085 — but it
+   is slightly WORSE at z=2 (4.7 vs 4.3). Ordering matters: A (shape
+   without the balanced objective) is no better than the adopted kernel
+   and still fails the gate, so **the objective is what unlocks the
+   conditioning**, not the reverse.
+4. **z=2 is still not fixed, and extended galaxies got worse there.**
+   Both B and C push the extended sub-population's central mass to
+   +38-39% overshoot at z=2 (adopted: +21.3%), so the sub-population gap
+   at z=2 WIDENS even as z <= 1.5 improves markedly. Consistent with
+   stage 1b: the fix works where halo information exists and does
+   nothing where it does not.
+
+### Caveats, stated plainly
+
+- **These are IN-SAMPLE.** The record's precedent is a ~zero
+  in-sample/held-out gap for population-shared thetas (exp32: 30.5% vs
+  30.4%), but a score of 0.7 that sits BELOW the split-half floor must be
+  cross-validated before anything is adopted.
+- **The C control is handicapped.** It carries three parameters its loss
+  ignores, so Nelder-Mead spends simplex dimensions on inert directions
+  (visible in the log as C's slopes wandering to the -4.0 bound before
+  being zeroed). Some unknown part of B's 0.0032 margin is search
+  efficiency, not signal. A 15-parameter refit would measure it cleanly.
+- **The missing control**: the adopted kernel with NO core channel, refit
+  under the balanced objective. That separates "the core channel works
+  once the objective is fixed" from "the objective alone was enough".
+
 ## Stage 2 — free the efficiency window (held until 1 and 3 land)
 
 The window is narrow (mu = 1.52, sigma = 0.24 -> peak z ~ 3.6, half-max
