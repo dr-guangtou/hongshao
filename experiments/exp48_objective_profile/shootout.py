@@ -224,11 +224,16 @@ def fit(family, cfg, p0, maxiter, label, pool, edges):
                            for i in range(len(p0))])
 
     def loss(p):
-        parts = pool.map(_chunk, [(p, KS, cfg, family, edges[i], edges[i + 1])
-                                  for i in range(len(edges) - 1)])
-        v = np.empty(n)
-        for lo, blk in parts:
-            v[lo:lo + len(blk)] = blk
+        if pool is None:                       # serial: slow but reliable
+            v = np.array([gal_loss_family(p, g, KS, cfg, family)
+                          for g in _W["gals"]], float)
+        else:
+            parts = pool.map(_chunk,
+                             [(p, KS, cfg, family, edges[i], edges[i + 1])
+                              for i in range(len(edges) - 1)])
+            v = np.empty(n)
+            for lo, blk in parts:
+                v[lo:lo + len(blk)] = blk
         return reduce_galaxies(v, cfg["galaxy"]) + _penalty(p, family)
 
     t0 = time.time()
@@ -252,7 +257,18 @@ def start_vector(family):
     return base
 
 
-def cmd_fit(dev=False, objective_name=None):
+class _NullPool:
+    """Stand-in so the fit loop needs no branching: `with` yields None,
+    and `fit` runs the loss serially when it sees None."""
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, *a):
+        return False
+
+
+def cmd_fit(dev=False, objective_name=None, one=False, use_pool=False):
     import objective as ob
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     tag = "_dev" if dev else ""
@@ -270,8 +286,15 @@ def cmd_fit(dev=False, objective_name=None):
     n = len(_W["gals"])
     workers = max(os.cpu_count() - 2, 2)
     edges = np.linspace(0, n, workers + 1).astype(int)
-    with Pool(workers, initializer=_w_init,
-              initargs=(_W["rows_arg"],)) as pool:
+    # SERIAL by default. Two full-scale attempts hung on the second fit of
+    # a process, and the workers reported BrokenPipeError on the pool's
+    # ERROR path -- something raises inside a worker at full scale that
+    # does not raise at dev scale or in a minimal 3-worker pool. Rather
+    # than keep chasing it, serial is ~8x slower per fit and always
+    # finishes. Pass --pool to opt back in.
+    ctx = (Pool(workers, initializer=_w_init, initargs=(_W["rows_arg"],))
+           if use_pool else _NullPool())
+    with ctx as pool:
         for oname, cfg in cfgs.items():
             for family in FAMILIES:
                 key = f"{family}::{oname}"
@@ -284,6 +307,18 @@ def cmd_fit(dev=False, objective_name=None):
                 done[f"loss::{key}"] = np.array([lo])
                 done[f"cfg::{key}"] = np.array([json.dumps(cfg)])
                 np.savez(store, **done)
+                if one:
+                    # ONE fit per process, by design. Two independent
+                    # full-scale attempts hung on the SECOND fit of a
+                    # process — 0% CPU, no live pool workers, parent
+                    # blocked in pool.map — with a fresh pool per fit and
+                    # again with one shared pool. The first fit in a
+                    # process has never failed. Rather than keep
+                    # debugging macOS spawn semantics, the driver loop
+                    # re-invokes this script until every cell is cached.
+                    print("  (--one: exiting after a single fit)",
+                          flush=True)
+                    return
     print(f"\n  wrote {store}")
 
 
@@ -337,6 +372,7 @@ if __name__ == "__main__":
     if cmd == "demo":
         demo()
     elif cmd == "fit":
-        cmd_fit(is_dev, obj)
+        cmd_fit(is_dev, obj, one="--one" in sys.argv,
+                use_pool="--pool" in sys.argv)
     else:
         raise SystemExit(__doc__)
