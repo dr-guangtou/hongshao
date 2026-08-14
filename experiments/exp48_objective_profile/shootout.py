@@ -62,7 +62,8 @@ KS_ALL = [0, 1, 2, 3, 4]
 _W = {}
 
 # n_extra = parameters BEYOND the 12 base ones
-FAMILIES = {"moffat": 0, "cuspy": 1, "sersic_r50": 0}
+FAMILIES = {"moffat": 0, "cuspy": 1, "sersic_r50": 0,
+            "gompertz_log": 0, "loglogistic": 0, "richards": 1}
 
 
 def _load_by_path(name, path):
@@ -105,6 +106,34 @@ def basis_family(family, th4, shape, ti, t_obs, tk, r):
         def cog(rc):
             X = (r[:, None] / rc[None, :]) ** 2
             return betainc(p, q, X / (1.0 + X))
+    elif family == "gompertz_log":
+        # Frechet CDF as a DEPOSIT: M(<R) = exp(-(rc/R)^c).
+        # Sigma ~ R^-(c+2) far out (a power-law tail, the property that
+        # won exp38) but a super-exponential central hole.
+        c = float(np.clip(shape[0], 0.2, 8.0))
+
+        def cog(rc):
+            return np.exp(-np.clip((rc[None, :] / r[:, None]) ** c,
+                                   0.0, 700.0))
+    elif family == "loglogistic":
+        # power law at BOTH ends: Sigma ~ R^(k-2) inner, R^-(k+2) outer,
+        # so k < 2 is a genuine CUSP. rc is exactly the half-mass radius.
+        k = float(np.clip(shape[0], 0.2, 8.0))
+
+        def cog(rc):
+            X = (r[:, None] / rc[None, :]) ** k
+            return X / (1.0 + X)
+    elif family == "richards":
+        # generalized logistic in log R; NESTS the two above
+        # (nu -> 0 gompertz_log, nu = 1 loglogistic), so the fitted nu
+        # says which sub-family the kernel actually wants.
+        k = float(np.clip(shape[0], 0.2, 8.0))
+        nu = float(np.exp(np.clip(shape[1], -6.0, 2.0)))
+
+        def cog(rc):
+            X = np.exp(np.clip(-k * np.log(r[:, None] / rc[None, :]),
+                               -700.0, 700.0))
+            return (1.0 + nu * X) ** (-1.0 / nu)
     elif family == "sersic_r50":
         from profiles import b_n
         n = float(np.clip(shape[0], 0.35, 8.0))
@@ -202,6 +231,10 @@ def _penalty(p, family):
         a = p[12]
         pen += 30.0 * float(np.clip(-a, 0, None) ** 2
                             + np.clip(a - 1.9, 0, None) ** 2)
+    if family == "richards":
+        v = p[12]
+        pen += 30.0 * float(np.clip(-6.0 - v, 0, None) ** 2
+                            + np.clip(v - 2.0, 0, None) ** 2)
     return pen
 
 
@@ -218,8 +251,8 @@ def fit(family, cfg, p0, maxiter, label, pool, edges):
     from objective import reduce_galaxies
     n = len(_W["gals"])
     step = np.maximum(0.05 * np.abs(p0), 0.02)
-    if family == "cuspy":
-        step[12] = 0.3            # alpha starts at 0 -> needs a real span
+    if family in ("cuspy", "richards"):
+        step[12] = 0.3            # starts at 0 -> needs a real span
     sx = np.vstack([p0] + [p0 + step[i] * np.eye(len(p0))[i]
                            for i in range(len(p0))])
 
@@ -254,6 +287,9 @@ def start_vector(family):
         p = base.copy()
         p[5] = 2.0                                # the gamma slot becomes n
         return p
+    if family == "richards":
+        # gamma slot -> k; nu starts at 1, i.e. exactly loglogistic
+        return np.concatenate([base, [0.0]])
     return base
 
 
@@ -268,19 +304,28 @@ class _NullPool:
         return False
 
 
-def cmd_fit(dev=False, objective_name=None, one=False, use_pool=False):
+def cmd_fit(dev=False, objective_name=None, one=False, use_pool=False,
+            winner_only=False, store_tag="", families=None):
     import objective as ob
     rows = np.load(POP_NPZ)["dev100"] if dev else None
     tag = "_dev" if dev else ""
     _w_init(rows)
-    cfgs = {"current": dict(ob.BASELINE)}
+    # WINNER FIRST. The ::current arm is the control, and its decisive
+    # cell is already banked (cuspy::current fits alpha=+0.124 for a
+    # 0.00002 loss gain -- the old objective cannot see a cusp). Serial
+    # fits run ~3 h each for the special-function families, so ordering
+    # decides which results exist after a given wall-clock budget.
+    cfgs = {}
     if objective_name:
         cfgs["winner"] = json.loads(_lookup_cfg(objective_name, tag))
+    if not winner_only:
+        cfgs["current"] = dict(ob.BASELINE)
     it = max(int(4000 * (0.05 if dev else 1.0)), 100)
     OUTDIR.mkdir(exist_ok=True)
-    store = OUTDIR / f"shootout{tag}.npz"
+    store = OUTDIR / f"shootout{store_tag}{tag}.npz"
     done = dict(np.load(store, allow_pickle=True)) if store.exists() else {}
-    print(f"exp48 step C shootout — {len(FAMILIES)} families x "
+    fams = families or list(FAMILIES)
+    print(f"exp48 step C shootout — {len(fams)} families x "
           f"{len(cfgs)} objectives, FULL kernel "
           f"(n={len(_W['gals'])}{', DEV' if dev else ''})", flush=True)
     n = len(_W["gals"])
@@ -296,7 +341,7 @@ def cmd_fit(dev=False, objective_name=None, one=False, use_pool=False):
            if use_pool else _NullPool())
     with ctx as pool:
         for oname, cfg in cfgs.items():
-            for family in FAMILIES:
+            for family in fams:
                 key = f"{family}::{oname}"
                 if f"theta::{key}" in done:
                     print(f"  [{key}] cached", flush=True)
@@ -348,8 +393,24 @@ def demo():
     B_a = basis_family("cuspy", th4, [1.4, 1.0], ti, 9.39, 8.0, r)
     inner = np.argmin(np.abs(r - 2.0))
     assert (B_a[inner] > B_cus[inner]).all(), "alpha>0 must add central mass"
+    # the sigmoid families: richards must NEST the other two INSIDE the
+    # migration mixture, which is the property that justifies its extra
+    # parameter (nu -> 0 gompertz_log, nu = 1 loglogistic)
+    B_gl = basis_family("gompertz_log", th4, [1.4], ti, 9.39, 8.0, r)
+    B_rg = basis_family("richards", th4, [1.4, -6.0], ti, 9.39, 8.0, r)
+    e_g = np.abs(B_gl - B_rg).max()
+    assert e_g < 5e-3, f"richards(nu->0) != gompertz_log: {e_g:.2e}"
+    B_ll = basis_family("loglogistic", th4, [1.4], ti, 9.39, 8.0, r)
+    B_r1 = basis_family("richards", th4, [1.4, 0.0], ti, 9.39, 8.0, r)
+    e_l = np.abs(B_ll - B_r1).max()
+    assert e_l < 1e-12, f"richards(nu=1) != loglogistic: {e_l:.2e}"
+    # loglogistic with k < 2 is a CUSP: more central mass than moffat
+    assert (B_ll[inner] > B_mof[inner]).all(), "k<2 loglogistic must be cuspy"
+
     # every basis is a CoG: non-decreasing in R, and in [0, 1]
     for name, B in (("moffat", B_mof), ("cuspy", B_a),
+                    ("gompertz_log", B_gl), ("loglogistic", B_ll),
+                    ("richards", B_r1),
                     ("sersic_r50", basis_family("sersic_r50", th4, [2.0], ti,
                                                 9.39, 8.0, r))):
         assert np.all(np.diff(B, axis=0) >= -1e-12), f"{name} not monotone"
@@ -358,9 +419,11 @@ def demo():
     assert len(start_vector("cuspy")) == 13
     assert len(start_vector("moffat")) == 12
     assert abs(start_vector("cuspy")[12]) < 1e-12, "cuspy must START nested"
-    print("demo OK — the cuspy BASIS nests the moffat basis exactly at "
-          "alpha=0 (<1e-12) inside the full migration mixture; alpha>0 adds "
-          "central mass; all three bases are monotone CoGs in [0,1]")
+    assert len(start_vector("richards")) == 13
+    print("demo OK — inside the full migration mixture: cuspy nests moffat "
+          f"at alpha=0 (<1e-12); richards nests gompertz_log ({e_g:.1e}) "
+          f"and loglogistic ({e_l:.1e}); k<2 loglogistic is cuspier than "
+          "moffat; all six bases are monotone CoGs in [0,1]")
 
 
 if __name__ == "__main__":
@@ -372,7 +435,13 @@ if __name__ == "__main__":
     if cmd == "demo":
         demo()
     elif cmd == "fit":
+        fams = (sys.argv[sys.argv.index("--families") + 1].split(",")
+                if "--families" in sys.argv else None)
+        st = (sys.argv[sys.argv.index("--store") + 1]
+              if "--store" in sys.argv else "")
         cmd_fit(is_dev, obj, one="--one" in sys.argv,
-                use_pool="--pool" in sys.argv)
+                use_pool="--pool" in sys.argv,
+                winner_only="--winner-only" in sys.argv,
+                store_tag=st, families=fams)
     else:
         raise SystemExit(__doc__)
