@@ -380,6 +380,60 @@ def _lookup_cfg(name, tag):
     raise SystemExit(f"objective {name!r} not found in the step-B stores")
 
 
+def cmd_report(dev=False):
+    """Step D: every shootout candidate through the exp47 judge + tier 2e."""
+    from hongshao import qa
+    from judge import verdict, print_verdict, physics_gates, PLANES
+    rows = np.load(POP_NPZ)["dev100"] if dev else None
+    tag = "_dev" if dev else ""
+    _w_init(rows)
+    gals, e = _W["gals"], _W["e"]
+    R, n = e.R, len(gals)
+    data_cogs = np.stack([g["data"] for g in gals])
+    pop = np.load(POP_NPZ)
+    logms = np.array([pop["logms"][g["row"]] for g in gals])
+    r50_t = qa._safe_rhalf(data_cogs, R, 0.5)
+
+    store = {}
+    for f in (f"shootout{tag}.npz", f"shootout_sig{tag}.npz"):
+        pth = OUTDIR / f
+        if pth.exists():
+            store.update(dict(np.load(pth, allow_pickle=True)))
+    want = [k.split("::", 1)[1] for k in store if k.startswith("theta::")
+            and k.endswith("::winner")]
+    rows_out = {}
+    for name in sorted(want):
+        fam = name.split("::")[0]
+        th = store[f"theta::{name}"]
+        cogs = np.full((n, len(KS_ALL), len(R)), np.nan)
+        for i, g in enumerate(gals):
+            c = model_cogs_family(th, g, KS_ALL, fam)
+            if c is not None:
+                cogs[i] = c
+        v = verdict(cogs, data_cogs, R, r50_truth=r50_t)
+        gt = physics_gates(cogs, data_cogs, logms, e)
+        cd = qa.mass_cdf_distance(cogs, data_cogs, R, quantities=qa.CDF_KEYS)
+        rows_out[name] = (v, gt, cd)
+        print_verdict(v, name, gt)
+
+    key = f"{PLANES[0][0]}|{PLANES[0][1]}"
+    print("\n\n=== STEP D SUMMARY (winner objective; ranked by mean "
+          "centered E/floor, z<=1.5) ===")
+    print(f"  {'candidate':<24}{'z0.4':>7}{'mean':>8}{'M5 cmp':>9}"
+          f"{'M5 ext':>9}{'R50 z2':>9}{'differential':>14}{'KS 30-50 z2':>13}")
+    rank = []
+    for nm, (v, gt, cd) in rows_out.items():
+        pl = [v[("plane", key, j, "all")] for j in range(4)]
+        rank.append((float(np.mean(pl)), nm, pl[0], v, gt, cd))
+    for m, nm, p0v, v, gt, cd in sorted(rank):
+        print(f"  {nm:<24}{p0v:7.1f}{m:8.2f}"
+              f"{100*v[('inner',5,0,'compact')]:8.1f}%"
+              f"{100*v[('inner',5,0,'extended')]:8.1f}%"
+              f"{v[('size',50,4)]:+9.3f}"
+              f"{gt['diff_model'][0]:9.2f}/{gt['diff_model'][1]:.2f}"
+              f"{cd[('kpc:M(30-50)',4)]['ks_ratio']:13.1f}")
+
+
 def demo():
     """Nesting and plumbing checks that need no data load."""
     r = np.logspace(np.log10(0.5), np.log10(300.0), 40)
@@ -434,6 +488,8 @@ if __name__ == "__main__":
         obj = sys.argv[sys.argv.index("--objective") + 1]
     if cmd == "demo":
         demo()
+    elif cmd == "report":
+        cmd_report(is_dev)
     elif cmd == "fit":
         fams = (sys.argv[sys.argv.index("--families") + 1].split(",")
                 if "--families" in sys.argv else None)
