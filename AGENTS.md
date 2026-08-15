@@ -32,6 +32,14 @@ for the profile modes), with `Deform()` = the frozen baseline. The deformation
 layer is the **hand-off boundary**: it outputs (deformed) stellar masses/profiles
 for a halo catalog, full stop.
 
+Supporting the above, two modules that fit rather than predict: **the fitting
+objective** (`hongshao/objective.py`) — what a profile model is asked to
+minimize, as six selectable axes with `Objective()` = the production objective
+(exp48 measured the objective to be the strongest lever on the model's compact-
+galaxy defect); and `hongshao/fitting.py`, currently one function guarding
+against a scipy Nelder-Mead trap that has produced a false null here twice. An
+objective is a fitting loss, not a likelihood — see the out-of-scope note below.
+
 Out of scope (do NOT build here): weak-lensing or clustering predictions,
 summary-statistic estimators, likelihoods, or samplers. Those need particle
 data / pre-computed catalogs and a separate emulator each, and belong in a
