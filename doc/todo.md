@@ -949,6 +949,44 @@ Cross-experiment plan. Mirrors the phase sequence in
     is nearly flat between the first two epoch pairs (truth 0.372 ->
     0.361, models 0.403 -> 0.315). Note the differential gate checks only
     ONE epoch pair (z=0.7 -> 0.4), which is what let this hide.
+- [x] **the optimizer question: `hongshao/fitting.py::minimize_loss`
+  (2026-08-15, branch objective-module -> fitting-optimizers).** Seven
+  optimizers benchmarked on the real 1ch-mof loss. **L-BFGS-B on
+  finite-difference gradients reached 0.152764 in 1170 evaluations / 38 s;
+  the plain Nelder-Mead in use exhausted 4000 evaluations at 0.159980 — 4.7%
+  worse — in 131 s.** BFGS, trust-constr and `Nelder-Mead(adaptive=True)`
+  agreed on 0.152764 to six decimals. Gradient methods apply because the
+  loss is measurably smooth (none of the kernel's clip/max guards active at
+  the solution; central differences stable from a step of 1e-2 to 1e-7).
+  `minimize_loss` exposes lbfgsb (default) / bfgs / neldermead / powell,
+  applies `adaptive=True` and `initial_simplex` automatically for
+  Nelder-Mead, takes real bounds, and refuses both a finite-difference step
+  coarser than 1e-4 and a start point outside the bounds. Nothing calls it;
+  production fits and the adopted theta are untouched.
+  - **OPEN, and it may matter for interpretation: is "the rail" real?**
+    Every method that reached the minimum put `g` at ~3.54 and `log_rc` at
+    ~2.47, both interior; every method that failed pinned one or the other
+    at its bound (3.9999 / 2.9999). The bounded run with the penalty removed
+    agrees — no parameter at a bound. But the FULL-sample refit still ends
+    with `g` at 4.0, having started from the already-railed adopted theta and
+    used the one-sided box penalty, whose derivative is exactly zero at the
+    bound, so a gradient method can report convergence at that kink.
+    **Decisive test: full sample, real bounds instead of the penalty, several
+    displaced starts.** If `g` comes off the rail, the adopted fit's railed
+    parameter is an optimizer artifact and its interpretation needs revisiting.
+  - Also measured, and NOT acted on: re-running the adopted fit with L-BFGS-B
+    moves the loss only 0.119% (0.153795 -> 0.153612, n=2397) but drops the
+    gradient norm 39-fold (0.0196 -> 0.0005), and the six conditioning slopes
+    move a lot in relative terms — the deposit scale's formation-time slope
+    flips sign, +0.00016 -> -0.01570. The base kernel is well determined;
+    those slopes are not. Nobody should read the adopted slope values without
+    re-fitting and re-judging first.
+  - **Deferred (user, 2026-08-15): a JAX prototype of the kernel.** Automatic
+    differentiation would replace 13 evaluations per gradient with one
+    backward pass and could vectorize the per-galaxy Python loop; DiffMAH is
+    itself a JAX library, so the dependency has precedent. Speedup UNMEASURED
+    — the honest first step is a single-galaxy prototype checked against the
+    current output and timed. Treated as a new direction, not this refactor.
   - **Also new: `hongshao/fitting.py::initial_simplex`.** scipy's
     Nelder-Mead spans a parameter started at exactly 0 by only 0.00025,
     and any parameter by only 5% of its own value, so parameters at or
