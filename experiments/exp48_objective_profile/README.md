@@ -124,14 +124,63 @@ the very top of the acceptable band where the baseline had margin. Given
 exp38's history of components that bought inner mass and broke this test,
 this is a genuine trade, not a free win.
 
-## Recommendation (NOT adopted — the user's call)
+## DECISION (user, 2026-08-15): findings recorded, NOTHING ADOPTED
 
-Keep the adopted 1ch-mof profile exactly as it is. Change only the
-objective, to log residuals on the surface-density profile. No new
-parameters, no new functional form, no simulation-specific weighting.
+**The adopted model is unchanged.** The user's reading: exp48's finding is
+useful but not a net positive, so it is recorded and not promoted. The
+adopted product remains the exp38 1ch-mof kernel at the exp40 z<=1.5 scope
+with the exp41 stochastic layer, fitted under the original objective.
 
-Open: whether the differential margin is acceptable, and whether this
-becomes the default or a documented option.
+The candidate that would have been proposed — same profile, same
+parameters, objective changed to log residuals on the surface-density
+profile — is documented here for a future decision, not adopted.
+
+### Why it is not a net positive
+
+The gain is real and survives CV (mean plane E/floor 2.71 -> 1.96 held
+out, compact M5 -43.1% -> -30.9%). The cost is the differential gate,
+0.40/0.13 -> 0.45/0.14 against data 0.37/0.11.
+
+`figures/exp48_differential` (built after the fact, because this gate had
+no figure in the standard set despite being the deciding number) shows the
+trade honestly, and complicates the simple reading:
+
+| epoch pair | truth | baseline | density-log |
+|---|---|---|---|
+| **z0.7->0.4** | **0.372** | 0.403 | **0.437** |
+| z1.0->0.7 | 0.361 | 0.315 | 0.325 |
+| z1.5->1.0 | 0.267 | 0.285 | 0.279 |
+| z2.0->1.5 | 0.231 | 0.211 | 0.195 |
+
+The gate only checks the FIRST pair, where density-log is genuinely worse.
+Across all four the two are close, and density-log is better at z1.5->1.0.
+The larger defect the figure exposes is SHARED: both models decline too
+steeply with redshift, where the truth is nearly flat between the first
+two pairs (0.372 -> 0.361 vs the models' 0.403 -> 0.315). That is a
+pre-existing problem the single-pair gate has been hiding.
+
+### The finding that may outlast the objective question
+
+The density-log fit drives the efficiency window **36% wider**
+(sigma 0.235 -> 0.320) and moves its peak from z ~ 3.6 to z ~ 5.0:
+
+| | log_rc | g | q | mu | sig | gamma |
+|---|---|---|---|---|---|---|
+| adopted | 2.738 | 4.00 | 0.908 | 1.522 | **0.235** | 1.378 |
+| density-log | 2.875 | 4.00 | 1.071 | 1.797 | **0.320** | 1.463 |
+
+That is the same direction exp42's real-MAH refit chose (sigma = 0.52) and
+the only lever exp45 found on cross-epoch coherence. **Three independent
+routes now say the adopted efficiency window is too narrow.**
+
+### Next (user direction): an objective module in `hongshao`
+
+Not another experiment. There is currently NO objective or loss code in
+the library at all — the production objective is hardcoded in
+`exp38/stage2_multiepoch.py::gal_loss` and every variant tried here lives
+in `exp48/objective.py`. The next branch should promote a flexible
+objective module into `hongshao/`, making every form tested here a
+first-class, selectable option.
 
 ## Figures
 
