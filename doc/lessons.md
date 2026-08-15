@@ -540,6 +540,54 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 - Background `uv run` commands buffer stdout through pipes; redirect to a file
   and read that, or block on the process, rather than polling a pipe.
 - `np.trapz` is gone in NumPy 2 — use `np.trapezoid`.
+- **scipy's Nelder-Mead silently freezes parameters started at (or near)
+  zero, and the result looks exactly like a measurement that the parameter
+  does nothing. It has produced a false null here twice. Use
+  `hongshao.fitting.initial_simplex` for any new fit.** scipy builds its
+  starting simplex by perturbing each parameter RELATIVELY, by 5% of its own
+  value (`nonzdelt = 0.05`), with one special case: a parameter that is
+  exactly 0.0 gets a fixed `zdelt = 0.00025` (checked against scipy 1.13.1).
+  Nelder-Mead only explores the space its starting simplex spans, and along a
+  direction where the loss barely changes it contracts rather than grows — so
+  a parameter handed a span of 0.00025 in a surface where it acts at order
+  one comes back where it started. In exp47 three shape slopes were started
+  at exactly 0 (deliberately, so the new component nested the previous model
+  as a special case) and came back at ~0.01: a property of the start point,
+  not of the data. **The bug is broader than "exactly zero"** — because the
+  step is purely relative, any parameter starting small in absolute terms but
+  acting at order unity gets a meaningless span with no special case needed,
+  which is how exp48's six conditioning slopes (sitting *near* zero) hit the
+  same wall. The fix is a relative step with an absolute FLOOR,
+  `max(0.05|p0|, floor)`, with the floor settable per parameter because
+  parameters have different natural scales (exp47 needed 0.3, 0.6 and 0.15
+  for three different groups). **Two traps in diagnosing it:** (1) the failure
+  is not a crash or a hit iteration limit — scipy reports `success=True` and
+  converges on the wrong answer, identically at every budget from 400 to 4000
+  iterations, so a longer run does not rescue it; (2) it is not reproducible
+  in a simple two-parameter quadratic toy, where Nelder-Mead escapes anyway —
+  it needs several well-scaled parameters alongside the weak ones, which is
+  why `hongshao/fitting.py`'s self-check uses five. Corollary for the record:
+  supplying an explicit simplex CHANGES what a fit returns, so never switch
+  an already-reported fit to it without re-running.
+- **A "this galaxy failed" marker that gets dropped rather than penalized
+  makes a worsening fit look better.** `hongshao.objective.reduce_galaxies`
+  drops non-finite per-galaxy losses before averaging, which is right for
+  reporting and wrong for driving a fit: measured on the full sample, five
+  failed galaxies out of 2397 moved the population loss from 0.149704 to
+  0.149470 — DOWN. So the scoring module returns NaN and counts it, and
+  anything driving an optimizer substitutes its own large sentinel (exp38
+  uses 4.0, ~10x a good loss) BEFORE reducing. Keep the sentinel in the fit
+  wrapper, not in the scoring: a reported population mean silently containing
+  a few 4.0s cannot be told apart from a model that fits badly everywhere.
+- **Verify a refactored numerical routine against the original with a
+  RELATIVE tolerance, chosen after looking at the range of values it
+  produces.** Checking `hongshao.objective` against exp48's reference across
+  182 configurations, a fixed 1e-10 absolute threshold flagged a failure that
+  was pure floating-point summation order (`einsum` in one, a plain `sum` in
+  the other). The losses span 0.05 to ~7e5 across those configurations —
+  comparing surface densities with a fractional residual diverges by design,
+  which is itself one of exp48's results — so one absolute number cannot be
+  right at both ends. All 182 agree to 5.9e-16 relative.
 
 ## Figures / QA presentation
 

@@ -923,6 +923,39 @@ Cross-experiment plan. Mirrors the phase sequence in
     unmeasurable defect; a natural selection metric for options B/C/D.
   - Closing note: the ~15% negative epoch-to-epoch growth rate is a
     DATA property (truth 13.78%), faithfully inherited, not an artifact.
+- [x] **the objective module — a REFACTOR, not an experiment: COMPLETE
+  (2026-08-15, branch objective-module).** There was no loss/objective
+  code in `hongshao/` at all; the production objective was six hardcoded
+  lines in `exp38/stage2_multiepoch.py::gal_loss`, with a flexible copy
+  in `exp48/objective.py` and a third partial copy in
+  `exp48/shootout.py::score_cogs`. Now `hongshao/objective.py`: a frozen
+  dataclass with six selectable axes (quantity cog/density, residual
+  fractional/absolute/log, radial rms/mean-abs/worst-radius, weight
+  uniform/per-dex/inner, epoch mean/weights, galaxy
+  mean/median/worst-20%). `Objective()` with no arguments IS the
+  production objective — verified against the previous implementation on
+  all 2397 galaxies at every epoch to 4.4e-16, and against
+  `exp48/shootout.py::score_cogs` across 182 configurations (every cell
+  exp48 ran plus the exhaustive six-axis product) to 5.9e-16 relative.
+  Adopted theta and adopted model UNCHANGED; the port costs no time
+  (1.00x on a full pass). Design: `doc/plans/2026-08-15-objective-module-design.md`.
+  - **NEW AND UNTESTED: the epoch axis.** Both previous versions took a
+    plain arithmetic mean over the fitted epochs, hardcoded — an
+    aggregation nobody had ever varied. It is now selectable via an
+    explicit per-epoch weight vector, default unchanged. **This is the
+    obvious untested lever on the one defect exp48 left open**: on the
+    test of how fast total stellar mass declines with redshift, both the
+    adopted model and exp48's winner decline too steeply where the truth
+    is nearly flat between the first two epoch pairs (truth 0.372 ->
+    0.361, models 0.403 -> 0.315). Note the differential gate checks only
+    ONE epoch pair (z=0.7 -> 0.4), which is what let this hide.
+  - **Also new: `hongshao/fitting.py::initial_simplex`.** scipy's
+    Nelder-Mead spans a parameter started at exactly 0 by only 0.00025,
+    and any parameter by only 5% of its own value, so parameters at or
+    near zero come back where they started and look measured. This
+    produced a false null in exp47. Nothing calls it yet — every existing
+    fit keeps scipy's default, so no published number moves — but any NEW
+    fit nesting a component at zero must use it. See `doc/lessons.md`.
 - [x] **exp46 stage 1 — "the high-z ridge" is the model failing on
   COMPACT galaxies, not on high redshift (2026-08-12, branch
   exp46-highz-ridge).** Opened after the 2026-08-12 discussion, which
