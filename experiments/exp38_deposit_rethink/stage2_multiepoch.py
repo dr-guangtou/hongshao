@@ -40,6 +40,8 @@ from scipy.special import expit
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT))
+
+from hongshao.objective import Objective            # noqa: E402  (needs ROOT)
 sys.path.insert(0, str(HERE))
 
 OUTDIR, FIGDIR = HERE / "outputs", HERE / "figures"
@@ -193,13 +195,38 @@ def penalty(p, variant):
                                + np.clip(p[5] - hi_g, 0, None) ** 2)
 
 
+OBJECTIVE = Objective()      # the production objective; see hongshao/objective
+FAIL_LOSS = 4.0              # ~10x a good loss: a "walk away" signal for the
+                             # optimizer, not a measurement. It lives HERE and
+                             # not in the scoring module, which reports NaN.
+
+
 def gal_loss(p, g, ks, variant):
+    """The production objective for one galaxy (unchanged behaviour).
+
+    Scoring now lives in ``hongshao.objective``; this wrapper builds the model
+    profiles and applies the fit-steering sentinel. Verified identical to the
+    previous inline implementation on the real sample — see the branch commit
+    for the equivalence run.
+    """
     cogs = model_cogs(p, g, ks, variant)
     if cogs is None:
-        return 4.0
-    return float(np.mean([np.sqrt(np.mean(((c - g["data"][k]) / g["data"][k])
-                                          ** 2))
-                          for c, k in zip(cogs, ks)]))
+        return FAIL_LOSS
+    v = OBJECTIVE.per_galaxy(np.asarray(cogs), _data_stack(g, ks), _W["e"].R)[0]
+    return FAIL_LOSS if not np.isfinite(v) else float(v)
+
+
+def _data_stack(g, ks):
+    """The galaxy's measured profiles at ``ks``, stacked and cached.
+
+    Rebuilt on every call this would be pure waste: it is constant per galaxy
+    and ``gal_loss`` runs once per galaxy per Nelder-Mead function evaluation.
+    """
+    key = tuple(ks)
+    cache = g.setdefault("_data_stack", {})
+    if key not in cache:
+        cache[key] = np.array([g["data"][k] for k in ks], float)
+    return cache[key]
 
 
 def gal_eval(p, g, ks, variant, rmin=5.0):
