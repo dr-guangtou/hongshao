@@ -188,6 +188,16 @@ def make_objective(cfg, pool, edges, n):
     return loss
 
 
+class _NullPool:
+    """`with` yields None; fit() then runs the loss serially."""
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, *a):
+        return False
+
+
 def _simplex12(p0):
     """Initial simplex for the 12-parameter base theta.
 
@@ -203,13 +213,30 @@ def _simplex12(p0):
                              for i in range(len(p0))])
 
 
-def fit(cfg, p0, maxiter, label):
+def fit(cfg, p0, maxiter, label, use_pool=False):
+    """SERIAL by default.
+
+    The pooled path hangs after a few fits in one process: workers die,
+    the parent blocks in pool.map at ~0% CPU, and the workers report
+    BrokenPipeError on multiprocessing's error path. It cost hours in the
+    step-C shootout and then repeated here in the CV, which calls this
+    function -- the CV stalled after 3 of 10 fits. Serial is ~8x slower
+    per fit and always finishes. Pass use_pool=True to opt back in.
+    """
     n = len(_W["gals"])
     workers = max(os.cpu_count() - 2, 2)
     edges = np.linspace(0, n, workers + 1).astype(int)
-    with Pool(workers, initializer=_w_init,
-              initargs=(_W["rows_arg"],)) as pool:
-        loss = make_objective(cfg, pool, edges, n)
+    ctx = (Pool(workers, initializer=_w_init, initargs=(_W["rows_arg"],))
+           if use_pool else _NullPool())
+    with ctx as pool:
+        if pool is None:
+            def loss(p):
+                v = np.array([gal_loss(p, g, KS, cfg) for g in _W["gals"]],
+                             float)
+                return (reduce_galaxies(v, cfg["galaxy"])
+                        + _W["s2"].penalty(p, "1ch-mof"))
+        else:
+            loss = make_objective(cfg, pool, edges, n)
         t0 = time.time()
         r = minimize(loss, p0, method="Nelder-Mead",
                      options=dict(maxiter=maxiter, xatol=3e-4, fatol=1e-10,
