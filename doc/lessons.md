@@ -569,6 +569,29 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   why `hongshao/fitting.py`'s self-check uses five. Corollary for the record:
   supplying an explicit simplex CHANGES what a fit returns, so never switch
   an already-reported fit to it without re-running.
+- **Nelder-Mead was the wrong optimizer for this project's losses, and a
+  parameter "pinned at its bound" is often just a stalled optimizer.**
+  Benchmarked on the real 1ch-mof loss (100 galaxies, z<=1.5, displaced start,
+  4000-evaluation budget): L-BFGS-B on finite-difference gradients reached
+  0.152764 in 1170 evaluations / 38 s, while the plain Nelder-Mead in use
+  exhausted its budget at 0.159980 — 4.7% worse — in 131 s. BFGS, trust-constr
+  and `Nelder-Mead(adaptive=True)` all agreed on 0.152764 to six decimals, so
+  that is a real minimum and not one method's quirk. **The `adaptive=True`
+  flag alone closes most of the gap and costs one keyword.** Gradient methods
+  apply because the loss is smooth, which was measured rather than assumed: at
+  the solution NONE of the kernel's `clip`/`max` guards are active (0/9900
+  deposit events, 0/39600 event-epochs, 0/100 galaxies, box penalty 2e-8), and
+  central differences are stable from a step of 1e-2 down to 1e-7. **The
+  corollary that matters most:** every method that reached the minimum put `g`
+  at ~3.54 and `log_rc` at ~2.47, both interior; every method that failed to
+  reach it pinned one or the other against its bound (3.9999, 2.9999). Before
+  interpreting a railed parameter as physics, re-fit with a converging
+  optimizer. Use `hongshao.fitting.minimize_loss`. Caveat, not yet closed: the
+  full-sample refit still ends with `g` at its bound, but it started from the
+  already-railed adopted theta and used the one-sided box PENALTY, whose
+  derivative vanishes exactly at the bound — so a gradient method can report
+  convergence while stuck at that kink. The clean test is real bounds plus
+  displaced starts on the full sample.
 - **A "this galaxy failed" marker that gets dropped rather than penalized
   makes a worsening fit look better.** `hongshao.objective.reduce_galaxies`
   drops non-finite per-galaxy losses before averaging, which is right for
