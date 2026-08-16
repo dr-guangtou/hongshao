@@ -569,6 +569,24 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   why `hongshao/fitting.py`'s self-check uses five. Corollary for the record:
   supplying an explicit simplex CHANGES what a fit returns, so never switch
   an already-reported fit to it without re-running.
+- **A SLICE IS NOT A PROFILE, and the slice is always the cheap thing that
+  looks like an answer. Vary one parameter with the others FROZEN and you
+  measure that parameter's mechanical role; vary it with the others
+  RE-OPTIMIZED and you measure what the fit would actually do. In a degenerate
+  model these differ in magnitude and can differ in SIGN.** This cost two wrong
+  claims in one day (2026-08-16, exp49 stage 2), both stated confidently from
+  slices: (1) "there is a genuine minimum at `g` ~ 4.07" — the profiled answer
+  is 4.35, and the slice's own value was worse than the fully optimized
+  bounded fit, which should have been the tell; (2) "`g` is the lever on the
+  compact-galaxy defect" — in a frozen slice the mass fraction inside 5 kpc
+  roughly doubles per unit of `g`, but under profiling the compact-galaxy
+  central-mass deficit gets monotonically WORSE with `g` (-35.7% at g=3.0 to
+  -40.5% at g=5.5), because `log_rc` and the rest compensate and over-cancel.
+  **The sign flipped.** Rule: never quote a one-parameter response as a
+  property of the model unless the other parameters were re-optimized, and say
+  which one you did. Corollary measured the same day: the loss optimum
+  (g = 4.25-4.35) and the observable of interest move in OPPOSITE directions,
+  so this is the "rank by judge, never by loss" lesson with a number on it.
 - **Nelder-Mead was the wrong optimizer for this project's losses, and a
   parameter "pinned at its bound" is often just a stalled optimizer.**
   Benchmarked on the real 1ch-mof loss (100 galaxies, z<=1.5, displaced start,
