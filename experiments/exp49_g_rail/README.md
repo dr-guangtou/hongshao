@@ -181,6 +181,67 @@ Precedent, reached and dropped two experiments ago: exp38's README rejected the
 sersic candidate with *"n-scale degeneracy; needs an R50 reparameterization"* —
 the same diagnosis.
 
+## Stage 1 — local geometry (`jacobian.py`): the degeneracy is much bigger than the `(log_rc, g)` pair
+
+Finite-difference Jacobian of the full fractional-CoG residual array (2397
+galaxies x 4 epochs x 24 radii = 230112 residuals) with respect to the 12
+population parameters, column-normalized before the SVD. Three steps (1e-6,
+1e-5, 1e-4); the weakest-1, -2 and -3 subspaces agree across all three to
+**0.000 degrees** in principal angle.
+
+**This is LOCAL GEOMETRY AT A CONSTRAINED REFERENCE, not parameter
+uncertainty** — `g` is on an active bound here.
+
+**The headline: all six BASE parameters are near-collinear in their effect on
+the residuals.**
+
+|  | log_rc | g | q | mu | sig | gamma |
+|---|---|---|---|---|---|---|
+| **log_rc** | 1.000 | −0.995 | 0.942 | −0.981 | 0.921 | −0.960 |
+| **g** | −0.995 | 1.000 | −0.958 | 0.987 | −0.893 | 0.940 |
+| **q** | 0.942 | −0.958 | 1.000 | −0.956 | 0.834 | −0.868 |
+| **mu** | −0.981 | 0.987 | −0.956 | 1.000 | −0.908 | 0.940 |
+| **sig** | 0.921 | −0.893 | 0.834 | −0.908 | 1.000 | −0.938 |
+| **gamma** | −0.960 | 0.940 | −0.868 | 0.940 | −0.938 | 1.000 |
+
+Every base-parameter pair correlates at |rho| = 0.834–0.995 (median 0.940). The
+conditioning slopes are a **separate and far better-conditioned block**
+(|rho| median 0.393 among themselves) and are **nearly orthogonal to the base
+parameters** (|rho| median 0.083, max 0.325).
+
+**Effective rank: 7 of 12** singular values exceed 10% of the largest. The
+spectrum declines smoothly with no clean gap — the classic sloppy-model
+signature — from 2.412 to 0.026 (condition number 93.3).
+
+Weakest directions, with their squared overlap with the `(log_rc, g)` plane:
+
+| | singular value | in (log_rc, g) | largest entries |
+|---|---|---|---|
+| sv11 | 0.02586 | **0.942** | g +0.712, log_rc +0.660, mu −0.197 |
+| sv10 | 0.07791 | 0.297 | mu −0.812, log_rc −0.497, g +0.223 |
+| sv9 | 0.16664 | 0.193 | gamma −0.681, q +0.440, g +0.361 |
+
+**What this means for the planned fix.** The single weakest direction IS
+essentially the `(log_rc, g)` pair (94%), so the time pivot targets a real
+object. But it is only the weakest of **five or six** poorly-constrained
+directions among the base parameters, and the next two are dominated by `mu`
+and by `gamma`/`q`. **A time pivot alone will not make the base parameters
+individually interpretable** — it flattens one direction out of several. An
+earlier reading of this section's dev-sample version ("94% in the plane, good
+news for the pivot") was too optimistic: that figure describes the weakest
+direction only, not the degeneracy as a whole.
+
+Raw column norms (absolute sensitivity) put `g` second-lowest of the twelve at
+326.7 and `q` lowest at 245.6, against `sig` at 856.7 — so `g` is both weakly
+influential and strongly entangled.
+
+The valley slope from the full 12-parameter geometry is **d(g)/d(log_rc) =
++1.079**, against +1.4822 from the 2-D grid with the other ten parameters
+frozen. The two measure different things and need not agree.
+
+Figures: `figures/exp49_jacobian_full.png` (correlation + singular vectors),
+`figures/exp49_spectrum_full.png` (sensitivity spectrum).
+
 ## Open — see `doc/plans/2026-08-16-kernel-identifiability.md`
 
 1. Residual-Jacobian SVD at the bounded reference (column-normalized).
