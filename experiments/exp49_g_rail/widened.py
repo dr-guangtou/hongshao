@@ -316,8 +316,9 @@ def cmd_report(objective="production", dev=False):
                   for k in [k])
     from hongshao import qa
     truth = prob.data
-    r50 = qa._safe_rhalf(truth[:, 0], R, 0.5)
-    compact = r50 < 5.0
+    # _safe_rhalf wants (n, n_epoch, n_radii); keep the epoch axis, then drop it
+    r50 = qa._safe_rhalf(truth[:, :1], R, 0.5)[:, 0]
+    compact = r50 < 5.0                     # exp47's compact-galaxy definition
     i5 = int(np.searchsorted(R, 5.0))
     i10 = int(np.searchsorted(R, 10.0))
     print(f"exp49 stage 2 REPORT — {objective}  (n={len(gals)}, "
