@@ -837,3 +837,30 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the exp38 self-similarity from the model side); (2) a paired metric
   is still the right tool for the MEAN prediction — keep both, label
   which is which.
+- **A readable profile representation needs an explicit inner anchor when its
+  other coordinates are enclosed-mass radii (exp50).** Total mass plus
+  R20/R50/R80 reconstructed the profile outside 5 kpc but left the measured
+  2-kpc mass underconstrained. Adding the 2-kpc mass fraction reduced the median
+  representation error from 0.027 dex to 0.004 dex. Quantiles describe where
+  most of the mass lies; they do not automatically preserve a central aperture
+  below the first quantile.
+- **Separate coordinate fidelity from halo-to-coordinate predictability
+  (exp50).** Adding R90 improved the median profile representation error from
+  0.00437 to 0.00316 dex, but did not improve held-out halo prediction: its
+  linear profile CRPS was 0.06601 dex versus 0.06577 dex without R90. A more
+  accurate compression can add a target that the available halo variables do
+  not predict. Choose coordinates on end-to-end held-out performance, not on
+  reconstruction error alone.
+- **Use symbolic regression as a stability-filtered correction search when the
+  linear core is already strong (exp50).** Keeping the full linear relation and
+  searching only its residuals produced three nonlinear terms that recurred in
+  at least four of five training folds. They improved held-out profile CRPS by
+  2.38% relative to the linear map, recovering about 62% of the dense degree-2
+  improvement without presenting fold-specific expressions as physical laws.
+- **Present-day concentration does not exhaust the information in concentration
+  history (exp50).** On the common 2,366-galaxy sample, adding five fitted
+  concentration epochs improved held-out profile CRPS by 2.89% relative to
+  DiffMAH plus z=0.4 concentration; mass-conditioned shuffled histories made
+  the score 0.12% worse. The effect is small but survives every held-out fold,
+  so histories of secondary halo properties deserve direct null-controlled
+  tests rather than being dismissed as redundant with MAH.
