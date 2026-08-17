@@ -864,3 +864,45 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the score 0.12% worse. The effect is small but survives every held-out fold,
   so histories of secondary halo properties deserve direct null-controlled
   tests rather than being dismissed as redundant with MAH.
+- **An inner-aperture anchor does not guarantee that total-mass quantile radii
+  are resolved (exp51).** A full-sample preflight found a valid z=2 galaxy with
+  81.1% of its measured stellar mass inside 2 kpc, so its total-mass R20 and R50
+  both lie below the measured radial grid. Describing quantiles of the mass
+  outside 2 kpc, alongside the separately modeled 2-kpc fraction, retained the
+  object and kept median full-profile reconstruction error near 0.004 dex at
+  every epoch. Never drop a physically informative extreme or assign a grid
+  boundary as its radius merely to preserve a convenient coordinate system.
+- **For high-redshift painting, fit the assembly clock available at that epoch
+  instead of borrowing the final descendant's clock (exp51).** DiffMAH fitted
+  only to halo history available by z=1.5 and z=2, plus concentration at the
+  same epoch, lowered profile CRPS by 8.28% and 8.17% relative to complete
+  descendant DiffMAH with concurrent concentration. Future information was not
+  the source of the high-redshift success; expressing the same assembly history
+  in the prediction epoch's local time frame was more useful.
+- **The time label on a secondary halo property is part of the feature
+  definition (exp51).** With descendant DiffMAH held fixed, concentration at
+  the prediction epoch lowered profile CRPS by 2.23--4.66% relative to z=0.4
+  concentration at z>0.4, while mass-conditioned concentration shuffles removed
+  the improvement. A physically named feature is not automatically portable
+  across redshift when its measurement epoch changes.
+- **Smooth coefficient evolution must be checked by removing an entire epoch,
+  not inferred from a smooth-looking plot (exp51).** Interpolating the
+  descendant-conditioned readable-map coefficients from the other four
+  snapshots worsened held-epoch profile CRPS by only 0.43--1.23%, whereas
+  copying the nearest snapshot was substantially worse. This establishes
+  continuous-redshift closure for that feature definition, but not for the
+  epoch-local model whose inputs also evolve and require common scaling first.
+- **A symbolic expression is useful only if its end-to-end predictive gain is
+  stable and substantial (exp51).** At z=2, stable residual terms improved the
+  epoch-local linear profile CRPS by 1.00%, while dense degree-2 terms improved
+  it by 5.01%; the fixed z=0.4 terms transferred only a 0.52% gain. Recurrence
+  across folds can reject unstable algebra, but it cannot turn a weak correction
+  into a redshift-independent physical law.
+- **Verify the active representation at the figure boundary when experiments
+  reuse modules (exp51 mistake).** The first z=2 symbolic run imported exp50's
+  decoder through Python's cached module name even though exp51 coordinates had
+  been compressed. The per-target labels in the direct prediction figure
+  exposed the mismatch, and the full symbolic run was discarded and repeated
+  with an explicit exp51 module reference. When neighboring experiments contain
+  same-named modules, avoid bare cached imports and assert target labels and
+  dimensions immediately before reconstruction.
