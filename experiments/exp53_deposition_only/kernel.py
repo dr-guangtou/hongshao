@@ -267,12 +267,32 @@ class Problem:
 
 
 # --------------------------------------------------------------------------- #
-def adopted_theta():
-    """exp38 1ch-mof @ exp40 z<=1.5 -- the adopted production theta, in exp38's
-    RAW-SCALE coordinates ``[log_rc, g, q, mu, sig, gamma, *slopes]``."""
+def adopted_theta(which="adopted"):
+    """The reference theta, in exp38's RAW-SCALE coordinates
+    ``[log_rc, g, q, mu, sig, gamma, *slopes]``.
+
+    ``"adopted"`` is **the adopted product itself** -- exp38 `1ch-mof` at the
+    exp40 `z <= 1.5` fit scope, `exp40/outputs/latestart.npz::theta_z15`. This
+    is the theta exp52 decomposed, so exp53's slice numbers are directly
+    comparable with exp52's.
+
+    ``"exp49refit"`` is exp49's L-BFGS-B re-fit of it. The two agree closely on
+    the base kernel (`log_rc` 2.738 vs 2.753, `q` 0.9085 vs 0.8949) and differ
+    by up to 0.022 on the CONDITIONING SLOPES -- which is exp49's own finding
+    that "the base kernel is well determined; those slopes are not". Quoting
+    the refit as "adopted" would silently compare against a different model
+    from the one exp52 measured.
+    """
+    if which == "exp49refit":
+        return np.asarray(np.load(
+            ROOT / "experiments/exp49_g_rail/outputs/railtest.npz",
+            allow_pickle=True)["theta::bounded::adopted"], float)
+    if which != "adopted":
+        raise ValueError(f"which must be 'adopted' or 'exp49refit', got "
+                         f"{which!r}")
     return np.asarray(np.load(
-        ROOT / "experiments/exp49_g_rail/outputs/railtest.npz",
-        allow_pickle=True)["theta::bounded::adopted"], float)
+        ROOT / "experiments/exp40_epoch_objective/outputs/latestart.npz"
+    )["theta_z15"], float)[:12]
 
 
 def from_exp38_theta(theta38):
@@ -309,6 +329,7 @@ def demo():
 
     # (1) EQUIVALENCE, the load-bearing check: exp53's moffat kernel with the
     #     translated theta reproduces exp38's ADOPTED kernel on real galaxies.
+    #     Run for BOTH reference thetas so the check does not depend on which.
     #     The R50_CAP is lifted for this comparison -- exp38 has no ceiling, so
     #     leaving it in would compare two different models.
     global R50_CAP
@@ -316,14 +337,18 @@ def demo():
     spec = Spec("moffat", q_free=True)
     th53 = from_exp38_theta(th38)
     worst = 0.0
-    for g in gals:
-        a = s2.model_cogs(th38, g, KS, "1ch-mof")
-        b = model_cogs(spec, th53, g, KS)
-        assert (a is None) == (b is None)
-        if a is None:
-            continue
-        worst = max(worst, max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
-                               for x, y in zip(a, b)))
+    for ref in ("adopted", "exp49refit"):
+        t38 = adopted_theta(ref)
+        t53 = from_exp38_theta(t38)
+        for g in gals:
+            a = s2.model_cogs(t38, g, KS, "1ch-mof")
+            b = model_cogs(spec, t53, g, KS)
+            assert (a is None) == (b is None)
+            if a is None:
+                continue
+            worst = max(worst,
+                        max(np.abs(np.asarray(x) / np.asarray(y) - 1.0).max()
+                            for x, y in zip(a, b)))
     R50_CAP = cap
     assert worst < 1e-12, f"exp38 equivalence broken: {worst:.2e}"
 
