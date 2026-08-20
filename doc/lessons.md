@@ -569,6 +569,59 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   why `hongshao/fitting.py`'s self-check uses five. Corollary for the record:
   supplying an explicit simplex CHANGES what a fit returns, so never switch
   an already-reported fit to it without re-running.
+- **Identifiability results are CONDITIONAL on the model being right, so audit
+  the mechanism before spending a week measuring parameter degeneracies.**
+  exp49 (2026-08-20) ran a careful identifiability program on the adopted
+  kernel -- residual-Jacobian SVD, widened multi-start fits, a properly profiled
+  `g` curve -- and answered its question: `g` = 4.352 +/- 0.003, one coordinate
+  of a degeneracy in which all six base parameters correlate at |rho| >= 0.83
+  (effective rank 7 of 12), worth 0.064% of the loss. Then exp52 found the
+  kernel's deposition mechanism is misspecified, which puts the remaining stages
+  on hold because **degeneracy structure measured in a misspecified model need
+  not survive fixing the model.** The mechanism audit cost an afternoon; the
+  identifiability program was a week of compute. Do the cheap structural check
+  first.
+- **A model can reproduce an observable well while getting the MECHANISM
+  structurally wrong, and nothing in the objective will reveal it — because the
+  objective only ever sees the summed profile.** exp52 (2026-08-20): the
+  adopted kernel fits the curves of growth to ~10-15% at five epochs, yet
+  **96.5% of its M\*[50,100 kpc] growth between z=0.7 and z=0.4 is
+  redistribution of stars it already had**, not new deposition, and its own
+  deposition supplies only ~11% of the z=2 -> z=0.4 mass growth (the other 89%
+  is manufactured by the M(<500 kpc) normalization pinning the model to the
+  data). The established picture for massive galaxies is the opposite: late
+  growth is ex-situ, driven by continued minor mergers. **Rule: for any model
+  with internal machinery, periodically audit HOW it produces the observable,
+  not just how well.** Concretely, decompose the change in the observable into
+  the model's own mechanisms and check each against the physics — here that
+  meant splitting aperture growth into transport / new deposition /
+  renormalization, which took an afternoon and found a defect two experiments
+  of fit-quality work had only seen the symptoms of (the compact-galaxy central
+  deficit: with deposition off, the only way to fill an outskirt is to empty the
+  centre).
+- **Corollary: watch for observables the model does not actually predict.**
+  This kernel never predicts total stellar mass growth — M(<500 kpc) is pinned
+  to the measurement — so agreement there is guaranteed by construction and is
+  not evidence of anything. Know which of your matches are earned and which are
+  imposed.
+- **A SLICE IS NOT A PROFILE, and the slice is always the cheap thing that
+  looks like an answer. Vary one parameter with the others FROZEN and you
+  measure that parameter's mechanical role; vary it with the others
+  RE-OPTIMIZED and you measure what the fit would actually do. In a degenerate
+  model these differ in magnitude and can differ in SIGN.** This cost two wrong
+  claims in one day (2026-08-16, exp49 stage 2), both stated confidently from
+  slices: (1) "there is a genuine minimum at `g` ~ 4.07" — the profiled answer
+  is 4.35, and the slice's own value was worse than the fully optimized
+  bounded fit, which should have been the tell; (2) "`g` is the lever on the
+  compact-galaxy defect" — in a frozen slice the mass fraction inside 5 kpc
+  roughly doubles per unit of `g`, but under profiling the compact-galaxy
+  central-mass deficit gets monotonically WORSE with `g` (-35.7% at g=3.0 to
+  -40.5% at g=5.5), because `log_rc` and the rest compensate and over-cancel.
+  **The sign flipped.** Rule: never quote a one-parameter response as a
+  property of the model unless the other parameters were re-optimized, and say
+  which one you did. Corollary measured the same day: the loss optimum
+  (g = 4.25-4.35) and the observable of interest move in OPPOSITE directions,
+  so this is the "rank by judge, never by loss" lesson with a number on it.
 - **Nelder-Mead was the wrong optimizer for this project's losses, and a
   parameter "pinned at its bound" is often just a stalled optimizer.**
   Benchmarked on the real 1ch-mof loss (100 galaxies, z<=1.5, displaced start,

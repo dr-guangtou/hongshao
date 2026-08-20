@@ -1,9 +1,12 @@
 # exp49 — the railed parameter `g`: optimizer artifact, or the model asking for something it cannot have?
 
-**Status: the rail is REAL — not an optimizer artifact. But `g` is NOT yet a
-measured quantity: it is one coordinate of a strong degeneracy, and the
-widened-domain optimum has not been properly profiled.** Continues under
-`doc/plans/2026-08-16-kernel-identifiability.md`.
+**Status: CLOSED 2026-08-20, with unfinished business documented below.**
+
+The rail is REAL — not an optimizer artifact. `g` = 4.352 +/- 0.003 under the
+production objective, but it is only ONE COORDINATE of a five-or-six-dimensional
+degeneracy, is worth 0.064% of the loss, and moves the compact-galaxy central
+mass the WRONG way. **Closed because exp52 found the kernel's deposition
+mechanism is misspecified, which may invalidate the remaining tests.**
 
 > ### Superseded claims — read before the sections below
 >
@@ -181,6 +184,169 @@ Precedent, reached and dropped two experiments ago: exp38's README rejected the
 sersic candidate with *"n-scale degeneracy; needs an R50 reparameterization"* —
 the same diagnosis.
 
+## Stage 1 — local geometry (`jacobian.py`): the degeneracy is much bigger than the `(log_rc, g)` pair
+
+Finite-difference Jacobian of the full fractional-CoG residual array (2397
+galaxies x 4 epochs x 24 radii = 230112 residuals) with respect to the 12
+population parameters, column-normalized before the SVD. Three steps (1e-6,
+1e-5, 1e-4); the weakest-1, -2 and -3 subspaces agree across all three to
+**0.000 degrees** in principal angle.
+
+**This is LOCAL GEOMETRY AT A CONSTRAINED REFERENCE, not parameter
+uncertainty** — `g` is on an active bound here.
+
+**The headline: all six BASE parameters are near-collinear in their effect on
+the residuals.**
+
+|  | log_rc | g | q | mu | sig | gamma |
+|---|---|---|---|---|---|---|
+| **log_rc** | 1.000 | −0.995 | 0.942 | −0.981 | 0.921 | −0.960 |
+| **g** | −0.995 | 1.000 | −0.958 | 0.987 | −0.893 | 0.940 |
+| **q** | 0.942 | −0.958 | 1.000 | −0.956 | 0.834 | −0.868 |
+| **mu** | −0.981 | 0.987 | −0.956 | 1.000 | −0.908 | 0.940 |
+| **sig** | 0.921 | −0.893 | 0.834 | −0.908 | 1.000 | −0.938 |
+| **gamma** | −0.960 | 0.940 | −0.868 | 0.940 | −0.938 | 1.000 |
+
+Every base-parameter pair correlates at |rho| = 0.834–0.995 (median 0.940). The
+conditioning slopes are a **separate and far better-conditioned block**
+(|rho| median 0.393 among themselves) and are **nearly orthogonal to the base
+parameters** (|rho| median 0.083, max 0.325).
+
+**Effective rank: 7 of 12** singular values exceed 10% of the largest. The
+spectrum declines smoothly with no clean gap — the classic sloppy-model
+signature — from 2.412 to 0.026 (condition number 93.3).
+
+Weakest directions, with their squared overlap with the `(log_rc, g)` plane:
+
+| | singular value | in (log_rc, g) | largest entries |
+|---|---|---|---|
+| sv11 | 0.02586 | **0.942** | g +0.712, log_rc +0.660, mu −0.197 |
+| sv10 | 0.07791 | 0.297 | mu −0.812, log_rc −0.497, g +0.223 |
+| sv9 | 0.16664 | 0.193 | gamma −0.681, q +0.440, g +0.361 |
+
+**What this means for the planned fix.** The single weakest direction IS
+essentially the `(log_rc, g)` pair (94%), so the time pivot targets a real
+object. But it is only the weakest of **five or six** poorly-constrained
+directions among the base parameters, and the next two are dominated by `mu`
+and by `gamma`/`q`. **A time pivot alone will not make the base parameters
+individually interpretable** — it flattens one direction out of several. An
+earlier reading of this section's dev-sample version ("94% in the plane, good
+news for the pivot") was too optimistic: that figure describes the weakest
+direction only, not the degeneracy as a whole.
+
+Raw column norms (absolute sensitivity) put `g` second-lowest of the twelve at
+326.7 and `q` lowest at 245.6, against `sig` at 856.7 — so `g` is both weakly
+influential and strongly entangled.
+
+The valley slope from the full 12-parameter geometry is **d(g)/d(log_rc) =
++1.079**, against +1.4822 from the 2-D grid with the other ten parameters
+frozen. The two measure different things and need not agree.
+
+Figures: `figures/exp49_jacobian_full.png` (correlation + singular vectors),
+`figures/exp49_spectrum_full.png` (sensitivity spectrum).
+
+## Stage 2 — the widened optimum and the profiled `g` curve (`widened.py`)
+
+L-BFGS-B, true bounds, no box penalty, widened domain `g<=6` and `log_rc<=3.5`
+(both must widen, or the fit moves to the other corner). Full sample.
+
+**Widened-domain optimum, production objective: `g` = 4.35222 +/- 0.00320,
+`log_rc` = 2.97312, loss 0.15351376.** Four of five starts agree to **1.17e-07**,
+inside the plan's 1e-6 requirement; **no parameter within 2% of a bound**, so the
+widened domain is adequate. This reproduces exp40's old Nelder-Mead stress fit
+(g = 4.367) at a slightly better loss.
+
+**The loss surface has at least TWO basins.** The start placed at `g` = 2 on the
+measured ridge converges (success=True) to a separate, worse minimum: g = 2.163,
+loss 0.157881 under the production objective and g = 3.071 under density-log.
+**Multi-start is not optional for this kernel.**
+
+**The profiled curve** (`g` fixed, other 11 re-optimized at each point):
+
+| `g` | loss | delta vs min | M(<5 kpc), compact |
+|---|---|---|---|
+| 3.00 | 0.15588845 | +2.37e-03 | -35.7% |
+| 4.00 *(adopted)* | 0.15361240 | +9.09e-05 | -37.3% |
+| **4.25 -> 4.35** | **0.15352148** | **0** | **-38.0%** |
+| 5.00 | 0.15366424 | +1.43e-04 | -39.2% |
+| 5.50 | 0.15425943 | +7.38e-04 | -40.5% |
+
+Internal consistency: the profile point at `g` = 4.00 gives loss **0.15361240**
+against the rail test's independent bounded 12-parameter fit at **0.15361240** --
+eight decimals, through a different code path.
+
+**THE RESULT THAT MATTERS: the loss optimum and the observable move in OPPOSITE
+directions.** Raising `g` monotonically worsens the compact-galaxy central-mass
+deficit (-35.7% at g=3.0 to -40.5% at g=5.5) while the loss minimizes in the
+middle. **So do NOT widen the box in production**: g = 4.0 -> 4.35 improves the
+loss by 0.064% and makes compact central masses ~0.9 percentage points worse.
+
+**Constraint strength** (stated as fractional objective change, NOT a confidence
+interval -- this is a loss, not a likelihood): taking the whole box-removal gain
+(9.1e-5) as the yardstick, the curve stays within that of its minimum over
+roughly `g` in [4.0, 4.85]. **`g` is pinned to about +/- 0.4 at the loss scale of
+the entire effect under investigation.**
+
+## The deposit-radius cap test (`rcap.py`) — the Mpc tail is free slack
+
+The size law is an unbounded power law; at the optimum the largest deposit scale
+is 938 kpc. Capping it:
+
+| cap | loss at the same theta | loss REFITTED | `g` refit |
+|---|---|---|---|
+| 300 kpc | +1.55e-05 | **+1.52e-05** | 4.3569 |
+| 1000 kpc | +9.2e-09 | +9.2e-09 | 4.3577 |
+
+A 300 kpc ceiling costs a sixth of the whole box-removal effect and the refit
+recovers almost nothing (1.55e-5 -> 1.52e-5): **the model has no way to
+compensate and no reason to.** A physically motivated ceiling is essentially
+free. This matters most for a fair FAMILY comparison, since `rc` is not the same
+physical quantity across families.
+
+## CLOSED 2026-08-20 — status, and what is unfinished
+
+**Closed because exp52 found the kernel's deposition mechanism is misspecified**
+(late-time growth is transport-dominated; the model's own deposition supplies
+~11% of the mass growth). **Identifiability results for a misspecified model may
+not survive fixing the model**, so finishing this program before the model is
+rethought risks measuring properties of a kernel we are about to replace.
+
+**INVALID as stated — do not quote without the caveat:**
+- **The density-log widened fit is PINNED** at `log_rc` = 3.50000. Its
+  `g` = 5.139 is rigorously a **LOWER BOUND**, not an optimum. The qualitative
+  finding stands: **the objective shifts `g` by at least 0.8** (4.35 vs >=5.14).
+- **Production profile points `g` = 5.25 and 5.50 are CONTAMINATED** -- `log_rc`
+  pinned at the same wall, so they are constrained fits, not profile points. The
+  apparent steepening of the high-`g` arm above 5.0 is partly the wall.
+
+**UNFINISHED (deferred, resumable — all stores are cached and keyed):**
+- the density-log widened fit with `log_rc` widened to ~4.5 (~2.5 h) and its
+  profiled curve (~3.5 h);
+- the refinement grid (+/-0.30 in steps of 0.05) around either minimum;
+- extending the grid below `g` = 3.0 to settle whether the two basins are
+  separated by a real barrier;
+- **stage 3 entirely**: the interior Hessian at the widened solution (3 FD steps,
+  eigenSPACES compared by principal angles), the weak-subspace dimensionality,
+  the sandwich covariance and the pilot bootstrap.
+
+## Lessons (all measured here)
+
+1. **A slice is not a profile.** Two wrong claims came from scans with the other
+   parameters frozen: "a genuine minimum at g ~ 4.07" (profiled answer 4.35) and
+   "`g` is the lever on the compact-galaxy defect" (under profiling the deficit
+   gets WORSE with `g` -- the sign flipped).
+2. **The dev subsample inverted the full-sample answer twice** on this parameter
+   -- on whether the rail was real at all, and on where the profiled minimum
+   sits. Run identifiability diagnostics at full size.
+3. **A parameter pinned at a bound is sometimes the optimizer and sometimes the
+   data**, and only a full-size multi-start test separates them.
+4. **Bounding the wrong coordinate.** `log_rc` is the deposit radius extrapolated
+   to the observation epoch; its bound of 3.5 is 3162 kpc, ~20x the outermost
+   measured radius. The physically meaningful quantity -- the deposit radius at
+   the pivot epoch -- is **1.05-1.21 kpc across every fit, both objectives, and
+   the whole profiled curve**, while the intercept ranges over a factor of 109.
+   The data measures one number; the parameterization hides it.
+
 ## Open — see `doc/plans/2026-08-16-kernel-identifiability.md`
 
 1. Residual-Jacobian SVD at the bounded reference (column-normalized).
@@ -200,7 +366,10 @@ the same diagnosis.
 
 ## Files
 
-- `railtest.py` — the ten-cell test. Resumable; saves after every cell.
+- `railtest.py` — the ten-cell rail test. Resumable; saves after every cell.
+- `jacobian.py` — stage 1, the column-normalized residual-Jacobian SVD.
+- `widened.py` — stage 2, the widened multi-start fit and the profiled `g` curve.
+- `rcap.py` — the deposit-radius cap test.
 - `outputs/railtest.npz` — thetas, losses, starts, convergence flags.
 
 Run: `HONGSHAO_DATA_DIR=... PYTHONPATH=. uv run python
