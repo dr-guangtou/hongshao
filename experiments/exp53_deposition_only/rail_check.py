@@ -57,6 +57,12 @@ WIDEN = {"mu": 12.0, "sig": 12.0, "g": 20.0, "log_R50": 5.0, "q": 6.0,
 #: a rail costing less than this fraction of the loss is BENIGN: the box was
 #: clipping a nearly-flat optimum, not choosing the answer.
 BENIGN = 0.005
+#: Evaluation cap. Lower than the main run's 4000 because BOTH starts here
+#: begin at or beside an already-converged solution, so the distance to travel
+#: is short — and because the Sersic/expo/gauss families evaluate `gammainc`
+#: and cost ~3 s per evaluation against the Moffat's ~0.8 s, which would
+#: otherwise put a single cold-budget cell at 3+ hours.
+MAX_EVALS = 2500
 
 
 def widened_bounds(spec, theta):
@@ -116,11 +122,13 @@ def main(dev=False, shard=(0, 1)):
                          [b[1] if b[1] is not None else np.inf for b in bounds])
             t0 = time.time()
             r = minimize_loss(prob.loss, p0, method="lbfgsb", bounds=bounds,
-                              max_evals=F.MAX_EVALS)
+                              max_evals=MAX_EVALS)
             esc = ", ".join(f"{h}={r.x[spec.theta_names.index(h)]:.3f}"
                             for h in hit if "LOWER" not in h)
             print(f"      [{sn:<17}] loss {r.fun:.8f}  -> {esc}  "
-                  f"({r.nfev} evals, {(time.time()-t0)/60:.1f} min)", flush=True)
+                  f"({r.nfev} evals, {(time.time()-t0)/60:.1f} min"
+                  f"{', HIT THE EVAL CAP' if r.nfev >= MAX_EVALS else ''})",
+                  flush=True)
             if best is None or r.fun < best.fun:
                 best = r
         gain = (loss - best.fun) / loss
