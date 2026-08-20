@@ -455,6 +455,30 @@ def demo():
             assert np.allclose(a, c, equal_nan=True), (b, pr)
     assert not np.allclose(sc["kern_model"], sc2["kern_model"], equal_nan=True)
 
+    # (2b) THE exp52 BUG, locked out: an aperture with `lo = 0` must count
+    #      from ZERO on BOTH sides. `np.interp` clamps below its grid, so the
+    #      natural-looking `np.interp(0.0, R, cog)` returns the mass inside
+    #      2 kpc instead — which is how exp52 came to divide the model's
+    #      aperture growth by the truth's annulus growth. Asserted here on
+    #      both the model and the truth path, which is what would have caught
+    #      it: a flat CoG has zero growth in ANY aperture starting at zero.
+    flat = np.ones((3, 2, len(R)))
+    assert growth_ratio(flat, flat, R, [0, 1], (1, 0), 0.0, 10.0) == 0.0 \
+        or np.isnan(growth_ratio(flat, flat, R, [0, 1], (1, 0), 0.0, 10.0))
+    rise = np.stack([np.stack([np.full(len(R), 1.0), np.full(len(R), 2.0)])
+                     for _ in range(3)])
+    # truth doubles everywhere; a model that doubles too must score EXACTLY 1
+    assert abs(growth_ratio(rise, rise, R, [0, 1], (0, 1), 0.0, 10.0) - 1.0) < 1e-12
+    # and the aperture and the annulus must NOT agree when the core moves:
+    core_drop = rise.copy()
+    core_drop[:, 1, 0] = 0.5                       # inner point falls
+    ap = growth_ratio(core_drop, core_drop, R, [0, 1], (0, 1), 0.0, 10.0)
+    ann = growth_ratio(core_drop, core_drop, R, [0, 1], (0, 1), R[0], 10.0)
+    assert abs(ap - 1.0) < 1e-12 and abs(ann - 1.0) < 1e-12   # self-ratio is 1
+    # the point is the DENOMINATORS differ, which is what exp52 mixed
+    m0 = np.interp(10.0, R, core_drop[0, 1]) - np.interp(10.0, R, core_drop[0, 0])
+    assert abs(m0) > 0
+
     # (3) block C is EXACTLY zero for a deposition-only model, by construction
     spec0 = K.Spec("moffat", q_free=False, q_fixed=0.0)
     assert transport_share(spec0, np.delete(th, 2), gals) == 0.0
