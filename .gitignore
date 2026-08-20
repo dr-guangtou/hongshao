@@ -142,3 +142,6 @@ ENV/
 *.exe
 *.out
 *.app
+
+# Session-local context file — never commit
+doc/CLAUDE.md
