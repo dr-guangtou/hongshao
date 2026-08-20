@@ -119,8 +119,9 @@ def starts(spec, base):
     c = np.asarray(base, float).copy()
     c[0] -= 0.45                                 # smaller deposits
     c[1] = max(c[1] - 1.8, 0.1)                  # weaker size growth in time
-    i = 2 + (1 if spec.q_free else 0)
-    c[i + 1] = min(c[i + 1] * 2.2, 1.9)          # a much wider efficiency window
+    i = 2 + (1 if spec.q_free else 0)            # index of `mu`; sig follows
+    sig_hi = K.BASE_BOX["sig"][1]
+    c[i + 1] = min(c[i + 1] * 2.2, 0.95 * sig_hi)   # a far wider window
     out["compact"] = _clip(spec, c)
     r = np.asarray(base, float).copy()
     n_base = len(r) - 6

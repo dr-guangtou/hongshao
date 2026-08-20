@@ -65,10 +65,34 @@ R50_FLOOR = 1e-4
 #: loss, never in the scoring module, which reports NaN.
 FAIL_LOSS = 4.0
 
-#: box for the shared base parameters, from exp35/exp38 (log_R50 replaces
-#: log_s0/log_rc; the same range, since it is the same physical decade)
-BASE_BOX = dict(log_R50=(1.0, 3.5), g=(0.0, 6.0), q=(0.0, 3.0),
-                mu=(0.0, 3.0), sig=(0.05, 2.0))
+#: Box for the shared base parameters. `log_R50` replaces exp35/exp38's
+#: `log_s0`/`log_rc` over the same physical decade; the other four are
+#: DELIBERATELY WIDER than production, because exp53's whole complaint about
+#: exp48 is that every family was fitted against a wall. Measured reasons:
+#:   g    production rails at 4.0; exp49 put the interior optimum at 4.35, and
+#:        a wingless family can only reach by inflating its scale, so it needs
+#:        room to fail honestly rather than at a bound.
+#:   sig  a no-transport model has to reshape the efficiency window (design
+#:        constraint 2), and at sig >~ 3 the window is flat to within 12% over
+#:        the sample's ln(1+z) range -- so 5.0 makes "effectively flat" an
+#:        interior point rather than a rail.
+#:   mu   exp38's stress test found this box irrelevant, so widening is free.
+BASE_BOX = dict(log_R50=(1.0, 3.5), g=(0.0, 10.0), q=(0.0, 3.0),
+                mu=(0.0, 5.0), sig=(0.05, 5.0))
+#: sig at or above this is operationally a FLAT efficiency window (< 12%
+#: variation over the sample's ln(1+z) range) -- report it as flat, not as a
+#: measured width.
+SIG_FLAT = 3.0
+#: Numerical guard on the CONDITIONED log-scale. The six conditioning slopes
+#: are unbounded by design (they carry no penalty in the production 1ch-mof
+#: layout either), so a fit exploring a large slope can drive the per-galaxy
+#: log_R50 to hundreds -- where `10.0 ** x` on a Python float RAISES
+#: OverflowError instead of returning inf, killing the fit. Measured: a slope
+#: of 400 on a galaxy with cond[0] = 4.84 gives log_R50 = 1940. The guard is
+#: far outside anything physical (R50_CAP bites at 300 kpc = 2.48), so it
+#: changes no fit that was going to succeed; it only converts a crash into a
+#: value the sentinel can price.
+LOG_R50_GUARD = 30.0
 
 
 @dataclass(frozen=True)
@@ -145,7 +169,8 @@ class Spec:
             lo, hi = families.shape_bounds(self.family)
             shape = float(np.clip(theta[i], lo + 1e-9, hi))
             i += 1
-        log_r50 = log_r50 + theta[i:i + 3] @ cond
+        log_r50 = np.clip(log_r50 + theta[i:i + 3] @ cond,
+                          -LOG_R50_GUARD, LOG_R50_GUARD)
         sig = sig + theta[i + 3:i + 6] @ cond
         return float(log_r50), float(gg), float(max(q, 0.0)), float(mu), \
             float(sig), shape
@@ -362,6 +387,15 @@ def demo():
             for k, ck in zip(KS, c):
                 assert np.isfinite(ck).all() and np.all(np.diff(ck) > -1e-9)
                 assert ck[-1] < gals[1]["m500"][k], (sp.label, k)
+
+    # (5b) an extreme conditioning slope must be PRICED, not raise. This is
+    #      the exp53 dev-run crash: `10.0 ** 1940.0` on a Python float raises
+    #      OverflowError, which killed a fit mid-shard.
+    sp_s = Spec("sersic", q_free=False, q_fixed=0.0)
+    th_big = np.array([1.9, 1.5, 1.5, 0.35, 2.5, 400.0, 0, 0, 0, 0, 0], float)
+    c = model_cogs(sp_s, th_big, gals[0], [0])          # must not raise
+    assert c is None or np.isfinite(np.asarray(c)).all()
+    assert np.isfinite(sp_s.unpack(th_big, gals[0]["cond"])[0])
 
     # (6) the conditioning layer acts through the standardized halo vector and
     #     through nothing else

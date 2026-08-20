@@ -127,11 +127,19 @@ def print_table(rows, title):
           "FREE by design because it is entangled with transport)")
     print(f"  {'cell':<15}{'npar':>5}{'loss':>12}{'q':>7}{'log_R50':>9}"
           f"{'g':>7}{'mu':>7}{'sig':>7}{'shape':>8}   at bound")
+    flat = 0
     for r in order:
         sh = "-" if not np.isfinite(r["shape"]) else f"{r['shape']:.3f}"
+        sig = f"{r['sig']:.3f}" + ("*" if r["sig"] >= K.SIG_FLAT else "")
+        flat += r["sig"] >= K.SIG_FLAT
         print(f"  {r['name']:<15}{r['npar']:5d}{r['loss']:12.6f}{r['q']:7.2f}"
-              f"{r['log_R50']:9.3f}{r['g']:7.3f}{r['mu']:7.3f}{r['sig']:7.3f}"
+              f"{r['log_R50']:9.3f}{r['g']:7.3f}{r['mu']:7.3f}{sig:>8}"
               f"{sh:>8}   {r.get('bounds', '-')}")
+    if flat:
+        print(f"  * sig >= {K.SIG_FLAT:g}: the efficiency window is "
+              f"OPERATIONALLY FLAT (varies < 12% over the sample's ln(1+z) "
+              f"range).\n    Read it as 'deposition tracks halo growth with no "
+              f"epoch preference', not as a measured width.")
 
     print(f"\n=== exp53 {title} — THE VERDICT, ranked by the added-light "
           f"kernel distance, NEVER by the loss ===")
