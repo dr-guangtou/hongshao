@@ -208,6 +208,13 @@ uv run python experiments/exp51_direct_cog_redshift/epoch_local.py fit
 uv run python experiments/exp51_direct_cog_redshift/symbolic_z2.py
 ```
 
+Exp50 Figures 4 and 6 can be rebuilt from its saved held-out predictions
+without repeating the model fit:
+
+```bash
+uv run python experiments/exp50_direct_cog_map/run.py figures
+```
+
 Regenerable numerical products and manifests are in `outputs/`; all figures
 are in `figures/`. Both directories are gitignored.
 

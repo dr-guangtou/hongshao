@@ -919,3 +919,10 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   though the PDF was correct. Re-rendering all pages as opaque RGB separated a
   renderer artifact from a document-layout problem and avoided an unnecessary
   change to the publication figures.
+- **Inspect the vector and raster exports of density plots independently
+  (Exp50--Exp51 report correction).** The PNG exports of the Exp50 hexbin
+  diagnostics were complete, while the PDF exports silently omitted four of
+  five data clouds in one figure and all six in another. The plotting code now
+  rasterizes only the dense hexbin collections, retains vector axes and labels,
+  and can rebuild these diagnostics from the saved held-out predictions. The
+  report uses the 300-dpi PNG versions for viewer-independent rendering.

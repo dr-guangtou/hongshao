@@ -10,9 +10,11 @@ gitignored because they can be rebuilt from the experiment products.
 
 ## Build
 
-First generate the Exp50 and Exp51 experiment figures. Then copy their PDF
-versions into this directory's `figures/` subdirectory, retaining the filenames
-used by `report.tex`. From this directory, compile with:
+First generate the Exp50 and Exp51 experiment figures. Then copy the figure
+files used by `report.tex` into this directory's `figures/` subdirectory,
+retaining their filenames. Most figures use the vector PDF version. Figures 4
+and 6 use the 300-dpi PNG version because some PDF viewers omit parts of their
+large hexbin collections. From this directory, compile with:
 
 ```bash
 latexmk -pdf report.tex

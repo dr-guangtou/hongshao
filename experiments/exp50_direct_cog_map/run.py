@@ -526,6 +526,7 @@ def parameter_figure(truth_parameters: np.ndarray, result: dict, mode: str) -> N
             gridsize=35,
             mincnt=1,
             cmap="cividis",
+            rasterized=True,
         )
         limits = [
             min(truth_parameters[:, index].min(), predicted[:, index].min()),
@@ -541,7 +542,7 @@ def parameter_figure(truth_parameters: np.ndarray, result: dict, mode: str) -> N
         )
     for axis in axes.ravel()[len(names) :]:
         axis.axis("off")
-    for label, axis in zip("ABCDEF", axes.ravel()):
+    for label, axis in zip("ABCDE", axes.ravel()[: len(names)]):
         axis.text(
             -0.14, 1.04, label, transform=axis.transAxes, fontsize=11, fontweight="bold"
         )
@@ -559,7 +560,12 @@ def planes_figure(result: dict, truth_log: np.ndarray) -> None:
     for column, (label, cogs) in enumerate(sets):
         sizes = np.log10(enclosed_radii(cogs, (0.5,))[:, 0])
         axes[0, column].hexbin(
-            cogs[:, -1], sizes, gridsize=35, mincnt=1, cmap="cividis"
+            cogs[:, -1],
+            sizes,
+            gridsize=35,
+            mincnt=1,
+            cmap="cividis",
+            rasterized=True,
         )
         axes[0, column].set(
             xlabel=r"log$_{10}$ M$_*(<148)$ (M$_\odot$)",
@@ -568,7 +574,12 @@ def planes_figure(result: dict, truth_log: np.ndarray) -> None:
         )
         apertures = aperture_targets(cogs)
         axes[1, column].hexbin(
-            apertures[:, 0], apertures[:, -1], gridsize=35, mincnt=1, cmap="cividis"
+            apertures[:, 0],
+            apertures[:, -1],
+            gridsize=35,
+            mincnt=1,
+            cmap="cividis",
+            rasterized=True,
         )
         axes[1, column].set(
             xlabel=r"log$_{10}$ M$_*(<10)$ (M$_\odot$)",
@@ -584,6 +595,26 @@ def planes_figure(result: dict, truth_log: np.ndarray) -> None:
     fig.tight_layout()
     save_fig(fig, FIGDIR / "exp50_population_planes")
     plt.close(fig)
+
+
+def regenerate_saved_figures() -> None:
+    """Rebuild diagnostic figures from the saved held-out predictions."""
+    prediction_path = OUTDIR / "predictions.npz"
+    if not prediction_path.exists():
+        raise FileNotFoundError(
+            f"missing {prediction_path}; run the full Exp50 fit before rebuilding figures"
+        )
+    with np.load(prediction_path) as saved:
+        truth_log = saved["truth_cogs_log"]
+        mean_cogs = saved["selected_mean_cogs_log"]
+        result = {
+            "mean_cogs": mean_cogs,
+            "draw_cogs": saved["selected_draw_cogs_log"],
+            "mean_parameters": compress_cogs(mean_cogs, RADII, "quantile3"),
+        }
+        parameter_figure(saved["quantile3_targets"], result, "quantile3")
+        planes_figure(result, truth_log)
+    print(f"rebuilt saved diagnostic figures in {FIGDIR}")
 
 
 def mass_binned_prediction_figure(
@@ -835,5 +866,7 @@ if __name__ == "__main__":
         demo()
     elif command == "fit":
         fit_experiment()
+    elif command == "figures":
+        regenerate_saved_figures()
     else:
-        raise SystemExit(f"unknown command {command!r}; use demo or fit")
+        raise SystemExit(f"unknown command {command!r}; use demo, fit, or figures")
