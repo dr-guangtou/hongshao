@@ -923,6 +923,60 @@ Cross-experiment plan. Mirrors the phase sequence in
     unmeasurable defect; a natural selection metric for options B/C/D.
   - Closing note: the ~15% negative epoch-to-epoch growth rate is a
     DATA property (truth 13.78%), faithfully inherited, not an artifact.
+- [x] **exp49 — is the railed `g` measurable? CLOSED 2026-08-20 with unfinished
+  business (branch exp49-identifiability).** Answered for the production
+  objective: **`g` = 4.35222 +/- 0.00320**, 4/5 starts agreeing to 1.17e-07, no
+  parameter within 2% of a bound. The rail was real (nine of ten cells, five
+  starts x two box formulations), but `g` is one coordinate of a degeneracy in
+  which all six BASE parameters correlate at |rho| = 0.834-0.995 (effective rank
+  **7 of 12**), it is worth **0.064%** of the loss, and **raising it makes the
+  compact-galaxy central deficit WORSE** (-35.7% at g=3.0 to -40.5% at g=5.5)
+  while the loss minimizes in between. **Do not widen the box in production.**
+  A 300 kpc deposit-radius ceiling costs 1.5e-5 refitted — essentially free.
+  - **INVALID, do not quote bare**: the density-log widened fit is PINNED at the
+    `log_rc` bound, so its `g` = 5.139 is a LOWER BOUND (the qualitative finding
+    holds: the objective shifts `g` by >= 0.8). Production profile points
+    `g` = 5.25 and 5.50 are contaminated by the same wall.
+  - **UNFINISHED, deferred and resumable** (stores cached and keyed): the
+    density-log widened fit with `log_rc` widened to ~4.5 and its profile; the
+    +/-0.30 refinement grids; extending the grid below `g` = 3.0 to settle the
+    two-basin question; and **stage 3 entirely** (interior Hessian at the widened
+    solution, weak-subspace principal angles, sandwich covariance, bootstrap).
+  - **Why closed**: exp52 showed the deposition mechanism is misspecified.
+    Identifiability results for a misspecified model may not survive fixing it,
+    so the remaining stages of
+    `doc/plans/2026-08-16-kernel-identifiability.md` are on hold, not abandoned.
+- [ ] **(NEXT, high priority) the DEPOSITION-ONLY model test** — a boundary
+  condition, on its own branch. Remove the transport mechanism entirely (q = 0,
+  a clean nested special case since rcw = rc0 makes fc irrelevant) so the model
+  only deposits new material, and test the profile families against the MEASURED
+  differential profiles rather than against the loss. Design notes:
+  - **The efficiency window MUST be free.** Transport and the window are
+    entangled: with sig = 0.235 the late deposits are nearly massless, so a
+    no-transport model would have no way to change shape at late times and the
+    failure would be uninterpretable.
+  - **Judge against the measured added-light kernel**, not the loss.
+    `exp38/outputs/stage0_kernels.npz` holds the empirical deposit kernel
+    (3 mass terciles x 4 epoch pairs x 23 radii); exp38 stage 0.2 measured it as
+    centrally peaked at 3-4 kpc with Sersic n = 2.1-3.1 and half-mass radius
+    15-47 kpc. exp52's `data_differential.py` adds the halo-mass-binned slopes.
+  - **Quantitative scorecard** (from exp52, n=2397): median dlogSigma ~ 0.00
+    +/- 0.01 at 2-3 kpc for both z<1 pairs; **+0.09 at 2.35 kpc over the long
+    baseline** (the core GROWS; there is NO systematic core drop -- an earlier
+    claim of one was withdrawn, it is 0.2-2.5% at one marginally-resolved radius
+    with 51-56% of galaxies negative, i.e. a coin flip); slope b ~ 0.10 late
+    rising to 0.15-0.19 early, **essentially independent of halo mass**.
+  - **Sersic was rejected for a fixable reason.** exp38 stage 1 rejected
+    `sersic (n free)` with "LOWER rail 3/5 epochs (n-scale degeneracy; needs an
+    R50 reparameterization)" -- that is the identifiability defect exp49
+    characterised, and the R50 reparameterization is the known fix. The family
+    the measured kernel points at was eliminated by a numerical artifact.
+  - **Falsifiable prediction**: exp52 showed transport drains M(<10 kpc) to
+    57.3% of the truth's growth. Removing transport should IMPROVE central
+    masses. If it does not, exp52's mechanism story is wrong.
+  - Run graded, not binary: **profile the loss over `q`** (currently fitted at
+    0.908 in a [0,3] box, comfortably interior, so the data actively wants
+    transport under the present setup) with q = 0 as its endpoint.
 - [x] **exp52 — the kernel grows galaxies by REDISTRIBUTION, not accretion:
   DIAGNOSIS COMPLETE (2026-08-20, branch exp49-identifiability).** Opened after
   the user challenged an offhand claim that late outskirt growth comes from

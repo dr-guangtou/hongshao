@@ -569,6 +569,18 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   why `hongshao/fitting.py`'s self-check uses five. Corollary for the record:
   supplying an explicit simplex CHANGES what a fit returns, so never switch
   an already-reported fit to it without re-running.
+- **Identifiability results are CONDITIONAL on the model being right, so audit
+  the mechanism before spending a week measuring parameter degeneracies.**
+  exp49 (2026-08-20) ran a careful identifiability program on the adopted
+  kernel -- residual-Jacobian SVD, widened multi-start fits, a properly profiled
+  `g` curve -- and answered its question: `g` = 4.352 +/- 0.003, one coordinate
+  of a degeneracy in which all six base parameters correlate at |rho| >= 0.83
+  (effective rank 7 of 12), worth 0.064% of the loss. Then exp52 found the
+  kernel's deposition mechanism is misspecified, which puts the remaining stages
+  on hold because **degeneracy structure measured in a misspecified model need
+  not survive fixing the model.** The mechanism audit cost an afternoon; the
+  identifiability program was a week of compute. Do the cheap structural check
+  first.
 - **A model can reproduce an observable well while getting the MECHANISM
   structurally wrong, and nothing in the objective will reveal it — because the
   objective only ever sees the summed profile.** exp52 (2026-08-20): the
