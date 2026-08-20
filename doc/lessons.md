@@ -569,6 +569,29 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   why `hongshao/fitting.py`'s self-check uses five. Corollary for the record:
   supplying an explicit simplex CHANGES what a fit returns, so never switch
   an already-reported fit to it without re-running.
+- **A model can reproduce an observable well while getting the MECHANISM
+  structurally wrong, and nothing in the objective will reveal it — because the
+  objective only ever sees the summed profile.** exp52 (2026-08-20): the
+  adopted kernel fits the curves of growth to ~10-15% at five epochs, yet
+  **96.5% of its M\*[50,100 kpc] growth between z=0.7 and z=0.4 is
+  redistribution of stars it already had**, not new deposition, and its own
+  deposition supplies only ~11% of the z=2 -> z=0.4 mass growth (the other 89%
+  is manufactured by the M(<500 kpc) normalization pinning the model to the
+  data). The established picture for massive galaxies is the opposite: late
+  growth is ex-situ, driven by continued minor mergers. **Rule: for any model
+  with internal machinery, periodically audit HOW it produces the observable,
+  not just how well.** Concretely, decompose the change in the observable into
+  the model's own mechanisms and check each against the physics — here that
+  meant splitting aperture growth into transport / new deposition /
+  renormalization, which took an afternoon and found a defect two experiments
+  of fit-quality work had only seen the symptoms of (the compact-galaxy central
+  deficit: with deposition off, the only way to fill an outskirt is to empty the
+  centre).
+- **Corollary: watch for observables the model does not actually predict.**
+  This kernel never predicts total stellar mass growth — M(<500 kpc) is pinned
+  to the measurement — so agreement there is guaranteed by construction and is
+  not evidence of anything. Know which of your matches are earned and which are
+  imposed.
 - **A SLICE IS NOT A PROFILE, and the slice is always the cheap thing that
   looks like an answer. Vary one parameter with the others FROZEN and you
   measure that parameter's mechanical role; vary it with the others

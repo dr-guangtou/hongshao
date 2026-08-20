@@ -1,4 +1,4 @@
-"""exp50 — how does the model grow a massive galaxy's outskirts?
+"""exp52 — how does the model grow a massive galaxy's outskirts?
 
 The kernel is a TRANSPORT model: mass deposited at time t_i with scale rc0
 later has a fraction (1-fc) expanded to rc0*(t_k/t_i)^q. So between two epochs
@@ -30,7 +30,7 @@ UN-NORMALIZED split (transport vs new deposition alone) is reported too, since
 that is the physics question with the bookkeeping removed.
 
 Run: HONGSHAO_DATA_DIR=... PYTHONPATH=. uv run python \
-experiments/exp50_growth_mechanism/decompose.py [--dev]
+experiments/exp52_growth_mechanism/decompose.py [--dev]
 """
 import sys
 from pathlib import Path
@@ -91,7 +91,7 @@ def main(dev=False):
     R = e.R
     theta = np.asarray(np.load(ROOT / "experiments/exp40_epoch_objective/"
                                "outputs/latestart.npz")["theta_z15"], float)[:12]
-    print(f"exp50 growth decomposition — adopted 1ch-mof theta, n={len(gals)}")
+    print(f"exp52 growth decomposition — adopted 1ch-mof theta, n={len(gals)}")
     print(f"  transport exponent q = {theta[2]:.4f}; efficiency window "
           f"mu={theta[3]:.4f} sig={theta[4]:.4f} "
           f"(peak z={np.exp(theta[3])-1:.2f})\n")

@@ -923,6 +923,34 @@ Cross-experiment plan. Mirrors the phase sequence in
     unmeasurable defect; a natural selection metric for options B/C/D.
   - Closing note: the ~15% negative epoch-to-epoch growth rate is a
     DATA property (truth 13.78%), faithfully inherited, not an artifact.
+- [x] **exp52 — the kernel grows galaxies by REDISTRIBUTION, not accretion:
+  DIAGNOSIS COMPLETE (2026-08-20, branch exp49-identifiability).** Opened after
+  the user challenged an offhand claim that late outskirt growth comes from
+  migration. It does, and that is a structural problem. Full sample n=2397.
+  - **Transport share of the model's own M\*[50,100] growth**: 18.0%
+    (z=2.0-1.5), 38.4% (1.5-1.0), 76.9% (1.0-0.7), **96.5% (0.7-0.4)**; 87.5%
+    over z=1.0-0.4. Crossover at z~1.2, exactly where minor-merger accretion
+    should take over.
+  - **The kernel's own deposition supplies ~11% of the mass growth** from z=2 to
+    z=0.4 (x1.115 vs measured x2.645); the other 89% is the M(<500) pinning.
+    After z~1.5 deposition is off and the un-normalized mass inside 500 kpc
+    FALLS (x0.992).
+  - **Explains the exp47/exp48 compact-galaxy central deficit**: with deposition
+    off, filling an outskirt requires emptying the centre. z=1.0-0.4 model/truth
+    growth M(<10) = **57.3%** against M[50,100] = 98.9%.
+  - **RIGHT SOURCE, ~10x TOO MUCH REACH** (user's framing, and the actionable
+    part). Adiabatic expansion from AGN feedback is well grounded but FLATTENS
+    the inner profile; it does not build the stellar halo. Measured: 93.1% of
+    the drained mass comes from 0-5 kpc (correct region) but 58.5% is delivered
+    beyond 50 kpc, 29.4% beyond 148 kpc, 12.0% beyond 500 kpc where the
+    normalization discards it. **Target the radial extent, not the existence, of
+    the transport term.**
+  - **NEXT, unrun**: TNG's own in-situ/ex-situ decomposition is the direct
+    falsification test. NOT in the local drop — historical profiles carry
+    isophote quantities only, and `map_tng100_hist_stellar.hdf5` is 852 MB of
+    ZEROS (failed download, needs re-fetching). TNG's public Stellar Assembly
+    catalogs give the per-subhalo split; the RADIAL split is a further step,
+    availability unverified.
 - [x] **the objective module — a REFACTOR, not an experiment: COMPLETE
   (2026-08-15, branch objective-module).** There was no loss/objective
   code in `hongshao/` at all; the production objective was six hardcoded

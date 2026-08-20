@@ -1,4 +1,4 @@
-"""exp50 figure — the model's growth mechanism versus the physical picture.
+"""exp52 figure — the model's growth mechanism versus the physical picture.
 
 Left: the transport share of the model's own outskirt growth, epoch pair by
 epoch pair. Transport = redistribution of stars already assembled; the
@@ -12,7 +12,7 @@ manufactured by the M(<500) normalization, which pins the model to the data.
 Numbers hard-coded from decompose.py on the full sample (n=2397); rerun that
 first if the adopted theta changes.
 
-Run: PYTHONPATH=. uv run python experiments/exp50_growth_mechanism/figure.py
+Run: PYTHONPATH=. uv run python experiments/exp52_growth_mechanism/figure.py
 """
 import sys
 from pathlib import Path
@@ -38,7 +38,7 @@ ZS = [2.0, 1.5, 1.0, 0.7, 0.4]
 
 def main():
     set_style()
-    fig, ax = plt.subplots(1, 2, figsize=(11.0, 4.3))
+    fig, ax = plt.subplots(1, 3, figsize=(15.6, 4.3))
     z = [p[1] for p in PAIRS]
 
     ax[0].plot(z, [p[2] for p in PAIRS], "o-", color=OKABE_ITO[5], lw=2,
@@ -72,10 +72,28 @@ def main():
                    f"{_pct()} of the growth\nis the model's own physics",
                    (0.62, 1.55), fontsize=9, color="0.25")
 
-    fig.suptitle("exp50 — the adopted kernel's late-time growth is "
+    # panel 3: the REACH of the transport, z=1.0 -> 0.4
+    lab = ["0-5", "5-10", "10-30", "30-50", "50-100", "100-148",
+           "148-300", "300-500", ">500"]
+    val = [-93.1, -6.9, 24.8, 16.7, 20.1, 9.0, 11.8, 5.6, 12.0]
+    col = [OKABE_ITO[5] if v < 0 else OKABE_ITO[4] for v in val]
+    ax[2].bar(range(len(val)), val, color=col)
+    ax[2].axhline(0, color="k", lw=0.8)
+    ax[2].axvline(3.5, color="0.4", lw=1, ls="--")
+    ax[2].text(4.0, -55, _tex("58.5") + _pct() + " delivered\n" + _tex(">") +
+               "50 kpc", fontsize=8, color="0.25")
+    ax[2].text(-0.3, -78, "drained from\nthe inner 10 kpc", fontsize=8,
+               color="0.25")
+    ax[2].set_xticks(range(len(lab)), [_tex(x) for x in lab], rotation=45,
+                     ha="right")
+    ax[2].set_xlabel("shell (kpc)")
+    ax[2].set_ylabel(f"share of the drained mass [{_pct()}]")
+    ax[2].set_title("Where transport carries it (z=1.0 to 0.4)")
+
+    fig.suptitle("exp52 — the adopted kernel's late-time growth is "
                  "redistribution, not accretion", fontsize=11)
     fig.tight_layout()
-    for p in save_fig(fig, HERE / "figures" / "exp50_growth_mechanism"):
+    for p in save_fig(fig, HERE / "figures" / "exp52_growth_mechanism"):
         print("wrote", p)
 
 

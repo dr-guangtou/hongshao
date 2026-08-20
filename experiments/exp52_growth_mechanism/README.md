@@ -1,4 +1,4 @@
-# exp50 — the adopted kernel grows massive galaxies by redistribution, not accretion
+# exp52 — the adopted kernel grows massive galaxies by redistribution, not accretion
 
 **Status: DIAGNOSIS. A structural incompatibility between the adopted kernel
 and the established physical picture, quantified. No fix proposed here.**
@@ -88,6 +88,51 @@ deficit that exp47 and exp48 spent two experiments characterising**: with the
 deposition machine off, the only way the kernel can grow an outskirt is to move
 material out of the centre, so the centre is systematically under-filled.
 
+## Result 4 — the transport has the RIGHT SOURCE and a REACH ~10x too long
+
+Adiabatic expansion is physically well grounded for massive galaxies: strong,
+continued AGN/SMBH feedback offsets baryons outward, the inner potential
+re-configures, and the stellar distribution responds. The established result
+from theory and hydro simulations is that this **flattens the inner stellar
+profile**. It does not build the stellar halo at 50-150 kpc. So some
+transformation that lowers the central density with time IS legitimately
+needed; large-scale transportation is not.
+
+Measured (`reach.py`, n=2397), for material already assembled at the earlier
+epoch — where transport takes mass FROM and delivers it TO:
+
+| shell (kpc) | z=1.0 -> 0.4 | z=2.0 -> 1.0 |
+|---|---|---|
+| 0-5 | **-93.1%** (drained) | **-100.0%** (drained) |
+| 5-10 | -6.9% (drained) | +16.2% |
+| 10-30 | +24.8% | +39.1% |
+| 30-50 | +16.7% | +13.6% |
+| 50-100 | +20.1% | +12.5% |
+| 100-148 | +9.0% | +4.8% |
+| 148-300 | +11.8% | +5.7% |
+| 300-500 | +5.6% | +2.6% |
+| beyond 500 | **+12.0%** | +5.5% |
+| **delivered inside 50 kpc** | **41.5%** | 68.9% |
+| **delivered beyond 50 kpc** | **58.5%** | 31.1% |
+
+**The source is exactly right.** 100% of the drained mass comes from inside
+10 kpc, 93% from inside 5 kpc — precisely the region where AGN-driven expansion
+should operate. Between z=1 and z=0.4 this moves **12.24% of all deposited
+stellar mass** out of the inner 10 kpc, and the half-mass radius of the
+assembled stars grows **11.27 -> 19.04 kpc (+69%)**.
+
+**The destination is wrong, and gets worse with time.** By z=1 -> 0.4, 58.5% of
+the drained mass is delivered beyond 50 kpc, **29.4% beyond 148 kpc — outside
+the measured profile entirely** — and **12.0% beyond 500 kpc, where the
+normalization then discards it**. At the earlier pair the reach is far more
+defensible (68.9% stays inside 50 kpc); it lengthens as the deposition machine
+switches off and transport becomes the only way to grow an outskirt.
+
+**So the defect is specific and quantified: the right physical process, applied
+with roughly an order of magnitude too much reach.** This is a sharper target
+than "the transport term is wrong" — the term is needed, its radial extent is
+not.
+
 ## What this does NOT say
 
 - It does not say the model fits badly. It reproduces the profiles at all five
@@ -97,11 +142,19 @@ material out of the centre, so the centre is systematically under-filled.
   predict mass growth at all** — M(<500) is pinned to the measured value, so
   the deposition history controls only the radial SHAPE.
 - **The transport picture has never been tested against TNG's own in-situ /
-  ex-situ decomposition.** That comparison is the direct falsification test and
-  has not been run; whether the ex-situ split is present in the local drop or
-  needs pulling from the TNG archive is unchecked.
+  ex-situ decomposition.** That is the direct falsification test and is unrun.
+  **Checked 2026-08-20: the split is NOT in the local drop.** The historical
+  profiles (`save_tng300_072_hist_prof`) carry only isophote quantities —
+  `r_kpc, intensity, intens_err, ellipticity, ellip_err, pa, pa_err` plus an
+  ellipse-fit diagnostics table. `map_tng100_hist_stellar.hdf5` is **852 MB of
+  zeros** (no HDF5 signature, zero bytes at every sampled offset) — a failed or
+  sparse download, not data. TNG's public release does provide Stellar Assembly
+  supplementary catalogs with in-situ / ex-situ stellar mass per subhalo; the
+  RADIAL split we would need here is a further step and its availability has
+  not been verified.
 
 ## Files
 
 - `decompose.py` — the exact three-term decomposition, all six epoch pairs.
-- `figure.py` — `figures/exp50_growth_mechanism.png`.
+- `reach.py` — where transport takes mass from and delivers it to.
+- `figure.py` — `figures/exp52_growth_mechanism.png`.
