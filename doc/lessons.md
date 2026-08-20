@@ -890,3 +890,24 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the exp38 self-similarity from the model side); (2) a paired metric
   is still the right tool for the MEAN prediction — keep both, label
   which is which.
+- **`np.interp` CLAMPS outside its grid, so `interp(0.0, R, cog)` is not zero
+  — it is the mass already inside the innermost aperture (exp52, found in
+  exp53).** exp52's growth decomposition built the truth term as
+  `interp(r_out) - interp(r_in)` and the model term analytically, where
+  `enclosed(0.0, ...)` really is 0. For every `r_in = 0` row that silently
+  divided the model's APERTURE growth by the truth's ANNULUS growth. It was
+  invisible because it is a 27% effect that only touches the aperture rows:
+  the annulus rows (`r_in > 0`) reproduced perfectly, which reads as
+  confirmation rather than as a clue. The headline moved from "the model grows
+  M(<10) at 57.3% of the truth's rate" to 72.6% — the finding survived, its
+  size did not. **Two habits this argues for.** (1) When model and data go
+  through DIFFERENT code paths to the same quantity, the two paths are a place
+  to put an assertion, not a place to trust symmetry — here, asserting
+  `truth_enclosed(0) == 0` would have caught it instantly. (2) When one row of
+  a table reproduces an independent number exactly and a neighbouring row does
+  not, the discrepancy is a lead about what differs BETWEEN the rows, not
+  noise to be explained away in the row that disagrees; chasing "why does
+  M(<10) disagree" through the model (deposit ceiling, analytic-vs-interpolated
+  radial operator — both tested, both innocent) took three probes, while
+  asking "what do M(<10) and M[50,100] not share" would have pointed at `r_in`
+  first.
