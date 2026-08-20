@@ -210,3 +210,13 @@ uv run python experiments/exp51_direct_cog_redshift/symbolic_z2.py
 
 Regenerable numerical products and manifests are in `outputs/`; all figures
 are in `figures/`. Both directories are gitignored.
+
+## Full technical report
+
+The mathematical and methodological report covering both Exp50 and Exp51 is
+maintained in [`doc/report.tex`](doc/report.tex). Its modular source explains
+every halo and CoG parameter, the coordinate transforms and inverse decoder,
+the probabilistic emulator, the purpose of each control, the numerical results,
+and the limits on the physical interpretation. Build instructions are in
+[`doc/README.md`](doc/README.md); the compiled PDF is written to the gitignored
+path `doc/build/report.pdf`.

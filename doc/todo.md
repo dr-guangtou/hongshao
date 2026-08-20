@@ -1292,3 +1292,10 @@ Cross-experiment plan. Mirrors the phase sequence in
   graduation, test held-epoch coefficient closure for the epoch-local inputs
   under one common physical scaling convention and refine the temporal
   residual model.
+  **Documentation:** a 35-page mathematical and methodological report covering
+  Exp50 and Exp51 is maintained in
+  `experiments/exp51_direct_cog_redshift/doc/`. It includes exact coordinate
+  definitions, the inverse monotone decoder, the probabilistic model, direct
+  profile figures, control logic, claim qualifications, and a reproducibility
+  map. The source compiles without unresolved references or overflowing text;
+  the generated PDF and staged figure copies are gitignored.

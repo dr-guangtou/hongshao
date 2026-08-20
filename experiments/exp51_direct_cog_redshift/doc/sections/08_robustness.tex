@@ -1,0 +1,146 @@
+\section{Robustness and validity audit}
+\label{sec:robustness}
+
+The experiments contain several strong internal controls, but they do not have
+the status of an external validation. This section separates what is directly
+demonstrated from what remains conditional or suggestive.
+
+\subsection{Cross-validation and leakage control}
+
+All quoted predictive scores are out of fold. For the readable models, feature
+standardization, mean coefficients, heteroscedastic variance coefficients, and
+the residual correlation matrix are fitted using only the training galaxies.
+For PCA, the mean profile, PCA basis, and halo-to-component regression are also
+recomputed in each training fold. The symbolic searches are nested inside the
+training folds. Thus neither a global PCA basis nor a globally selected symbolic
+expression has access to the held-out targets.
+
+The descendant-conditioned high-redshift model does contain halo growth after
+the target epoch. This is not hidden leakage when the scientific sample is
+defined by its known $z=0.4$ descendants, but it is an invalid feature set for
+painting an independently selected high-redshift halo catalog. The epoch-local
+test explicitly closes this information channel and improves the result at
+$z\geq1$, which strengthens rather than weakens the main high-redshift claim.
+
+\subsection{Null controls and the meaning of an assembly signal}
+
+The final-mass and concurrent-mass baselines measure how much can be learned
+without MAH shape. The within-mass-bin shuffles preserve the mass distribution
+and approximately preserve the marginal distribution and internal covariance
+of the shuffled feature block. They destroy its object-level association with
+the galaxy. A real-versus-shuffled improvement is therefore evidence of
+predictive assembly information at approximately fixed mass.
+
+This design does not identify a causal intervention. MAH parameters can be
+correlated with merger orbital structure, environment, concentration, or other
+unmodeled variables. The appropriate statement is that the real halo history
+contains predictive information for the galaxy profile that is lost when halo
+histories are reassigned among similar-mass objects.
+
+\subsection{Representation and sample-quality checks}
+
+The CoG compression is tested before halo fitting and remains near $0.004\dex$
+at every epoch. Invalid or dropped interpolation knots are counted. The full
+sample, rather than only a development subset, is used for the representation
+preflight. This step exposed the compact $z=2$ galaxy and caused the move to
+outer-mass quantiles.
+
+Two objects with broken progenitor matches are removed using the established
+mass-drop criterion. This is a quality-control exclusion, not a model-dependent
+outlier rejection. The report does not claim robustness to other possible
+merger-tree failures that remain unidentified.
+
+\subsection{Halo-history fitting}
+
+The implementation in \cref{eq:diffmah_alpha,eq:diffmah_mass} is checked by
+synthetic parameter recovery. Epoch-local fits use only $t\geq1\gyr$, consistent
+with the regime where \diffmah{} is expected to approximate resolved halo
+histories accurately \citep{Hearin2021}. All 2365 common-sample galaxies obtain
+five finite successful fits. The median mass-history RMS is $0.0505$--$0.0707$
+dex, but the fit parameters can still be covariant. These experiments evaluate
+their predictive combination; they do not report full posterior uncertainties
+for individual \diffmah{} parameters.
+
+\subsection{Monte Carlo precision and calibration}
+
+The empirical profile CRPS and coverage use 32 draws per galaxy. This is
+adequate for the central distribution and efficient model comparisons, but
+quantiles at 5 and 95 per cent are coarsely sampled. The similar undercoverage
+of readable and PCA models suggests that it is not caused by the readable
+coordinate choice. A publication-level calibration claim should repeat the
+final model with more draws or use analytic coordinate-space intervals propagated
+through a larger numerical sample.
+
+The residual model is multivariate Gaussian in transformed coordinate space.
+Non-Gaussian tails, multimodality, and mass-dependent correlations beyond the
+adopted factorization can remain. The AR(1) temporal model uses one average
+coefficient for all coordinates and epoch spacings. Its endpoint mismatch is
+direct evidence that this approximation is incomplete.
+
+\subsection{Symbolic-regression correction and rerun}
+
+The first full $z=2$ symbolic run was invalid. Python's cached module name
+selected the \ExpFifty{} decoder after the profiles had been compressed with
+\ExpFiftyOne{} coordinates. Target labels in the direct prediction figure
+exposed the inconsistency. That run was discarded; the import was made explicit
+and the complete nested calculation was repeated. Only the corrected results in
+\cref{fig:exp51_symbolic} and this report are retained. This incident illustrates
+why decoded-profile inspection is a validity check rather than a presentation
+step.
+
+\subsection{Scope limitations}
+
+The most important remaining limitations are:
+\begin{itemize}
+  \item one hydrodynamical simulation, with no resolution or subgrid-model
+  comparison;
+  \item a massive-central sample rather than a mass-complete galaxy population;
+  \item one projected CoG per galaxy and no modeled observational errors;
+  \item no external validation of the halo feature distributions or fitted
+  coefficients;
+  \item no explicit initial-condition, merger-orbit, satellite, or environment
+  features;
+  \item independent single-epoch epoch-local fits rather than a validated
+  continuous-redshift portable model;
+  \item a Gaussian residual family and a one-parameter temporal correlation
+  model.
+\end{itemize}
+
+\subsection{Claim-strength summary}
+
+\begin{longtable}{@{}p{0.36\textwidth}p{0.22\textwidth}p{0.34\textwidth}@{}}
+  \caption{Strength and scope of the main claims.}\label{tab:claim_strength}\\
+  \toprule
+  Claim & Status & Qualification \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Claim & Status & Qualification \\
+  \midrule
+  \endhead
+  Five readable coordinates accurately reconstruct the measured CoG. &
+  Mechanically demonstrated & Median representation RMS near $0.004\dex$ on
+  the full retained samples.\\
+  The readable map matches PCA predictive performance. & Supported within
+  TNG300 & Difference is below PCA fold variation at all five epochs; this is
+  practical parity, not formal statistical equivalence.\\
+  MAH shape contains profile information beyond halo mass. & Supported within
+  TNG300 & Real pairing outperforms mass-conditioned shuffled MAH shape.\\
+  Concentration adds information beyond \diffmah{}. & Supported within TNG300 &
+  Real concurrent concentration outperforms its mass-conditioned shuffle.\\
+  Future halo growth is required for high-$z$ prediction. & Rejected by current
+  test & Epoch-local inputs are better at $z=1.5$ and $z=2$.\\
+  Descendant-conditioned coefficients can be interpolated in redshift. &
+  Supported on fitted interval & All three held interior epochs pass the 5 per
+  cent closure gate.\\
+  Epoch-local coefficients define a continuous-$z$ model. & Not yet tested &
+  Requires common physical scaling of evolving inputs and held-epoch closure.\\
+  A one-parameter AR(1) residual process is exact. & Rejected as exact & It
+  repairs over-coherence but undershoots the longest-baseline size correlation.\\
+  A compact universal symbolic law has been discovered. & Not supported & The
+  sparse $z=2$ gain is 1.00 per cent versus 5.01 per cent for dense degree-2.\\
+  The map is causal or externally portable. & Not established & Requires other
+  simulations, observational forward modeling, and a causal design.\\
+  \bottomrule
+\end{longtable}
+

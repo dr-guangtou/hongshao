@@ -1,0 +1,100 @@
+\section{Simulation data, samples, and observables}
+\label{sec:data}
+
+\subsection{TNG300 and the galaxy sample}
+
+The analysis uses the TNG300 hydrodynamical simulation from the IllustrisTNG
+suite \citep{Pillepich2018,Nelson2019}. TNG300 provides a large volume together
+with baryonic galaxy formation physics, halo catalogs, and merger trees. The
+present results are therefore conditional on one simulation's numerical
+resolution and subgrid model; no claim of transfer to another simulation or to
+observations is made in these experiments.
+
+The objects are massive central galaxies and their main-branch halos. The
+samples used by each stage are summarized in \cref{tab:samples}. The reduction
+from the single-epoch to the five-epoch sample is caused by the requirement of
+valid progenitor profiles at every fitted snapshot and the removal of two known
+broken progenitor matches. Concentration analyses use a further intersection
+with valid fitted concentration histories. The one-object difference between
+the \ExpFifty{} and \ExpFiftyOne{} concentration samples follows from applying
+the five-epoch progenitor quality requirement in \ExpFiftyOne{}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Samples used in Experiments 50 and 51. A valid CoG is a finite,
+  monotone cumulative stellar mass profile on the adopted radial grid.}
+  \label{tab:samples}
+  \begin{tabularx}{\textwidth}{@{}lrlX@{}}
+    \toprule
+    Analysis & $N$ & Redshift(s) & Additional requirement \\
+    \midrule
+    \ExpFifty{} main sample & 2539 & 0.4 & Valid \diffmah{}, $\ctwo$, and CoG \\
+    \ExpFifty{} concentration history & 2366 & 0.4--2.0 & Five valid concentration measurements \\
+    \ExpFiftyOne{} main sample & 2395 & 0.4--2.0 & Five valid progenitor CoGs; broken matches removed \\
+    \ExpFiftyOne{} epoch-local sample & 2365 & 0.4--2.0 & Valid truncated \diffmah{} and concurrent $\ctwo$ at all epochs \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+The five profile epochs are $z=(0.4,0.7,1.0,1.5,2.0)$. All held-out model
+comparisons use five shared galaxy folds. Sharing folds matters because the
+difference between two competitive models is much smaller than their absolute
+prediction error.
+
+\subsection{Curve of growth}
+
+The primary observable is the projected, CoG-derived cumulative stellar mass
+\begin{equation}
+  M_\star(<R)=2\pi\int_0^R \Sigma_\star(R')R'\,dR',
+  \label{eq:cog_definition}
+\end{equation}
+sampled at 24 radii from $2.0$ to approximately $148.2\kpc$. Its normalized
+form is
+\begin{equation}
+  F_\star(R)=\frac{M_\star(<R)}{M_{\star,\rm tot}},\qquad
+  M_{\star,\rm tot}\equiv M_\star(<148.2\kpc).
+  \label{eq:normalized_cog}
+\end{equation}
+The measured CoG is monotone by construction. Modeling the cumulative profile
+is useful because central apertures, radial annuli, total mass, and enclosed-mass
+radii can all be derived from the same prediction. The direct projected-particle
+aperture masses are reserved for cross-checks; they are not substituted for the
+CoG-derived observable.
+
+Each galaxy profile is a single projected realization of a generally triaxial
+and sometimes disturbed system. Projection, merger geometry, and baryonic
+history therefore contribute irreducible scatter relative to the selected halo
+features.
+
+\subsection{Halo-side measurements and units}
+
+The mass history is the main-branch peak halo mass, $\Mpeak(t)$. Masses used by
+the emulator are $h$-free and reported as $\logten(M/\Msun)$. The official
+\diffmah{} comparison catalog stores mass in $\Msun/h$; on ingestion the analysis
+adds
+\begin{equation}
+  \Delta\logten M=\logten(1/h)=0.169\dex
+\end{equation}
+for the simulation value of $h$. Omitting this conversion would produce a
+numerically plausible but physically spurious offset comparable to several of
+the effects studied here.
+
+The secondary halo property is the spherical-overdensity concentration
+\begin{equation}
+  \ctwo=\frac{\Rtwo}{r_s},
+  \label{eq:concentration}
+\end{equation}
+where $\Rtwo$ encloses a mean density 200 times the critical density and $r_s$
+is the scale radius of an NFW-like profile \citep{Navarro1997}. The epoch at
+which $\ctwo$ is measured is part of the feature definition.
+
+\subsection{Information boundary at high redshift}
+
+A high-redshift prediction can be posed in two ways. If the objects are selected
+as descendants at $z=0.4$, their full later halo histories are known and may be
+used to reconstruct their progenitor profiles. This is a legitimate conditional
+history model. It is not, however, a portable model for an independently
+selected $z=2$ halo catalog. For that use, every halo feature must be measurable
+using only times $t\leq t(z)$. This distinction becomes a central experimental
+control in \ExpFiftyOne{}.
+

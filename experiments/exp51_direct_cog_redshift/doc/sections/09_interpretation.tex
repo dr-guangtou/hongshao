@@ -1,0 +1,113 @@
+\section{Combined interpretation}
+\label{sec:interpretation}
+
+\subsection{What the direct conversion now means}
+
+The successful object is not a single equation that turns a halo history into
+one deterministic galaxy profile. It is the composition
+\begin{equation}
+  \Mpeak(t),\ctwo(t)
+  \longrightarrow \vect{x}(z)
+  \longrightarrow P(\vect{\theta}_{\cog}\mid\vect{x},z)
+  \longrightarrow P[M_\star(<R)\mid\vect{x},z].
+  \label{eq:final_composition}
+\end{equation}
+The first arrow defines a compact halo state, the second is a fitted conditional
+distribution, and the third is a monotone coordinate decoder. The model is
+interpretable because its intermediate galaxy variables are total mass,
+central fraction, and radial quantiles. It remains statistical because much of
+the profile-shape variance is unresolved by the selected halo inputs.
+
+\subsection{Why readable coordinates can match PCA}
+
+PCA is optimized to reconstruct variance in the particular training sample.
+The readable coordinates are instead chosen to preserve scientifically useful
+functionals of a monotone cumulative profile. Their success indicates that, on
+the adopted radial grid, the dominant profile variation can be captured by one
+normalization, one central anchor, and three ordered outer scales. The result
+does not imply that these are unique sufficient statistics. Adding $R_{90}$
+improves the representation floor but not the halo prediction, demonstrating
+that sufficiency for profile reconstruction and predictability from halos are
+different requirements.
+
+\subsection{Why the model must remain probabilistic}
+
+The conditional mean predicts total stellar mass well but explains only
+15--36 per cent of the variance in individual shape coordinates at $z=0.4$.
+This remaining scatter is physically plausible: baryonic feedback, merger
+orbits, satellite structure, stellar stripping, and projection need not be
+fully determined by a smooth main-branch MAH and one concentration measurement.
+The correlated residual distribution restores most of the population width
+that the mean suppresses. Removing it would change the scientific model, not
+merely its error bars.
+
+\subsection{What the epoch-local result changes}
+
+The strongest \ExpFiftyOne{} result is not simply that a $z=2$ fit succeeds. It
+is that the fit improves when the halo assembly parameters are defined using
+the correct epoch-local clock. Complete descendant \diffmah{} summarizes how a
+halo reaches $z=0.4$; it is not automatically the most informative coordinate
+system for the state of its progenitor at $z=2$. Re-anchoring the same class of
+mass-history model at the prediction epoch aligns the mass normalization,
+transition time, and growth indices with the target galaxy state.
+
+The improvement also changes how ``portability'' should be described. The
+functional form is portable in the sense that any halo with a resolved past
+history can be compressed to four \diffmah{} parameters. The fitted
+halo-to-galaxy coefficients are not yet externally portable: they have been
+trained and tested only within TNG300.
+
+\subsection{Relation to the deposition-and-migration model}
+
+The direct conversion and the deposition model answer related but different
+questions. The deposition model proposes an explicit history-to-radius
+mechanism and can be interrogated in terms of when stellar mass arrives and
+where it moves. Its assumptions are consequently more numerous and its
+parameter degeneracies can be physically informative. The direct model asks
+for the lowest-complexity conditional relation that preserves observable CoGs.
+It has fewer mechanistic assumptions but does not identify a stellar mass flux
+or migration trajectory.
+
+The two models can therefore act as mutual controls. The direct map supplies a
+statistical performance ceiling and reveals which profile coordinates contain
+assembly information. The deposition model can test whether an explicit
+phenomenological mechanism reproduces those dependencies and their redshift
+evolution. Agreement on a dependence would be stronger evidence than either
+model alone; disagreement would identify where mechanistic assumptions or
+statistical shortcuts matter.
+
+\subsection{Why symbolic regression did not yet deliver the hoped-for equation}
+
+Symbolic regression is most useful when the relation is both low-dimensional
+and stable under resampling. At $z=0.4$, three recurring residual corrections
+recover a substantial fraction of the dense nonlinear gain. At $z=2$, the
+nonlinearity is larger but is distributed across more target-specific terms,
+and the $z=0.4$ terms transfer weakly. This pattern can arise if the natural
+variables change with epoch, if interactions are genuinely numerous, or if a
+small symbolic law is obscured by residual covariance and measurement noise.
+
+The correct conclusion is not that symbolic regression is unsuitable. It is
+that the current standardized variables and independent-epoch formulation do
+not support a compact universal equation. A future search should follow, not
+precede, construction of physically consistent epoch-local coordinates and an
+explicit redshift variable.
+
+\subsection{Priority of the next tests}
+
+The next decisive analysis is held-epoch closure for the epoch-local model.
+Because $\logten M_p$ and $u_c$ are anchored at different cosmic times, the
+features require a common physical scaling before their coefficients can be
+interpolated. A sensible sequence is:
+\begin{enumerate}
+  \item express local times relative to the cosmic age at prediction and masses
+  relative to concurrent halo mass where appropriate;
+  \item standardize with one training-set convention shared across epochs;
+  \item remove each interior epoch and predict it from the others;
+  \item test whether explicit low-order redshift terms retain the high-$z$
+  degree-2 gain;
+  \item replace the one-$\rho$ residual model only if a more flexible process
+  measurably improves both adjacent and endpoint coherence;
+  \item validate the frozen design in another simulation or resolution before
+  library graduation.
+\end{enumerate}
+

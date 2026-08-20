@@ -1,0 +1,127 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=24mm,headheight=15pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools,bm}
+\usepackage{booktabs,longtable,tabularx,array,multirow}
+\usepackage{graphicx}
+\usepackage{caption,subcaption}
+\usepackage{float,placeins}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\definecolor{hsblue}{HTML}{0072B2}
+\definecolor{hsgreen}{HTML}{009E73}
+\definecolor{hsorange}{HTML}{E69F00}
+\definecolor{hspurple}{HTML}{CC79A7}
+\definecolor{hsgray}{HTML}{5F6368}
+\newcommand{\diffmah}{\textnormal{\textsc{DiffMAH}}}
+\newcommand{\cog}{\mathrm{CoG}}
+\newcommand{\Msun}{\mathrm{M}_{\odot}}
+\newcommand{\Mpeak}{M_{\mathrm{peak}}}
+\newcommand{\Rtwo}{R_{200\mathrm{c}}}
+\newcommand{\ctwo}{c_{200\mathrm{c}}}
+\newcommand{\logten}{\log_{10}}
+\newcommand{\given}{\,\middle|\,}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\ExpFifty}{Exp50}
+\newcommand{\ExpFiftyOne}{Exp51}
+\newcommand{\TNG}{\textsc{TNG300}}
+\newcommand{\dex}{\,\mathrm{dex}}
+\newcommand{\kpc}{\,\mathrm{kpc}}
+\newcommand{\gyr}{\,\mathrm{Gyr}}
+
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt}
+\renewcommand{\arraystretch}{1.15}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{HongShao: direct halo-to-profile conversion}
+\fancyhead[R]{Exp50 and Exp51 working report}
+\fancyfoot[C]{\thepage}
+
+\hypersetup{
+  pdftitle={A Direct Probabilistic Connection Between Halo Assembly and Massive-Galaxy Curves of Growth},
+  pdfauthor={HongShao project},
+  pdfsubject={Technical report for experiments 50 and 51},
+  pdfkeywords={galaxy-halo connection, DiffMAH, curve of growth, TNG300}
+}
+
+\title{\textbf{A Direct Probabilistic Connection Between Halo Mass Assembly\\
+and the Stellar Curves of Growth of Massive Galaxies in TNG300}\\[8pt]
+\large A mathematical and methodological report on Experiments 50 and 51}
+\author{HongShao project\\\small Working technical report}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We test whether the stellar curve of growth (CoG) of a massive central galaxy
+can be predicted directly from a compact description of its host halo mass
+assembly history. The halo history is represented by four \diffmah{} parameters
+and the secondary halo state by concentration, while the galaxy profile is
+represented by total stellar mass, a central two-kiloparsec mass fraction, and
+three ordered enclosed-mass radii. The model is a conditional probability
+distribution rather than a deterministic conversion. At redshift $z=0.4$, the
+readable representation matches the predictive performance of a three-component
+principal-component reference: its held-out profile continuous ranked
+probability score (CRPS) is $0.06327\dex$, compared with $0.06317\dex$ for PCA.
+The difference, $0.00010\dex$, is smaller than the measured fold-to-fold
+variation of the PCA score. Extending the analysis through five snapshots from
+$z=0.4$ to $z=2$ requires a revised radius definition that remains resolved for
+very compact high-redshift galaxies. The readable representation continues to
+match PCA at every epoch. A portable model in which \diffmah{} is refitted using
+only halo history available by the prediction epoch improves profile CRPS by
+$20.79$--$25.41$ per cent relative to concurrent halo mass alone. At $z=1.5$
+and $z=2$, this epoch-local model is $8.28$ and $8.17$ per cent better than a
+model using the final descendant's complete \diffmah{} parameters. Concurrent
+halo concentration provides an additional, shuffle-controlled signal. A simple
+AR(1) residual process substantially improves the temporal coherence of
+stochastic galaxy histories, although it slightly underpredicts the persistence
+of half-mass-radius rank over the full redshift baseline. Symbolic regression
+finds small, fold-stable corrections but does not recover the full nonlinear
+gain of the degree-2 model. These experiments therefore support a readable,
+probabilistic, phenomenological halo-to-profile map, but not a unique physical
+law or a redshift-independent symbolic equation.
+\end{abstract}
+
+\vspace{4pt}
+\noindent\textbf{Document status.} This is a serious internal working report,
+written in a form suitable for later conversion into a publication draft. It
+documents results measured only in TNG300 and does not claim external
+validation or causality.
+
+\tableofcontents
+\listoffigures
+\listoftables
+\clearpage
+
+\input{sections/01_motivation}
+\input{sections/02_data}
+\input{sections/03_mathematical_framework}
+\input{sections/04_exp50_methods}
+\input{sections/05_exp50_results}
+\input{sections/06_exp51_methods}
+\input{sections/07_exp51_results}
+\input{sections/08_robustness}
+\input{sections/09_interpretation}
+\input{sections/10_conclusions}
+
+\appendix
+\input{sections/appendices}
+
+\bibliographystyle{aasjournal}
+\bibliography{references}
+
+\end{document}

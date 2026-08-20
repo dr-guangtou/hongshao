@@ -1,0 +1,200 @@
+\section{Experiment 50: results}
+\label{sec:exp50_results}
+
+\subsection{The five readable coordinates preserve the measured CoG}
+
+Without the 2-kpc fraction, the three quantile radii reproduce the CoG outside
+roughly 5 kpc but leave the first measured aperture weakly constrained. Adding
+$f_2$ lowers the median profile reconstruction RMS from $0.027\dex$ to
+$0.00437\dex$. The adopted readable representation is $0.00100\dex$ worse than
+the three-component PCA representation, whose median reconstruction RMS is
+$0.00337\dex$, but both floors are more than an order of magnitude below the
+halo-to-galaxy prediction error.
+
+Adding $R_{90}$ lowers the readable reconstruction RMS to $0.00316\dex$, which
+is $0.00021\dex$ better than PCA. It nevertheless changes held-out linear
+profile CRPS from $0.06577\dex$ for the adopted five-coordinate representation
+to $0.06601\dex$ for the six-coordinate version, making prediction worse by
+$0.00023\dex$. The outermost additional coordinate is measurable from the CoG
+but not sufficiently predictable from the available halo variables to improve
+the reconstructed profile.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/exp50_representation.pdf}
+  \caption{\ExpFifty{} representation study. The radial reconstruction errors
+  and direct profile examples separate the information retained by each
+  coordinate system from the later halo-prediction problem. The central-fraction
+  coordinate is required to anchor the first measured aperture.}
+  \label{fig:exp50_representation}
+\end{figure}
+
+\subsection{The readable halo-to-CoG map passes the PCA parity test}
+
+The degree-2 readable model has held-out profile CRPS $0.06327\dex$. The
+like-for-like degree-2 PCA reference has $0.06317\dex$. Thus the readable model
+is worse by $0.00010\dex$, while the measured standard deviation among the five
+PCA fold scores is $0.00024\dex$. It passes the gate in
+\cref{eq:exp50_gate}.
+
+The conditional-mean median profile RMS is $0.08560\dex$ for the readable model
+and $0.08377\dex$ for PCA, so PCA is better by $0.00182\dex$ under this paired
+mean statistic. The median largest fractional stellar-mass error beyond 5 kpc
+is 24.64 per cent for the readable model and 24.25 per cent for PCA, making the
+readable map worse by 0.39 percentage points. These small differences support
+practical parity, not exact identity.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Held-out \ExpFifty{} prediction metrics. CRPS and RMS are in dex;
+  lower values are better. Annular columns give RMS for CoG-derived stellar
+  masses.}
+  \label{tab:exp50_prediction}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    Model & Profile CRPS & Median profile RMS & $M(<10)$ & $M(10$--$30)$ & $M(30$--$50)$ & $M(50$--$100)$ \\
+    \midrule
+    Readable linear & 0.06577 & 0.08693 & 0.1168 & 0.1560 & 0.1717 & 0.1739 \\
+    Readable degree-2 & 0.06327 & 0.08560 & 0.1115 & 0.1524 & 0.1670 & 0.1665 \\
+    PCA linear & 0.06596 & 0.08631 & 0.1158 & 0.1555 & 0.1690 & 0.1697 \\
+    PCA degree-2 & 0.06317 & 0.08377 & 0.1106 & 0.1513 & 0.1637 & 0.1667 \\
+    \bottomrule
+  \end{tabular}}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/exp50_predictive_skill.pdf}
+  \caption{Held-out predictive comparison in \ExpFifty{}. The readable and PCA
+  representations are evaluated on identical galaxy folds. The figure includes
+  profile-wide scores and radial diagnostics; a low aggregate score is not used
+  as a substitute for inspecting the reconstructed curves.}
+  \label{fig:exp50_predictive_skill}
+\end{figure}
+
+\subsection{Total mass is much more predictable than detailed shape}
+
+For the adopted degree-2 map, the held-out fraction of target-coordinate
+variance explained is approximately 0.87 for total stellar mass, 0.31 for the
+2-kpc fraction, 0.36 for $R_{20}$, 0.31 for the transformed $R_{20}$--$R_{50}$
+gap, and 0.15 for the transformed $R_{50}$--$R_{80}$ gap. Therefore, the
+selected halo variables tightly constrain overall stellar mass but only partly
+constrain the radial mass distribution. A deterministic map would suppress
+real profile diversity.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/exp50_parameter_predictions.pdf}
+  \caption{Truth-versus-prediction and residual behavior for the five readable
+  coordinates. The contrast between total-mass predictability and profile-shape
+  predictability motivates treating the conversion as a conditional
+  distribution.}
+  \label{fig:exp50_parameters}
+\end{figure}
+
+\subsection{Assembly history and concentration both add paired information}
+
+A final-mass-only linear model has median profile RMS $0.10890\dex$. Adding the
+four \diffmah{} parameters lowers it to $0.09362\dex$, an improvement of
+$0.01527\dex$. Shuffling the three MAH-shape variables at fixed final mass gives
+$0.09472\dex$, which is $0.00109\dex$ worse than the correctly paired \diffmah{}
+model. This is a modest but nonzero object-level assembly signal.
+
+Adding correctly paired $z=0.4$ concentration lowers median profile RMS from
+$0.09362\dex$ for \diffmah{} alone to $0.08693\dex$, an improvement of
+$0.00669\dex$. Shuffling concentration within final-mass bins gives
+$0.09338\dex$, nearly returning to the \diffmah{}-only reference. Concentration
+therefore supplies information not encoded by the adopted smooth MAH
+parameters.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/exp50_mass_binned_predictions.pdf}
+  \caption{Measured and predicted CoGs with residuals in halo-mass bins at
+  $z=0.4$. The conditional mean reproduces median trends but leaves broad
+  object-to-object residuals, especially toward small radii.}
+  \label{fig:exp50_mass_binned}
+\end{figure}
+
+\subsection{Correlated draws are required to reproduce the population}
+
+The conditional mean is narrower than the TNG galaxy population. In the total
+stellar mass--$R_{50}$ plane, its energy distance is 3.94 times the finite-sample
+floor. One correlated draw per halo reduces the ratio to 1.35, making the draw
+population 2.9 times closer to the floor under this ratio. In the central
+$M_\star(<10\kpc)$ versus outer $M_\star(50$--$100\kpc)$ plane, the ratio falls
+from 3.46 for the mean to 1.21 for a draw, again a 2.9-fold improvement. The
+scatter model is thus necessary to represent the galaxy population.
+
+The nominal 68 and 90 per cent pointwise intervals contain the measured CoGs
+65.2 and 85.6 per cent of the time. The corresponding PCA coverages are 64.8
+and 84.9 per cent. Both models are modestly under-covering, and 32 Monte Carlo
+draws limit the precision of the tail estimates. The comparison does not reveal
+a readable-coordinate-specific calibration failure.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/exp50_population_planes.pdf}
+  \caption{Population-level validation in \ExpFifty{}. Conditional means
+  collapse part of the intrinsic distribution, whereas correlated stochastic
+  draws restore most of the observed width in mass--size and central--outer
+  mass planes. Each population uses its own derived size.}
+  \label{fig:exp50_population}
+\end{figure}
+
+\subsection{Symbolic regression finds useful corrections, but not a law}
+
+The full linear map has profile CRPS $0.06577\dex$. Adding only nonlinear terms
+that recur in at least four of five training folds lowers CRPS to
+$0.06421\dex$, a 2.38 per cent improvement relative to linear. The dense
+degree-2 model reaches $0.06327\dex$, a 3.80 per cent improvement; the sparse
+terms therefore recover about 62 per cent of the available nonlinear gain.
+
+The recurring standardized-variable terms are $c^2$ for total stellar mass,
+$u_c\alpha_{\rm early}$ for the central fraction, and
+$(\logten M_p)\alpha_{\rm early}$ for the middle radial gap. No correction
+recurs in four folds for $R_{20}$ or the outer radial gap. Their coefficients
+depend on the training-fold standardization, so these are empirical hypotheses,
+not unit-independent physical equations.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/exp50_symbolic_regression.pdf}
+  \caption{Nested-fold symbolic-regression result at $z=0.4$. Term recurrence
+  is used as a stability filter, while the decoded held-out profile CRPS is the
+  final criterion.}
+  \label{fig:exp50_symbolic}
+\end{figure}
+
+\subsection{Concentration history adds a small independent signal}
+
+On the 2366-galaxy overlap sample, the current-concentration degree-2 model has
+profile CRPS $0.06318\dex$. Adding the five-epoch concentration history lowers
+it to $0.06135\dex$, a 2.89 per cent improvement. Shuffling those histories
+within final-mass bins gives $0.06325\dex$, which is 0.12 per cent worse than
+the current-concentration reference. The real-history gain has the same sign
+in all five held-out folds, whereas the shuffled history is worse in all five.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/exp50_concentration_history.pdf}
+  \caption{Concentration-history extension in \ExpFifty{}. The real history is
+  compared with current concentration and with histories permuted among halos
+  of similar final mass. The gain is small but is not reproduced by the null.}
+  \label{fig:exp50_concentration}
+\end{figure}
+
+\subsection{What \ExpFifty{} established}
+
+At $z=0.4$, readable CoG coordinates can replace PCA coordinates without a
+measurable loss at the precision of the five-fold comparison. The result is
+probabilistic: only total stellar mass is tightly determined, and correlated
+scatter is essential. Both MAH shape and concentration provide independent,
+shuffle-controlled predictive information. The experiment does not establish
+that one fixed relation applies at other epochs, that future halo history is
+unnecessary, or that the sparse nonlinear terms are universal. Those questions
+motivate \ExpFiftyOne{}.
+
+\FloatBarrier
+

@@ -906,3 +906,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   with an explicit exp51 module reference. When neighboring experiments contain
   same-named modules, avoid bare cached imports and assert target labels and
   dimensions immediately before reconstruction.
+- **Write transformed coordinates together with their inverse map in technical
+  reports (Exp50--Exp51 report).** The radial-gap variables are logarithms of
+  differences between logarithmic radii, not logarithms of physical-radius
+  differences. Writing only the forward coordinate definition makes that
+  distinction easy to miss. The report now states both transformations and the
+  monotone decoder, and its audit checklist was checked against the actual
+  implementation before compilation.
+- **Render figure-rich PDFs onto an opaque background during visual review
+  (Exp50--Exp51 report).** Rendering with an alpha-capable PNG device made the
+  transparent margins of imported vector figures appear as black blocks even
+  though the PDF was correct. Re-rendering all pages as opaque RGB separated a
+  renderer artifact from a document-layout problem and avoided an unnecessary
+  change to the publication figures.
