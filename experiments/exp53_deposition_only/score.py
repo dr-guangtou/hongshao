@@ -220,6 +220,66 @@ def growth_ratio(cogs, data_cogs, R, ks, pair, lo, hi):
     return float(num / den) if den != 0 else np.nan
 
 
+def deposit_reach(spec, theta, gals, radii=(50.0, 148.0, 500.0),
+                 t_index=0):
+    """Where the model PUTS its stars: mass-weighted deposit reach.
+
+    exp52's actionable finding was "RIGHT SOURCE, ~10x TOO MUCH REACH" -- 93%
+    of the transported mass leaves 0-5 kpc (correct) but 58.5% is delivered
+    beyond 50 kpc and 12% beyond 500 kpc, where the normalization discards it.
+    With transport removed the same question is asked of the DEPOSITION: what
+    fraction of the mass the kernel lays down at the observation epoch lands
+    beyond each radius, and how big are the deposits it uses.
+
+    Only meaningful across families because the scale coordinate is a half-mass
+    radius. Returns the beyond-R fractions, the mass-weighted median deposit
+    R50, and the mass fraction sitting AT the `R50_CAP` ceiling (a large value
+    means the ceiling is load-bearing rather than free).
+    """
+    import families
+    e = s2._W["e"]
+    edge = np.asarray(radii, float)
+    beyond = np.zeros(len(edge))
+    tot = 0.0
+    r50_all, w_all, capped = [], [], 0.0
+    tk = e.pe.AT[t_index]
+    for g in gals:
+        dM = K.deposit_weights(spec, theta, g)
+        if dM is None:
+            continue
+        mah = g["mah"]
+        sel = (mah["snap"] <= e.ANCHOR_SNAP[t_index]).astype(float)
+        w = dM * sel
+        log_r50, gg, q, _, _, shape = spec.unpack(theta, g["cond"])
+        raw = 10.0 ** log_r50 * (mah["t"] / mah["t_obs"]) ** gg
+        r50_0 = np.clip(raw, K.R50_FLOOR, K.R50_CAP)
+        if q == 0.0:
+            r50_eff = r50_0
+        else:
+            r50_w = np.clip(r50_0 * (tk / mah["t"]) ** q, K.R50_FLOOR,
+                            K.R50_CAP)
+            fc = np.exp(-np.clip(tk - mah["t"], 0.0, None) / mah["t"])
+            r50_eff = fc * r50_0 + (1.0 - fc) * r50_w        # for the summary
+        cg = families.cog_unit(spec.family, r50_0, shape, edge)
+        if q != 0.0:
+            cgw = families.cog_unit(spec.family, r50_w, shape, edge)
+            cg = fc[None, :] * cg + (1.0 - fc)[None, :] * cgw
+        beyond += (1.0 - cg) @ w
+        tot += w.sum()
+        capped += float(w[raw >= K.R50_CAP].sum())
+        r50_all.append(r50_eff)
+        w_all.append(w)
+    if tot <= 0:
+        return dict(beyond={}, median_r50=np.nan, at_cap=np.nan)
+    r50_all = np.concatenate(r50_all)
+    w_all = np.concatenate(w_all)
+    o = np.argsort(r50_all)
+    cw = np.cumsum(w_all[o]) / w_all.sum()
+    return dict(beyond={float(rr): float(v / tot) for rr, v in zip(edge, beyond)},
+                median_r50=float(np.interp(0.5, cw, r50_all[o])),
+                at_cap=float(capped / tot))
+
+
 # --------------------------------------------------------------------------- #
 def scorecard(spec, theta, gals, R, logms, logmh, data_cogs, ks=K.KS):
     """The full exp53 verdict for one fitted theta. Model AND data, paired."""
@@ -252,6 +312,7 @@ def scorecard(spec, theta, gals, R, logms, logmh, data_cogs, ks=K.KS):
             out[("growth", nm, pr)] = growth_ratio(
                 cogs, data_cogs[:, ks], R, ks, pr, lo, hi)
     out["kern_rms"] = _kernel_distance(km, kd, mid)
+    out["reach"] = deposit_reach(spec, theta, gals)
     return out
 
 
@@ -319,6 +380,17 @@ def print_scorecard(sc, label):
     print(f"  C. transport share of the model's own M[50,100] growth over the "
           f"full baseline: {100*sc['transport_share']:.1f}% "
           f"(exp52 measured 87.5% for the adopted kernel over z=1.0->0.4)")
+    rc = sc.get("reach")
+    if rc:
+        print("  C2. deposit REACH at z=0.4 — mass-weighted fraction of the "
+              "model's own deposited\n      stars landing beyond each radius "
+              "(exp52 measured 58.5% beyond 50 kpc and 12.0%\n      beyond 500 "
+              "kpc for the ADOPTED kernel's transported mass)")
+        print("      " + "   ".join(
+            f"beyond {r:.0f} kpc: {100*v:5.1f}%" for r, v in rc["beyond"].items())
+            + f"   |  median deposit R50 {rc['median_r50']:.1f} kpc"
+              f"   |  {100*rc['at_cap']:.1f}% of mass at the "
+              f"{K.R50_CAP:.0f} kpc ceiling")
     grow = sorted({k[2] for k in sc if isinstance(k, tuple) and k[0] == "growth"})
     if grow:
         print("  D. population-summed growth, MODEL / TRUTH "

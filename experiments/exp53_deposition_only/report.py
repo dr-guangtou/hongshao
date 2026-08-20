@@ -20,7 +20,7 @@ SCORED at all five epochs, so z = 2.0 is an extrapolation test -- the standing
 convention since exp40/exp43.
 
 Run: `HONGSHAO_DATA_DIR=... PYTHONPATH=. uv run python \
-experiments/exp53_deposition_only/report.py {table|figures|all} \
+experiments/exp53_deposition_only/report.py {table|slice|figures|all} \
 [--stage qprofile|shootout] [--dev]`
 """
 from __future__ import annotations
@@ -76,60 +76,112 @@ def evaluate_cell(name, spec, theta, gals, e, logms, logmh, data):
 
 def _row(res, loss, n_theta):
     v, g, sc = res["verdict"], res["gates"], res["score"]
-    ks = KS_ALL
-    pr_long = (max(ks), min(ks))
+    spec, theta = res["spec"], res["theta"]
     kd = S.sign_disagreement(sc["kern_model"], sc["kern_data"], sc["mid"])
     nm = np.array([sc[("kshape", "model", b, pr)][0]
                    for b in range(3) for pr in sc["pairs"]])
     nd = np.array([sc[("kshape", "data", b, pr)][0]
                    for b in range(3) for pr in sc["pairs"]])
+    par = dict(zip(spec.theta_names, np.asarray(theta, float)))
     return dict(
         name=res["name"], loss=loss, npar=n_theta,
+        q=par.get("q", spec.q_fixed), log_R50=par["log_R50"], g=par["g"],
+        mu=par["mu"], sig=par["sig"],
+        shape=par.get(spec.shape_name) if spec.shape_name else np.nan,
         m5_all=v[("inner", 5, 0, "all")],
         m5_compact=v[("inner", 5, 0, "compact")],
+        m5_extended=v[("inner", 5, 0, "extended")],
         m10_all=v[("inner", 10, 0, "all")],
-        grow_m10=sc[("growth", "M(<10)", (2, 0))],
         grow_m5=sc[("growth", "M(<5)", (2, 0))],
+        grow_m10=sc[("growth", "M(<10)", (2, 0))],
+        grow_m30=sc[("growth", "M(<30)", (2, 0))],
         grow_out=sc[("growth", "M[50,100]", (2, 0))],
         kern_dex=sc["kern_rms"], kern_sign=kd,
         n_model=float(np.nanmedian(nm)), n_data=float(np.nanmedian(nd)),
+        r50k_model=float(np.nanmedian(
+            [sc[("kshape", "model", b, pr)][1]
+             for b in range(3) for pr in sc["pairs"]])),
+        r50k_data=float(np.nanmedian(
+            [sc[("kshape", "data", b, pr)][1]
+             for b in range(3) for pr in sc["pairs"]])),
         transport=sc["transport_share"],
+        beyond50=sc["reach"]["beyond"].get(50.0, np.nan),
+        beyond500=sc["reach"]["beyond"].get(500.0, np.nan),
+        dep_r50=sc["reach"]["median_r50"], at_cap=sc["reach"]["at_cap"],
         plane_z04=v[("plane", "kpc:M(<30)|kpc:M(50-100)", 0, "all")],
         plane_z20=v[("plane", "kpc:M(<30)|kpc:M(50-100)", 4, "all")],
         plane_cmp=v[("plane", "kpc:M(<30)|kpc:M(50-100)", 0, "compact")][0],
         plane_cmp_ctrl=v[("plane", "kpc:M(<30)|kpc:M(50-100)", 0, "compact")][1],
         r50_z04=v[("size", 50, 0)], r50_z20=v[("size", 50, 4)],
+        tilt_m5=v[("tilt", 0, "vs_m5")],
         gate_diff=g["diff_model"][0], gate_diff_data=g["diff_data"][0],
-        gate_over=g["over_T1"][1], pr_long=pr_long)
+        gate_over=g["over_T1"][1])
 
 
 def print_table(rows, title):
-    print(f"\n=== exp53 {title} — ranked by the added-light kernel distance, "
-          f"NEVER by the loss ===")
-    print(f"  {'cell':<18}{'npar':>5}{'loss':>11}"
-          f"{'kernel':>8}{'sign':>6}{'n mod/dat':>11}"
-          f"{'M(<10) grow':>12}{'M(<5) bias':>11}{'M(<5) cmp':>10}"
-          f"{'transp':>8}{'GATEdiff':>10}{'GATEover':>9}")
-    print(f"  {'':<18}{'':>5}{'':>11}{'[dex]':>8}{'':>6}{'':>11}"
-          f"{'(exp52 .573)':>12}{'[%]':>11}{'[%]':>10}{'[%]':>8}"
-          f"{'(.30-.45)':>10}{'(|.|<.06)':>9}")
-    for r in sorted(rows, key=lambda x: (np.nan_to_num(x["kern_dex"], nan=9))):
-        ts = "-" if not np.isfinite(r["transport"]) else f"{100*r['transport']:.0f}"
-        print(f"  {r['name']:<18}{r['npar']:5d}{r['loss']:11.6f}"
-              f"{r['kern_dex']:8.3f}{100*r['kern_sign']:5.0f}%"
-              f"{r['n_model']:6.1f}/{r['n_data']:.1f}"
-              f"{r['grow_m10']:12.3f}{100*r['m5_all']:10.1f}%"
-              f"{100*r['m5_compact']:9.1f}%{ts:>8}"
-              f"{r['gate_diff']:10.2f}{r['gate_over']:+9.3f}")
-    print(f"  data marks: GATE differential {rows[0]['gate_diff_data']:.2f}; "
-          f"kernel Sersic n {rows[0]['n_data']:.1f}")
-    print("\n  planes (tier 2b M(<30) vs M(50-100), centered E/floor) and sizes")
-    print(f"  {'cell':<18}{'z=0.4 all':>11}{'z=2.0 all':>11}"
-          f"{'z=0.4 compact (ctrl)':>24}{'dlogR50 z0.4':>14}{'z2.0':>8}")
-    for r in sorted(rows, key=lambda x: (np.nan_to_num(x["kern_dex"], nan=9))):
-        print(f"  {r['name']:<18}{r['plane_z04']:11.1f}{r['plane_z20']:11.1f}"
-              f"{r['plane_cmp']:16.1f} ({r['plane_cmp_ctrl']:.1f})"
-              f"{r['r50_z04']:+14.3f}{r['r50_z20']:+8.3f}")
+    order = sorted(rows, key=lambda x: np.nan_to_num(x["kern_dex"], nan=9.0))
+    print(f"\n=== exp53 {title} — the FITTED parameters ===")
+    print("  (`q` is the transport exponent, 0 = deposition only; log_R50 is "
+          "the deposit half-mass\n   radius at t_obs in log10 kpc; `g` its "
+          "growth exponent in time; mu/sig the efficiency\n   window, which is "
+          "FREE by design because it is entangled with transport)")
+    print(f"  {'cell':<15}{'npar':>5}{'loss':>12}{'q':>7}{'log_R50':>9}"
+          f"{'g':>7}{'mu':>7}{'sig':>7}{'shape':>8}   at bound")
+    for r in order:
+        sh = "-" if not np.isfinite(r["shape"]) else f"{r['shape']:.3f}"
+        print(f"  {r['name']:<15}{r['npar']:5d}{r['loss']:12.6f}{r['q']:7.2f}"
+              f"{r['log_R50']:9.3f}{r['g']:7.3f}{r['mu']:7.3f}{r['sig']:7.3f}"
+              f"{sh:>8}   {r.get('bounds', '-')}")
+
+    print(f"\n=== exp53 {title} — THE VERDICT, ranked by the added-light "
+          f"kernel distance, NEVER by the loss ===")
+    print(f"  {'cell':<15}{'kernel':>8}{'sign':>6}{'kern n':>9}"
+          f"{'kern R50':>11}{'M(<10)grow':>11}{'M(<5)grow':>10}"
+          f"{'M(<5) all':>10}{'M(<5) cmp':>10}{'transp':>8}"
+          f"{'GATEdif':>9}{'GATEovr':>9}")
+    print(f"  {'':<15}{'[dex]':>8}{'':>6}{'mod/dat':>9}{'mod/dat':>11}"
+          f"{'exp52 .573':>11}{'':>10}{'[%]':>10}{'[%]':>10}{'[%]':>8}"
+          f"{'.30-.45':>9}{'|.|<.06':>9}")
+    for r in order:
+        ts = "-" if not np.isfinite(r["transport"]) else \
+            f"{100 * r['transport']:.0f}"
+        print(f"  {r['name']:<15}{r['kern_dex']:8.3f}"
+              f"{100 * r['kern_sign']:5.0f}%"
+              f"{r['n_model']:5.1f}/{r['n_data']:.1f}"
+              f"{r['r50k_model']:7.0f}/{r['r50k_data']:.0f}"
+              f"{r['grow_m10']:11.3f}{r['grow_m5']:10.3f}"
+              f"{100 * r['m5_all']:9.1f}%{100 * r['m5_compact']:9.1f}%"
+              f"{ts:>8}{r['gate_diff']:9.2f}{r['gate_over']:+9.3f}")
+    print(f"  DATA marks: kernel Sersic n {order[0]['n_data']:.1f}, kernel R50 "
+          f"{order[0]['r50k_data']:.0f} kpc, GATE differential "
+          f"{order[0]['gate_diff_data']:.2f}. A growth ratio of 1.000 means "
+          f"the model grows\n              that region at the truth's rate "
+          f"(exp52: 0.573 for M(<10), 0.989 for M[50,100]).")
+
+    print(f"\n=== exp53 {title} — where the model PUTS its stars (deposit "
+          f"reach at z=0.4) ===")
+    print("  (mass-weighted over the model's own deposits; comparable across "
+          "families only because\n   the scale coordinate is a half-mass "
+          "radius. exp52 measured 58.5% of the ADOPTED kernel's\n   "
+          "TRANSPORTED mass beyond 50 kpc and 12.0% beyond 500 kpc, where the "
+          "normalization discards it.)")
+    print(f"  {'cell':<15}{'median dep R50':>16}{'beyond 50 kpc':>15}"
+          f"{'beyond 500 kpc':>16}{'at 300 kpc cap':>16}")
+    for r in order:
+        print(f"  {r['name']:<15}{r['dep_r50']:13.1f} kpc"
+              f"{100 * r['beyond50']:14.1f}%{100 * r['beyond500']:15.1f}%"
+              f"{100 * r['at_cap']:15.1f}%")
+
+    print(f"\n=== exp53 {title} — planes, sizes and the compact-galaxy tilt "
+          f"===")
+    print(f"  {'cell':<15}{'2b z=0.4':>10}{'2b z=2.0':>10}"
+          f"{'2b z=0.4 compact (ctrl)':>26}{'dlogR50 z0.4':>14}{'z2.0':>8}"
+          f"{'rho(tilt,M5)':>14}")
+    for r in order:
+        print(f"  {r['name']:<15}{r['plane_z04']:10.1f}{r['plane_z20']:10.1f}"
+              f"{r['plane_cmp']:18.1f} ({r['plane_cmp_ctrl']:.1f})"
+              f"{r['r50_z04']:+14.3f}{r['r50_z20']:+8.3f}"
+              f"{r['tilt_m5']:+14.2f}")
 
 
 # --------------------------------------------------------------------------- #
@@ -145,7 +197,12 @@ def cmd_table(stage, dev=False, verbose=False):
             continue
         theta, loss, sname = b
         res = evaluate_cell(name, spec, theta, gals, e, logms, logmh, data)
-        rows.append(_row(res, loss, spec.n_theta))
+        row = _row(res, loss, spec.n_theta)
+        hits = R53._bound_audit(spec, theta)
+        row["bounds"] = "; ".join(hits) if hits else "-"
+        row["start"] = sname
+        row["spread"] = R53.cell_spread(done, name)
+        rows.append(row)
         keep[name] = res
         if verbose:
             S.print_scorecard(res["score"], name)
@@ -161,6 +218,37 @@ def cmd_table(stage, dev=False, verbose=False):
     return keep, rows
 
 
+def cmd_slice(dev=False):
+    """The SLICE, for contrast with the profile — no re-optimization.
+
+    exp49's sharpest warning is that in this model a frozen-parameter slice and
+    a profiled curve can disagree in SIGN, and exp52's mechanism claim
+    ("transport drains the centre") is a slice statement: it holds the adopted
+    theta and inspects the transport term. Measuring the slice here, with the
+    identical scorers, makes the comparison explicit instead of rhetorical.
+    """
+    gals, e, logms, logmh, data = _setup(dev)
+    spec = K.Spec("moffat", q_free=True)
+    base = K.from_exp38_theta(K.adopted_theta())
+    rows = []
+    for qv in (0.0,) + R53.Q_GRID[1:] + (base[2],):
+        th = base.copy()
+        th[2] = float(qv)
+        name = f"slice-q{qv:.3f}" + (" (adopted)" if qv == base[2] else "")
+        res = evaluate_cell(name, spec, th, gals, e, logms, logmh, data)
+        row = _row(res, np.nan, spec.n_theta)
+        row["bounds"] = "(not fitted — a SLICE)"
+        rows.append(row)
+    print_table(rows, "the SLICE at the adopted theta (NOT re-optimized)")
+    OUTDIR.mkdir(exist_ok=True)
+    out = OUTDIR / f"verdict_slice{'_dev' if dev else ''}.json"
+    out.write_text(json.dumps(
+        [{k: (float(v) if isinstance(v, (np.floating, np.integer)) else v)
+          for k, v in r.items()} for r in rows], indent=1))
+    print(f"\nwrote {out}")
+    return rows
+
+
 def cmd_figures(stage, dev=False):
     keep, rows = cmd_table(stage, dev)
     gals, e, logms, logmh, data = _setup(dev)
@@ -172,42 +260,49 @@ def cmd_figures(stage, dev=False):
 
 
 def fig_qprofile(keep, rows, tag):
-    """The graded answer: loss, the central-mass prediction, and the kernel
-    distance, all against the profiled transport exponent."""
-    pts = []
-    for r in rows:
-        nm = r["name"]
-        if not nm.startswith("moffat-q") or nm.endswith("qfree"):
-            continue
-        pts.append((float(nm.split("-q")[1]), r))
-    pts.sort()
+    """The GRADED answer. Top row: what the fit buys. Bottom row: what the fit
+    does to the observables the loss cannot see. `q = 0` is the left edge."""
+    pts = sorted((r["q"], r) for r in rows
+                 if r["name"].startswith("moffat-q")
+                 and not r["name"].endswith("qfree"))
+    if len(pts) < 3:
+        print("  (too few profiled q points for the figure)")
+        return
     q = np.array([p[0] for p in pts])
-    free = [r for r in rows if r["name"] == "moffat-qfree"]
-    fig, axes = plt.subplots(1, 4, figsize=(17.0, 4.1))
+    free = next((r for r in rows if r["name"] == "moffat-qfree"), None)
     panels = [
-        ("loss", lambda r: r["loss"], "production objective", None),
-        ("grow_m10", lambda r: r["grow_m10"],
-         r"$M_*(<10\,$kpc$)$ growth, model/truth", 1.0),
-        ("m5_compact", lambda r: 100 * r["m5_compact"],
-         r"compact-galaxy $M_*(<5)$ bias [%]", 0.0),
-        ("kern_dex", lambda r: r["kern_dex"],
-         "added-light kernel distance [dex]", 0.0)]
-    for ax, (key, fn, ylab, mark) in zip(axes, panels):
-        y = np.array([fn(p[1]) for p in pts])
-        ax.plot(q, y, "o-", color=OKABE_ITO[5], lw=1.8, ms=5, zorder=3)
-        if free:
-            ax.axvline(0.0, color="0.85", lw=6, zorder=0)
-            ax.plot([], [])
+        (lambda r: r["loss"], "production objective", None, False),
+        (lambda r: r["sig"], "efficiency-window width $\\sigma$", None, False),
+        (lambda r: r["log_R50"], r"deposit $\log R_{50}$ at $t_{obs}$", None,
+         False),
+        (lambda r: 100 * r["transport"], "transport share of $M_*[50,100]$"
+         " growth [%]", None, False),
+        (lambda r: r["grow_m10"], r"$M_*(<10)$ growth, model/truth", 1.0, True),
+        (lambda r: r["grow_out"], r"$M_*[50,100]$ growth, model/truth", 1.0,
+         True),
+        (lambda r: 100 * r["m5_compact"],
+         r"compact-galaxy $M_*(<5)$ bias [%]", 0.0, True),
+        (lambda r: r["kern_dex"], "added-light kernel distance [dex]", None,
+         True)]
+    fig, axes = plt.subplots(2, 4, figsize=(17.4, 8.0))
+    for ax, (fn, ylab, mark, judged) in zip(axes.ravel(), panels):
+        y = np.array([fn(p[1]) for p in pts], float)
+        ax.plot(q, y, "o-", color=OKABE_ITO[5 if judged else 0], lw=1.9, ms=5,
+                zorder=3)
+        if free is not None and np.isfinite(fn(free)):
+            ax.axhline(fn(free), color=OKABE_ITO[1], ls="--", lw=1.2, zorder=2,
+                       label=f"$q$ free ({free['q']:.2f})")
+            ax.legend(fontsize=7, loc="best")
         if mark is not None:
             ax.axhline(mark, color="k", ls=":", lw=1.0, zorder=1)
-        ax.set_xlabel("transport exponent $q$ (profiled)")
+        ax.set_xlabel("transport exponent $q$ (PROFILED)", fontsize=9)
         ax.set_ylabel(ylab, fontsize=9)
-        ax.tick_params(labelsize=9)
-    axes[0].text(0.03, 0.95, "$q=0$: deposition only", transform=axes[0].transAxes,
-                 fontsize=8, va="top")
-    fig.suptitle("exp53 stage A — the PROFILED transport exponent: every other "
-                 "parameter re-optimized at each point (a slice is not a "
-                 "profile)", fontsize=12)
+        ax.tick_params(labelsize=8)
+    axes[0, 0].text(0.03, 0.06, "$q=0$: deposition only",
+                    transform=axes[0, 0].transAxes, fontsize=8)
+    fig.suptitle("exp53 stage A — the PROFILED transport exponent (every other "
+                 "parameter re-optimized at each point). Top: what the fit "
+                 "spends. Bottom: what the loss cannot see.", fontsize=12)
     fig.tight_layout()
     FIGDIR.mkdir(exist_ok=True)
     print("wrote", save_fig(fig, FIGDIR / f"exp53_qprofile{tag}")[0])
@@ -261,11 +356,13 @@ if __name__ == "__main__":
     verbose = "--verbose" in sys.argv
     if cmd == "table":
         cmd_table(stage, dev, verbose)
+    elif cmd == "slice":
+        cmd_slice(dev)
     elif cmd == "figures":
         cmd_figures(stage, dev)
     elif cmd == "all":
+        cmd_slice(dev)
         for st in ("qprofile", "shootout"):
-            if R53._store(st, dev).exists():
-                cmd_figures(st, dev)
+            cmd_figures(st, dev)
     else:
         raise SystemExit(__doc__)
