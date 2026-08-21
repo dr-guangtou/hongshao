@@ -58,9 +58,12 @@ from hongshao.profile_emulator import density_from_cog        # noqa: E402
 KS = [0, 1, 2, 3, 4]
 ANCHOR_Z = [0.4, 0.7, 1.0, 1.5, 2.0]
 #: (label, inner, outer) in kpc. All inside the measured grid; 148.2 is the
-#: outermost CoG radius, so nothing here is extrapolated.
+#: outermost CoG radius, so nothing here is extrapolated. Cumulative apertures
+#: are included because that is what `qa_mass_kpc_aper` plots, and a trend read
+#: off those figures has to be checkable in the same quantity.
 ANNULI = [("M[30,50]", 30.0, 50.0), ("M[50,100]", 50.0, 100.0),
-          ("M[100,148]", 100.0, 148.0), ("M[50,148]", 50.0, 148.0)]
+          ("M[100,148]", 100.0, 148.0), ("M[50,148]", 50.0, 148.0),
+          ("M(<100)", 0.0, 100.0), ("M(<148)", 0.0, 148.0)]
 #: adjacent pairs as (earlier, later) plus the long baseline
 PAIRS = [(1, 0), (2, 1), (3, 2), (4, 3), (4, 0)]
 DEFAULT_CELLS = ("moffat-q0", "sersic-q0", "expo-q0", "gauss-q0")
@@ -115,26 +118,36 @@ def _dlog(model, truth):
     return out
 
 
-def main(cells=None, nboot=NBOOT, dev=False):
+def main(cells=None, nboot=NBOOT, dev=False, by="logms"):
+    """``by`` selects the binning variable: "logms" (stellar) or "logmh" (halo).
+
+    They are NOT interchangeable. The standard QA figures bin by HALO mass
+    (`bin_by=logmh`), so a trend read off those figures must be checked in
+    halo-mass bins; binning the same galaxies by stellar mass can reverse the
+    apparent sign, because the stellar-to-halo mass relation has large scatter
+    at fixed halo mass.
+    """
     pop = np.load(ROOT / "experiments/exp32_full_population/outputs/"
                   "population.npz")
     rows = pop["dev100"] if dev else None
     s2._w_init(rows)
     gals, R = s2._W["gals"], s2._W["e"].R
     logms = np.array([pop["logms"][g["row"]] for g in gals])
+    logmh = np.array([pop["logmh"][g["row"]] for g in gals])
+    binvar = logmh if by == "logmh" else logms
     data = np.stack([np.stack([g["data"][k] for k in KS]) for g in gals])
     done = F._load(F._store(dev=dev))
     lookup = dict(F.all_cells())
     names = list(cells or DEFAULT_CELLS)
 
-    edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
-    massive = logms >= edges[2]
-    t1 = logms < edges[1]
-    t2 = (logms >= edges[1]) & (logms < edges[2])
+    edges = np.quantile(binvar, [0, 1 / 3, 2 / 3, 1])
+    massive = binvar >= edges[2]
+    t1 = binvar < edges[1]
+    t2 = (binvar >= edges[1]) & (binvar < edges[2])
     bins = [("all", np.ones(len(gals), bool)),
-            ("T1 low-mass", t1), ("T2 mid", t2), ("T3 massive", massive)]
-    print(f"exp53 — THE OUTSKIRT TEST  (n={len(gals)}, {massive.sum()} in the "
-          f"massive tercile logM* >= {edges[2]:.2f})")
+            ("T1 low", t1), ("T2 mid", t2), ("T3 high", massive)]
+    print(f"exp53 — THE OUTSKIRT TEST  (n={len(gals)}, binned by {by.upper()}, "
+          f"{massive.sum()} in the top tercile {by} >= {edges[2]:.2f})")
     print(f"  {nboot} galaxy bootstraps; CIs are 95%. All annuli lie inside "
           f"the measured 2-148 kpc grid.\n")
 
@@ -273,4 +286,7 @@ if __name__ == "__main__":
         cl = sys.argv[sys.argv.index("--cells") + 1].split(",")
     if "--nboot" in sys.argv:
         nb = int(sys.argv[sys.argv.index("--nboot") + 1])
-    main(cl, nb, "--dev" in sys.argv)
+    by = "logms"
+    if "--by" in sys.argv:
+        by = sys.argv[sys.argv.index("--by") + 1]
+    main(cl, nb, "--dev" in sys.argv, by)

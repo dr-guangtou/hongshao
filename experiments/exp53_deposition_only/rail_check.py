@@ -80,7 +80,7 @@ def widened_bounds(spec, theta):
     return bounds, hit
 
 
-def main(dev=False, shard=(0, 1)):
+def main(dev=False, shard=(0, 1), only=None):
     rows = (np.load(ROOT / "experiments/exp32_full_population/outputs/"
                     "population.npz")["dev100"] if dev else None)
     s2._w_init(rows)
@@ -93,6 +93,8 @@ def main(dev=False, shard=(0, 1)):
         if b is None:
             continue
         bounds, hit = widened_bounds(spec, np.asarray(b[0], float))
+        if only and name not in only:
+            continue
         if any("LOWER" not in h for h in hit):
             todo.append((name, spec, b, bounds, hit))
     idx, n = shard
@@ -148,7 +150,10 @@ def main(dev=False, shard=(0, 1)):
 
 if __name__ == "__main__":
     sh = (0, 1)
+    on = None
+    if "--only" in sys.argv:
+        on = sys.argv[sys.argv.index("--only") + 1].split(",")
     if "--shard" in sys.argv:
         a, b = sys.argv[sys.argv.index("--shard") + 1].split("/")
         sh = (int(a), int(b))
-    main("--dev" in sys.argv, sh)
+    main("--dev" in sys.argv, sh, on)

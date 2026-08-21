@@ -478,6 +478,83 @@ its halo has the right MASS with a slightly too-steep radial slope. The
 incumbent is flatter in the far halo. So "as well as" holds for the mass budget
 and its growth, not for every detail of the profile shape.
 
+## Result 7 — the generalized-sigmoid family, and the USER'S VERDICT
+
+Added 2026-08-21 after the user pointed out the family kept being noted and
+never run. Deposition-only (`q` = 0), which is this branch's scope.
+
+| cell | loss | params | added-light kernel [dex] | wins vs fiducial |
+|---|---|---|---|---|
+| **richards-q0** | **0.158948** | 12 | 0.076 | 9/13 |
+| **gompertz_log-q0** | 0.159687 | 11 | **0.072** (best of 11) | **10/13** |
+| moffat-q0 | 0.160001 | 11 | 0.086 | 9/13 |
+| loglogistic-q0 | 0.161177 | 11 | 0.098 | 7/13 |
+| moffat-qfree (fiducial) | 0.153577 | 12 | 0.081 | — |
+
+`richards` fitted **nu = 0.345**: since `nu` -> 0 recovers `gompertz_log` and
+`nu` = 1 recovers `loglogistic`, the data want an asymmetric sigmoid closer to
+Gompertz than to log-logistic but neither exactly. It beats both families it
+nests, as an interior optimum must. `gompertz_log-q0` beats `moffat-q0` at
+EQUAL parameter count, so that win is not bought with freedom.
+
+Rail checks: all three sigmoid `mu` rails are BENIGN (+0.030%, +0.035%,
+confirmed for richards). **The sigmoid loss surface is much rougher**:
+start-to-start spreads of 1.7e-3 to 2.5e-3 against 1e-8 to 1e-10 for
+moffat/sersic/expo/gauss. One start in three landed in a clearly worse basin
+for every sigmoid, so a single-start run would have had a ~1-in-3 chance of
+reporting the wrong answer per family.
+
+### THE USER'S VERDICT (2026-08-21), after reviewing the QA figures
+
+**"I didn't see strong evidence of any of the new deposition-only model
+becoming significantly better than the fiducial. The sigmoid family is not bad,
+but still has issues at the centre (not surprising) and at high redshift... the
+lesson is that, while it cannot solve the problem alone, the sigmoid family is
+still worth considering for the next phase."**
+
+This is the standing verdict and it overrides the loss and kernel tables above.
+Reading them as "a deposition-only model beats the fiducial" would be
+over-claiming from two metrics while the QA battery shows the failures below.
+
+### The defect the user identified, quantified
+
+The user read `qa_mass_kpc_aper` (cumulative apertures, binned by HALO mass)
+and observed a systematic under-estimate of the large-aperture stellar mass in
+the low halo-mass bin and an over-estimate in the high one. Measured, `M(<148)`
+median dlog(model/truth), n = 2397, 2000 bootstraps:
+
+| halo-mass tercile | fiducial | gompertz_log-q0 | richards-q0 | moffat-q0 |
+|---|---|---|---|---|
+| T1 low | **+3%** | **-3%** | -2% | -3% |
+| T3 high | **+3%** | **+6%** | +7% | +6% |
+
+**A 9-percentage-point tilt with halo mass, where the fiducial is FLAT.**
+
+And it is not a mass-budget error. The `M[50,148]` annulus tilts the OPPOSITE
+way (+17% at low halo mass, -9% at high), so:
+
+| halo mass | inner `M(<50)` | outer `M[50,148]` | total `M(<148)` |
+|---|---|---|---|
+| low | too little | **+17%** | **-3%** |
+| high | too much | **-9%** | **+6%** |
+
+**The deposition-only models have a RADIAL DISTRIBUTION error that flips sign
+with halo mass** — profiles too extended in low-mass haloes, too concentrated
+in high-mass ones. The model's concentration does not vary with halo mass the
+way the truth's does, and the fiducial's transport term is evidently what
+supplies that halo-mass dependence. It also explains the strained
+outskirt-overshoot gate (+0.074 to +0.090 against a +/-0.06 band): that gate is
+measured on the LOW-mass tercile's outer surface density, exactly where the
+over-extension sits.
+
+**METHOD NOTE, and a trap.** The sign of the apparent trend depends on BOTH the
+binning variable and the quantity. The standard QA figures bin by HALO mass and
+plot CUMULATIVE apertures; exp53's first outskirt pass binned by STELLAR mass
+and reported ANNULI, and read alone it suggested the opposite conclusion. The
+annulus tilt has the same sign in either binning, so the discrepancy here is
+the quantity, not the binning — but both have to be stated when a trend is
+quoted. `outskirt.py --by logmh|logms` now runs either.
+
 ## Scope limit: exp53 ran ONE objective, and exp48 measured that the objective
 ## reverses the profile ranking
 
