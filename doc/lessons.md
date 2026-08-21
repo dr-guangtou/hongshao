@@ -911,23 +911,24 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   radial operator — both tested, both innocent) took three probes, while
   asking "what do M(<10) and M[50,100] not share" would have pointed at `r_in`
   first.
-- **A boundary test can PASS on the slice and FAIL under profiling — and the
-  difference is the whole result (exp53).** exp52 predicted that removing the
-  kernel's transport term would improve central masses. Holding the adopted
-  theta and forcing `q` to zero, it does, enormously: the compact-galaxy
-  `M*(<5)` bias runs -43.6% -> +13.6%. Re-optimizing the other eleven
-  parameters at each `q`, it does not: the deficit is -39% to -47% at EVERY
-  `q`, so removing transport entirely buys 4 points out of 43. The model does
-  not respond to losing transport by depositing more centrally; it flattens
-  its efficiency window (sig 0.22 -> 2.68) and shrinks its deposits
-  (log R50 3.27 -> 1.73), buying the outskirt fit back a different way and
-  leaving the centre alone. **A mechanism that is real in a model's internal
-  bookkeeping is not thereby the CAUSE of that model's error** — the slice
-  measures the former, only the profile measures the latter. Corollary worth
-  the extra cost: run BOTH and report them side by side through the identical
-  scorers. The disagreement is not an embarrassment to be resolved, it is the
-  finding, and reporting only the profile would have hidden that exp52's
-  bookkeeping claim is perfectly correct.
+- **A boundary test can PASS with everything frozen and FAIL once refitted —
+  and the gap between the two is the whole result (exp53).** exp52 predicted
+  that removing the kernel's transport term would improve central masses.
+  Switching transport off at the adopted theta and changing nothing else, it
+  does, enormously: the compact-galaxy `M*(<5)` bias runs -43.6% -> **+13.6%**.
+  Re-fitting the other parameters with transport off, it does not: -43.4% ->
+  **-39.4%**, four points out of forty-three. The two answers differ by 57
+  points and in SIGN. The model does not respond to losing transport by
+  depositing more centrally; it flattens its efficiency window (sig 0.22 ->
+  2.68) and shrinks its deposits (log R50 3.27 -> 1.73), buying the outskirt
+  fit back a different way and leaving the centre alone. **A mechanism that is
+  real in a model's internal bookkeeping is not thereby the CAUSE of that
+  model's error** — freezing everything measures the former, only refitting
+  measures the latter. Corollary worth the extra cost: run BOTH and report them
+  side by side through the identical scorers. The disagreement is not an
+  embarrassment to be resolved; reporting only the refit would have hidden that
+  exp52's bookkeeping claim is perfectly correct, and reporting only the frozen
+  version would have "confirmed" a prediction that is false.
 - **When several model families all rail on the same parameter, widen the box
   once and see whether they rail AGAIN — "unidentified" and "boxed" look
   identical from a single fit (exp53).** Three of four deposit families hit
@@ -944,3 +945,21 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   exp48 verdict that "the profile does not matter": the profile stops
   mattering precisely because the scale runs away, so that verdict is
   conditional on an unpinned scale rather than a statement about profiles.
+- **Check whether a "fixable defect" in the record has already been fixed
+  before building the fix (exp53).** The 2026-08-20 handover carried an
+  action item — Sersic was eliminated in exp38 by an n-scale degeneracy
+  "needing an R50 reparameterization", a fixable numerical artifact, so
+  exp53 should supply the reparameterization and re-run it. exp53 did, and
+  reported it as a vindication. **exp48 step C had already built
+  `sersic_r50` and already re-fitted it inside the full multi-epoch
+  kernel**, where it came LAST on the judge. The work was not wasted — it
+  reproduced exp48's verdict under a different objective, which strengthens
+  it — but it was mis-labelled as new for a whole session, and the real
+  (narrow) contribution was buried. Two habits: (1) an inherited "nobody
+  ever fixed X" is a claim about the record, so grep the record for X before
+  acting on it, especially when the handover cites the ORIGINAL rejection
+  rather than the most recent test; (2) when an experiment reproduces a
+  prior verdict under different conditions, say so in those words — a
+  confirmation across objectives is a real and reportable result, and
+  dressing it as a discovery costs the credibility that the confirmation
+  actually earns.

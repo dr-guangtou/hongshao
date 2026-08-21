@@ -100,84 +100,31 @@ analytic-vs-interpolated radial operator: 0.1 points; the choice of adopted
 theta). Fixed in `exp52/decompose.py`, recorded in `doc/lessons.md`, and locked
 out by assertions in `score.py`.
 
-## Result 1 — the SLICE: removing transport DOES fix the central deficit, and
-overshoots
+## Result 1 — the SLICE: removing transport DOES fix the central deficit, and overshoots
 
-The adopted theta with `q` forced along the grid and nothing re-optimized.
-This is the form exp52's mechanism claim takes, and it is confirmed
-emphatically. n = 2397, scored at all five epochs.
+The adopted theta with transport switched off and NOTHING re-optimized. This
+is the form exp52's mechanism claim takes. n = 2397, scored at all five epochs.
 
-| `q` | M(<5) bias, all | M(<5) bias, **compact** | M(<10) growth vs truth | kernel dist [dex] | GATE diff (data 0.37) | dlog R50 (z=0.4) |
-|---|---|---|---|---|---|---|
-| 0.908 (adopted) | -13.4% | **-43.6%** | 0.701 | 0.077 | 0.41 | +0.028 |
-| 0.80 | -1.6% | -36.2% | 1.279 | **0.063** | 0.37 | -0.019 |
-| 0.60 | +21.3% | -22.4% | 2.326 | 0.088 | 0.29 | -0.105 |
-| 0.40 | +43.8% | -9.3% | 3.317 | 0.139 | 0.23 | -0.190 |
-| 0.20 | +65.7% | +2.9% | 4.230 | 0.198 | 0.18 | -0.273 |
-| 0.00 | +86.3% | **+13.6%** | 5.054 | 0.260 | 0.12 | -0.355 |
+| | adopted (`q` = 0.908) | transport OFF (`q` = 0), nothing refitted |
+|---|---|---|
+| M(<5) bias, all | -13.4% | **+86.3%** |
+| M(<5) bias, **compact** | **-43.6%** | **+13.6%** |
+| M(<10) growth vs truth | 0.701 | 5.054 |
+| added-light kernel [dex] | 0.077 | 0.260 |
+| GATE differential (data 0.37) | 0.41 | 0.12 |
+| dlog R50 at z=0.4 | +0.028 | -0.355 |
 
-**exp53's falsifiable prediction passes on the slice, and then some.** The
-compact-galaxy `M*(<5 kpc)` deficit runs from -43.6% to +13.6%, crossing zero
-near `q ~ 0.25`. But removing transport does not *correct* the centre so much
-as *overrun* it: `M(<10)` ends up growing 5x faster than the truth, half-mass
-radii collapse by 0.36 dex, and the differential-deposition gate fails
+**On the slice the prediction passes emphatically**: the compact-galaxy
+`M*(<5 kpc)` deficit goes from -43.6% to +13.6%. But it does not *correct* the
+centre so much as *overrun* it — `M(<10)` ends up growing 5x faster than the
+truth, half-mass radii collapse by 0.36 dex, and the differential gate fails
 outright (0.12 against a measured 0.37).
 
-Two readings that must not be taken from this table.
-
-- **This is NOT "deposition-only fails".** The slice holds the efficiency
-  window frozen at the adopted `sig = 0.237`, which is exactly the
-  uninterpretable case design constraint 2 names: with a narrow early window
-  the late deposits are nearly massless, so a no-transport model has no way to
-  change shape at late times. The profiled fits are what settle it.
-- **The added-light kernel does not want transport removed.** Its distance is
-  minimized at `q = 0.80` (0.063 dex), not at `q = 0` (0.260) — the measured
-  kernel prefers slightly LESS transport than the adopted 0.908, not none.
-
-## Status
-
-Machinery complete and committed; the slice is final. Full-sample profiled
-fits (14 cells x 3 starts, n = 2397) running.
-
-## Result 2 — stage A, the PROFILED transport exponent (n = 2397, 3 starts/cell)
-
-Loss: 0.160001 (q=0) -> 0.158808 -> 0.158078 -> 0.156983 -> 0.153998 ->
-**0.153577 at q = 0.908 free** -> 0.153872 (q=1.0) -> 0.156512 (q=1.2). A
-single well-formed minimum near q ~ 0.9, rising on both sides; the profiled
-curve brackets the free fit correctly. Under the production objective the data
-genuinely wants transport, and removing it costs 4.2%.
-
-| cell | loss | q | sig | g | log R50 | M(<10) growth | M(<5) compact | kernel [dex] | GATE (0.37) | dlog R50 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| q free | 0.153577 | 0.91 | 0.223 | 4.28 | 3.27 | 0.722 | -43.4% | 0.081 | 0.42 | +0.026 |
-| **q=0.6** | 0.156983 | 0.60 | 0.252 | 3.68 | 2.89 | 1.417 | **-39.0%** | 0.070 | **0.37** | **-0.009** |
-| **q=0.8** | 0.153998 | 0.80 | 0.232 | 4.05 | 3.13 | **0.991** | -41.9% | **0.068** | 0.40 | +0.012 |
-| q=0 | 0.160001 | 0.00 | 2.683 | 1.72 | 1.73 | 0.879 | -39.4% | 0.086 | 0.36 | +0.016 |
-| q=1.2 | 0.156512 | 1.20 | 0.217 | 4.71 | 3.50 | -0.066 | -47.3% | 0.108 | 0.50 FAIL | +0.065 |
-
-**(a) The compact-galaxy central deficit is TRANSPORT-INDEPENDENT.** It sits at
--39% to -47% at every q. Removing transport entirely buys 4 points out of 43.
-**exp53's falsifiable prediction FAILS under profiling** — and it passes
-spectacularly on the slice (-43.6% -> +13.6%), which is exactly the
-slice-versus-profile disagreement exp49 warned about, now landing on the
-central question. exp52's mechanism claim splits in two: *"the adopted kernel's
-late outskirt growth is redistribution"* stands, but *"...and that causes the
-compact central deficit"* does not survive re-optimization. The exp47/exp48
-compact defect is still unexplained.
-
-**(b) The profile has TWO BRANCHES and the fit switches at q ~ 0.5.** Below:
-wide efficiency window (sig up to 2.68), small deposits (log R50 1.73), weak
-size growth (g 1.7). Above: narrow early window (sig ~0.22), huge deposits
-(log R50 3.3-3.5), steep growth (g 4.3-4.7). Physically different models, not
-one model sliding; the adopted kernel lives on the high branch.
-
-**(c) The best candidate is neither the adopted model nor the boundary.**
-Judged against the measured added light, **q = 0.8 costs 0.27% of the loss**
-and improves the kernel distance 0.081 -> 0.068, the M(<10) growth ratio
-0.722 -> **0.991**, and the size offset +0.026 -> +0.012. q = 0.6 costs 2.2%
-and matches the differential gate exactly (0.37 vs 0.37) with the best sizes.
-**The answer to "remove transport?" is no — trim it by 20-35%**, which the
-loss alone would never have indicated since it minimizes at 0.91.
+**This is NOT "deposition-only fails".** The slice holds the efficiency window
+frozen at the adopted `sig` = 0.237, which is exactly the uninterpretable case
+design constraint 2 names: with a narrow early window the late deposits are
+nearly massless, so a no-transport model has no way to change shape at late
+times. Result 3 is the properly refitted answer, and it is very different.
 
 ## Result 3 — stage B, the family shootout (PROVISIONAL: rails, see below)
 
@@ -264,26 +211,22 @@ fully converged.
 
 ## Result 4 — the judged verdicts (all five epochs; fitted on z <= 1.5)
 
-### Stage A, ranked by the added-light kernel
+### The DEPOSITION-ONLY result, ranked by the added-light kernel
+
+Only the two in-scope columns: transport removed (`q` = 0) against the adopted
+incumbent (`q` free). The intermediate grid is in the out-of-scope appendix.
 
 | cell | kernel [dex] | kern R50 mod/dat | M(<10) growth | GATE diff (0.37) | GATE overshoot | dlog R50 | plane z=0.4 |
 |---|---|---|---|---|---|---|---|
-| **moffat-q0.8** | **0.068** | 23/26 | **0.991** | 0.40 | **+0.006** | +0.012 | 2.1 |
-| **moffat-q0.6** | 0.070 | 21/26 | 1.417 | **0.37** | -0.020 | **-0.009** | **1.9** |
-| moffat-qfree (0.91) | 0.081 | 24/26 | 0.722 | 0.42 | +0.023 | +0.026 | 2.1 |
-| moffat-q0.4 | 0.085 | 24/26 | 0.845 | 0.35 | +0.082 STRAINED | +0.015 | 2.7 |
-| moffat-q0 | 0.086 | 24/26 | 0.879 | 0.36 | +0.074 STRAINED | +0.016 | 2.7 |
-| moffat-q1.2 | 0.108 | 26/26 | -0.066 | 0.50 FAIL | +0.072 STRAINED | +0.065 | 2.2 |
+| moffat-qfree (adopted) | 0.081 | 24/26 | 0.722 | 0.42 | +0.023 | +0.026 | 2.1 |
+| **moffat-q0** | 0.086 | 24/26 | **0.879** | 0.36 | +0.074 STRAINED | +0.016 | 2.7 |
 
-**`q` = 0.6-0.8 beats the adopted model on every judged axis** — kernel
-distance, both gates, sizes, central growth — for 0.27% (q=0.8) or 2.2%
-(q=0.6) of the loss. The deposition-only endpoint sits MID-PACK on the kernel
-and STRAINS the outskirt-overshoot gate (+0.074 against a +/-0.06 band) that
-the adopted model passes.
-
-Also visible: the two branches trade epochs. The low-`q` branch is worse at
-z=0.4 (plane 2.7 vs 1.9-2.1) and better at z=2.0 (4.1 vs 4.4-4.9) — exp40's
-dissipative-era finding from a new direction.
+Removing transport moves the added-light kernel slightly the WRONG way
+(0.081 -> 0.086), improves the `M(<10)` growth ratio (0.722 -> 0.879), leaves
+the differential gate comfortable (0.36 against a measured 0.37) and STRAINS
+the outskirt-overshoot gate (+0.074 against a +/-0.06 band) that the adopted
+model passes. On the tier 2b plane at z=0.4 it is worse (2.7 vs 2.1); on the
+mass-size plane it is BETTER (see Result 5).
 
 ### Stage B, ranked by the added-light kernel
 
@@ -318,33 +261,49 @@ measured a 300 kpc ceiling as costing 1.5e-5.
 ## What exp53 settles, and what it does not
 
 **Settled.**
-1. The compact-galaxy central deficit is **not caused by transport**. It is
-   -39% to -47% at every `q` under profiling. The leading hypothesis for the
-   exp47/exp48 defect is retired and the defect is unexplained again.
-2. exp52's mechanism claim survives in its narrow form (late outskirt growth
-   is redistribution) and fails in its causal form.
-3. Sersic, reinstated behind the R50 reparameterization, fits at **n = 2.29**
-   unrailed — inside the measured kernel's 2.1-3.1. It still loses to the
-   Moffat, now on a fair footing rather than at a wall.
-4. **The deposit scale is unidentified for every family except the Moffat**,
-   and the objective does not constrain it from above. This is a mechanism for
+1. **Removing transport does NOT fix the compact-galaxy central deficit.**
+   Refitted, `moffat-q0` gives -39.4% against the incumbent's -43.4% — four
+   points out of forty-three. exp52's mechanism claim survives in its narrow
+   form (late outskirt growth IS redistribution) and fails in its causal form.
+   The exp47/exp48 defect is unexplained again and its leading hypothesis is
+   retired.
+2. **The slice and the refit disagree by 57 points on that number** (+13.6%
+   against -39.4%). A mechanism that is real in a model's internal bookkeeping
+   is not thereby the CAUSE of that model's error.
+3. **A deposition-only kernel is more credible than the loss suggests.** It is
+   0.3 points behind the incumbent on the program's standard profile mark
+   (18.3% vs 18.0%), BETTER at z = 1.5 and z = 2.0, and it improves the
+   mass-size plane (E/floor 4.4 vs 5.2 at z=0.4). The 4.2% loss gap is
+   concentrated at low redshift.
+4. **Among deposition-only families the ranking is monotonic in tail weight**:
+   moffat (0.160001) < sersic (0.162079) < expo (0.175218) < gauss (0.177770),
+   and the same order on the added-light kernel. The wingless control fails as
+   designed and catastrophically at z=2 (`gauss-q0` mass-mass slope +4.11
+   against a measured +1.43, E/floor 56.9).
+5. **The deposit scale is unidentified for every family except the Moffat**,
+   and the objective does not constrain it from above — a mechanism for
    exp48's "the profile does not matter".
-5. **Actionable**: trim `q` from 0.91 to ~0.6-0.8. It improves every judged
-   observable for <= 2.2% of the loss.
 
 **Not settled.**
 - **exp53's fits are IN-SAMPLE.** exp38 stage 2 used 10-fold CV; 14 cells x 3
-  starts x 10 folds was not affordable here. Parameter counts differ by at
-  most 2 of ~11 against ~220k residuals, so in-sample optimism cannot plausibly
-  reorder families separated by more than a fraction of a per cent — but the
-  q = 0.8 vs q free comparison (0.27%) is inside that margin on the LOSS. It is
-  not close on the judged observables, which is what the ranking uses.
-- `gauss-qfree` and `sersic-qfree` hit the rail-check evaluation cap on one
-  start each; both starts agree to <= 2e-6, but those widened losses are not
-  fully converged.
-- The `gausswing` family (exp38 stage 1's co-winner) was not tested.
-- Whether a LOWER deposit ceiling recovers the Moffat's wasted reach is
-  untested and is the obvious next experiment.
+  starts x 10 folds was not affordable. Parameter counts differ by at most 2 of
+  ~11 against ~220k residuals, so optimism cannot plausibly reorder families
+  separated by more than a fraction of a per cent — but `moffat-q0` vs the
+  incumbent on the PROFILE mark (0.3 points) is inside that margin, and that
+  comparison specifically needs CV before it is quoted as a near-tie.
+- **One objective only** (production CoG + fractional residuals). exp48
+  measured that the objective REVERSES the profile ranking, so the family
+  ordering is conditional. See the scope-limit section below.
+- **The generalized-sigmoid family was not tested** — `gompertz_log`,
+  `loglogistic` and `richards` (which nests the first two). exp48 ranked
+  `gompertz_log` 2nd of six on the judge with the BEST compact central mass of
+  any candidate. See the scope-limit section.
+- **The deposit profile SHAPE is frozen in time.** See the design-asymmetry
+  section below — this is the largest untested structural freedom.
+- `gauss-qfree` / `sersic-qfree` hit the rail-check evaluation cap on one start
+  each; both starts agree to <= 2e-6, but those widened losses are not fully
+  converged.
+- `gausswing` (exp38 stage 1 co-winner) was not tested.
 
 ## Result 5 — the STANDARD QA battery on the deposition-only set
 
@@ -451,3 +410,136 @@ number is exactly the one exp53 omitted. Its CoG is
 Moffat but a super-exponentially emptied centre — so it is not obviously
 suited to fixing a central DEFICIT, and exp48's gain may come from the
 objective rather than the shape. Worth testing rather than assuming either way.
+
+## A DESIGN ASYMMETRY exp53 inherited and did not test: scale is rich, shape is frozen
+
+Raised by the user, 2026-08-21. Both Moffat and Sersic are TWO-parameter
+families, and exp53 did fit both parameters of each — the answer to "did you
+only vary one?" is no. But the two are given wildly unequal freedom, and that
+inequality is inherited from exp35/exp38, never measured.
+
+| | how many numbers control it | varies with halo? | varies with epoch? |
+|---|---|---|---|
+| **scale** `R50` | **5** — `log_R50`, the time exponent `g`, and 3 conditioning slopes on `[logMh, c200c, fz2]` | **yes** | **yes**, as `R50(t_i) = 10^log_R50 (t_i/t_obs)^g` |
+| **shape** `gam` / `n` | **1** — a single population constant | no | **no** |
+
+So the deposit's SIZE is a halo-conditioned power law in formation time, while
+its SHAPE is one number shared by every galaxy, every halo mass and every
+epoch. `expo` and `gauss` have no shape freedom at all by construction (n fixed
+at 1 and 0.5); they are the controls.
+
+**"Why ignore Re in Sersic?" — it is not ignored; it is `log_R50`+`g`+slopes,
+the richest part of the model.** What is missing is the reverse: the shape has
+none of that structure.
+
+### Is a redshift-dependent shape worth building?
+
+**Yes — and it deserves its own branch, not a footnote here (user, 2026-08-21).**
+An earlier draft of this README leaned toward "the existing measurement does
+not resolve it, so expect it to be weakly constrained". That conclusion is
+withdrawn: what follows is a statement about the RESOLUTION of one coarse
+measurement, not about the physics.
+
+What the measured added-light kernel (exp38 stage 0.2) actually shows:
+
+| epoch pair | n (T1) | n (T2) | n (T3) | mean | within-epoch spread |
+|---|---|---|---|---|---|
+| z0.7->0.4 | 2.87 | 2.27 | 2.08 | 2.41 | 0.79 |
+| z1.0->0.7 | 2.67 | 2.27 | 3.06 | 2.67 | 0.79 |
+| z1.5->1.0 | 2.67 | 2.67 | 2.87 | 2.74 | 0.20 |
+| z2.0->1.5 | 2.67 | 2.67 | 2.87 | 2.74 | 0.20 |
+
+Early-minus-late is +0.20 against a typical within-epoch tercile spread of 0.49
+and an `n`-grid resolution of 0.197 — so exp38's stage 0.2 grid CANNOT resolve
+a trend of this size. That is a reason to measure it better, not a reason to
+assume it is absent. Note also that the terciles are by stellar mass, so part
+of the "within-epoch spread" is a real mass dependence the model does not have
+either — a shape conditioning row is the natural companion test.
+
+Design sketch for the branch: add `shape(t_i) = shape_0 + shape_1 *
+log10(t_i/t_obs)` (one parameter, slots into `Spec.unpack` exactly like the
+existing rows), and separately a shape conditioning row on the standardized
+halo vector. Nesting is clean — `shape_1 = 0` recovers exp53 exactly — so the
+fitted `shape_1` IS the measurement. Pair it with a finer re-measurement of the
+stage 0.2 kernel (a denser `n` grid and a bootstrap over galaxies) so the fit
+has something to be checked against.
+
+## The generalized-sigmoid FAMILY, not just Gompertz
+
+Noted by the user, 2026-08-21: exp48 explored a whole family of growth-curve
+sigmoids in log radius, and exp53 tested none of them. From
+`exp48/gompertz.py` and `exp48/profiles.py`:
+
+| family | CoG | params | note |
+|---|---|---|---|
+| `gompertz_log` | `exp(-b R^-c)` | 2 | Frechet; power-law tail like Moffat, super-exponentially emptied centre |
+| `loglogistic` | `1/(1 + X^-k)` | 2 | |
+| **`richards`** | generalized logistic in log R | **3** | **NESTS both above**: nu -> 0 gives `gompertz_log`, nu = 1 gives `loglogistic` |
+| `gompertz_lin` | `exp(-b e^-cR)` | 2 | exponential-ish cutoff, NO power-law tail |
+| `cuspy` | `(R/rc)^-alpha [1+(R/rc)^2]^-gamma` | 3 | **NESTS Moffat** at alpha = 0; the cusp the incumbent cannot make |
+
+**Richards is the efficient entry point**: fitting it tests `gompertz_log` and
+`loglogistic` simultaneously as nested special cases, so the fitted `nu` is
+itself the measurement of which sigmoid the data want. `cuspy` plays the same
+role for the Moffat.
+
+Why this matters for exp53 specifically: exp48's judge ranked `gompertz_log`
+2nd of six with the **best compact-galaxy central mass of any candidate**
+(-27.7% against Moffat's -31.4%) and the most comfortable differential gate.
+exp53's central finding is that the compact deficit is stuck near -39% to -47%
+whatever the transport setting — so the one family that has ever moved that
+number is exactly the one exp53 omitted. (exp48 also found `cuspy` fits
+alpha = +0.814 and still scores worse, so the cusp hypothesis is separately
+dead; that does not bear on the sigmoids.)
+
+## Appendix (OUT OF SCOPE for this branch) — the profiled `q` grid
+
+**Scoping decision (user, 2026-08-21): this is out of scope for exp53 and is
+retained only as a record.** exp53's requirement is a DEPOSITION-ONLY test —
+transport simply turned off — and the intermediate `q` grid answers a
+different question (how a transport model should be tuned), complicating the
+one exp53 was asked. **Nothing in this appendix should be read as an exp53
+conclusion, and the "trim `q` to 0.6-0.8" recommendation it produced is
+withdrawn from this branch's findings.** It belongs to a transport-tuning
+experiment, and if it is wanted it should be re-run as one.
+
+The `q = 0` and `q` free columns below are in scope and are carried into the
+main results above; the intermediate points are not.
+
+Loss: 0.160001 (q=0) -> 0.158808 -> 0.158078 -> 0.156983 -> 0.153998 ->
+**0.153577 at q = 0.908 free** -> 0.153872 (q=1.0) -> 0.156512 (q=1.2). A
+single well-formed minimum near q ~ 0.9, rising on both sides; the profiled
+curve brackets the free fit correctly. Under the production objective the data
+genuinely wants transport, and removing it costs 4.2%.
+
+| cell | loss | q | sig | g | log R50 | M(<10) growth | M(<5) compact | kernel [dex] | GATE (0.37) | dlog R50 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| q free | 0.153577 | 0.91 | 0.223 | 4.28 | 3.27 | 0.722 | -43.4% | 0.081 | 0.42 | +0.026 |
+| **q=0.6** | 0.156983 | 0.60 | 0.252 | 3.68 | 2.89 | 1.417 | **-39.0%** | 0.070 | **0.37** | **-0.009** |
+| **q=0.8** | 0.153998 | 0.80 | 0.232 | 4.05 | 3.13 | **0.991** | -41.9% | **0.068** | 0.40 | +0.012 |
+| q=0 | 0.160001 | 0.00 | 2.683 | 1.72 | 1.73 | 0.879 | -39.4% | 0.086 | 0.36 | +0.016 |
+| q=1.2 | 0.156512 | 1.20 | 0.217 | 4.71 | 3.50 | -0.066 | -47.3% | 0.108 | 0.50 FAIL | +0.065 |
+
+**(a) The compact-galaxy central deficit is TRANSPORT-INDEPENDENT.** It sits at
+-39% to -47% at every q. Removing transport entirely buys 4 points out of 43.
+**exp53's falsifiable prediction FAILS under profiling** — and it passes
+spectacularly on the slice (-43.6% -> +13.6%), which is exactly the
+slice-versus-profile disagreement exp49 warned about, now landing on the
+central question. exp52's mechanism claim splits in two: *"the adopted kernel's
+late outskirt growth is redistribution"* stands, but *"...and that causes the
+compact central deficit"* does not survive re-optimization. The exp47/exp48
+compact defect is still unexplained.
+
+**(b) The profile has TWO BRANCHES and the fit switches at q ~ 0.5.** Below:
+wide efficiency window (sig up to 2.68), small deposits (log R50 1.73), weak
+size growth (g 1.7). Above: narrow early window (sig ~0.22), huge deposits
+(log R50 3.3-3.5), steep growth (g 4.3-4.7). Physically different models, not
+one model sliding; the adopted kernel lives on the high branch.
+
+**(c) The best candidate is neither the adopted model nor the boundary.**
+Judged against the measured added light, **q = 0.8 costs 0.27% of the loss**
+and improves the kernel distance 0.081 -> 0.068, the M(<10) growth ratio
+0.722 -> **0.991**, and the size offset +0.026 -> +0.012. q = 0.6 costs 2.2%
+and matches the differential gate exactly (0.37 vs 0.37) with the best sizes.
+**The answer to "remove transport?" is no — trim it by 20-35%**, which the
+loss alone would never have indicated since it minimizes at 0.91.
