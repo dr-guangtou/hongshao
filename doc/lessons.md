@@ -890,3 +890,127 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the exp38 self-similarity from the model side); (2) a paired metric
   is still the right tool for the MEAN prediction — keep both, label
   which is which.
+- **`np.interp` CLAMPS outside its grid, so `interp(0.0, R, cog)` is not zero
+  — it is the mass already inside the innermost aperture (exp52, found in
+  exp53).** exp52's growth decomposition built the truth term as
+  `interp(r_out) - interp(r_in)` and the model term analytically, where
+  `enclosed(0.0, ...)` really is 0. For every `r_in = 0` row that silently
+  divided the model's APERTURE growth by the truth's ANNULUS growth. It was
+  invisible because it is a 27% effect that only touches the aperture rows:
+  the annulus rows (`r_in > 0`) reproduced perfectly, which reads as
+  confirmation rather than as a clue. The headline moved from "the model grows
+  M(<10) at 57.3% of the truth's rate" to 72.6% — the finding survived, its
+  size did not. **Two habits this argues for.** (1) When model and data go
+  through DIFFERENT code paths to the same quantity, the two paths are a place
+  to put an assertion, not a place to trust symmetry — here, asserting
+  `truth_enclosed(0) == 0` would have caught it instantly. (2) When one row of
+  a table reproduces an independent number exactly and a neighbouring row does
+  not, the discrepancy is a lead about what differs BETWEEN the rows, not
+  noise to be explained away in the row that disagrees; chasing "why does
+  M(<10) disagree" through the model (deposit ceiling, analytic-vs-interpolated
+  radial operator — both tested, both innocent) took three probes, while
+  asking "what do M(<10) and M[50,100] not share" would have pointed at `r_in`
+  first.
+- **A boundary test can PASS with everything frozen and FAIL once refitted —
+  and the gap between the two is the whole result (exp53).** exp52 predicted
+  that removing the kernel's transport term would improve central masses.
+  Switching transport off at the adopted theta and changing nothing else, it
+  does, enormously: the compact-galaxy `M*(<5)` bias runs -43.6% -> **+13.6%**.
+  Re-fitting the other parameters with transport off, it does not: -43.4% ->
+  **-39.4%**, four points out of forty-three. The two answers differ by 57
+  points and in SIGN. The model does not respond to losing transport by
+  depositing more centrally; it flattens its efficiency window (sig 0.22 ->
+  2.68) and shrinks its deposits (log R50 3.27 -> 1.73), buying the outskirt
+  fit back a different way and leaving the centre alone. **A mechanism that is
+  real in a model's internal bookkeeping is not thereby the CAUSE of that
+  model's error** — freezing everything measures the former, only refitting
+  measures the latter. Corollary worth the extra cost: run BOTH and report them
+  side by side through the identical scorers. The disagreement is not an
+  embarrassment to be resolved; reporting only the refit would have hidden that
+  exp52's bookkeeping claim is perfectly correct, and reporting only the frozen
+  version would have "confirmed" a prediction that is false.
+- **When several model families all rail on the same parameter, widen the box
+  once and see whether they rail AGAIN — "unidentified" and "boxed" look
+  identical from a single fit (exp53).** Three of four deposit families hit
+  `log_R50` = 3.5. Widening to 5.0, the Moffat escaped to a finite interior
+  3.626 while sersic/expo/gauss all re-railed at 5.0 — and their losses
+  converged to within 1e-4 of each other, because "put every deposit at the
+  ceiling" is the same model whatever profile shape is hung on it. Two things
+  follow. (1) The right verdict was not "the box chose the answer" but
+  "nothing chooses the answer": the objective does not constrain a light-tailed
+  deposit's scale from above at all. A loss-gain threshold alone mislabels
+  this — one cell gained only 0.37% and was flagged benign while still sitting
+  on the new bound, so the check must test whether the parameter ESCAPED, not
+  just whether the loss moved. (2) It supplies a mechanism for the standing
+  exp48 verdict that "the profile does not matter": the profile stops
+  mattering precisely because the scale runs away, so that verdict is
+  conditional on an unpinned scale rather than a statement about profiles.
+- **Check whether a "fixable defect" in the record has already been fixed
+  before building the fix (exp53).** The 2026-08-20 handover carried an
+  action item — Sersic was eliminated in exp38 by an n-scale degeneracy
+  "needing an R50 reparameterization", a fixable numerical artifact, so
+  exp53 should supply the reparameterization and re-run it. exp53 did, and
+  reported it as a vindication. **exp48 step C had already built
+  `sersic_r50` and already re-fitted it inside the full multi-epoch
+  kernel**, where it came LAST on the judge. The work was not wasted — it
+  reproduced exp48's verdict under a different objective, which strengthens
+  it — but it was mis-labelled as new for a whole session, and the real
+  (narrow) contribution was buried. Two habits: (1) an inherited "nobody
+  ever fixed X" is a claim about the record, so grep the record for X before
+  acting on it, especially when the handover cites the ORIGINAL rejection
+  rather than the most recent test; (2) when an experiment reproduces a
+  prior verdict under different conditions, say so in those words — a
+  confirmation across objectives is a real and reportable result, and
+  dressing it as a discovery costs the credibility that the confirmation
+  actually earns.
+- **State the QUANTITY and the BINNING VARIABLE whenever you quote a trend with
+  mass — the apparent sign depends on both (exp53).** exp53 reported that its
+  deposition-only models over-fill low-mass galaxies' outskirts and under-fill
+  massive ones, measured as the `M[50,148]` ANNULUS in STELLAR-mass terciles.
+  The user read the standard QA figures — which bin by HALO mass and plot
+  CUMULATIVE apertures — and saw the opposite: `M(<148)` under-estimated at low
+  halo mass, over-estimated at high. Both were correct. The annulus and the
+  aperture disagree because the inner and outer errors have opposite signs, and
+  the two together say what neither says alone: the models have a RADIAL
+  DISTRIBUTION error that flips sign with halo mass, not a mass-budget error.
+  Two habits follow. (1) A "trend with mass" is under-specified until the
+  quantity and the binning variable are both named; a reader comparing against
+  the project's standard figures will use THEIR conventions, not yours.
+  (2) When a bespoke analysis and the standard QA figures appear to disagree,
+  that is a lead worth chasing rather than a discrepancy to reconcile away —
+  here the disagreement located the actual defect, which neither view had
+  identified on its own.
+- **Regression to the mean in binned profile QA is RADIUS-DEPENDENT, and a
+  blanket warning about it is wrong in both directions (exp53).** Binning by
+  the TRUTH stellar mass and comparing against a conditional-mean model tilts
+  the residual by `(slope - 1)` dex per dex of bin separation, where
+  `slope = r * sigma_model/sigma_truth`. Measured on the exp53 kernel at
+  z = 0.4: the slope is **0.79 at `M(<5 kpc)`** — a severe artifact, and the
+  stellar-mass and halo-mass binnings there disagree in SIGN (+0.022 against
+  -0.016) — but **1.03 at `M(<148)`**, where it is negligible because the
+  `M(<500)` normalization pins the total to the truth per galaxy and leaves
+  almost no scatter to dilute (`r` = 0.997). So the caution belongs on the
+  INNER profile only; applying it to the outer profile would have wrongly
+  discounted a real 9-percentage-point halo-mass tilt that survives in both
+  binnings. **The general habit**: before invoking regression to the mean as a
+  reason to distrust a binned trend, compute the model-on-truth slope for THAT
+  quantity — it is two lines, it bounds the artifact exactly, and a
+  normalization that pins the quantity per object can defeat the mechanism
+  entirely.
+- **A per-object normalization can hide a factor-2 error in the thing the model
+  is supposed to predict — audit what it supplies (exp53, user's question).**
+  Every kernel in this program pins `M(<500 kpc)` per galaxy per epoch to the
+  truth, and every judged metric operates on the POST-normalization profiles.
+  So nothing scored the model's own mass ASSEMBLY. Measured: the deposit
+  weights sum to 1 by construction, so 100% of the stellar mass and 100% of the
+  mass growth come from the pinned value, and the incumbent's own accumulation
+  grows x1.25 from z=2 to z=0.4 where the truth grows **x2.65** — the pinning
+  silently supplies a factor of **2.1**, more than half the growth. Every
+  deposition-only variant is within 0.03-0.11 dex of the truth's assembly, a
+  3-11x smaller correction, which is the strongest argument for them in the
+  whole experiment and was invisible to all thirteen judged metrics.
+  **The habit**: for any normalization, pinning, or per-object rescaling, write
+  down explicitly what it SUPPLIES and then score that quantity separately. It
+  is usually free — the un-normalized prediction is already computed — and it
+  is exactly where a model can be most wrong while looking fine, because the
+  normalization is applied before anything measures it.

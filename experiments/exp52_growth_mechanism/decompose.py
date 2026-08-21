@@ -58,6 +58,27 @@ def enclosed(Rl, rc, gam):
     return 1.0 - (1.0 + (Rl / rc) ** 2) ** (1.0 - gam)
 
 
+def _enc(cog, R, Rl):
+    """Truth enclosed mass inside ``Rl`` from a measured CoG.
+
+    ``Rl = 0`` must mean ZERO. Written as a bare ``np.interp(0.0, R, cog)``
+    it does not: numpy CLAMPS below the grid and returns ``cog[0]``, the mass
+    already inside the innermost aperture radius (2 kpc). The model side of
+    this decomposition uses the analytic ``enclosed(0.0, ...) = 0``, so the
+    bare form silently divided the model's APERTURE growth by the truth's
+    ANNULUS growth for every ``r_in = 0`` row.
+
+    It mattered: the truth's `M(<2 kpc)` FALLS between z=1.0 and z=0.4
+    (-6.55e12 Msun summed, 62% of galaxies negative), so excluding it inflated
+    the denominator by 27% and the `M(<10)` model/truth growth ratio read
+    0.573 where the consistent aperture-vs-aperture answer is 0.726. The
+    annulus rows (`M[50,100]`, `M[100,148]`) have `r_in > 0` and were never
+    affected -- which is why `M[50,100] = 0.989` reproduces exactly and the
+    aperture rows did not. Found in exp53.
+    """
+    return 0.0 if Rl <= 0.0 else float(np.interp(Rl, R, cog))
+
+
 def galaxy_terms(g, theta, e):
     """Per-galaxy: for each epoch, the un-normalized enclosed mass at every
     aperture edge, split into 'present at k1' and 'arrived later'."""
@@ -128,8 +149,8 @@ def main(dev=False):
                 nw = N0 * A_new_k0
                 d1 = g["data"][k1]
                 d0 = g["data"][k0]
-                tru = ((np.interp(r_out, R, d0) - np.interp(r_in, R, d0))
-                       - (np.interp(r_out, R, d1) - np.interp(r_in, R, d1)))
+                tru = (_enc(d0, R, r_out) - _enc(d0, R, r_in)
+                       - (_enc(d1, R, r_out) - _enc(d1, R, r_in)))
                 acc[name] += np.array([tr, rn, nw, tr + rn + nw, tru])
         # How much does the M(<500) pinning have to inflate? If the model's
         # own deposits kept pace with the measured mass growth this is 1.0.

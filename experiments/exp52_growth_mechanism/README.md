@@ -1,5 +1,25 @@
 # exp52 — the adopted kernel grows massive galaxies by redistribution, not accretion
 
+> **CORRECTION (2026-08-21, found in exp53).** Every `M(<R)` row in the
+> decomposition below divided the model's APERTURE growth by the truth's
+> ANNULUS growth. `decompose.py` built the truth term as
+> `np.interp(r_out, R, d) - np.interp(r_in, R, d)` with `r_in = 0.0`, and
+> numpy's `interp` CLAMPS below the grid — so it returned the CoG at the
+> innermost aperture radius (2 kpc) rather than zero — while the model term
+> used the analytic `enclosed(0.0, ...) = 0`. The truth's `M(<2 kpc)` FALLS
+> over z=1.0->0.4 (-6.55e12 Msun summed, 62% of galaxies negative), so
+> dropping it inflated the denominator by 27%.
+>
+> **The headline central-deficit number changes: `M(<10)` model/truth growth
+> over z=1.0->0.4 is 0.726, not 0.573.** The qualitative finding stands — the
+> model does under-grow the centre — but by 27%, not 43%. The ANNULUS rows
+> (`M[50,100]`, `M[100,148]`) have `r_in > 0` and were never affected, which
+> is why `M[50,100] = 0.989` reproduces exactly under the fix and the aperture
+> rows did not. Every transport-share number is likewise unaffected: those are
+> ratios of model terms only, with no truth denominator. Fixed in
+> `decompose.py`; re-run for the corrected table.
+
+
 **Status: DIAGNOSIS. A structural incompatibility between the adopted kernel
 and the established physical picture, quantified. No fix proposed here.**
 

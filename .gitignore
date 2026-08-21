@@ -145,3 +145,6 @@ ENV/
 
 # Session-local context file — never commit
 doc/CLAUDE.md
+
+# Long-run shard logs (regenerable; the README carries the results)
+experiments/*/logs/

@@ -429,13 +429,34 @@ def size_planes(model_cogs, data_cogs, R, fractions=SIZE_FRACTIONS):
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
              verbose=True, figures=True, bin_by=None, bin_label=None,
-             draw_cogs=None):
+             draw_cogs=None, bin_by_ms=None, ms_label=None):
     """Tiered QA for one model. Prints the report, writes the standard figures
     (mass tables per bin set, observational planes, profile visual QA), and
     returns a dict with all measurements for programmatic comparison.
     ``draw_cogs`` (S, n, nz, nr): sampled CoG populations from the generative
     layer; the first is overlaid on the plane figure (the mean prediction is
-    under-dispersed there by construction)."""
+    under-dispersed there by construction).
+
+    **Two binned-profile figures are always written**, because the two views
+    answer different questions and can disagree in SIGN (exp53):
+
+    - ``qa_bins_*``     binned by ``bin_by``, normally a MODEL INPUT (halo
+      mass). This is the view that matters for the model's purpose — predicting
+      the stellar-mass distribution from halo properties — and it is free of
+      the regression-to-the-mean artifact described in ``_bins_figure``.
+    - ``qa_bins_ms_*``  binned by TOTAL STELLAR MASS (``bin_by_ms``, defaulting
+      to the truth's outermost CoG point at the first epoch). This is the view
+      an observed, mass-selected sample would give, so it is what a reader
+      compares against published profiles — but for any conditional-mean model
+      it converts unexplained amplitude scatter into apparent bin-wise bias, and
+      the figure is annotated to say so. The artifact is RADIUS-DEPENDENT and
+      was measured in exp53: the model-on-truth slope is 0.79 at ``M(<5)``
+      (where the two binnings disagree in SIGN) but 1.03 at ``M(<148)``,
+      because the ``M(<500)`` normalization pins the total per galaxy and
+      leaves almost no scatter to dilute (r = 0.997). So an inner-radius trend
+      in the stellar-mass view needs checking against the halo-mass view; an
+      outer-radius one is largely safe.
+    """
     set_style()
     model_cogs, data_cogs = np.asarray(model_cogs), np.asarray(data_cogs)
     n, nz = data_cogs.shape[:2]
@@ -543,6 +564,14 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         _plane_figure(truth, model, anchor_z, name, figdir, draws=draw_m)
         _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
                      bin_by=bin_by, bin_label=bin_label)
+        # the stellar-mass view, always: standard since 2026-08-21 (exp53)
+        ms = bin_by_ms
+        if ms is None:
+            ms = np.log10(np.clip(data_cogs[:, 0, -1], 1.0, None))
+            ms_label = ms_label or f"logM$_*$($<${R[-1]:.0f} kpc, z={anchor_z[0]})"
+        _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
+                     bin_by=ms, bin_label=ms_label or "logM$_*$",
+                     tag="bins_ms", caveat=True)
         _cases_figure(model_cogs, data_cogs, R, anchor_z, mr_all, name, figdir)
         if growth:
             _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name,
@@ -871,7 +900,7 @@ def _case_picks(mr, n=2):
 
 
 def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
-                 bin_by=None, bin_label=None):
+                 bin_by=None, bin_label=None, tag="bins", caveat=False):
     """Median data-vs-model CoG per tercile of ``bin_by`` + median residuals.
 
     Bin by a MODEL INPUT (halo mass) whenever available: binning by the truth
@@ -921,8 +950,24 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
     axes[0, 0].legend(fontsize=8, loc="lower right")
     fig.suptitle(f"QA [{name}] — CoGs by {bin_label} tercile "
                  "(data solid, model dashed)", fontsize=12)
-    fig.tight_layout()
-    print("wrote", save_fig(fig, figdir / f"qa_bins_{name}")[0])
+    if caveat:
+        fig.text(0.5, 0.005,
+                 "Binned by TRUTH stellar mass: selecting on the noisy "
+                 "quantity tilts the residual by (slope$-$1) dex/dex, where "
+                 "slope $= r\\,\\sigma_{model}/\\sigma_{truth}$ "
+                 "(regression to the mean). RADIUS-DEPENDENT: strongest at "
+                 "small R where the model has predictive freedom (measured "
+                 "slope 0.79 at $M(<5)$, where this view and the halo-mass "
+                 "view disagree in SIGN), and negligible at large R where the "
+                 "$M(<500)$ normalization pins the total to the truth "
+                 "($r=0.997$). Check the halo-mass-binned figure before "
+                 "reading an inner-radius trend as a model defect.",
+                 ha="center", va="bottom", fontsize=7.0, style="italic",
+                 color="0.35")
+        fig.tight_layout(rect=(0, 0.035, 1, 1))
+    else:
+        fig.tight_layout()
+    print("wrote", save_fig(fig, figdir / f"qa_{tag}_{name}")[0])
 
 
 def _cases_figure(model_cogs, data_cogs, R, anchor_z, mr, name, figdir):

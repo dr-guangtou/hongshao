@@ -946,37 +946,110 @@ Cross-experiment plan. Mirrors the phase sequence in
     Identifiability results for a misspecified model may not survive fixing it,
     so the remaining stages of
     `doc/plans/2026-08-16-kernel-identifiability.md` are on hold, not abandoned.
-- [ ] **(NEXT, high priority) the DEPOSITION-ONLY model test** — a boundary
-  condition, on its own branch. Remove the transport mechanism entirely (q = 0,
-  a clean nested special case since rcw = rc0 makes fc irrelevant) so the model
-  only deposits new material, and test the profile families against the MEASURED
-  differential profiles rather than against the loss. Design notes:
-  - **The efficiency window MUST be free.** Transport and the window are
-    entangled: with sig = 0.235 the late deposits are nearly massless, so a
-    no-transport model would have no way to change shape at late times and the
-    failure would be uninterpretable.
-  - **Judge against the measured added-light kernel**, not the loss.
-    `exp38/outputs/stage0_kernels.npz` holds the empirical deposit kernel
-    (3 mass terciles x 4 epoch pairs x 23 radii); exp38 stage 0.2 measured it as
-    centrally peaked at 3-4 kpc with Sersic n = 2.1-3.1 and half-mass radius
-    15-47 kpc. exp52's `data_differential.py` adds the halo-mass-binned slopes.
-  - **Quantitative scorecard** (from exp52, n=2397): median dlogSigma ~ 0.00
-    +/- 0.01 at 2-3 kpc for both z<1 pairs; **+0.09 at 2.35 kpc over the long
-    baseline** (the core GROWS; there is NO systematic core drop -- an earlier
-    claim of one was withdrawn, it is 0.2-2.5% at one marginally-resolved radius
-    with 51-56% of galaxies negative, i.e. a coin flip); slope b ~ 0.10 late
-    rising to 0.15-0.19 early, **essentially independent of halo mass**.
-  - **Sersic was rejected for a fixable reason.** exp38 stage 1 rejected
-    `sersic (n free)` with "LOWER rail 3/5 epochs (n-scale degeneracy; needs an
-    R50 reparameterization)" -- that is the identifiability defect exp49
-    characterised, and the R50 reparameterization is the known fix. The family
-    the measured kernel points at was eliminated by a numerical artifact.
-  - **Falsifiable prediction**: exp52 showed transport drains M(<10 kpc) to
-    57.3% of the truth's growth. Removing transport should IMPROVE central
-    masses. If it does not, exp52's mechanism story is wrong.
-  - Run graded, not binary: **profile the loss over `q`** (currently fitted at
-    0.908 in a [0,3] box, comfortably interior, so the data actively wants
-    transport under the present setup) with q = 0 as its endpoint.
+- [x] **exp53 — the DEPOSITION-ONLY boundary test: COMPLETE (2026-08-21,
+  branch exp53-deposition-only).** Ran graded (7-point profiled `q` grid plus
+  the free fit), efficiency window free, judged against the MEASURED
+  added-light kernel, Sersic reinstated behind an R50 reparameterization.
+  14 cells x 3 starts, n=2397, full sample. Plan:
+  `doc/plans/2026-08-20-deposition-only-test.md`.
+  - **THE PREDICTION FAILS UNDER PROFILING.** exp52 predicted that removing
+    transport would improve central masses. On the SLICE it does, hugely
+    (compact `M(<5)` bias -43.6% -> +13.6%). Under profiling the compact
+    deficit is **-39% to -47% at EVERY `q`** — removing transport entirely
+    buys 4 points out of 43. **The compact-galaxy central deficit is not
+    caused by transport**; exp52's mechanism claim survives in its narrow form
+    (late outskirt growth IS redistribution) and fails in its causal form. The
+    exp47/exp48 defect is unexplained again. Textbook slice-vs-profile, on the
+    central question.
+  - **ACTIONABLE: trim `q` from 0.91 to ~0.6-0.8, do not remove it.** Judged
+    against the measured kernel, `q`=0.8 costs **0.27%** of the loss and
+    improves the kernel distance 0.081 -> 0.068, the `M(<10)` growth ratio
+    0.722 -> **0.991**, sizes +0.026 -> +0.012 and the overshoot gate
+    +0.023 -> +0.006; `q`=0.6 costs 2.2% and matches the differential gate
+    exactly (0.37 vs 0.37) with the best sizes (-0.009). The loss alone would
+    never point there: it minimizes at 0.91.
+  - **The profiled loss curve is a clean single minimum at `q` ~ 0.9**
+    (0.160001 at `q`=0 rising from 0.153577), so under the production
+    objective the data genuinely wants transport. Removing it costs 4.2%.
+  - **Two branches, switching at `q` ~ 0.5**: below, a wide efficiency window
+    (sig up to 2.68), small deposits (log R50 1.73), weak growth (g 1.7);
+    above, a narrow early window (sig ~0.22), huge deposits (log R50 3.3-3.5),
+    steep growth (g 4.3-4.7). They trade epochs — the low branch is worse at
+    z=0.4 (plane 2.7 vs 1.9-2.1) and better at z=2.0 (4.1 vs 4.4-4.9), which
+    is exp40's dissipative-era finding from a new direction.
+  - **Sersic: a CONFIRMATION of exp48, not a new result.** It fits at
+    **n = 2.29** unrailed, inside the measured kernel's 2.1-3.1, and still
+    loses to the Moffat on both loss (0.1567 vs 0.1536) and kernel (0.118 vs
+    0.081). **The 2026-08-20 handover's framing was wrong**: it said Sersic
+    "was eliminated by a numerical artifact" for exp53 to fix, but **exp48
+    step C had already built `sersic_r50` and already re-run it in the full
+    multi-epoch kernel**, where it came LAST on the judge (2.44 vs Moffat
+    1.95). exp53 reproduces that under a different objective, which
+    strengthens exp48. The new part is narrow: exp48 left the Moffat in raw
+    `rc`, so exp53 is the first run where `log_R50` means the same physical
+    quantity for every family. (The degeneracy is now quantified though: at
+    fixed raw scale a=1, n from 0.5 -> 8 moves R50 by **1.2e6x**.)
+  - **SCOPE LIMIT: one objective only.** Every exp53 fit used the PRODUCTION
+    objective (CoG, fractional residuals), NOT log-density. exp48 measured
+    that the objective REVERSES the profile ranking (`sersic_r50` worst under
+    production, tied-best under exp48's density-log winner), so exp53's family
+    ordering is conditional. **`gompertz_log` was not tested and should have
+    been**: exp48 ranked it 2nd of six on the judge with the BEST compact
+    central mass of any candidate (-27.7% vs Moffat -31.4%) — the one family
+    that has ever moved the number exp53 found stuck at -39% to -47%.
+  - **Transport SUBSTITUTES for a heavy tail.** Removing it costs the
+    heavy-tailed families 3-4% and the light-tailed ones ~11%. gauss/expo
+    *need* transport because they have no other way to reach the outskirts.
+    The falsification control behaves: `gauss-q0` is worst on the kernel by 4x
+    (0.339), with kernel n = 1.7 against a measured 2.7.
+  - **The deposit scale is UNIDENTIFIED for every family except the Moffat.**
+    `rail_check.py`: sersic/expo/gauss escape `log_R50` = 3.5 and immediately
+    rail at 5.0; the Moffat is interior at 3.266 and its one railed cell
+    escapes to a finite 3.626. Widened, the three converge to
+    0.15613/0.15616/0.15621 — indistinguishable — because "every deposit at
+    the ceiling" is the same model whatever shape is hung on it.
+    **A mechanism for exp48's "the profile does not matter"**, and it means a
+    family shootout is only meaningful with the deposit scale pinned. The `mu`
+    rail on the deposition-only cells is BENIGN (0.02-0.05%), so design
+    constraint 2 held.
+  - **Reach is a FAMILY property, not only a transport one**: the Moffat puts
+    4.9-6.8% of deposited mass beyond 500 kpc where the normalization discards
+    it; every lighter-tailed family puts 0.5-1.4%. In tension with the Moffat
+    also matching the measured kernel best. **A lower, physically motivated
+    deposit ceiling is the obvious next lever** (exp49 measured 300 kpc at
+    1.5e-5).
+  - **CAVEAT: exp53's fits are IN-SAMPLE** (10-fold CV over 14 cells x 3
+    starts was unaffordable). Parameter counts differ by <= 2 of ~11 against
+    ~220k residuals, so optimism cannot reorder families separated by more
+    than a fraction of a per cent — but `q`=0.8 vs `q` free (0.27%) is inside
+    that margin ON THE LOSS. It is not close on the judged observables.
+  - **The generalized-sigmoid family, run 2026-08-21.** `richards` fits
+    **nu = 0.345** (nu->0 = gompertz_log, nu=1 = loglogistic), so the data want
+    an asymmetric sigmoid that is neither exactly; it beats both families it
+    nests. `gompertz_log-q0` posts the best added-light kernel of all eleven
+    candidates (0.072 vs the fiducial's 0.081) and beats the fiducial on 10 of
+    13 metrics at EQUAL parameter count to `moffat-q0`. Confirms exp48's
+    2nd-of-six ranking across a different objective and harness. All `mu` rails
+    benign. **The sigmoid loss surface is much rougher** — start-to-start
+    spreads 1.7e-3 to 2.5e-3 against 1e-8 to 1e-10 for the other families, with
+    one start in three landing in a worse basin, so multi-start is mandatory
+    for this family.
+  - **STANDING VERDICT (user, 2026-08-21), overriding the loss and kernel
+    tables**: no deposition-only model is significantly better than the
+    fiducial. The sigmoid family is not bad but still has issues at the centre
+    and at high redshift; **it cannot solve the problem alone but is worth
+    carrying into the next phase.**
+  - **The defect that decides it, quantified**: `M(<148)` is under-estimated by
+    3% in the low HALO-mass tercile and over-estimated by 6% in the high one, a
+    **9-point tilt where the fiducial is FLAT at +3%**. Not a mass-budget
+    error — the `M[50,148]` annulus tilts the OTHER way (+17% low, -9% high),
+    so the deposition-only models carry a **RADIAL DISTRIBUTION error that
+    flips sign with halo mass**: too extended in low-mass haloes, too
+    concentrated in high-mass ones. The fiducial's transport term is what
+    supplies that halo-mass-dependent concentration, which is the sharpest
+    statement exp53 produced about what transport is actually FOR.
+  - Untested: the `gausswing` family; a lower deposit ceiling; CV; the sigmoid
+    family with `q` free.
 - [x] **exp52 — the kernel grows galaxies by REDISTRIBUTION, not accretion:
   DIAGNOSIS COMPLETE (2026-08-20, branch exp49-identifiability).** Opened after
   the user challenged an offhand claim that late outskirt growth comes from
@@ -992,6 +1065,11 @@ Cross-experiment plan. Mirrors the phase sequence in
   - **Explains the exp47/exp48 compact-galaxy central deficit**: with deposition
     off, filling an outskirt requires emptying the centre. z=1.0-0.4 model/truth
     growth M(<10) = **57.3%** against M[50,100] = 98.9%.
+    **CORRECTED 2026-08-21 (found in exp53): M(<10) is 0.726, not 0.573.**
+    `decompose.py` divided the model's APERTURE growth by the truth's ANNULUS
+    growth (`np.interp(0.0, R, cog)` clamps to the CoG at 2 kpc, not zero).
+    The finding survives at 27% rather than 43%; M[50,100] and every transport
+    share are unaffected.
   - **RIGHT SOURCE, ~10x TOO MUCH REACH** (user's framing, and the actionable
     part). Adiabatic expansion from AGN feedback is well grounded but FLATTENS
     the inner profile; it does not build the stellar halo. Measured: 93.1% of
