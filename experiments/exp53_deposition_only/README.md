@@ -333,3 +333,79 @@ measured a 300 kpc ceiling as costing 1.5e-5.
 - The `gausswing` family (exp38 stage 1's co-winner) was not tested.
 - Whether a LOWER deposit ceiling recovers the Moffat's wasted reach is
   untested and is the obvious next experiment.
+
+## Result 5 — the STANDARD QA battery on the deposition-only set
+
+exp53's own figures answer exp53's own question. They are not a substitute for
+`hongshao.qa.evaluate`, which is what every promoted model in this program has
+been shown on. Run for all four deposition-only families plus the adopted
+baseline (`report.py qa`): 10 figures each, binned by halo mass, scored at all
+five epochs with z = 2.0 an extrapolation test.
+
+**It changed the picture in two ways the exp53-specific scorers could not see.**
+
+### tier 3 — profile max|rel| over R > 5 kpc, epoch-averaged
+
+| model | avg | per epoch (z = 0.4 ... 2.0) |
+|---|---|---|
+| moffat-qfree (adopted) | **18.0%** | 19.3 / 18.6 / 18.1 / 17.3 / 16.6 |
+| **moffat-q0** | **18.3%** | 20.6 / 19.9 / 19.1 / 16.4 / 15.5 |
+| sersic-q0 | 19.5% | 19.7 / 20.2 / 20.4 / 19.4 / 17.9 |
+| expo-q0 | 20.4% | 19.5 / 21.6 / 24.3 / 21.3 / 15.4 |
+| gauss-q0 | 21.2% | 19.3 / 21.2 / 24.7 / 22.7 / 18.0 |
+
+**The deposition-only Moffat is 0.3 points behind the adopted model on the
+program's standard profile mark** — far closer than the 4.2% loss gap implies,
+and it is BETTER at z = 1.5 and z = 2.0 (16.4/15.5 against 17.3/16.6). The
+loss gap is concentrated at low redshift. (In-sample; exp38's CV marks are not
+directly comparable.)
+
+### tier 2d — the MASS-SIZE plane, the program's standing failure
+
+E/floor for R50 (lower is better; the truth's own split-half floor is 1.0):
+
+| model | z=0.4 | z=1.0 | z=2.0 | R50 slope at z=0.4 (truth +0.50) |
+|---|---|---|---|---|
+| **gauss-q0** | **2.9** | 11.5 | **5.9** | **+0.44** |
+| **expo-q0** | **3.2** | 11.0 | 6.0 | **+0.44** |
+| moffat-q0 | 4.4 | 5.1 | 8.1 | +0.32 |
+| moffat-qfree (adopted) | 5.2 | 5.2 | 10.4 | +0.41 |
+| sersic-q0 | 7.2 | 8.2 | 13.8 | +0.34 |
+
+**Every deposition-only model except Sersic beats the adopted model on the
+mass-size plane at z = 0.4**, and the two wingless ones nearly halve it
+(5.2 -> 2.9) while getting the slope closer to the truth (+0.44 against the
+adopted +0.41, truth +0.50). This is the standing gap the user has flagged
+repeatedly — "the adopted product does NOT pass the mass-size plane; the
+relation is too FLAT at every epoch". A deposition-only kernel improves it.
+
+The reason is visible in the scatter column of tier 2b: the heavy-tailed models
+are MORE under-dispersed (R50 scatter 0.074-0.090 against a truth 0.173) than
+the light-tailed ones (0.111-0.113). The known over-coherence defect
+(exp45/exp46) is WORSE for the Moffat.
+
+### ... and the wingless models pay for it catastrophically at z = 2
+
+tier 2b `M(<30)` vs `M(30-50)` at z = 2.0, E/floor:
+
+| model | E/floor | model slope (truth +1.43) | model scatter (truth 0.338) |
+|---|---|---|---|
+| sersic-q0 | 6.9 | +1.32 | 0.148 |
+| moffat-q0 | 7.0 | +1.18 | 0.089 |
+| moffat-qfree | 7.1 | +1.08 | 0.072 |
+| expo-q0 | **28.3** | +2.08 | 0.352 |
+| gauss-q0 | **56.9** | **+4.11** | **1.009** |
+
+A wingless deposit with no transport cannot extrapolate: `gauss-q0`'s z=2
+mass-mass slope is +4.11 against a measured +1.43, with three times the truth's
+scatter. The falsification control fails in the predicted way and then some.
+
+**Net verdict.** The deposition-only Moffat is a genuinely credible model —
+0.3 points off the adopted profile mark, better at high z, better on the
+mass-size plane — and it was NOT visible as such from the loss (+4.2%) or from
+the added-light kernel (0.086 vs 0.081) alone. The light-tailed deposition-only
+models trade a real mass-size-plane gain at z <= 0.4 for an unusable z = 2
+extrapolation. Neither displaces the `q` ~ 0.6-0.8 recommendation, which wins
+on the kernel and both gates, but the mass-size result means **deposition-only
+should stay on the table rather than be closed**, and it should be re-tested
+with CV.

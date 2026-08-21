@@ -20,8 +20,13 @@ SCORED at all five epochs, so z = 2.0 is an extrapolation test -- the standing
 convention since exp40/exp43.
 
 Run: `HONGSHAO_DATA_DIR=... PYTHONPATH=. uv run python \
-experiments/exp53_deposition_only/report.py {table|slice|figures|all} \
-[--stage qprofile|shootout] [--dev]`
+experiments/exp53_deposition_only/report.py {table|slice|qa|figures|all} \
+[--stage qprofile|shootout] [--only cell,cell] [--dev]`
+
+`qa` runs the project's STANDARD battery (`hongshao.qa.evaluate`: tier 1+2
+mass tables, 2b planes, 2c growth planes, 2d size planes, profile visual QA)
+on the four deposition-only family cells plus the adopted baseline. exp53's
+own figures answer exp53's own question and do not replace it.
 """
 from __future__ import annotations
 
@@ -227,6 +232,56 @@ def cmd_table(stage, dev=False, verbose=False):
     return keep, rows
 
 
+#: the deposition-only family set plus the adopted baseline, for the standard
+#: QA battery. `moffat-qfree` is included so every QA figure has the incumbent
+#: to read against; it is NOT a deposition-only model.
+QA_CELLS = ("moffat-q0", "sersic-q0", "expo-q0", "gauss-q0", "moffat-qfree")
+
+
+def cmd_qa(dev=False, cells=None, stage="main"):
+    """Run the project's STANDARD QA battery on exp53 candidates.
+
+    exp53's own figures answer exp53's own question (how does the added-light
+    kernel respond to `q`, and which family matches it). They are not a
+    substitute for `hongshao.qa.evaluate`, which is what every promoted model
+    in this program has been shown on: tier 1+2 mass tables per bin set, the
+    2b observational planes, 2c growth planes, 2d size planes, and the profile
+    visual QA — with figures, binned by halo mass.
+
+    Defaults to the four DEPOSITION-ONLY family cells plus the adopted
+    baseline for reference. Model CoGs are evaluated at all five epochs, so
+    z = 2.0 is an extrapolation test (fits used z <= 1.5).
+    """
+    from hongshao import qa
+    gals, e, logms, logmh, data = _setup(dev)
+    done = R53._load(R53._store(stage, dev))
+    lookup = dict(R53.all_cells())
+    names = list(cells or QA_CELLS)
+    FIGDIR.mkdir(exist_ok=True)
+    out = {}
+    for name in names:
+        spec = lookup.get(name)
+        if spec is None:
+            print(f"  [{name}] unknown cell — skipped")
+            continue
+        b = R53.best_cell(done, name)
+        if b is None:
+            print(f"  [{name}] not fitted — skipped")
+            continue
+        theta, loss, sname = b
+        cogs = K.population_cogs(spec, theta, gals, KS_ALL)
+        print(f"\n{'=' * 78}\nexp53 STANDARD QA — {name} "
+              f"({spec.n_theta} parameters, loss {loss:.6f}, best start "
+              f"'{sname}')\n"
+              f"  {'DEPOSITION ONLY (q = 0)' if not spec.q_free else 'q free'}"
+              f" | fitted on z <= 1.5, SCORED at all five epochs\n{'=' * 78}")
+        out[name] = qa.evaluate(cogs, data, e.R, K.ANCHOR_Z,
+                                name=f"exp53_{name}{'_dev' if dev else ''}",
+                                figdir=FIGDIR, figures=True, bin_by=logmh,
+                                bin_label="logMh")
+    return out
+
+
 def cmd_slice(dev=False):
     """The SLICE, for contrast with the profile — no re-optimization.
 
@@ -401,6 +456,11 @@ if __name__ == "__main__":
         cmd_table(stage, dev, verbose)
     elif cmd == "slice":
         cmd_slice(dev)
+    elif cmd == "qa":
+        only = None
+        if "--only" in sys.argv:
+            only = sys.argv[sys.argv.index("--only") + 1].split(",")
+        cmd_qa(dev, only)
     elif cmd == "figures":
         cmd_figures(stage, dev)
     elif cmd == "all":
