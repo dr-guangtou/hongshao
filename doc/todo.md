@@ -1023,7 +1023,33 @@ Cross-experiment plan. Mirrors the phase sequence in
     ~220k residuals, so optimism cannot reorder families separated by more
     than a fraction of a per cent — but `q`=0.8 vs `q` free (0.27%) is inside
     that margin ON THE LOSS. It is not close on the judged observables.
-  - Untested: the `gausswing` family; a lower deposit ceiling; CV.
+  - **The generalized-sigmoid family, run 2026-08-21.** `richards` fits
+    **nu = 0.345** (nu->0 = gompertz_log, nu=1 = loglogistic), so the data want
+    an asymmetric sigmoid that is neither exactly; it beats both families it
+    nests. `gompertz_log-q0` posts the best added-light kernel of all eleven
+    candidates (0.072 vs the fiducial's 0.081) and beats the fiducial on 10 of
+    13 metrics at EQUAL parameter count to `moffat-q0`. Confirms exp48's
+    2nd-of-six ranking across a different objective and harness. All `mu` rails
+    benign. **The sigmoid loss surface is much rougher** — start-to-start
+    spreads 1.7e-3 to 2.5e-3 against 1e-8 to 1e-10 for the other families, with
+    one start in three landing in a worse basin, so multi-start is mandatory
+    for this family.
+  - **STANDING VERDICT (user, 2026-08-21), overriding the loss and kernel
+    tables**: no deposition-only model is significantly better than the
+    fiducial. The sigmoid family is not bad but still has issues at the centre
+    and at high redshift; **it cannot solve the problem alone but is worth
+    carrying into the next phase.**
+  - **The defect that decides it, quantified**: `M(<148)` is under-estimated by
+    3% in the low HALO-mass tercile and over-estimated by 6% in the high one, a
+    **9-point tilt where the fiducial is FLAT at +3%**. Not a mass-budget
+    error — the `M[50,148]` annulus tilts the OTHER way (+17% low, -9% high),
+    so the deposition-only models carry a **RADIAL DISTRIBUTION error that
+    flips sign with halo mass**: too extended in low-mass haloes, too
+    concentrated in high-mass ones. The fiducial's transport term is what
+    supplies that halo-mass-dependent concentration, which is the sharpest
+    statement exp53 produced about what transport is actually FOR.
+  - Untested: the `gausswing` family; a lower deposit ceiling; CV; the sigmoid
+    family with `q` free.
 - [x] **exp52 — the kernel grows galaxies by REDISTRIBUTION, not accretion:
   DIAGNOSIS COMPLETE (2026-08-20, branch exp49-identifiability).** Opened after
   the user challenged an offhand claim that late outskirt growth comes from

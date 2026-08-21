@@ -963,3 +963,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   confirmation across objectives is a real and reportable result, and
   dressing it as a discovery costs the credibility that the confirmation
   actually earns.
+- **State the QUANTITY and the BINNING VARIABLE whenever you quote a trend with
+  mass — the apparent sign depends on both (exp53).** exp53 reported that its
+  deposition-only models over-fill low-mass galaxies' outskirts and under-fill
+  massive ones, measured as the `M[50,148]` ANNULUS in STELLAR-mass terciles.
+  The user read the standard QA figures — which bin by HALO mass and plot
+  CUMULATIVE apertures — and saw the opposite: `M(<148)` under-estimated at low
+  halo mass, over-estimated at high. Both were correct. The annulus and the
+  aperture disagree because the inner and outer errors have opposite signs, and
+  the two together say what neither says alone: the models have a RADIAL
+  DISTRIBUTION error that flips sign with halo mass, not a mass-budget error.
+  Two habits follow. (1) A "trend with mass" is under-specified until the
+  quantity and the binning variable are both named; a reader comparing against
+  the project's standard figures will use THEIR conventions, not yours.
+  (2) When a bespoke analysis and the standard QA figures appear to disagree,
+  that is a lead worth chasing rather than a discrepancy to reconcile away —
+  here the disagreement located the actual defect, which neither view had
+  identified on its own.
