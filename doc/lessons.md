@@ -980,3 +980,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   that is a lead worth chasing rather than a discrepancy to reconcile away —
   here the disagreement located the actual defect, which neither view had
   identified on its own.
+- **Regression to the mean in binned profile QA is RADIUS-DEPENDENT, and a
+  blanket warning about it is wrong in both directions (exp53).** Binning by
+  the TRUTH stellar mass and comparing against a conditional-mean model tilts
+  the residual by `(slope - 1)` dex per dex of bin separation, where
+  `slope = r * sigma_model/sigma_truth`. Measured on the exp53 kernel at
+  z = 0.4: the slope is **0.79 at `M(<5 kpc)`** — a severe artifact, and the
+  stellar-mass and halo-mass binnings there disagree in SIGN (+0.022 against
+  -0.016) — but **1.03 at `M(<148)`**, where it is negligible because the
+  `M(<500)` normalization pins the total to the truth per galaxy and leaves
+  almost no scatter to dilute (`r` = 0.997). So the caution belongs on the
+  INNER profile only; applying it to the outer profile would have wrongly
+  discounted a real 9-percentage-point halo-mass tilt that survives in both
+  binnings. **The general habit**: before invoking regression to the mean as a
+  reason to distrust a binned trend, compute the model-on-truth slope for THAT
+  quantity — it is two lines, it bounds the artifact exactly, and a
+  normalization that pins the quantity per object can defeat the mechanism
+  entirely.

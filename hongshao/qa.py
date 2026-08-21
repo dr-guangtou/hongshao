@@ -449,7 +449,13 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
       an observed, mass-selected sample would give, so it is what a reader
       compares against published profiles — but for any conditional-mean model
       it converts unexplained amplitude scatter into apparent bin-wise bias, and
-      the figure is annotated to say so.
+      the figure is annotated to say so. The artifact is RADIUS-DEPENDENT and
+      was measured in exp53: the model-on-truth slope is 0.79 at ``M(<5)``
+      (where the two binnings disagree in SIGN) but 1.03 at ``M(<148)``,
+      because the ``M(<500)`` normalization pins the total per galaxy and
+      leaves almost no scatter to dilute (r = 0.997). So an inner-radius trend
+      in the stellar-mass view needs checking against the halo-mass view; an
+      outer-radius one is largely safe.
     """
     set_style()
     model_cogs, data_cogs = np.asarray(model_cogs), np.asarray(data_cogs)
@@ -946,12 +952,17 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
                  "(data solid, model dashed)", fontsize=12)
     if caveat:
         fig.text(0.5, 0.005,
-                 "Binned by TRUTH stellar mass: for a conditional-mean model "
-                 "this converts unexplained amplitude scatter into apparent "
-                 "bin-wise bias (regression to the mean). "
-                 "Compare with the halo-mass-binned figure before reading a "
-                 "trend as a model defect.",
-                 ha="center", va="bottom", fontsize=7.5, style="italic",
+                 "Binned by TRUTH stellar mass: selecting on the noisy "
+                 "quantity tilts the residual by (slope$-$1) dex/dex, where "
+                 "slope $= r\\,\\sigma_{model}/\\sigma_{truth}$ "
+                 "(regression to the mean). RADIUS-DEPENDENT: strongest at "
+                 "small R where the model has predictive freedom (measured "
+                 "slope 0.79 at $M(<5)$, where this view and the halo-mass "
+                 "view disagree in SIGN), and negligible at large R where the "
+                 "$M(<500)$ normalization pins the total to the truth "
+                 "($r=0.997$). Check the halo-mass-binned figure before "
+                 "reading an inner-radius trend as a model defect.",
+                 ha="center", va="bottom", fontsize=7.0, style="italic",
                  color="0.35")
         fig.tight_layout(rect=(0, 0.035, 1, 1))
     else:
