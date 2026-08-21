@@ -113,14 +113,21 @@ class Spec:
 
     # -- layout ----------------------------------------------------------- #
     @property
+    def shape_names(self):
+        """Tuple of free shape-parameter names (empty for expo/gauss; TWO for
+        richards, which is why this is a tuple rather than one slot)."""
+        return families.shape_names(self.family)
+
+    @property
     def shape_name(self):
-        return families.SHAPE[self.family][0]
+        """First shape name, or None. Kept for callers that assume one."""
+        nm = self.shape_names
+        return nm[0] if nm else None
 
     @property
     def theta_names(self):
         names = ["log_R50", "g"] + (["q"] if self.q_free else []) + ["mu", "sig"]
-        if self.shape_name:
-            names.append(self.shape_name)
+        names += list(self.shape_names)
         return names + ["R50:logMh", "R50:c200c", "R50:fz2",
                         "sig:logMh", "sig:c200c", "sig:fz2"]
 
@@ -135,8 +142,7 @@ class Spec:
         if self.q_free:
             b.append(BASE_BOX["q"])
         b += [BASE_BOX["mu"], BASE_BOX["sig"]]
-        if self.shape_name:
-            b.append(families.shape_bounds(self.family))
+        b += list(families.shape_bounds(self.family))
         return b + [(None, None)] * 6
 
     @property
@@ -164,11 +170,11 @@ class Spec:
             q = self.q_fixed
         mu, sig = theta[i], theta[i + 1]
         i += 2
-        shape = None
-        if self.shape_name:
-            lo, hi = families.shape_bounds(self.family)
-            shape = float(np.clip(theta[i], lo + 1e-9, hi))
+        shp = []
+        for lo, hi in families.shape_bounds(self.family):
+            shp.append(float(np.clip(theta[i], lo + 1e-9, hi)))
             i += 1
+        shape = tuple(shp) if shp else None
         log_r50 = np.clip(log_r50 + theta[i:i + 3] @ cond,
                           -LOG_R50_GUARD, LOG_R50_GUARD)
         sig = sig + theta[i + 3:i + 6] @ cond
@@ -326,6 +332,11 @@ def demo():
     assert Spec("gauss", True).n_theta == 11
     assert Spec("gauss", False).n_theta == 10
     assert Spec("sersic", True).theta_names[5] == "n"
+    # richards carries TWO shape parameters — the reason Spec had to generalize
+    assert Spec("richards", True).n_theta == 13
+    assert Spec("richards", False).n_theta == 12
+    assert Spec("richards", True).theta_names[5:7] == ["k", "nu"]
+    assert Spec("gompertz_log", False).n_theta == 11
 
     # (1) EQUIVALENCE, the load-bearing check: exp53's moffat kernel with the
     #     translated theta reproduces exp38's ADOPTED kernel on real galaxies.
@@ -405,8 +416,8 @@ def demo():
             if q_free:
                 t[i], i = 0.9, i + 1                 # q
             t[i], t[i + 1] = 1.53, 0.35              # mu, sig
-            if sp.shape_name:
-                t[i + 2] = families.SHAPE[fam][2]
+            for m, v in enumerate(families.shape_defaults(fam)):
+                t[i + 2 + m] = v
             c = model_cogs(sp, t, gals[1], KS)
             assert c is not None, sp.label
             for k, ck in zip(KS, c):

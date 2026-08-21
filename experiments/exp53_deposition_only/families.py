@@ -45,14 +45,31 @@ from __future__ import annotations
 import numpy as np
 from scipy.special import gammainc, gammaincinv
 
-#: family -> (shape parameter name, box, default) ; None = no shape parameter
+#: family -> tuple of (shape parameter name, box, default). Empty tuple = no
+#: free shape parameter. `richards` carries TWO, which is why this is a list
+#: rather than the single slot the first version used.
 SHAPE = {
-    "moffat": ("gam", (1.05, 6.0), 1.3771),
-    "sersic": ("n", (0.25, 8.0), 2.5),
-    "expo": (None, None, 1.0),
-    "gauss": (None, None, 0.5),
+    "moffat": (("gam", (1.05, 6.0), 1.3771),),
+    "sersic": (("n", (0.25, 8.0), 2.5),),
+    "expo": (),
+    "gauss": (),
+    # --- the generalized-sigmoid family (exp48/gompertz.py), in R50 form --- #
+    "gompertz_log": (("c", (0.2, 8.0), 1.2),),
+    "loglogistic": (("k", (0.2, 8.0), 1.2),),
+    "richards": (("k", (0.2, 8.0), 1.2), ("nu", (0.02, 12.0), 0.5)),
 }
 FAMILIES = tuple(SHAPE)
+#: families whose CoG is defined directly, not via a native scale parameter
+SIGMOIDS = ("gompertz_log", "loglogistic", "richards")
+
+
+def _as_tuple(shape):
+    """Normalize a shape argument to a tuple (scalar and None both accepted)."""
+    if shape is None:
+        return ()
+    if np.isscalar(shape):
+        return (float(shape),)
+    return tuple(float(v) for v in shape)
 
 
 def _sersic_index(family, shape):
@@ -61,7 +78,7 @@ def _sersic_index(family, shape):
         return 1.0
     if family == "gauss":
         return 0.5
-    return float(shape)
+    return float(_as_tuple(shape)[0])
 
 
 def scale_from_r50(family, r50, shape):
@@ -71,8 +88,11 @@ def scale_from_r50(family, r50, shape):
     parameter. Returns an array of the same shape as ``r50``.
     """
     r50 = np.asarray(r50, float)
+    if family in SIGMOIDS:
+        raise ValueError(f"{family} has no native scale parameter; it is "
+                         f"defined directly in R50 (see cog_unit)")
     if family == "moffat":
-        gam = float(shape)
+        gam = float(_as_tuple(shape)[0])
         if gam <= 1.0:
             raise ValueError(f"moffat needs gam > 1 for finite mass, got {gam}")
         # 1 - (1+x50^2)^(1-gam) = 1/2  ->  x50 = sqrt(2^(1/(gam-1)) - 1)
@@ -94,10 +114,35 @@ def cog_unit(family, r50, shape, Rgrid):
     """
     r50 = np.atleast_1d(np.asarray(r50, float))
     Rgrid = np.asarray(Rgrid, float)
+    sh = _as_tuple(shape)
+
+    if family in SIGMOIDS:
+        # Sigmoids in log R. Each is written so that R50 IS the half-mass
+        # radius by construction, which is what makes `log_R50` the same
+        # physical coordinate here as for moffat/sersic.
+        #   gompertz_log  M = exp(-ln2 (R/R50)^-c)
+        #   loglogistic   M = X/(1+X),  X = (R/R50)^k
+        #   richards      M = (1 + nu Y)^(-1/nu),  Y = (R/lam)^-k,
+        #                 lam = R50 ((2^nu - 1)/nu)^(1/k)
+        #                 -> nu->0 gives gompertz_log, nu=1 gives loglogistic
+        u = Rgrid[:, None] / r50[None, :]
+        if family == "gompertz_log":
+            c = sh[0]
+            return np.exp(-np.log(2.0) * np.exp(
+                np.clip(-c * np.log(u), -700.0, 700.0)))
+        if family == "loglogistic":
+            k = sh[0]
+            X = np.exp(np.clip(k * np.log(u), -700.0, 700.0))
+            return X / (1.0 + X)
+        k, nu = sh[0], sh[1]
+        lam_fac = ((2.0 ** nu - 1.0) / nu) ** (1.0 / k)
+        Y = np.exp(np.clip(-k * np.log(u / lam_fac), -700.0, 700.0))
+        return (1.0 + nu * Y) ** (-1.0 / nu)
+
     s = scale_from_r50(family, r50, shape)
     x = Rgrid[:, None] / s[None, :]
     if family == "moffat":
-        return 1.0 - (1.0 + x ** 2) ** (1.0 - float(shape))
+        return 1.0 - (1.0 + x ** 2) ** (1.0 - sh[0])
     n = _sersic_index(family, shape)
     return gammainc(2.0 * n, x ** (1.0 / n))
 
@@ -108,15 +153,23 @@ def cog(family, dM, r50, shape, Rgrid):
     return (dM[None, :] * cog_unit(family, r50, shape, Rgrid)).sum(1)
 
 
+def shape_names(family):
+    return tuple(e[0] for e in SHAPE[family])
+
+
 def shape_bounds(family):
-    """``(lo, hi)`` for the family's shape parameter, or ``None``."""
-    return SHAPE[family][1]
+    """Tuple of ``(lo, hi)`` per shape parameter (possibly empty)."""
+    return tuple(e[1] for e in SHAPE[family])
+
+
+def shape_defaults(family):
+    return tuple(e[2] for e in SHAPE[family])
 
 
 def n_params(family, q_free=True):
-    """Parameter count: base + shape? + q? + 6 conditioning slopes."""
+    """Parameter count: base + shape(s) + q? + 6 conditioning slopes."""
     base = 5 if q_free else 4          # log_R50, g, [q], mu, sig
-    return base + (1 if SHAPE[family][0] else 0) + 6
+    return base + len(SHAPE[family]) + 6
 
 
 # --------------------------------------------------------------------------- #
@@ -150,7 +203,11 @@ def demo():
     worst = 0.0
     for fam, shapes in (("moffat", [1.06, 1.3771, 2.0, 4.0, 6.0]),
                         ("sersic", [0.3, 0.5, 1.0, 2.5, 4.0, 8.0]),
-                        ("expo", [None]), ("gauss", [None])):
+                        ("expo", [None]), ("gauss", [None]),
+                        ("gompertz_log", [0.4, 1.2, 3.0, 8.0]),
+                        ("loglogistic", [0.4, 1.2, 3.0, 8.0]),
+                        ("richards", [(0.4, 0.05), (1.2, 0.5), (1.2, 1.0),
+                                      (3.0, 5.0), (8.0, 12.0)])):
         for sh in shapes:
             for target in (0.5, 3.0, 30.0, 300.0):
                 m = cog(fam, one, np.array([target]), sh, rr)
@@ -197,9 +254,36 @@ def demo():
         ref = _num_cog_from_sigma(sig_moffat, R)
         assert np.abs(cog("moffat", dM, r50, gam, R) - ref).max() < 2e-3
 
+    # (4b) THE RICHARDS NESTING, which is why it is the efficient entry point
+    #      to the sigmoid family: nu -> 0 recovers gompertz_log and nu = 1
+    #      recovers loglogistic EXACTLY, so the fitted nu measures which
+    #      sigmoid the data want instead of assuming one.
+    Rn = np.geomspace(0.5, 500.0, 400)
+    one1 = np.array([1.0])
+    r1 = np.array([20.0])
+    err = np.abs(cog("richards", one1, r1, (1.3, 1.0), Rn)
+                 - cog("loglogistic", one1, r1, 1.3, Rn)).max()
+    assert err < 1e-12, f"richards(nu=1) != loglogistic: {err:.2e}"
+    err = np.abs(cog("richards", one1, r1, (1.3, 1e-7), Rn)
+                 - cog("gompertz_log", one1, r1, 1.3, Rn)).max()
+    assert err < 1e-6, f"richards(nu->0) != gompertz_log: {err:.2e}"
+
+    # (4c) the sigmoids' TAILS, which is what the outskirt test cares about:
+    #      gompertz_log and loglogistic are power laws outside, gompertz_lin
+    #      is not represented here because it has no power-law tail at all
+    beyond_s = {}
+    for lab, fam, sh in (("gompertz_log c=1.2", "gompertz_log", 1.2),
+                         ("loglogistic k=1.2", "loglogistic", 1.2),
+                         ("moffat 1.38", "moffat", 1.3771)):
+        beyond_s[lab] = 1.0 - cog(fam, one1, np.array([30.0]), sh,
+                                  np.array([120.0]))[0]
+    assert all(v > 0.01 for v in beyond_s.values()), beyond_s
+
     # (5) monotone, mass-conserving, finite everywhere
     for fam, sh in (("moffat", 1.3771), ("sersic", 4.0), ("sersic", 0.4),
-                    ("expo", None), ("gauss", None)):
+                    ("expo", None), ("gauss", None),
+                    ("gompertz_log", 1.2), ("loglogistic", 1.2),
+                    ("richards", (1.2, 0.5))):
         m = cog(fam, dM, r50, sh, R)
         assert np.isfinite(m).all() and np.all(np.diff(m) > -1e-15), (fam, sh)
         assert abs(cog(fam, dM, r50, sh, far)[0] - dM.sum()) < 1e-6, (fam, sh)
@@ -234,7 +318,11 @@ def demo():
           "brute-force integration; at matched R50 the mass beyond 4 R50 is "
           + ", ".join(f"{k} {100*v:.1f}%" for k, v in beyond.items())
           + f"; the degeneracy the old coordinates carried: at fixed a=1, n "
-          f"0.5->8 moves R50 by {span_old:.0f}x")
+          f"0.5->8 moves R50 by {span_old:.0f}x.\n  SIGMOID family in: "
+          f"richards nests loglogistic EXACTLY at nu=1 and gompertz_log in the "
+          f"nu->0 limit, so its fitted nu measures which sigmoid the data "
+          f"want; mass beyond 4 R50 is "
+          + ", ".join(f"{k} {100*v:.1f}%" for k, v in beyond_s.items()))
 
 
 if __name__ == "__main__":

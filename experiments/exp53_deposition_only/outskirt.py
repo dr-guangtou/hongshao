@@ -129,8 +129,10 @@ def main(cells=None, nboot=NBOOT, dev=False):
 
     edges = np.quantile(logms, [0, 1 / 3, 2 / 3, 1])
     massive = logms >= edges[2]
+    t1 = logms < edges[1]
+    t2 = (logms >= edges[1]) & (logms < edges[2])
     bins = [("all", np.ones(len(gals), bool)),
-            ("T3 massive", massive)]
+            ("T1 low-mass", t1), ("T2 mid", t2), ("T3 massive", massive)]
     print(f"exp53 — THE OUTSKIRT TEST  (n={len(gals)}, {massive.sum()} in the "
           f"massive tercile logM* >= {edges[2]:.2f})")
     print(f"  {nboot} galaxy bootstraps; CIs are 95%. All annuli lie inside "
@@ -167,8 +169,8 @@ def main(cells=None, nboot=NBOOT, dev=False):
                     v = d[sel, j]
                     med, lo_ci, hi_ci = _boot_median(v, nboot)
                     sc = np.nanpercentile(v, 84) - np.nanpercentile(v, 16)
-                    cells_txt.append(f"{med:+.3f}[{lo_ci:+.3f},{hi_ci:+.3f}]"
-                                     f" s{sc:.2f}")
+                    pct = 100.0 * (10.0 ** med - 1.0)
+                    cells_txt.append(f"{med:+.3f}={pct:+.0f}% s{sc:.2f}")
                 tag = "  (incumbent)" if nm == BASELINE else ""
                 print(f"    {nm + tag:<16}" + "".join(
                     f"{c:>22}" for c in cells_txt))

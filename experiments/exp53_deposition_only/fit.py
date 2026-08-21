@@ -83,9 +83,10 @@ def project(spec, theta_moffat_qfree):
     t = np.asarray(theta_moffat_qfree, float)
     log_r50, gg, q, mu, sig = t[0], t[1], t[2], t[3], t[4]
     out = [log_r50, gg] + ([q] if spec.q_free else []) + [mu, sig]
-    if spec.shape_name:
-        out.append(families.SHAPE[spec.family][2] if spec.family != "moffat"
-                   else t[5])
+    if spec.family == "moffat":
+        out.append(t[5])                       # carry the fitted gamma across
+    else:
+        out.extend(families.shape_defaults(spec.family))
     return _clip(spec, np.asarray(out + list(t[6:]), float))
 
 
@@ -205,6 +206,18 @@ def qprofile_cells():
     return [(sp.label, sp) for sp in specs]
 
 
+#: The generalized-sigmoid family, added 2026-08-21 after the user pointed out
+#: it kept being noted and never run. DEPOSITION-ONLY only (`q` = 0), which is
+#: this branch's scope. `richards` nests the other two, so its fitted `nu`
+#: measures which sigmoid the data want rather than assuming one.
+SIGMOID_CELLS = ("gompertz_log", "loglogistic", "richards")
+
+
+def sigmoid_cells():
+    return [(K.Spec(f, q_free=False, q_fixed=0.0).label,
+             K.Spec(f, q_free=False, q_fixed=0.0)) for f in SIGMOID_CELLS]
+
+
 def shootout_cells():
     """Stage B: every family at `q = 0` and at `q` free.
 
@@ -222,7 +235,7 @@ def shootout_cells():
 def all_cells():
     """The union, de-duplicated, in run order: stage A first."""
     seen, out = set(), []
-    for name, spec in qprofile_cells() + shootout_cells():
+    for name, spec in qprofile_cells() + shootout_cells() + sigmoid_cells():
         if name not in seen:
             seen.add(name)
             out.append((name, spec))
@@ -231,7 +244,7 @@ def all_cells():
 
 # --------------------------------------------------------------------------- #
 CELL_LISTS = dict(main=all_cells, qprofile=qprofile_cells,
-                  shootout=shootout_cells)
+                  shootout=shootout_cells, sigmoid=sigmoid_cells)
 
 
 def _setup(dev):
@@ -323,7 +336,7 @@ if __name__ == "__main__":
                          text=True, cwd=ROOT).stdout.strip()
     print(f"# git {sha[:10]}  stage={stage}  dev={dev}  shard={shard}",
           flush=True)
-    if stage in ("main", "qprofile", "shootout"):
+    if stage in ("main", "qprofile", "shootout", "sigmoid"):
         run_stage(stage, dev, shard, hours, only)
     elif stage == "summary":
         summarize("main", dev)

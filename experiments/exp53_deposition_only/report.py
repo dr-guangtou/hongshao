@@ -235,7 +235,20 @@ def cmd_table(stage, dev=False, verbose=False):
 #: the deposition-only family set plus the adopted baseline, for the standard
 #: QA battery. `moffat-qfree` is included so every QA figure has the incumbent
 #: to read against; it is NOT a deposition-only model.
-QA_CELLS = ("moffat-q0", "sersic-q0", "expo-q0", "gauss-q0", "moffat-qfree")
+QA_CELLS = ("moffat-q0", "sersic-q0", "expo-q0", "gauss-q0",
+            "gompertz_log-q0", "loglogistic-q0", "richards-q0",
+            "moffat-qfree")
+#: cross-family figures (the q profile, the kernel comparisons) live here; the
+#: per-family QA sets live in `figures/<family>/`. Fifty-plus QA figures in one
+#: flat directory is unreviewable, and the family is the axis a reader compares
+#: along.
+OVERVIEW_DIR = "_overview"
+
+
+def family_figdir(family):
+    d = FIGDIR / family
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 
 def cmd_qa(dev=False, cells=None, stage="main"):
@@ -270,14 +283,16 @@ def cmd_qa(dev=False, cells=None, stage="main"):
             continue
         theta, loss, sname = b
         cogs = K.population_cogs(spec, theta, gals, KS_ALL)
+        fdir = family_figdir(spec.family)
         print(f"\n{'=' * 78}\nexp53 STANDARD QA — {name} "
               f"({spec.n_theta} parameters, loss {loss:.6f}, best start "
               f"'{sname}')\n"
               f"  {'DEPOSITION ONLY (q = 0)' if not spec.q_free else 'q free'}"
               f" | fitted on z <= 1.5, SCORED at all five epochs\n{'=' * 78}")
+        print(f"  figures -> {fdir.relative_to(ROOT)}")
         out[name] = qa.evaluate(cogs, data, e.R, K.ANCHOR_Z,
                                 name=f"exp53_{name}{'_dev' if dev else ''}",
-                                figdir=FIGDIR, figures=True, bin_by=logmh,
+                                figdir=fdir, figures=True, bin_by=logmh,
                                 bin_label="logMh")
     return out
 
@@ -368,8 +383,9 @@ def fig_qprofile(keep, rows, tag):
                  "parameter re-optimized at each point). Top: what the fit "
                  "spends. Bottom: what the loss cannot see.", fontsize=12)
     fig.tight_layout()
-    FIGDIR.mkdir(exist_ok=True)
-    print("wrote", save_fig(fig, FIGDIR / f"exp53_qprofile{tag}")[0])
+    od = FIGDIR / OVERVIEW_DIR
+    od.mkdir(parents=True, exist_ok=True)
+    print("wrote", save_fig(fig, od / f"exp53_qprofile{tag}")[0])
 
 
 def fig_kernels(keep, e, tag, stage):
@@ -441,8 +457,9 @@ def fig_kernels(keep, e, tag, stage):
                  f"stack (exp38 stage 0.2 operator). Grey band: $\\pm$0.1 dex. "
                  f"Solid $q$ free, dashed $q=0$.", fontsize=11)
     fig.tight_layout(rect=(0, 0, 0.84, 1))
-    FIGDIR.mkdir(exist_ok=True)
-    print("wrote", save_fig(fig, FIGDIR / f"exp53_kernels_{stage}{tag}")[0])
+    od = FIGDIR / OVERVIEW_DIR
+    od.mkdir(parents=True, exist_ok=True)
+    print("wrote", save_fig(fig, od / f"exp53_kernels_{stage}{tag}")[0])
 
 
 if __name__ == "__main__":
