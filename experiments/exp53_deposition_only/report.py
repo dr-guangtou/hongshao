@@ -201,6 +201,9 @@ def print_table(rows, title):
 # --------------------------------------------------------------------------- #
 def cmd_table(stage, dev=False, verbose=False):
     gals, e, logms, logmh, data = _setup(dev)
+    # pass the CATALOGUE total stellar mass rather than letting qa fall back to
+    # the CoG's outermost point, so the stellar-mass binning matches the one
+    # exp53's own outskirt analysis uses
     done = R53._load(R53._store(stage, dev))
     cells = (R53.qprofile_cells() if stage == "qprofile"
              else R53.shootout_cells())
@@ -293,7 +296,8 @@ def cmd_qa(dev=False, cells=None, stage="main"):
         out[name] = qa.evaluate(cogs, data, e.R, K.ANCHOR_Z,
                                 name=f"exp53_{name}{'_dev' if dev else ''}",
                                 figdir=fdir, figures=True, bin_by=logmh,
-                                bin_label="logMh")
+                                bin_label="logMh", bin_by_ms=logms,
+                                ms_label="logM$_*$ (total)")
     return out
 
 
