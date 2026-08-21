@@ -204,18 +204,48 @@ deposit profile, which is more actionable than "the model redistributes".
 Six cells converged at a bound. `rail_check.py` refits each with that bound
 widened, from the railed fit and from a point nudged past the old wall.
 
-- **`mu` = 5.0 on the DEPOSITION-ONLY cells is BENIGN.** `sersic-q0` widened to
-  `mu <= 12` gains 0.054% of the loss and one start settles at `mu` = 8.3 with
-  the same loss. Design constraint 2 is satisfied: the efficiency window was
-  effectively free.
-- **`log_R50` = 3.5 on the light-tailed q-free cells is NOT benign, and it does
-  not stop.** All three escape 3.5 and immediately rail at the NEW bound of
-  5.0, gaining 0.4% (sersic), 1.6% (expo), 2.6% (gauss). **The deposit scale is
-  UNIDENTIFIED for every family except the Moffat**, which is interior at 3.266
-  — the exp36 Gaussian rail, alive in three new families.
-  And with the box widened the three converge to nearly the same loss
-  (0.156133 / 0.156156 / 0.156216): **once the scale is free to rail, the
-  family comparison collapses**, because "every deposit at the 300 kpc ceiling"
-  is the same model whatever profile shape you hang on it. That is a mechanism
-  for exp48's "the profile does not matter", and it means a family shootout is
-  only meaningful with the deposit scale pinned.
+| cell | rail | widened to | loss gain | escapes? |
+|---|---|---|---|---|
+| moffat-q0 | `mu` 5.0 | 12 | +0.024% | rails again at 12 |
+| sersic-q0 | `mu` 5.0 | 12 | +0.054% | rails again at 12 |
+| moffat-q1.2 | `log_R50` 3.5 | 5 | +0.011% | **yes — settles at 3.626, INTERIOR** |
+| sersic-qfree | `log_R50` 3.5 | 5 | +0.369% | no — rails again at 5.0 |
+| expo-qfree | `log_R50` 3.5 | 5 | **+1.585%** | no — rails again at 5.0 |
+| gauss-qfree | `log_R50` 3.5 | 5 | **+2.643%** | no — rails again at 5.0 |
+
+**(a) The `mu` rail on the DEPOSITION-ONLY cells is benign** (0.02-0.05% of the
+loss). Design constraint 2 is satisfied: the efficiency window was effectively
+free, so the stage-A result stands as reported.
+
+**(b) The Moffat is the only family whose deposit scale is IDENTIFIED.**
+`moffat-qfree` is interior at `log_R50` = 3.266 and `moffat-q1.2` escapes its
+rail to a finite 3.626. Every other family rails again at whatever bound it is
+given.
+
+**(c) The other three families' deposit scale is UNIDENTIFIED, and the loss
+gain understates it.** The verdict threshold reads `sersic-qfree` as benign at
++0.369%, and in loss terms it is — but it still rails at the new bound, which
+means the objective simply *does not constrain the deposit scale from above*
+for a light-tailed deposit. That is the sharper statement: not "the box chose
+the answer" but "nothing chooses the answer". (exp49 found the same thing from
+the other side: the Mpc deposit tail is unconstrained slack.)
+
+**(d) Once the scale is free to rail, the family comparison COLLAPSES.**
+Widened, the three converge to 0.156131 (sersic) / 0.156156 (expo) / 0.156214
+(gauss) — indistinguishable — while the Moffat sits clearly better at 0.153577
+with an interior scale. "Every deposit at the 300 kpc ceiling" is the same
+model whatever profile shape is hung on it. **This is a mechanism for exp48's
+"the profile does not matter"**: it does not matter *because* the scale runs
+away, and a family shootout is only meaningful with the deposit scale pinned.
+
+**(e) The widened fits are physically absurd and should not be adopted.**
+`log_R50` = 5.0 means a deposit half-mass radius of 100 Mpc before the 300 kpc
+ceiling clips it — i.e. every deposit pinned at the ceiling. The loss prefers
+this; no physical process produces it. The `R50_CAP` is doing all the work in
+those cells, which is an argument for a *lower*, physically motivated ceiling
+rather than a wider box.
+
+Caveat: `gauss-qfree` and `sersic-qfree` each hit the 2500-evaluation cap on
+their nudged start (flagged in the logs). Both starts agree to <= 2e-6 in each
+case, so the conclusion is unaffected, but those two widened losses are not
+fully converged.
