@@ -1065,6 +1065,11 @@ Cross-experiment plan. Mirrors the phase sequence in
   - **Explains the exp47/exp48 compact-galaxy central deficit**: with deposition
     off, filling an outskirt requires emptying the centre. z=1.0-0.4 model/truth
     growth M(<10) = **57.3%** against M[50,100] = 98.9%.
+    **CORRECTED 2026-08-21 (found in exp53): M(<10) is 0.726, not 0.573.**
+    `decompose.py` divided the model's APERTURE growth by the truth's ANNULUS
+    growth (`np.interp(0.0, R, cog)` clamps to the CoG at 2 kpc, not zero).
+    The finding survives at 27% rather than 43%; M[50,100] and every transport
+    share are unaffected.
   - **RIGHT SOURCE, ~10x TOO MUCH REACH** (user's framing, and the actionable
     part). Adiabatic expansion from AGN feedback is well grounded but FLATTENS
     the inner profile; it does not build the stellar halo. Measured: 93.1% of

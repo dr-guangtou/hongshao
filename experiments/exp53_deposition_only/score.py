@@ -200,7 +200,9 @@ def growth_ratio(cogs, data_cogs, R, ks, pair, lo, hi):
     """Population-summed model growth / truth growth in an aperture or annulus.
 
     exp52's headline central-deficit statistic: for `M(<10)` over z=1.0->0.4 it
-    measured 57.3% for the adopted kernel against 98.9% for `M[50,100]`. A
+    measured 0.726 for the adopted kernel against 0.989 for `M[50,100]` (its
+    README quotes 0.573 for the first; that value carried an aperture/annulus
+    mismatch corrected in exp53 -- see `exp52/decompose.py::_enc`). A
     value of 1.0 means the model grows that region at the truth's rate.
     `pair` is ``(earlier k, later k)`` in ABSOLUTE epoch indices.
     """
@@ -235,6 +237,14 @@ def deposit_reach(spec, theta, gals, radii=(50.0, 148.0, 500.0),
     radius. Returns the beyond-R fractions, the mass-weighted median deposit
     R50, and the mass fraction sitting AT the `R50_CAP` ceiling (a large value
     means the ceiling is load-bearing rather than free).
+
+    **Definition, which must be quoted with the number**: the beyond-R fraction
+    is DEPOSIT-MASS-WEIGHTED and summed over the population -- each galaxy's
+    weights sum to ~1, so it is close to an equal-galaxy mean and is NOT the
+    median per galaxy. At z=0.4 the three natural definitions differ
+    materially: for `moffat-qfree`, 4.00% (median per galaxy) / 4.95%
+    (equal-galaxy mean) / 6.94% (absolute-deposit-weighted). Ranking across
+    families is robust to the choice; the value is not.
     """
     import families
     e = s2._W["e"]
