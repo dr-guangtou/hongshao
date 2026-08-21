@@ -83,6 +83,7 @@ galaxies.
 | `rail_check.py` | refits any cell that converged at a bound, with the bound widened; BENIGN / LOAD-BEARING verdict |
 | `outskirt.py` | the stellar-halo test: annuli and apertures, 2000 galaxy bootstraps, **paired** per-galaxy comparison, `--by logmh\|logms` |
 | `headtohead.py` | every judged metric scored by **distance to target** |
+| `pinning.py` | audits the `M(<500)` normalization: extrapolated fraction, restored over-reach, and the unscored mass-assembly prediction |
 | `report.py` | verdict tables, kernel figures, and the standard QA battery per family |
 
 **The R50 reparameterization.** exp38 rejected Sersic for an "n-scale
@@ -207,6 +208,67 @@ growth (`np.interp(0.0, R, cog)` clamps to the CoG at 2 kpc rather than
 returning zero). **`M(<10)` model/truth growth is 0.726, not 0.573.** exp52's
 qualitative finding survives at 27% rather than 43%; its transport shares are
 unaffected. Fixed, re-run, and locked out by assertions.
+
+## 5.6 The `M(<500)` pinning, audited — and a result nothing else could see
+
+Raised by the user (2026-08-22). `pinning.py` audits it. The normalization was
+introduced in exp35 to close the aperture-horizon trap, and it does that — but
+EVERY judged metric in this program operates on POST-normalization profiles, so
+three consequences are structurally invisible.
+
+**(a) The pinned quantity is partly extrapolated.** The measured CoG ends at
+148 kpc; `M(<500)` is an exp34 power-law tail evaluated at 500 kpc. The
+fraction beyond the last measured radius is 7.2% (median) at z = 0.4, with a
+16-84 range of 3.5-14.4%, falling to 1.0% at z = 2.
+
+**(b) Mass thrown out of the aperture is silently restored.** The kernel is not
+charged for over-reaching: whatever lands beyond 500 kpc is discarded and the
+rest scaled back up. Inflation factor at z = 0.4: `moffat-q0` 1.071,
+`gompertz_log-q0` 1.057, `moffat-qfree` 1.042, `sersic-q0` 1.005.
+
+**(c) THE BIG ONE — the kernel carries no absolute stellar mass at all, and its
+mass-assembly history is a free, unscored prediction that it gets badly
+wrong.** `dM` is normalized to sum to 1 by construction, so 100% of the stellar
+mass and 100% of the mass GROWTH come from the pinned value. What the model
+does predict is the fraction of its lifetime deposits in place inside 500 kpc
+by each epoch. Against the truth's growth, both relative to z = 2:
+
+| | z=2.0 | z=1.5 | z=1.0 | z=0.7 | z=0.4 | correction the pinning must apply |
+|---|---|---|---|---|---|---|
+| **TRUTH `M(<500)`** | 1.000 | 1.340 | 1.831 | 2.204 | **2.647** | — |
+| moffat-qfree (fiducial) | 1.000 | 1.162 | 1.241 | 1.252 | **1.248** | **+0.327 dex** |
+| moffat-q0 | 1.000 | 1.465 | 2.124 | 2.622 | 3.188 | -0.081 dex |
+| gompertz_log-q0 | 1.000 | 1.465 | 2.122 | 2.617 | 3.179 | **-0.080 dex** |
+| richards-q0 | 1.000 | 1.478 | 2.163 | 2.688 | 3.289 | -0.094 dex |
+| sersic-q0 | 1.000 | 1.489 | 2.199 | 2.750 | 3.388 | -0.107 dex |
+
+**The fiducial's own accumulation grows x1.25 where the truth grows x2.65 — the
+pinning supplies a factor of 2.1, more than half the mass growth. Every
+deposition-only model is within 0.03-0.11 dex, a 3-11x smaller correction.**
+
+This is the strongest argument in exp53's record FOR deposition-only, and no
+judged metric saw it, because the fit never sees the un-normalized
+accumulation. It is also consistent: a model that transports rather than
+deposits should under-assemble, and one that only deposits should not.
+
+**Assessment of the pinning.** It buys a real thing (the aperture-horizon trap
+stays closed) and it separates shape from the SHMR normalization, which is a
+legitimate division of labour. But it is stronger than "a normalization": it
+supplies the entire stellar mass AND the entire mass growth, it pins to a
+partly-extrapolated quantity, it rewards over-reach, and it conceals a factor-2
+error in the incumbent's mass assembly. **The claim "predicting stellar-mass
+distributions from halo properties" is only half-earned under it** — the model
+predicts the radial distribution, not the mass.
+
+Options, in increasing order of disruption:
+1. **Score the accumulation** as a standard diagnostic. Free — `pinning.py`
+   already computes it — and it would have flagged the incumbent's factor of 2.
+2. **Pin to `M(<148)` instead**, the outermost MEASURED radius, as a robustness
+   check. Removes the extrapolation; keeps everything else.
+3. **Soft pinning**: fit a population amplitude law and penalize deviation from
+   it, so the mass assembly becomes a scored prediction rather than an input.
+4. **Predict the total** from the halo (a genuine SHMR leg). Most honest, most
+   work, and couples two problems that exp35 deliberately separated.
 
 ## 6. Where the record lives
 

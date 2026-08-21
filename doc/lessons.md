@@ -997,3 +997,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   quantity — it is two lines, it bounds the artifact exactly, and a
   normalization that pins the quantity per object can defeat the mechanism
   entirely.
+- **A per-object normalization can hide a factor-2 error in the thing the model
+  is supposed to predict — audit what it supplies (exp53, user's question).**
+  Every kernel in this program pins `M(<500 kpc)` per galaxy per epoch to the
+  truth, and every judged metric operates on the POST-normalization profiles.
+  So nothing scored the model's own mass ASSEMBLY. Measured: the deposit
+  weights sum to 1 by construction, so 100% of the stellar mass and 100% of the
+  mass growth come from the pinned value, and the incumbent's own accumulation
+  grows x1.25 from z=2 to z=0.4 where the truth grows **x2.65** — the pinning
+  silently supplies a factor of **2.1**, more than half the growth. Every
+  deposition-only variant is within 0.03-0.11 dex of the truth's assembly, a
+  3-11x smaller correction, which is the strongest argument for them in the
+  whole experiment and was invisible to all thirteen judged metrics.
+  **The habit**: for any normalization, pinning, or per-object rescaling, write
+  down explicitly what it SUPPLIES and then score that quantity separately. It
+  is usually free — the un-normalized prediction is already computed — and it
+  is exactly where a model can be most wrong while looking fine, because the
+  normalization is applied before anything measures it.
