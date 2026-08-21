@@ -911,3 +911,36 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   radial operator — both tested, both innocent) took three probes, while
   asking "what do M(<10) and M[50,100] not share" would have pointed at `r_in`
   first.
+- **A boundary test can PASS on the slice and FAIL under profiling — and the
+  difference is the whole result (exp53).** exp52 predicted that removing the
+  kernel's transport term would improve central masses. Holding the adopted
+  theta and forcing `q` to zero, it does, enormously: the compact-galaxy
+  `M*(<5)` bias runs -43.6% -> +13.6%. Re-optimizing the other eleven
+  parameters at each `q`, it does not: the deficit is -39% to -47% at EVERY
+  `q`, so removing transport entirely buys 4 points out of 43. The model does
+  not respond to losing transport by depositing more centrally; it flattens
+  its efficiency window (sig 0.22 -> 2.68) and shrinks its deposits
+  (log R50 3.27 -> 1.73), buying the outskirt fit back a different way and
+  leaving the centre alone. **A mechanism that is real in a model's internal
+  bookkeeping is not thereby the CAUSE of that model's error** — the slice
+  measures the former, only the profile measures the latter. Corollary worth
+  the extra cost: run BOTH and report them side by side through the identical
+  scorers. The disagreement is not an embarrassment to be resolved, it is the
+  finding, and reporting only the profile would have hidden that exp52's
+  bookkeeping claim is perfectly correct.
+- **When several model families all rail on the same parameter, widen the box
+  once and see whether they rail AGAIN — "unidentified" and "boxed" look
+  identical from a single fit (exp53).** Three of four deposit families hit
+  `log_R50` = 3.5. Widening to 5.0, the Moffat escaped to a finite interior
+  3.626 while sersic/expo/gauss all re-railed at 5.0 — and their losses
+  converged to within 1e-4 of each other, because "put every deposit at the
+  ceiling" is the same model whatever profile shape is hung on it. Two things
+  follow. (1) The right verdict was not "the box chose the answer" but
+  "nothing chooses the answer": the objective does not constrain a light-tailed
+  deposit's scale from above at all. A loss-gain threshold alone mislabels
+  this — one cell gained only 0.37% and was flagged benign while still sitting
+  on the new bound, so the check must test whether the parameter ESCAPED, not
+  just whether the loss moved. (2) It supplies a mechanism for the standing
+  exp48 verdict that "the profile does not matter": the profile stops
+  mattering precisely because the scale runs away, so that verdict is
+  conditional on an unpinned scale rather than a statement about profiles.
