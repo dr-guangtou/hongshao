@@ -381,6 +381,103 @@ on the kernel and both gates, but the mass-size result means **deposition-only
 should stay on the table rather than be closed**, and it should be re-tested
 with CV.
 
+## Result 6 — THE OUTSKIRT TEST: can deposition alone build the stellar halo?
+
+**This is what the branch is actually for (user, 2026-08-21).** The central
+region was never the target. The question is whether a deposition-only kernel
+reproduces the extended stellar halo of massive galaxies and its evolution as
+well as deposition + transport does.
+
+Measured in `outskirt.py`: annuli inside the measured 2-148 kpc grid (nothing
+extrapolated, and `M(<500)` deliberately excluded since the model matches it by
+construction), 2000 galaxy bootstraps, split by stellar mass, and — the biggest
+accuracy gain — a **PAIRED per-galaxy** comparison against the incumbent, which
+removes the galaxy-to-galaxy variance that dominates an unpaired one.
+
+All numbers below are the **massive tercile** (logM* >= 11.42, n = 799) and the
+**`M[50,148] kpc`** annulus. CIs are 95%.
+
+### A. Structure — how much halo mass is there
+
+median dlog10(model/truth) [dex]:
+
+| model | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| moffat-qfree (incumbent) | +0.007 | +0.001 | +0.008 | +0.010 | +0.030 |
+| moffat-q0 | **-0.043** | **-0.058** | **-0.058** | -0.019 | +0.117 |
+| **sersic-q0** | **+0.027** | **+0.018** | **+0.009** | **-0.006** | **+0.019** |
+| expo-q0 | +0.020 | +0.073 | +0.053 | **-0.500** | **-2.268** |
+| gauss-q0 | +0.003 | +0.065 | +0.089 | **-0.740** | **-6.199** |
+
+### B. Evolution — how fast the halo GROWS (population-summed model/truth)
+
+| model | z0.7->0.4 | z1.0->0.7 | z1.5->1.0 | z2.0->1.5 | **z2.0->0.4** |
+|---|---|---|---|---|---|
+| moffat-qfree (incumbent) | 1.071 | 1.016 | 1.133 | 0.992 | **1.062** |
+| moffat-q0 | 1.020 | 0.920 | 0.820 | 0.702 | **0.885** |
+| **sersic-q0** | 1.110 | 1.118 | 1.076 | 0.938 | **1.073** |
+| expo-q0 | 0.739 | 1.285 | 1.951 | 0.710 | 1.212 |
+| gauss-q0 | 0.626 | 0.981 | 2.266 | 0.543 | 1.165 |
+
+### C. Head to head, PAIRED per galaxy
+
+median(|dlog| deposition-only - |dlog| incumbent) [dex]; NEGATIVE = the
+deposition-only model is CLOSER; `w` = fraction of galaxies it wins:
+
+| model | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| moffat-q0 | +0.009 w43% | +0.014 w42% | +0.009 w45% | -0.009 w57% | +0.006 w47% |
+| **sersic-q0** | **+0.002 w47%** | **+0.000 w50%** | **-0.003 w54%** | **-0.017 w59%** | **-0.053 w67%** |
+
+### The answer
+
+**YES — deposition alone can build the stellar halo, but only with the right
+profile, and WHICH profile matters far more than whether transport is on.**
+
+1. **`sersic-q0` matches the incumbent, and beats it at high z.** Its halo mass
+   is within +/-0.03 dex of the truth at every epoch (incumbent: +0.00 to
+   +0.03), it grows the halo at **1.073x** the truth's rate over the full
+   z=2->0.4 baseline against the incumbent's 1.062x, and per galaxy it is
+   statistically indistinguishable from the incumbent at z <= 0.7 and
+   **significantly closer at z = 1.0, 1.5 and 2.0** (-0.053 dex, winning 67% of
+   galaxies at z=2). **A deposition-only Sersic kernel reproduces the extended
+   stellar halo and its evolution as well as deposition + transport, and
+   extrapolates better.**
+2. **`moffat-q0` does NOT.** It carries a systematic ~12% halo mass deficit at
+   z <= 1 (-0.043 to -0.058 dex, CIs excluding zero) and under-grows the halo,
+   worsening with lookback (0.820 at z1.5->1.0, 0.702 at z2.0->1.5) to
+   **0.885x** over the full baseline. The Moffat genuinely needs its transport
+   term to reach.
+3. **Wings are ESSENTIAL.** Without transport the two light-tailed families
+   collapse at z >= 1.5 — `expo-q0` reaches -2.27 dex and `gauss-q0` -6.20 dex
+   at z=2, i.e. a halo one part in 10^2 to 10^6 of the truth's. This is the
+   cleanest demonstration in the program that the deposit profile's TAIL is
+   what builds the stellar halo.
+
+### Why the Moffat loses the outskirt while winning the loss
+
+`moffat-q0` beats `sersic-q0` on the loss (0.160001 vs 0.162079) and on the
+added-light kernel (0.086 vs 0.102), and LOSES the outskirt decisively. The
+deposit-reach measurement explains it: **`moffat-q0` puts 6.8% of its deposited
+mass beyond 500 kpc, where the `M(<500)` normalization discards it; `sersic-q0`
+puts 0.7% there.** The Moffat's power-law tail is genuinely heavier, but it
+spends that weight OUTSIDE the aperture, so the mass is lost from the halo
+budget rather than delivered to 50-148 kpc. The Sersic's n = 3.41 wings put
+theirs inside.
+
+That also sharpens exp52's "right source, ~10x too much reach": for a
+deposition-only model the wasted reach is a property of the PROFILE FAMILY, and
+choosing a family whose tail lands inside the aperture fixes it without any
+ceiling.
+
+### Caveat
+
+`sersic-q0` overshoots the 30-60 kpc surface density (+0.040 to +0.175 dex,
+rising with redshift) and undershoots at 100-148 kpc (-0.09 dex at z >= 1.5):
+its halo has the right MASS with a slightly too-steep radial slope. The
+incumbent is flatter in the far halo. So "as well as" holds for the mass budget
+and its growth, not for every detail of the profile shape.
+
 ## Scope limit: exp53 ran ONE objective, and exp48 measured that the objective
 ## reverses the profile ranking
 
