@@ -189,9 +189,21 @@ loss alone would never have indicated since it minimizes at 0.91.
 | gauss (n = 0.5) | 0.160456 | 0.177770 | +10.8% |
 
 **Sersic fits at n = 2.29, inside the measured kernel's 2.1-3.1**, unrailed and
-stable across three starts. exp38 stage 1 rejected this family for railing `n`;
-with the R50 reparameterization it lands exactly where the measured added light
-says it should. The handover's point 4 is vindicated.
+stable across three starts.
+
+**CORRECTION (2026-08-21): this is a CONFIRMATION of exp48, not a new result,
+and the framing exp53 inherited was wrong.** The 2026-08-20 handover said
+Sersic "was eliminated by a numerical artifact" that exp53 would fix. exp38
+stage 1 did reject it for railing `n` -- but **exp48 step C had already
+supplied the R50 reparameterization and already re-run Sersic inside the full
+multi-epoch kernel**, where it came LAST on the judge (mean E/floor 2.44
+against Moffat's 1.95) while tying best on the loss under exp48's winning
+objective. exp53 reproduces that verdict under a DIFFERENT objective (Sersic
+loses to Moffat on both loss, 0.1567 vs 0.1536, and kernel distance, 0.118 vs
+0.081), which strengthens exp48's conclusion rather than overturning
+anything. The genuinely new part is narrow: exp48 left the Moffat in raw `rc`
+coordinates, so exp53 is the first run in which `log_R50` means the same
+physical quantity for every candidate.
 
 **Transport SUBSTITUTES for a heavy tail.** Removing it costs the two
 heavy-tailed families 3-4% and the two light-tailed ones ~11% — the Gaussian
@@ -409,3 +421,33 @@ extrapolation. Neither displaces the `q` ~ 0.6-0.8 recommendation, which wins
 on the kernel and both gates, but the mass-size result means **deposition-only
 should stay on the table rather than be closed**, and it should be re-tested
 with CV.
+
+## Scope limit: exp53 ran ONE objective, and exp48 measured that the objective
+## reverses the profile ranking
+
+Every exp53 fit used the PRODUCTION objective — `Objective()`, i.e. the curve
+of growth with FRACTIONAL residuals. It is not the log-density objective.
+That matters more here than it would elsewhere, because exp48 step B measured
+that **the objective REVERSES the profile ranking**: `sersic_r50` is worst
+under the production objective (0.15767 vs Moffat 0.15362) and *tied best*
+under exp48's winner (surface density with a LOG residual).
+
+So exp53's family ranking — Moffat > Sersic > expo > gauss, on both loss and
+added-light kernel — is **conditional on the production objective**. It agrees
+with exp48's judged ranking under a different objective, which is reassuring,
+but exp53 did not test the density-log objective and cannot claim the ordering
+is objective-independent. `hongshao.objective.Objective(quantity="density",
+residual="log")` makes the re-run a one-line change; the cost is another full
+fit set.
+
+Related: **`gompertz_log` was NOT tested in exp53, and it should have been.**
+exp48 ranked it SECOND of six on the judge (2.05 against Moffat's 1.95) with
+the **best compact-galaxy central mass of any candidate** (-27.7% against
+Moffat's -31.4%) and the most comfortable differential gate (0.39/0.13). Since
+exp53's central finding is that the compact deficit is transport-independent
+and stuck near -39% to -47%, the one profile family that has ever moved that
+number is exactly the one exp53 omitted. Its CoG is
+`M(<R)/Mtot = exp(-b R^-c)`, which has a genuine power-law tail like the
+Moffat but a super-exponentially emptied centre — so it is not obviously
+suited to fixing a central DEFICIT, and exp48's gain may come from the
+objective rather than the shape. Worth testing rather than assuming either way.

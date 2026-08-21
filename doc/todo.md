@@ -977,12 +977,26 @@ Cross-experiment plan. Mirrors the phase sequence in
     steep growth (g 4.3-4.7). They trade epochs — the low branch is worse at
     z=0.4 (plane 2.7 vs 1.9-2.1) and better at z=2.0 (4.1 vs 4.4-4.9), which
     is exp40's dissipative-era finding from a new direction.
-  - **Sersic is vindicated and still loses.** With the R50 reparameterization
-    it fits at **n = 2.29**, unrailed, inside the measured kernel's 2.1-3.1 —
-    exp38 stage 1 had rejected it for railing `n`, and the degeneracy is now
-    measured: at fixed raw scale a=1, n running 0.5 -> 8 moves the profile's
-    R50 by **1.2e6x**. On a fair footing it still loses to the Moffat on both
-    the loss (0.1567 vs 0.1536) and the kernel (0.118 vs 0.081).
+  - **Sersic: a CONFIRMATION of exp48, not a new result.** It fits at
+    **n = 2.29** unrailed, inside the measured kernel's 2.1-3.1, and still
+    loses to the Moffat on both loss (0.1567 vs 0.1536) and kernel (0.118 vs
+    0.081). **The 2026-08-20 handover's framing was wrong**: it said Sersic
+    "was eliminated by a numerical artifact" for exp53 to fix, but **exp48
+    step C had already built `sersic_r50` and already re-run it in the full
+    multi-epoch kernel**, where it came LAST on the judge (2.44 vs Moffat
+    1.95). exp53 reproduces that under a different objective, which
+    strengthens exp48. The new part is narrow: exp48 left the Moffat in raw
+    `rc`, so exp53 is the first run where `log_R50` means the same physical
+    quantity for every family. (The degeneracy is now quantified though: at
+    fixed raw scale a=1, n from 0.5 -> 8 moves R50 by **1.2e6x**.)
+  - **SCOPE LIMIT: one objective only.** Every exp53 fit used the PRODUCTION
+    objective (CoG, fractional residuals), NOT log-density. exp48 measured
+    that the objective REVERSES the profile ranking (`sersic_r50` worst under
+    production, tied-best under exp48's density-log winner), so exp53's family
+    ordering is conditional. **`gompertz_log` was not tested and should have
+    been**: exp48 ranked it 2nd of six on the judge with the BEST compact
+    central mass of any candidate (-27.7% vs Moffat -31.4%) — the one family
+    that has ever moved the number exp53 found stuck at -39% to -47%.
   - **Transport SUBSTITUTES for a heavy tail.** Removing it costs the
     heavy-tailed families 3-4% and the light-tailed ones ~11%. gauss/expo
     *need* transport because they have no other way to reach the outskirts.

@@ -5,8 +5,14 @@ exp38 stage 1 rejected the Sersic deposit family with "LOWER rail 3/5 epochs
 (n-scale degeneracy; needs an R50 reparameterization)". That is a numerical
 defect, not a physical verdict, and it eliminated the family the MEASURED added
 light actually points at (exp38 stage 0.2: Sersic n = 2.1-3.1, kernel R50
-15-47 kpc). This module supplies the missing reparameterization, and supplies
-it for every family so the comparison is fair.
+15-47 kpc). **PRIOR ART, and exp53 does not supersede it**: exp48 step C already built
+`sersic_r50` and already fitted it inside the FULL multi-epoch kernel
+(conditioning, migration clock, M(<500) normalization, z <= 1.5 scope) --
+see `exp48/profiles.py::sersic_r50_cog`. What this module adds is narrower:
+the SAME reparameterization applied to EVERY family, so `log_R50` is one
+common physical coordinate across the shootout rather than a relabelling of
+one candidate. exp48 left the Moffat in raw `rc` coordinates, so its scale
+parameter and Sersic's did not mean the same thing.
 
 **The defect.** A Sersic profile's scale `a` and index `n` both set its
 physical extent: at fixed `a`, raising `n` moves the half-mass radius by orders
