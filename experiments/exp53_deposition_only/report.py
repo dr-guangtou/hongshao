@@ -46,6 +46,7 @@ import fit as R53                                    # noqa: E402
 import score as S                                    # noqa: E402
 import stage2_multiepoch as s2                       # noqa: E402
 from hongshao.plotting import OKABE_ITO, save_fig, set_style   # noqa: E402
+from hongshao.qa import _pct                                   # noqa: E402
 
 OUTDIR, FIGDIR = HERE / "outputs", HERE / "figures"
 KS_ALL = [0, 1, 2, 3, 4]
@@ -283,13 +284,13 @@ def fig_qprofile(keep, rows, tag):
         (lambda r: r["sig"], "efficiency-window width $\\sigma$", None, False),
         (lambda r: r["log_R50"], r"deposit $\log R_{50}$ at $t_{obs}$", None,
          False),
-        (lambda r: 100 * r["transport"], "transport share of $M_*[50,100]$"
-         " growth [%]", None, False),
+        (lambda r: 100 * r["transport"],
+         f"transport share of $M_*[50,100]$ growth [{_pct()}]", None, False),
         (lambda r: r["grow_m10"], r"$M_*(<10)$ growth, model/truth", 1.0, True),
         (lambda r: r["grow_out"], r"$M_*[50,100]$ growth, model/truth", 1.0,
          True),
         (lambda r: 100 * r["m5_compact"],
-         r"compact-galaxy $M_*(<5)$ bias [%]", 0.0, True),
+         f"compact-galaxy $M_*(<5)$ bias [{_pct()}]", 0.0, True),
         (lambda r: r["kern_dex"], "added-light kernel distance [dex]", None,
          True)]
     fig, axes = plt.subplots(2, 4, figsize=(17.4, 8.0))
@@ -317,40 +318,74 @@ def fig_qprofile(keep, rows, tag):
 
 
 def fig_kernels(keep, e, tag, stage):
-    """Model vs MEASURED added light, the massive tercile, all epoch pairs."""
-    names = [n for n in keep]
+    """Model vs MEASURED added light, in the coordinates the JUDGE uses.
+
+    An earlier version plotted the raw added Sigma on a symlog axis. That is
+    the wrong frame: the measured kernel's innermost annulus is strongly
+    NEGATIVE (the core loses mass), so the symlog range is set by a single
+    point at 2.35 kpc and the 4-120 kpc band the distance metric actually
+    reads gets squeezed into the top fifth of the panel. Here the top row
+    shows the positive kernel on log-log axes over the fit band, and the
+    bottom row shows `dlog(model/data)` -- which IS the quantity
+    `_kernel_distance` medians, so a candidate's rank is readable off the
+    figure rather than only off the table.
+    """
+    names = list(keep)
     if not names:
         return
     ref = keep[names[0]]["score"]
-    pairs = ref["pairs"]
-    fig, axes = plt.subplots(2, len(pairs), figsize=(4.3 * len(pairs), 8.0),
+    pairs, mid = ref["pairs"], ref["mid"]
+    band = (mid >= S.KERN_LO) & (mid <= S.KERN_HI)
+    order = sorted(names, key=lambda n: keep[n]["score"]["kern_rms"])
+    # 8 candidates: colour carries the family, dash carries the q setting.
+    fams = {}
+    for n in order:
+        fams.setdefault(keep[n]["spec"].family, len(fams))
+    style = {n: dict(color=OKABE_ITO[fams[keep[n]["spec"].family] % len(OKABE_ITO)],
+                     ls="-" if keep[n]["spec"].q_free else "--")
+             for n in order}
+    nrow, ncol = 2, len(pairs)
+    fig, axes = plt.subplots(nrow, ncol, figsize=(3.7 * ncol + 2.2, 7.2),
                              sharex=True)
     axes = np.atleast_2d(axes)
-    colors = plt.cm.viridis(np.linspace(0.05, 0.9, len(names)))
-    for irow, b in enumerate((0, 2)):                # low and high tercile
-        for j, pr in enumerate(pairs):
-            ax = axes[irow, j]
-            ax.plot(ref["mid"], ref["kern_data"][b, j], "ko-", ms=3, lw=1.6,
-                    label="MEASURED", zorder=5)
-            for c, nm in zip(colors, names):
-                sc = keep[nm]["score"]
-                ax.plot(sc["mid"], sc["kern_model"][b, j], "-", lw=1.3,
-                        color=c, label=nm, alpha=0.9)
-            ax.axhline(0.0, color="0.7", lw=0.8)
-            ax.set(xscale="log", yscale="symlog")
-            if irow == 0:
-                ax.set_title(f"z{K.ANCHOR_Z[pr[0]]}" r"$\to$"
-                             f"{K.ANCHOR_Z[pr[1]]}", fontsize=10)
-            if j == 0:
-                ax.set_ylabel(f"tercile T{b+1}\n"
-                              r"added $\Sigma_*$ [M$_\odot$ kpc$^{-2}$]",
-                              fontsize=9)
-            if irow == 1:
-                ax.set_xlabel("$R$ [kpc]")
-    axes[0, -1].legend(fontsize=6, loc="upper right")
-    fig.suptitle(f"exp53 {stage} — the added-light kernel: candidates against "
-                 "the MEASURED stack (exp38 stage 0.2 operator)", fontsize=12)
-    fig.tight_layout()
+    b = 2                                    # the massive tercile
+    for j, pr in enumerate(pairs):
+        kd = ref["kern_data"][b, j]
+        pos = band & np.isfinite(kd) & (kd > 0)
+        ax = axes[0, j]
+        ax.plot(mid[pos], kd[pos], "ko-", ms=4, lw=2.0, zorder=10,
+                label="MEASURED")
+        lo = axes[1, j]
+        for n in order:
+            km = keep[n]["score"]["kern_model"][b, j]
+            ax.plot(mid[pos], np.where(km[pos] > 0, km[pos], np.nan), lw=1.5,
+                    alpha=0.95, label=n, **style[n])
+            lo.plot(mid[pos], np.log10(np.where(km[pos] > 0, km[pos], np.nan)
+                                       / kd[pos]), lw=1.5, alpha=0.95,
+                    **style[n])
+        ax.set(xscale="log", yscale="log")
+        ax.set_title(f"z{K.ANCHOR_Z[pr[0]]}" r"$\to$" f"{K.ANCHOR_Z[pr[1]]}",
+                     fontsize=10)
+        lo.axhline(0.0, color="k", lw=1.2, zorder=5)
+        lo.axhspan(-0.1, 0.1, color="0.85", zorder=0, lw=0)
+        lo.set(xscale="log", ylim=(-0.6, 0.6))
+        lo.set_xlabel("$R$ [kpc]")
+        if j == 0:
+            ax.set_ylabel(r"added $\Sigma_*$ [M$_\odot$ kpc$^{-2}$]"
+                          "\nmassive tercile", fontsize=9)
+            lo.set_ylabel(r"$\log_{10}$(model / measured)", fontsize=9)
+        ax.tick_params(labelsize=8)
+        lo.tick_params(labelsize=8)
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    labels = [lb if lb == "MEASURED" else
+              f"{lb}  ({keep[lb]['score']['kern_rms']:.3f})" for lb in labels]
+    fig.legend(handles, labels, fontsize=8, loc="center right",
+               frameon=False, title="ranked by median $|$dlog$|$ [dex]",
+               title_fontsize=8)
+    fig.suptitle(f"exp53 {stage} — the added-light kernel against the MEASURED "
+                 f"stack (exp38 stage 0.2 operator). Grey band: $\\pm$0.1 dex. "
+                 f"Solid $q$ free, dashed $q=0$.", fontsize=11)
+    fig.tight_layout(rect=(0, 0, 0.84, 1))
     FIGDIR.mkdir(exist_ok=True)
     print("wrote", save_fig(fig, FIGDIR / f"exp53_kernels_{stage}{tag}")[0])
 

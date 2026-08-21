@@ -249,3 +249,87 @@ Caveat: `gauss-qfree` and `sersic-qfree` each hit the 2500-evaluation cap on
 their nudged start (flagged in the logs). Both starts agree to <= 2e-6 in each
 case, so the conclusion is unaffected, but those two widened losses are not
 fully converged.
+
+## Result 4 — the judged verdicts (all five epochs; fitted on z <= 1.5)
+
+### Stage A, ranked by the added-light kernel
+
+| cell | kernel [dex] | kern R50 mod/dat | M(<10) growth | GATE diff (0.37) | GATE overshoot | dlog R50 | plane z=0.4 |
+|---|---|---|---|---|---|---|---|
+| **moffat-q0.8** | **0.068** | 23/26 | **0.991** | 0.40 | **+0.006** | +0.012 | 2.1 |
+| **moffat-q0.6** | 0.070 | 21/26 | 1.417 | **0.37** | -0.020 | **-0.009** | **1.9** |
+| moffat-qfree (0.91) | 0.081 | 24/26 | 0.722 | 0.42 | +0.023 | +0.026 | 2.1 |
+| moffat-q0.4 | 0.085 | 24/26 | 0.845 | 0.35 | +0.082 STRAINED | +0.015 | 2.7 |
+| moffat-q0 | 0.086 | 24/26 | 0.879 | 0.36 | +0.074 STRAINED | +0.016 | 2.7 |
+| moffat-q1.2 | 0.108 | 26/26 | -0.066 | 0.50 FAIL | +0.072 STRAINED | +0.065 | 2.2 |
+
+**`q` = 0.6-0.8 beats the adopted model on every judged axis** — kernel
+distance, both gates, sizes, central growth — for 0.27% (q=0.8) or 2.2%
+(q=0.6) of the loss. The deposition-only endpoint sits MID-PACK on the kernel
+and STRAINS the outskirt-overshoot gate (+0.074 against a +/-0.06 band) that
+the adopted model passes.
+
+Also visible: the two branches trade epochs. The low-`q` branch is worse at
+z=0.4 (plane 2.7 vs 1.9-2.1) and better at z=2.0 (4.1 vs 4.4-4.9) — exp40's
+dissipative-era finding from a new direction.
+
+### Stage B, ranked by the added-light kernel
+
+| cell | kernel [dex] | kern n mod/dat | kern R50 | M(<10) growth | M(<5) cmp | beyond 500 kpc |
+|---|---|---|---|---|---|---|
+| moffat-qfree | **0.081** | 2.7/2.7 | 24/26 | 0.722 | -43.4% | 4.9% |
+| moffat-q0 | 0.086 | 2.4/2.7 | 24/26 | 0.879 | -39.4% | 6.8% |
+| sersic-q0 | 0.102 | 2.3/2.7 | 34/26 | **1.015** | -40.7% | 0.7% |
+| gauss-qfree | 0.114 | 1.4/2.7 | 32/26 | 0.755 | -40.3% | 0.5% |
+| sersic-qfree | 0.118 | **2.7/2.7** | 32/26 | 0.533 | -44.6% | 1.4% |
+| expo-qfree | 0.122 | 1.9/2.7 | 34/26 | 0.664 | -42.0% | 0.9% |
+| expo-q0 | 0.286 | 1.9/2.7 | 39/26 | 1.875 | -35.2% | 0.8% |
+| **gauss-q0** | **0.339** | 1.7/2.7 | 34/26 | 2.227 | -34.2% | 0.5% |
+
+**The falsification control fails exactly as designed.** `gauss-q0` — wingless
+deposit, no transport — is worst by a factor of four, with the wrong kernel
+shape (n = 1.7 against a measured 2.7) and 5% sign disagreement. The ladder is
+monotonic in tail weight at `q` = 0.
+
+**The Moffat wins on the MEASURED KERNEL too, not only on the loss** — and
+`moffat-q0` (0.086) beats `sersic-qfree` (0.118), so the family matters more
+than the transport setting.
+
+**The deposit-reach column localizes exp52's "too much reach" to the FAMILY.**
+The Moffat throws 4.9-6.8% of its deposited mass beyond 500 kpc where the
+`M(<500)` normalization discards it; every lighter-tailed family puts 0.5-1.4%
+there. The power-law tail is itself a wasteful-reach mechanism — in genuine
+tension with the Moffat also matching the measured added light best. A lower,
+physically motivated deposit ceiling is the obvious lever, and exp49 already
+measured a 300 kpc ceiling as costing 1.5e-5.
+
+## What exp53 settles, and what it does not
+
+**Settled.**
+1. The compact-galaxy central deficit is **not caused by transport**. It is
+   -39% to -47% at every `q` under profiling. The leading hypothesis for the
+   exp47/exp48 defect is retired and the defect is unexplained again.
+2. exp52's mechanism claim survives in its narrow form (late outskirt growth
+   is redistribution) and fails in its causal form.
+3. Sersic, reinstated behind the R50 reparameterization, fits at **n = 2.29**
+   unrailed — inside the measured kernel's 2.1-3.1. It still loses to the
+   Moffat, now on a fair footing rather than at a wall.
+4. **The deposit scale is unidentified for every family except the Moffat**,
+   and the objective does not constrain it from above. This is a mechanism for
+   exp48's "the profile does not matter".
+5. **Actionable**: trim `q` from 0.91 to ~0.6-0.8. It improves every judged
+   observable for <= 2.2% of the loss.
+
+**Not settled.**
+- **exp53's fits are IN-SAMPLE.** exp38 stage 2 used 10-fold CV; 14 cells x 3
+  starts x 10 folds was not affordable here. Parameter counts differ by at
+  most 2 of ~11 against ~220k residuals, so in-sample optimism cannot plausibly
+  reorder families separated by more than a fraction of a per cent — but the
+  q = 0.8 vs q free comparison (0.27%) is inside that margin on the LOSS. It is
+  not close on the judged observables, which is what the ranking uses.
+- `gauss-qfree` and `sersic-qfree` hit the rail-check evaluation cap on one
+  start each; both starts agree to <= 2e-6, but those widened losses are not
+  fully converged.
+- The `gausswing` family (exp38 stage 1's co-winner) was not tested.
+- Whether a LOWER deposit ceiling recovers the Moffat's wasted reach is
+  untested and is the obvious next experiment.
