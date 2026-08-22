@@ -175,6 +175,74 @@ penalized for it.
    growth is identical in all four columns (9.19-12.29), a clean sanity check
    that only the amplitude moved.
 
+## Stage 3.0 — pre-fit floors (`stage30.py`), COMPLETE
+
+**The monotonic-addition ceiling.** Any sum of static positive deposits makes
+`M*(<R)` non-decreasing in time; TNG violates this in 50-58% of galaxies at
+4.9 kpc per epoch interval. In production-objective units the best possible
+monotone model scores **0.045590** against the incumbent's 0.158196 — 28.8% of
+the loss, 8.3% of its variance. **But it is entirely an inner-profile
+phenomenon**: median isotonic correction 0.0485 dex at 2 kpc, 0.0163 at 4.9,
+0.0059 at 10.2, and **0.0000 beyond ~20 kpc**.
+
+**Signal or noise? RESOLVED — do not build a survival term.** The violations
+are ~2x the CoG measurement sigma (not instrumental), but at 4.9 kpc the sign
+agreement between consecutive intervals is **52.1% against 50% for chance**,
+with step-to-step r = **+0.013**. They are INCOHERENT. (At 103.5 kpc: 76.8%,
++0.163 — the outer profile does grow coherently.) They do not track MAH
+burstiness (-0.101, wrong sign) or halo shape (+0.037), and galaxies losing
+~4e9 Msun inside 10 kpc simultaneously GAIN 3-8e9 in total. A survival term is
+smooth and monotone in dt and cannot produce incoherent sign-flipping
+inner-only fluctuations — it would absorb the floor as a spurious mass-loss
+signal.
+
+**Tail diagnostics** confirm the review's caution: Moffat's `R99/R50 = 195` but
+its observable fraction beyond 500 kpc is only 9.29%. The discriminating
+observable is the fraction beyond the measured horizon — moffat 23.1%,
+loglogistic 21.1%, richards 18.9%, gompertz_log 16.9%, sersic 15.1%, expo 3.9%,
+gauss 0.19%.
+
+**Endpoint-preserving shuffles** displace `Mh(z_k)` by a median 0.0037-0.0039
+dex against **0.1884 dex** for the old `Mh(z=0.4)`-matched control at z=2 —
+47.9x cleaner.
+
+## Stage 3.1 — the minimal absolute model (`stage31.py`), COMPLETE
+
+E1 x sersic x {S2, S2a}, n=300 mass-stratified, fitted jointly at **z=0.4 and
+z=2.0**. Six parameters, no per-object freedom, no pin.
+
+| | loss | score_A | score_F | n_eff | bootstrap |
+|---|---|---|---|---|---|
+| **S2** `R50 = f0 R200c` | 1.90521 | 1.0891 | 0.8480 | 6/6 | 0.9-15% |
+| **S2a** `R50 = fs R200c/c200c` | **1.85863** | 1.0822 | 0.8291 | 6/6 | **b at 81%** |
+
+**Amplitude, truth vs prediction: rms 0.123 dex at z=0.4 and 0.174 at z=2.0.**
+Against Stage 1's best halo-only regression (0.1047, 0.1744) the physical model
+is 17% worse at z=0.4 and **exactly equal at z=2.0** — with 6 global parameters
+against a per-epoch refitted regression, while also predicting the profile.
+
+**The identifiability protocol earned its place on its first use.** S2a has the
+lower loss but its `b` is **not identified**: 81% bootstrap scatter, a profile
+rise of 1.3e-2 against S2's 6.8e-2, and a smallest singular value of 2.8e-3
+against S2's 1.1e-2 — 4x closer to degenerate. Ranking on loss alone would have
+promoted a model with a meaningless parameter. `b` is degenerate in S2a because
+`c200c` carries its own redshift dependence, which `(1+z)^b` then duplicates.
+
+**Pre-registered predictions:**
+- **2 CONFIRMED**: `b = -0.4527 +- 0.068` in S2, far smaller in magnitude than
+  the incumbent's implied -3.
+- **11 WRONG**: I predicted S2a would fit at least as well at low z and worse
+  at high z. It fits better overall at both — but with a degenerate parameter,
+  which is the more useful finding.
+
+**The shape residual is structured and worsens with redshift** (figure
+`s31_minimal_model`): at z=0.4 the model over-predicts at 2 kpc (+0.037 dex),
+under-predicts at 4-6 kpc (-0.048), and recovers by 20 kpc; at z=2.0 it
+under-predicts by -0.079 dex inside 4 kpc and over-predicts at 20-40 kpc. The
+shape loss (0.131) is **2.9x the monotonic floor (0.0456)**, so the floor is not
+yet binding and the family is still the limitation — which is what Stage 3.2
+tests.
+
 ## Measured before any fitting (see plan §3.2 and §4.4)
 
 - The **absolute deposition law works**: `eps = 0.00318 (Mh/10^13.5)^-0.190
