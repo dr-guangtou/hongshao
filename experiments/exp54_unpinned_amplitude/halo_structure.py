@@ -200,51 +200,79 @@ def group_ids(snaps=SNAPS):
     return gid, pop
 
 
+def _schema(paths):
+    """(fields, header) discovered from the LARGEST cached file.
+
+    Not from the first one: **snapshot 2 contains zero haloes** (at z=12 no
+    TNG300 halo has a valid structural fit), so its file has no datasets at
+    all, and taking the schema from it yields an empty field list. Discovering
+    from the largest file also guarantees the widest schema if the catalog ever
+    varies between snapshots.
+    """
+    import h5py
+    for path in sorted(paths, key=lambda q: q.stat().st_size, reverse=True):
+        with h5py.File(path, "r") as f:
+            fields = {k: f[k].shape[1:] for k in f.keys()
+                      if isinstance(f[k], h5py.Dataset)}
+            header = dict(f["Header"].attrs) if "Header" in f else {}
+        if fields:
+            return dict(sorted(fields.items())), header
+    raise SystemExit("every cached file is empty — re-run `fetch`")
+
+
 def cmd_extract():
     import h5py
     OUTDIR.mkdir(parents=True, exist_ok=True)
+    cached = [CACHE / f"halo_structure.{s}.hdf5" for s in SNAPS]
+    cached = [p for p in cached if p.exists() and p.stat().st_size > 0]
+    if not cached:
+        raise SystemExit(f"nothing cached in {CACHE} — run `fetch` first")
+    fields, header = _schema(cached)
     gid, pop = group_ids()
     n, ns = gid.shape
     zs = snapshot_redshifts()
-    print(f"exp54 — full halo-structure record (n={n}, {ns} snapshots)\n")
 
-    fields, out = None, {}
+    print(f"exp54 — full halo-structure record (n={n}, {ns} snapshots)")
+    print(f"  {len(fields)} fields: " + ", ".join(
+        f"{k}{'' if not v else str(v)}" for k, v in fields.items()) + "\n")
+    # (n, ns) for scalars, (n, ns, 3) for the vector fields (Mean_vel, sigma_1D)
+    out = {k: np.full((n, ns) + shp, np.nan) for k, shp in fields.items()}
+    n_empty = 0
+
     for j, snap in enumerate(SNAPS):
         path = CACHE / f"halo_structure.{snap}.hdf5"
-        if not path.exists():
-            print(f"  snap {snap:2d}: MISSING — run `fetch` first")
+        if not path.exists() or path.stat().st_size == 0:
+            print(f"  snap {snap:2d} (z={zs[snap]:5.2f}): NOT CACHED — skipped",
+                  flush=True)
             continue
         with h5py.File(path, "r") as f:
-            names = sorted(k for k in f.keys()
-                           if isinstance(f[k], h5py.Dataset) and f[k].ndim == 1)
-            if fields is None:
-                fields = names
-                out = {k: np.full((n, ns), np.nan) for k in fields}
-                print(f"  {len(fields)} fields discovered: "
-                      f"{', '.join(fields)}\n")
-            have = gid[:, j] >= 0
-            ncat = f[fields[0]].shape[0]
-            use = have & (gid[:, j] < ncat)
-            idx = gid[use, j]
-            for k in fields:
-                if k not in f:
-                    continue
-                out[k][use, j] = np.asarray(f[k][:])[idx]
-        flag = out.get("GroupFlag")
-        nv = int(np.nansum(flag[:, j] == 1)) if flag is not None else -1
-        print(f"  snap {snap:2d} (z={zs[snap]:5.2f}): {have.sum():4d} matched, "
+            present = [k for k in fields if k in f]
+            if not present:
+                n_empty += 1
+                print(f"  snap {snap:2d} (z={zs[snap]:5.2f}): catalog is EMPTY "
+                      f"(no haloes with a valid fit) — left as NaN", flush=True)
+                continue
+            ncat = f[present[0]].shape[0]
+            use = (gid[:, j] >= 0) & (gid[:, j] < ncat)
+            # h5py fancy indexing needs strictly increasing, unique indices
+            uniq, inv = np.unique(gid[use, j], return_inverse=True)
+            for k in present:
+                out[k][use, j] = np.asarray(f[k][uniq])[inv]
+        flag = out["GroupFlag"][:, j] if "GroupFlag" in out else None
+        nv = int(np.nansum(flag == 1)) if flag is not None else -1
+        print(f"  snap {snap:2d} (z={zs[snap]:5.2f}): {int(use.sum()):4d} matched, "
               f"{nv:4d} valid fits, median c200c "
               f"{np.nanmedian(out['c200c'][:, j]):6.3f}", flush=True)
 
-    if fields is None:
-        raise SystemExit("nothing cached — run `fetch` first")
     dst = OUTDIR / "halo_structure_history.npz"
-    np.savez_compressed(dst, index=pop["index"], gid=gid,
-                        snaps=np.array(SNAPS), z=zs[list(SNAPS)],
-                        fields=np.array(fields), **out)
+    np.savez_compressed(
+        dst, index=pop["index"], gid=gid, snaps=np.array(SNAPS),
+        z=zs[list(SNAPS)], fields=np.array(sorted(fields)),
+        header=np.array(str(header)), **out)
     print(f"\n  wrote {dst} ({dst.stat().st_size / 1e6:.1f} MB)")
+    if n_empty:
+        print(f"  {n_empty} snapshot(s) had an empty catalog and are all-NaN")
     print(f"  raw files stay OUTSIDE the repo at {CACHE}")
-
 
 def cmd_verify():
     d = np.load(OUTDIR / "halo_structure_history.npz", allow_pickle=True)

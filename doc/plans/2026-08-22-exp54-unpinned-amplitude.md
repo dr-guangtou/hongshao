@@ -505,14 +505,41 @@ Normalizing by D19 helps exactly there, dividing out the definition-dependence
 carried by the mean relation. It cannot supply the excess, which is the part
 that carries the information.
 
+**MEASURED CONCENTRATION RUNS OUT ABOVE z ~ 5, AND THE SURVIVORS ARE
+MASS-SELECTED.** From the extraction (fraction of our 2397 galaxies with
+`GroupFlag == 1`, a valid NFW structural fit):
+
+| snap | z | matched | valid fits | coverage |
+|---|---|---|---|---|
+| 25 | 3.01 | 2392 | 2390 | 99.9% |
+| 21 | 4.01 | 2390 | 2364 | 98.9% |
+| 17 | 5.00 | 2393 | 2228 | 93.1% |
+| 13 | 6.01 | 2387 | 1782 | 74.7% |
+| 11 | 7.01 | 2387 | 1108 | 46.4% |
+| 8 | 8.01 | 2365 | 557 | 23.5% |
+| 6 | 9.00 | 2338 | 215 | 9.2% |
+| 4 | 10.00 | 2231 | 58 | 2.6% |
+| 3 | 10.98 | 2023 | 11 | 0.5% |
+| 2 | 11.98 | - | 0 | **catalog is EMPTY** |
+
+Set against the deposit budget — **22% of z=0.4 stellar mass is deposited at
+z>3, 13% at z>4** — this is usable to z ~ 5 and unusable beyond z ~ 6. Worse,
+**the galaxies that keep a valid fit at high z are the best-resolved ones**, so
+any concentration statistic computed on the z>6 survivors is mass-selected and
+must not be read as a population property.
+
 **Order of work.** (1) The full catalog download is running — see
 `experiments/exp54_unpinned_amplitude/halo_structure.py`. (2) Build the excess
-feature at the 16 catalog snapshots and interpolate in `log(1+z)` to every
-deposit snapshot. (3) Keep the fit-free `M500c/M200c` proxy as the FALLBACK for
-snapshots the catalog does not cover and as a portability check — it recovers
-25-43% of the gain and is available in essentially any halo catalogue. Handle
-the 3.7% of snapshots where the proxy is missing explicitly rather than
-silently filling.
+feature where the catalog supports it (z <~ 5) and interpolate in `log(1+z)`
+between the 16 snapshots. (3) **Above z ~ 5 the fallback is not optional.** Two
+are available and both work at any redshift: the fit-free `M500c/M200c` proxy
+(all 73 snapshots, 96.3% finite, recovers 25-43% of the gain, portable to any
+halo catalogue), and `c_Diemer19` for the mean relation. Since the adopted
+feature is an EXCESS over D19, a missing measurement degrades gracefully to
+excess = 0, i.e. "assume this halo is typical for its mass and redshift" —
+which is the right default and must be recorded as such, never silently
+imputed. (4) Handle the 3.7% of snapshots where even the proxy is missing
+explicitly.
 
 **Do not misapply the standing "concentration history is a SETTLED dead end"
 verdict here.** That was about separating COMPACT GALAXIES (R^2 0.012-0.037).
