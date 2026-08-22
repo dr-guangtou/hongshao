@@ -622,6 +622,40 @@ spans `[t_i, t_{i+1}]` and the code aligns it with `logMh_full[1:]` — the
 **post-deposit** halo mass. State the convention in the module docstring and
 assert it; an off-by-one here is a silent 0.01-0.03 dex systematic in `a_M`.
 
+### 4.4.5 The input vector: official DiffMAH, and drop the catalog halo mass
+
+**Decided (user, 2026-08-22).**
+
+**Use the OFFICIAL DiffMAH fit** (`diffmah_log_mah_fit`, Hearin et al. 2021,
+what `dipfree_mah` already reads). **Keep our own exp10 fit** (`dmah_*` in the
+FITS table) as a **robustness check**, never as the primary input.
+
+This is not cosmetic: **the two disagree by 0.117 dex rms** (r = 0.939) and are
+not equally predictive of `log M*(<100)` at z=0.4 — our `dmah_logmp` alone
+gives 0.1350 dex, the official curve at z=0.4 gives **0.1209**. The statistical
+emulator has been using one and the physical kernel the other. Any comparison
+between them must state which.
+
+**DROP the catalog `logMh(z=0.4)` from the input vector.** Measured, 5-fold CV
+on `log M*(<100 kpc)`:
+
+| predictor | z=0.4 | z=1.0 | z=2.0 |
+|---|---|---|---|
+| catalog `logMh(z=0.4)` alone | 0.1401 | 0.2031 | 0.3039 |
+| DiffMAH 4 params | 0.1068 | 0.1718 | 0.2286 |
+| DiffMAH 4 params + catalog `logMh` | **0.1068** | 0.1694 | 0.2259 |
+| DiffMAH 4 params + c200c + fz2 | **0.0971** | 0.1514 | 0.1890 |
+
+Zero gain at z=0.4, ~0.004 dex at high z. It is redundant with the MAH that
+generates it.
+
+**CORRECTION TO §3.2.B's BASELINE.** The strongest halo-only baseline is not
+`logMh(z_k)+c200c+fz2` (0.1109 at z=0.4) but **DiffMAH 4 params + c200c + fz2 =
+0.0971 dex**. Every "baseline to beat" in this plan is correspondingly harder.
+Note also that DiffMAH 4 params alone (0.1068) beats epoch-matched
+`logMh(z_k)` (0.1209) — the MAH SHAPE carries real information beyond the
+epoch-local mass.
+
 ### 4.5 Three products, and what each can and cannot test
 
 | | amplitude from | shape from | can test | cost |
