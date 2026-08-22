@@ -40,6 +40,22 @@ real name. Needs `~/.tng_api_key`.
 project's own `c200c` exactly, and the five overlapping epochs must agree with
 exp46's `conc_history.npz`.
 
+**DONE (2026-08-22).** 27 GB fetched, all 16 snapshots, extracted to
+`outputs/halo_structure_history.npz` (2.9 MB, all 14 fields). Verification is
+exact: max |diff| = **0.000e+00** against the project's own `c200c` at snap 72
+(100% exact, all 2397) and **0.000e+00** against exp46's five epochs.
+
+> **KEEP THE RAW FILES until exp54 is finished.** `experiments/*/outputs/` is
+> gitignored, so `halo_structure_history.npz` is NOT in version control, and
+> regenerating it needs the 27 GB cache — a ~3 hour download over a link that
+> stalled 14 times. Either keep `~/Desktop/tng300_halo_structure`, or copy the
+> 2.9 MB npz somewhere durable before deleting it.
+
+Coverage by valid NFW fit, on the full set: 2397/2397 at z=0.4, 2384 at z=3,
+1812 at z=5, 1083 at z=6, 482 at z=7, 158 at z=8, 5 at z=10, **zero at z>=11**.
+Usable to z ~ 5, unusable beyond z ~ 6, and the high-z survivors are the
+best-resolved haloes, so statistics on them are mass-selected.
+
 ## Measured before any fitting (see plan §3.2 and §4.4)
 
 - The **absolute deposition law works**: `eps = 0.00318 (Mh/10^13.5)^-0.190
