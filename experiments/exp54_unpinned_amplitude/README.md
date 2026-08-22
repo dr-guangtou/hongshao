@@ -243,6 +243,63 @@ shape loss (0.131) is **2.9x the monotonic floor (0.0456)**, so the floor is not
 yet binding and the family is still the limitation — which is what Stage 3.2
 tests.
 
+## Stage 3.2 — the controlled factorial (`stage32.py`), COMPLETE
+
+45 cells (5 efficiencies x 3 families x 3 size laws), n=240 mass-stratified,
+z=0.4 and z=2.0, **ranked by a seven-criterion judge, never by loss**.
+205.9 min.
+
+| rank | model | mean | sA(0.4) | sA(2.0) | sF(0.4) | sF(2.0) | ident | tilt |
+|---|---|---|---|---|---|---|---|---|
+| 1 | **gompertz_log-E2-S2** | 13.29 | 1.183 | 0.907 | 0.886 | 0.703 | **8.0e-03** | **-0.0007** |
+| 2 | sersic-E5-S2+S3 | 14.00 | 1.202 | 0.864 | 0.856 | 0.717 | 8.8e-04 | -0.0004 |
+| 3 | moffat-E2-S2 | 14.29 | 1.182 | 0.907 | 0.884 | 0.709 | 7.8e-03 | +0.0028 |
+| 4 | moffat-E2-S2+S3 | 15.57 | 1.183 | 0.905 | 0.872 | 0.702 | 1.1e-03 | +0.0033 |
+| ... | | | | | | | | |
+| 43-45 | **all three E4 cells** | 33.6-34.0 | | | | | 1e-07 | |
+
+**THE JUDGE AND THE LOSS DISAGREE, EXACTLY AS THE RULE ANTICIPATES.** Ranking
+by loss would pick `moffat-E5-S2+S3` (1.7010), which the judge places **7th**,
+and `gompertz_log-E5-S2+S3` (1.7116), which it places **11th**. The
+loss-optimal models are precisely the ones with degenerate identifiability
+(8.2e-04 to 2.4e-03). The judge's winner has **8.0e-03** — an order of
+magnitude better conditioned — for a loss only 0.04 higher.
+
+**Five findings.**
+
+1. **The transport-replacement question is ANSWERED, and not by the size law.**
+   E1 leaves a halo-mass tilt of +0.024 to +0.041 dex/dex. Adding the
+   mass x redshift cross-term (E2) collapses it to **-0.009 to +0.009** across
+   every family and size law. Explicit mass conditioning of the size law (S3)
+   does NOT close it (+0.035 to +0.041 under E1). exp53 concluded transport
+   supplies the halo-mass-dependent concentration; what actually supplies it is
+   a halo-mass-dependent *evolution of the efficiency*, which shifts WHEN mass
+   is deposited and therefore WHERE, since deposit radius tracks `R200c(t_j)`.
+
+2. **E4, the free spline, is the worst of all five efficiency forms** — the
+   bottom three cells overall, with identifiability 1.2e-07 to 7.5e-07, five
+   orders of magnitude worse than E1/E2, for a loss gain of ~0.007 over three
+   extra parameters. **Prediction 4 confirmed: no peak in the efficiency's
+   redshift dependence is identified.** The data prefer a power law.
+
+3. **E1+E3 (concentration in the efficiency) does not earn its place** — it
+   appears nowhere in the top 15, gains ~0.009 in loss, and leaves the tilt
+   unchanged. Stage 1 showed concentration excess helps an amplitude
+   *regression* by 0.011 dex; inside the physical model it does not.
+
+4. **E2 subsumes S2a.** At Stage 3.1 with E1, the NFW scale radius beat the
+   halo boundary. With E2 present, plain `S2` wins and `S2a` falls to ranks 9,
+   14, 15 — both encode a mass-dependent size/timing and E2 does it better and
+   far more identifiably.
+
+5. **The profile family barely matters** — gompertz_log, moffat and sersic all
+   appear in the top 4, with a loss spread of ~0.05 across families against
+   ~0.08 across efficiency forms. This is the exp48 verdict ("the objective is
+   the lever, the profile is not") reproduced in an unpinned model.
+
+**Short list for Stage 3.3**: `gompertz_log-E2-S2`, `sersic-E5-S2+S3`,
+`moffat-E2-S2`, `moffat-E2-S2+S3`.
+
 ## Measured before any fitting (see plan §3.2 and §4.4)
 
 - The **absolute deposition law works**: `eps = 0.00318 (Mh/10^13.5)^-0.190

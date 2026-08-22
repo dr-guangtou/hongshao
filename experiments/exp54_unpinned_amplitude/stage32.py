@@ -146,6 +146,7 @@ def main(n_total=240):
     print(f"\n  SHORT LIST for Stage 3.3: {short}")
     np.savez_compressed(OUT, labels=np.array([r["label"] for r in good]),
                         mean_rank=mean_rank,
+                        **{f"theta::{r['label']}": r["theta"] for r in good},
                         **{k: np.array([r[k] for r in good])
                            for k in ("loss", "sA0", "sA4", "sF0", "sF4",
                                      "ident", "over", "tilt", "npar")})
