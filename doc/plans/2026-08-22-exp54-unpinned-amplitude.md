@@ -165,7 +165,21 @@ log10 eps_i  =  a0  +  a_M [logMh(t_i) - 13.5]  +  a_z ln(1 + z_i)
 M*_model(<100, z_k)  =  SUM_{i : t_i <= t_k}  eps_i * dMh_i
 ```
 
-gives **a0 = -2.498, a_M = -0.190, a_z = 0.355**:
+gives **a0 = -2.498, a_M = -0.190, a_z = 0.355**. **Write it as a double power
+law when reporting it** — mixing log10 for the mass term with ln for the
+redshift term makes the two coefficients non-comparable (dex per dex vs dex per
+e-fold), and they differ only by the constant ln(10):
+
+```
+eps  =  0.00318 * [ Mh(t_i) / 10^13.5 Msun ]^(-0.190) * (1 + z_i)^(+0.817)
+```
+
+Both exponents are then dimensionless log-log slopes. `t_i` and `z_i` are the
+same snapshot index labelled two ways. **Scope caveat**: a single power law in
+halo mass means NO PEAK in stellar-to-halo-mass ratio, whereas real relations
+peak near 10^12 Msun. This sample is logMh = 13.01 / 13.29 / 14.36 (1st / 50th
+/ 99th percentile), entirely on the declining side, so the power law is
+adequate **over this mass range only**.
 
 | epoch | law (5-fold CV) | law bias | `logMh(z_k)` | paired verdict | shuffled-MAH control |
 |---|---|---|---|---|---|
@@ -245,9 +259,29 @@ tested, and both name a term that works.**
   is exactly the deep conditioning of §4.4.
 
 **F. The amplitude and the shape want opposite efficiency windows, and for the
-amplitude the window is not a window at all.** The shape fit puts it at
+amplitude the window is not a window at all.**
+
+*Terminology, because these are easy to conflate.* `eps(t_i)` is a TRUE
+efficiency: a dimensionless fraction with an absolute value (~0.003-0.008
+here), and stellar mass is `sum eps(t_i) dMh(t_i)` with nothing else applied.
+`w(z)` is NOT an efficiency — it is a shape function defined only up to an
+arbitrary multiplicative constant, because the next line of the current kernel
+is `dM = w*dMh / sum(w*dMh)`, which cancels the normalization. It says WHEN
+mass is laid down, in relative terms, and nothing about how much. So
+
+```
+current model:   eps(t_i) = C * w(z_i)      C supplied per galaxy per epoch by the TRUTH PIN
+new model:       eps(t_i) = 10^a0 * [Mh(t_i)/10^13.5]^a_M * (1+z_i)^0.817
+```
+
+`C` being the truth rather than a model parameter IS the oracle problem of §1.
+"Remove the truth pin" and "give `eps` an absolute normalization and a
+halo-mass dependence" are the same instruction.
+
+The shape fit puts the window at
 mu = 1.522, sig = 0.235 — a sharp lognormal peaked at z ~ 3.6. The amplitude
-wants `a_z = +0.355`: a smooth *monotone* rise toward high z with no peak.
+wants `eps` to rise *monotonically* toward high z with no peak at all,
+`(1+z)^0.817`.
 Three measurements say the amplitude's window is degenerate rather than merely
 different:
 
@@ -367,9 +401,73 @@ epoch-k swap:
   survives once `logMh(t_i)` is available is a real, scored question.
 - It gives the shape a lever that does **not** run through the efficiency
   window, which is the only structural hope of relieving the §3.2.F tension.
+  **What would falsify the bet**: if `log R50` is conditioned on `logMh(t_i)`
+  and the fitted window *still* prefers to be sharply peaked, the second lever
+  is not reaching and the honest answer is two separate functions — one for the
+  mass budget, one for the radial clock. Given that the adopted mass slope on
+  `log R50` is currently ~0 (see below), this failure mode is live.
 
 A progenitor-track mode may deliberately condition on descendant properties,
 but must be labelled as such and never used for catalogue population.
+
+#### 4.4.1 Concentration: availability, importance, and the cheap route first
+
+**Availability.** The source is the TNG supplementary *Halo Structure* catalog
+(Anbajagane et al., arXiv:2109.02713), which fits NFW profiles and reports
+`c200c` at **twenty snapshots up to z=12**. We hold **five** — the anchor
+epochs — in `experiments/exp46_highz_ridge/outputs/conc_history.npz`, at
+99.6-100% completeness per epoch. `fetch_halo_structure.py` can pull more and
+the API key is present, at **~2.7 GB per snapshot** (~40 GB for the remaining
+fifteen).
+
+**Importance (measured).** Gain in CV scatter on `log M*(<100)` over
+`logMh(z_k)` alone:
+
+| epoch | `c200c` at all (z=0.4 value) | EXTRA gain from epoch-local `c200c(z_k)` |
+|---|---|---|
+| z=0.4 | +0.0106 | +0.0000 |
+| z=0.7 | +0.0092 | -0.0009 |
+| z=1.0 | +0.0061 | +0.0017 |
+| z=1.5 | +0.0021 | +0.0043 |
+| z=2.0 | **+0.0002** | **+0.0091** |
+
+**Concentration matters most at low z; making it epoch-local matters most at
+high z, and the two hand off almost exactly.** The mechanism is that `c200c`
+decorrelates with itself across time: `corr(log c200c(z=0.4), log c200c(z))` =
++0.392 (z=0.7), +0.133 (z=1.0), **-0.045 (z=1.5), -0.036 (z=2.0)**. The
+descendant value is not a usable substitute and there is no shortcut via
+correlation.
+
+**But do NOT download 40 GB first.** Deposit-time conditioning needs `c200c`
+far beyond z=2 — under the fitted law, **39% of z=0.4 stellar mass is deposited
+at z>2** (16-84: 28-54%), 22% at z>3, 13% at z>4 — and the decorrelation makes
+extrapolation from z<=2 hopeless. The cheap alternative is physical:
+concentration tracks formation time (`c ~ (1+z_form)/(1+z)`, Wechsler/Bullock),
+and the full MAH is already in hand. **Order of work: build the MAH-derived
+concentration proxy, validate it against the five epochs we hold, and download
+more snapshots only if the proxy is inadequate.** Interpolation between the
+five anchors is acceptable inside z=0.4-2.0.
+
+**Do not misapply the standing "concentration history is a SETTLED dead end"
+verdict here.** That was about separating COMPACT GALAXIES (R^2 0.012-0.037).
+For the AMPLITUDE, concentration is worth +0.011 dex at z=0.4. Different
+question, different answer.
+
+**The functional form is empirical, and the one physical check available
+currently FAILS.** `parameter = base + sum(slopes x standardized halo
+properties)` is a first-order Taylor expansion chosen for identifiability, not
+derived. The single physical expectation available is that halo virial radius
+scales as `Mh^(1/3)` and galaxy size tracks it, so the `log R50` vs `logMh`
+slope should be near **+0.333**. **The adopted fit gives -0.059 per dex** —
+essentially zero, wrong sign. Two mitigations from the record: exp49 measured
+these six slopes to be the least well-determined part of the model (two fits
+agreeing to 0.015 on the base kernel differed by up to 0.022 on the slopes),
+and exp09 measured the predictable halo->stellar-mass map to be essentially
+linear (a gradient-boosted-tree ceiling did not beat linear, -0.6%, within
+noise) — which justifies linear conditioning for the STATISTICAL emulator
+though it does not automatically transfer here. **Make "is the fitted log R50
+vs logMh slope consistent with +1/3?" an explicit scored check in Stage 3**; it
+is the only falsifiable physical statement this layer admits.
 
 Bookkeeping to fix explicitly: `dMh` is `diff(10**logMh_full)`, so deposit `i`
 spans `[t_i, t_{i+1}]` and the code aligns it with `logMh_full[1:]` — the
