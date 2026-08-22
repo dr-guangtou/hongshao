@@ -459,12 +459,58 @@ essentially any N-body halo catalogue. Measured against the fitted value:
 Adding the proxy on top of the fitted value gains nothing (0.1104 vs 0.1102 at
 z=0.4), so it is a **noisier version of the same information**, not a new axis.
 
-**Order of work.** (1) Use the fit-free proxy — zero cost, every snapshot, and
-the only option that covers z>2 at all. (2) **Calibrate it**: regress the
-fitted `c200c` on the proxy plus MAH features at the five epochs where both
-exist, then apply that calibration at all 73 snapshots. This is cheap and
-should recover more than the raw 40%. (3) Download more catalog snapshots only
-if the calibration is demonstrably limited by having only five anchors. Handle
+#### 4.4.2 The concentration FEATURE: an excess, not a concentration
+
+**Decided (user, 2026-08-22): download the full record, and use the Diemer &
+Joyce (2019) model to remove measurement systematics.** Both were done. The
+result reframes the feature.
+
+`colossus` 1.4.0 is now a dependency; the TNG300 cosmology is registered
+exactly (Planck 2015: H0=67.74, Om0=0.3089, Ob0=0.0486, sigma8=0.8159,
+ns=0.9667). `modelDiemer19` gives `c200c(M, z)` — **a DETERMINISTIC function of
+mass and redshift**, so it carries no per-halo information. Measured
+consequence, 5-fold CV on `log M*(<100)`:
+
+| predictor | z=0.4 | z=1.0 | z=2.0 |
+|---|---|---|---|
+| `logMh(z_k)` — the model already has this | 0.1209 | 0.1488 | 0.1820 |
+| + `c_Diemer19(Mh(z_k), z_k)` | 0.1209 | 0.1485 | 0.1784 |
+| + MEASURED `c200c(z_k)` | 0.1102 | 0.1409 | 0.1727 |
+| + RESIDUAL `log(c_meas / c_D19)` | **0.1102** | **0.1408** | **0.1722** |
+
+**D19 alone adds nothing, and the measured value's ENTIRE gain lives in the
+residual.** D19 also sits well off TNG: median offset +0.110 dex (z=0.4) rising
+to +0.214 (z=2.0) — TNG haloes 29-64% more concentrated — with Spearman rank
+correlation of only **0.039 at z=0.4**, rising to 0.23 at z=1.5. Both are
+expected: TNG is hydrodynamic and D19 is calibrated on dark-matter-only runs
+(baryonic contraction), and this sample's narrow mass range (logMh 13.0-14.4)
+makes the mean relation nearly flat across it while all measured variation is
+per-halo scatter.
+
+**ADOPT the excess as the feature:**
+
+```
+concentration feature  =  log10[ c_measured(t_i) / c_Diemer19(Mh(t_i), z_i) ]
+```
+
+Dimensionless, cosmology-normalized, exactly as predictive (0.1102), portable
+(any simulation computes the denominator with colossus), non-redundant with
+`logMh(t_i)` by construction, and explicit about what it means.
+
+**A nuance on the systematics motivation, stated because it cuts against the
+framing**: deploying on another N-body catalogue means measuring concentration
+with THAT simulation's halo finder, so the risk is not measurement per se — it
+is INCONSISTENCY between the definition used in training and in application.
+Normalizing by D19 helps exactly there, dividing out the definition-dependence
+carried by the mean relation. It cannot supply the excess, which is the part
+that carries the information.
+
+**Order of work.** (1) The full catalog download is running — see
+`experiments/exp54_unpinned_amplitude/halo_structure.py`. (2) Build the excess
+feature at the 16 catalog snapshots and interpolate in `log(1+z)` to every
+deposit snapshot. (3) Keep the fit-free `M500c/M200c` proxy as the FALLBACK for
+snapshots the catalog does not cover and as a portability check — it recovers
+25-43% of the gain and is available in essentially any halo catalogue. Handle
 the 3.7% of snapshots where the proxy is missing explicitly rather than
 silently filling.
 
@@ -489,7 +535,62 @@ though it does not automatically transfer here. **Make "is the fitted log R50
 vs logMh slope consistent with +1/3?" an explicit scored check in Stage 3**; it
 is the only falsifiable physical statement this layer admits.
 
-Bookkeeping to fix explicitly: `dMh` is `diff(10**logMh_full)`, so deposit `i`
+#### 4.4.3 Replace the deposit-size clock with the virial radius
+
+**The current size law is badly posed** (user, 2026-08-22, confirmed by
+measurement). It reads
+`R50_i = 10^(log_R50_base + slopes.cond) * (t_i/t_obs)^g`, and:
+
+- **`t_obs` normalizes nothing.** It is a GLOBAL constant (9.389 Gyr, snapshot
+  72), not per-galaxy, so `(t_i/t_obs)^g = const * t_i^g` and the constant is
+  absorbed into the intercept. It is an exact reparameterization that changes
+  only what the intercept means.
+- **The intercept is uninterpretable**: 1253 kpc, extrapolated to a time when
+  almost no deposits form.
+- **The pivot is at the EDGE of the data.** Deposits span t ~ 0.2-9.4 Gyr with
+  most mass laid down early; the pivot is at the far end, which maximally
+  correlates intercept with slope. `g` rails at 4.0.
+
+**Measured**: the adopted model's deposit radius as a fraction of the halo's own
+virial radius, `f = R50/R200c(t_i)`, over 42405 deposits from 600 galaxies:
+
+| z | median `f` | median R50 | median R200c |
+|---|---|---|---|
+| 8-20 | 0.0013 | 0.011 kpc | 7.3 kpc |
+| 5-8 | 0.0038 | 0.10 kpc | 24.3 kpc |
+| 3-5 | 0.0132 | 0.86 kpc | 71.4 kpc |
+| 2-3 | 0.0498 | 8.5 kpc | 175.6 kpc |
+| 1-2 | 0.186 | 65.9 kpc | 352.8 kpc |
+| 0.5-1 | 0.492 | 300 kpc (capped) | 566.4 kpc |
+
+Spread of `log f` = **0.913 dex**. The fitted clock is ~3x steeper in log than
+virial growth, putting high-z deposits at 0.1% of the virial radius (11 pc, a
+point mass) and low-z ones at half of it against the ceiling.
+
+**PROPOSED replacement:**
+
+```
+R50_i  =  f0 * R200c(t_i) * (1 + z_i)^b
+```
+
+- `R200c(t_i)` is already on disk at all 73 snapshots (`Group_R_Crit200` in
+  `exp46_highz_ridge/outputs/so_history.npz`, 96.4% finite), in ckpc/h ->
+  physical via `/h/(1+z)`.
+- `f0` reads as "deposits form at this fraction of the virial radius" —
+  dimensionless, physical, comparable to the literature.
+- **`b` measures the DEVIATION from virial scaling, and `b = 0` is a testable
+  null hypothesis.** The current model implies `b ~ -3`.
+- It builds the `Mh^(1/3)` scaling in for free — the thing the current
+  conditioning fails to reproduce (fitted -0.059/dex against +1/3).
+
+**Minimal fallback** if that is too large a step for one experiment: keep the
+power law but move the pivot to the mass-weighted median deposit time (~2 Gyr).
+Purely cosmetic, but it decorrelates the two parameters and makes the base
+radius a number that can be sanity-checked.
+
+#### 4.4.4 Deposit bookkeeping
+
+Fix explicitly: `dMh` is `diff(10**logMh_full)`, so deposit `i`
 spans `[t_i, t_{i+1}]` and the code aligns it with `logMh_full[1:]` — the
 **post-deposit** halo mass. State the convention in the module docstring and
 assert it; an off-by-one here is a silent 0.01-0.03 dex systematic in `a_M`.
