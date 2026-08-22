@@ -133,7 +133,15 @@ def main(top=3, n_total=0):
         pr = F.Problem(sp, recs, data, epochs=epochs)
         t0 = time.time()
         print(f"{RULE}\n{sp.label}   {sp.n_theta} parameters\n{RULE}")
-        th, lo = F.fit(pr, maxiter=600 * sp.n_theta, verbose=True)
+        # two starts, not four: five epochs on a large sample is ~10x the
+        # factorial's cost per evaluation, and Stage 3.2 showed these cells
+        # converge from any sane start (S2 cells had zero multi-start spread).
+        base = M.default_theta(sp)
+        rng = np.random.default_rng(1)
+        j = np.clip(base + rng.normal(0, 0.12, base.shape)
+                    * np.maximum(np.abs(base), 0.3), *np.array(sp.bounds()).T)
+        th, lo = F.fit(pr, starts=[base, j], maxiter=600 * sp.n_theta,
+                       verbose=True)
         sa, sf = pr.per_epoch(th)
         pred = pr.predict(th)
         print(f"    fitted in {(time.time() - t0) / 60:.1f} min; loss {lo:.5f}")

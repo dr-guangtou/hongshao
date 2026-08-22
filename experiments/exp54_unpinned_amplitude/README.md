@@ -300,6 +300,61 @@ magnitude better conditioned — for a loss only 0.04 higher.
 **Short list for Stage 3.3**: `gompertz_log-E2-S2`, `sersic-E5-S2+S3`,
 `moffat-E2-S2`, `moffat-E2-S2+S3`.
 
+## Stage 3.3 — five epochs (`stage33.py`), COMPLETE
+
+Short list on n=1199 at all five epochs. `score_A` = 1 means "as good as the
+best halo-only regression"; `score_F` is the raw shape loss over Stage 0's
+incumbent reference.
+
+| model | p | loss | sA(0.4) | sA(0.7) | sA(1.0) | sA(1.5) | sA(2.0) | growth bias |
+|---|---|---|---|---|---|---|---|---|
+| **gompertz_log-E2-S2** | 7 | 1.6547 | 1.128 | **0.907** | **0.899** | **0.929** | **0.970** | +0.032 |
+| sersic-E5-S2+S3 | 11 | 1.6472 | 1.151 | 0.921 | 0.906 | 0.912 | 0.924 | +0.044 |
+| moffat-E2-S2 | 7 | 1.6619 | 1.127 | 0.907 | 0.899 | 0.929 | 0.971 | +0.035 |
+
+**Three headline results.**
+
+1. **The physical model BEATS the best halo-only regression at four of five
+   epochs** (`score_A` = 0.90-0.97 at z >= 0.7), losing only at z=0.4 (1.13).
+   Seven global parameters, no per-object freedom, no pin — against a
+   regression refitted separately at every epoch, and it predicts the profile
+   as well.
+
+2. **Mass growth is right to +0.032 dex.** The pinned incumbent needed a
+   **+0.398 dex** correction to its own assembly. That is a **12x** improvement
+   in the one quantity the pin was entirely concealing.
+
+3. **The monotonic floor is NOT the limitation.** Raw shape loss runs 0.145 at
+   z=0.4 to 0.113 at z=2, i.e. **3.2x to 2.5x the floor of 0.0456**. The model
+   is limited by its functional forms, not by the deposition-only assumption.
+
+**The Stage 3.4 diagnosis — the residual has exactly two components.**
+
+*(a) An inner deficit at every epoch.* All three models under-predict inside
+~7 kpc, reaching **-0.10 dex (-21%) at 3 kpc**, over-predict by +0.02 at 20-70
+kpc, and recover by 148 kpc. This is the project's standing compact-central
+defect (exp47/48/53), now at -21% instead of -39% to -47%, but unmistakably the
+same shape. **No profile family in the shootout fixes it** — gompertz_log,
+moffat and sersic give the same curve.
+
+*(b) A z=2 amplitude deficit that tilts with halo mass.* Median amplitude bias
+is small at z <= 1.5 (-0.008 to +0.010 dex) and falls to **-0.026 dex at z=2**,
+with a halo-mass tilt of **-0.061 to -0.122 dex/dex at every radius** —
+radius-independent, so it is an amplitude failure, not a shape failure.
+
+**The two candidate fixes now have evidence, and they address different
+components:**
+
+- **E5 partially fixes (b) and worsens (a)**: it closes the z=2 outer tilt
+  (-0.030 [-0.060, +0.003] at 148 kpc, CI includes zero, against E2's -0.078)
+  but opens an inner tilt of -0.042 to -0.057 at 5 kpc **at all five epochs**,
+  and costs 4 extra parameters, multi-start spread, and 10x worse
+  identifiability.
+- **A COMPACT second channel** (§4.5) targets (a) directly.
+- **A DELIVERY-DELAY kernel** (§4.6) targets (b): if stars arrive later than
+  the halo mass that formed them, the z=2 budget is reduced in exactly the
+  mass-dependent way observed.
+
 ## Measured before any fitting (see plan §3.2 and §4.4)
 
 - The **absolute deposition law works**: `eps = 0.00318 (Mh/10^13.5)^-0.190
