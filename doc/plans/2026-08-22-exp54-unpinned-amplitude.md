@@ -20,9 +20,10 @@ amplitude. Four things it assumed are now known to be false or backwards.
 
 1. **The absolute deposition law is not the risky, far-off Stage 3. Its
    amplitude already works.** The exact 3-parameter form revision 1 proposed
-   reproduces the epoch-matched halo-mass baseline at every epoch, beats it at
-   z >= 1.0, carries <= 0.004 dex bias, and cross-validates with no
-   overfitting (§3.2.D). Revision 1 called this "more physical, separate,
+   TIES the epoch-matched halo-mass baseline at every epoch under a paired
+   bootstrap, carries <= 0.004 dex bias, and cross-validates with no
+   overfitting (§3.2.D). It still LOSES to halo mass + concentration +
+   formation time by 0.004-0.012 dex — the missing concentration term. Revision 1 called this "more physical, separate,
    benchmark it, don't assume it". It has now been benchmarked and it holds.
 2. **exp54a's "refit all physical parameters" is a no-op** under the split
    objective revision 1 also asks for. The two requirements are incompatible;
@@ -166,13 +167,43 @@ M*_model(<100, z_k)  =  SUM_{i : t_i <= t_k}  eps_i * dMh_i
 
 gives **a0 = -2.498, a_M = -0.190, a_z = 0.355**:
 
-| epoch | law (5-fold CV) | law bias | `logMh(z_k)` | shuffled-MAH control |
-|---|---|---|---|---|
-| z=0.4 | 0.1231 | +0.0005 | 0.1209 | 0.1324 |
-| z=0.7 | 0.1463 | -0.0015 | 0.1459 | 0.1741 |
-| z=1.0 | 0.1473 | -0.0006 | 0.1488 | 0.2010 |
-| z=1.5 | 0.1504 | +0.0035 | 0.1552 | 0.2530 |
-| z=2.0 | 0.1802 | -0.0020 | 0.1820 | 0.3287 |
+| epoch | law (5-fold CV) | law bias | `logMh(z_k)` | paired verdict | shuffled-MAH control |
+|---|---|---|---|---|---|
+| z=0.4 | 0.1231 | +0.0005 | 0.1209 | **baseline better** | 0.1324 |
+| z=0.7 | 0.1463 | -0.0015 | 0.1459 | tie | 0.1741 |
+| z=1.0 | 0.1473 | -0.0006 | 0.1488 | law better | 0.2010 |
+| z=1.5 | 0.1504 | +0.0035 | 0.1552 | law better | 0.2530 |
+| z=2.0 | 0.1802 | -0.0020 | 0.1820 | tie | 0.3287 |
+
+**The verdict column is a paired bootstrap** (2000 resamples of the same 2397
+galaxies, 95% CI on the difference in CV residual scatter). Every margin is
+<= 0.005 dex, ~3% of the scatter. **The correct summary is that the
+3-parameter law TIES the epoch-matched halo-mass baseline** — it does not beat
+it. An earlier draft of this plan claimed "beats it at z >= 1.0"; that was
+stated without an error bar and is wrong at z=2.0 (tie) and backwards at
+z=0.4.
+
+**Against the strongest halo-only baseline it LOSES at every epoch**, by
+0.0038-0.0122 dex, all significant:
+
+| epoch | 3p law | `logMh(z_k)+c200c+fz2` | difference |
+|---|---|---|---|
+| z=0.4 | 0.1231 | 0.1109 | -0.0122 |
+| z=0.7 | 0.1463 | 0.1366 | -0.0097 |
+| z=1.0 | 0.1473 | 0.1403 | -0.0069 |
+| z=1.5 | 0.1504 | 0.1437 | -0.0067 |
+| z=2.0 | 0.1802 | 0.1764 | -0.0038 |
+
+That gap is the missing concentration term (§3.2.E) and is the law's clearest
+target. **The 4-parameter cross-term version does beat `logMh(z_k)` at all
+five epochs significantly** (+0.0025 to +0.0041 dex) — it, not the 3-parameter
+form, is the row that clears the simple baseline.
+
+What the 3-parameter law earns is therefore NOT accuracy over a regression. It
+is: three GLOBAL parameters doing the work of ten epoch-specific regression
+coefficients, while also producing the radial profile and the growth history;
+and a bias of <= 0.004 dex, which is a win over the PINNED MODEL's +0.398 dex,
+not over an OLS baseline (which is unbiased by construction).
 
 Pooled in-sample 0.1505, pooled CV **0.1506** — 3 parameters on ~12000 points,
 so overfitting is nil. It **beats** the epoch-matched baseline at z >= 1.0. Its
@@ -375,9 +406,10 @@ deferred to a separate experiment and was folded back in once §3.2.D and
   hybrid's "refit" is a no-op, so the scope as originally drawn would not fill
   a branch.
 - **The absolute law's amplitude is already done** — 3 parameters, CV'd,
-  shuffle-controlled, near-zero bias, and with the mass x redshift cross-term
-  it beats the epoch-matched halo-mass baseline at z=0.4 as well (0.1176 vs
-  0.1209). What remains is the *joint* fit, i.e. the §3.2.F window tension.
+  shuffle-controlled, near-zero bias, tying the epoch-matched halo-mass
+  baseline; with the mass x redshift cross-term it beats that baseline at all
+  five epochs significantly. What remains is the *joint* fit, i.e. the §3.2.F
+  window tension.
 - **None of pre-registered predictions 1-4 can be tested without Stage 3**,
   because they all require the kernel to supply its own amplitude.
 
