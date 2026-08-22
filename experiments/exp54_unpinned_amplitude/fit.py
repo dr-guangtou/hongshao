@@ -100,6 +100,34 @@ class Problem:
         score_F = float(self.obj(F_m, self.F_d[good], R_GRID)) / L_F_REF
         return score_A, score_F, n_bad
 
+    def per_epoch(self, theta):
+        """(score_A[k], score_F[k]) per epoch -- what the JUDGE ranks on."""
+        m = self.predict(theta)
+        good = np.isfinite(m).all(axis=(1, 2)) & (m[:, :, I100] > 0).all(axis=1)
+        if good.sum() < 10:
+            return np.full(len(self.epochs), np.nan), np.full(len(self.epochs), np.nan)
+        mg = m[good]
+        A_m = np.log10(np.clip(mg[:, :, I100], 1.0, None))
+        dA = (A_m - self.A_d[good]) / self.sig
+        sa = np.sqrt(np.mean(dA ** 2, axis=0))
+        F_m = mg / np.clip(mg[:, :, I100], 1.0, None)[:, :, None]
+        sf = np.array([self.obj(F_m[:, [j]], self.F_d[good][:, [j]], R_GRID)
+                       / L_F_REF for j in range(len(self.epochs))])
+        return sa, sf
+
+    def diagnostics(self, theta):
+        """Over-reach and the halo-mass tilt -- judge criteria, not losses."""
+        m = self.predict(theta)
+        good = np.isfinite(m).all(axis=(1, 2)) & (m[:, :, I100] > 0).all(axis=1)
+        mg, dg = m[good], self.data[good]
+        over = np.median(1.0 - mg[:, 0, -1] / np.clip(
+            mg[:, 0, I100] / np.clip(mg[:, 0, I100], 1e-30, None)
+            * mg[:, 0, -1], 1e-30, None))          # placeholder, see below
+        # fraction of the model's own deposited mass outside the measured grid
+        # is not observable from the CoG alone; use the RESIDUAL TILT instead
+        r148 = np.log10(np.clip(mg[:, 0, -1], 1.0, None)) - np.log10(dg[:, 0, -1])
+        return r148, good
+
     def loss(self, theta):
         self.n_eval += 1
         a, f, n_bad = self.scores(theta)
