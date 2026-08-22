@@ -836,8 +836,29 @@ else — which is information the deferral would not have produced.
 13. **Deployment use case 3 is reported UNVALIDATED** until the progenitor
     selection is addressed (§7.5).
 14. **Figures are required before Stage 3.1 fitting** (§7.6).
-15. **The monotonic-addition floor is MEASURED at Stage 3.0 and ACTED ON at
-    Stage 3.4** (user, 2026-08-23). exp54 does not pre-commit to being either a
+15. **RESOLVED AT STAGE 3.0 — DO NOT BUILD A SURVIVAL TERM.** The measurement
+    arrived earlier than expected and is decisive. The floor is
+    **0.045590 in production-objective units, 28.8% of the incumbent's
+    0.158196 loss (8.3% of its variance)** — but it is:
+    - **confined to the inner profile**: median isotonic correction 0.0485 dex
+      at 2 kpc, 0.0163 at 4.9, 0.0059 at 10.2, and **0.0000 beyond ~20 kpc**;
+    - **INCOHERENT across epochs**: at 4.9 kpc the sign agreement between
+      consecutive intervals is **52.1%** against 50% for pure chance, with a
+      step-to-step correlation of **+0.013**. (At 103.5 kpc it is 76.8% and
+      +0.163, i.e. the OUTER profile does grow coherently.)
+    - **not tracked by merger activity** (corr with MAH burstiness -0.101 at
+      4.9 kpc) **nor by halo shape** (corr with c/a +0.037);
+    - **happening while the galaxy GROWS**: galaxies losing ~4e9 Msun inside
+      10 kpc simultaneously gain 3-8e9 Msun in total.
+
+    A survival term is smooth and monotone in `t_k - t_j`. **It cannot produce
+    incoherent, sign-flipping, inner-only fluctuations**, so it would not
+    recover this floor — it would only absorb it as a spurious mass-loss
+    signal. The honest treatment is to **report the floor as the
+    deposition-only ceiling**, note that it binds only at R < 20 kpc, and
+    exclude it from the attribution of any remaining error there.
+
+    Original framing, kept for the record (user, 2026-08-23): exp54 does not pre-commit to being either a
     deposition-only boundary experiment or the successor fiducial. Stage 3.0
     splits the floor into real signal and irreducible noise; if it is mostly
     noise, deposition-only stands and the floor is reported as the ceiling; if
