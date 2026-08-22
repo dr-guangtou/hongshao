@@ -836,6 +836,15 @@ else — which is information the deferral would not have produced.
 13. **Deployment use case 3 is reported UNVALIDATED** until the progenitor
     selection is addressed (§7.5).
 14. **Figures are required before Stage 3.1 fitting** (§7.6).
+15. **The monotonic-addition floor is MEASURED at Stage 3.0 and ACTED ON at
+    Stage 3.4** (user, 2026-08-23). exp54 does not pre-commit to being either a
+    deposition-only boundary experiment or the successor fiducial. Stage 3.0
+    splits the floor into real signal and irreducible noise; if it is mostly
+    noise, deposition-only stands and the floor is reported as the ceiling; if
+    mostly signal, a survival or controlled radial-evolution term is added at
+    Stage 3.4 with the evidence on the record. **No evolution term is built
+    before that measurement exists** — it would otherwise absorb projection
+    noise and acquire a physical name it has not earned.
 
 ---
 
