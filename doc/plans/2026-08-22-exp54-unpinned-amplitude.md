@@ -438,15 +438,35 @@ decorrelates with itself across time: `corr(log c200c(z=0.4), log c200c(z))` =
 descendant value is not a usable substitute and there is no shortcut via
 correlation.
 
-**But do NOT download 40 GB first.** Deposit-time conditioning needs `c200c`
-far beyond z=2 — under the fitted law, **39% of z=0.4 stellar mass is deposited
-at z>2** (16-84: 28-54%), 22% at z>3, 13% at z>4 — and the decorrelation makes
-extrapolation from z<=2 hopeless. The cheap alternative is physical:
-concentration tracks formation time (`c ~ (1+z_form)/(1+z)`, Wechsler/Bullock),
-and the full MAH is already in hand. **Order of work: build the MAH-derived
-concentration proxy, validate it against the five epochs we hold, and download
-more snapshots only if the proxy is inadequate.** Interpolation between the
-five anchors is acceptable inside z=0.4-2.0.
+**But do NOT download 40 GB. A fit-free proxy is already on disk at EVERY
+snapshot.** Deposit-time conditioning needs `c200c` far beyond z=2 — under the
+fitted law, **39% of z=0.4 stellar mass is deposited at z>2** (16-84: 28-54%),
+22% at z>3, 13% at z>4 — and even the full 20-snapshot download would not
+cover every deposit. `experiments/exp46_highz_ridge/outputs/so_history.npz`
+already holds **`M500c_over_M200c` at all 73 snapshots** (2397 x 73, 96.3%
+finite), a concentration proxy needing no NFW fit, no Vmax and no profile fit —
+just two directly measured spherical-overdensity masses, available in
+essentially any N-body halo catalogue. Measured against the fitted value:
+
+| epoch | Spearman(proxy, fitted `c200c`) | gain from FITTED `c200c(z_k)` | gain from PROXY | proxy recovers |
+|---|---|---|---|---|
+| z=0.4 | 0.700 | +0.0107 | +0.0045 | 42% |
+| z=0.7 | 0.674 | +0.0084 | +0.0036 | 43% |
+| z=1.0 | 0.663 | +0.0079 | +0.0029 | 37% |
+| z=1.5 | 0.623 | +0.0065 | +0.0016 | 25% |
+| z=2.0 | 0.653 | +0.0093 | +0.0034 | 37% |
+
+Adding the proxy on top of the fitted value gains nothing (0.1104 vs 0.1102 at
+z=0.4), so it is a **noisier version of the same information**, not a new axis.
+
+**Order of work.** (1) Use the fit-free proxy — zero cost, every snapshot, and
+the only option that covers z>2 at all. (2) **Calibrate it**: regress the
+fitted `c200c` on the proxy plus MAH features at the five epochs where both
+exist, then apply that calibration at all 73 snapshots. This is cheap and
+should recover more than the raw 40%. (3) Download more catalog snapshots only
+if the calibration is demonstrably limited by having only five anchors. Handle
+the 3.7% of snapshots where the proxy is missing explicitly rather than
+silently filling.
 
 **Do not misapply the standing "concentration history is a SETTLED dead end"
 verdict here.** That was about separating COMPACT GALAXIES (R^2 0.012-0.037).
