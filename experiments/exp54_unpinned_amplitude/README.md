@@ -129,6 +129,52 @@ shuffled data. An earlier probe froze the parameters and got 0.1324 rather than
 version is the correct permutation test — the same frozen-vs-refitted
 distinction that decided exp52/exp53's mechanism claim.
 
+## Stage 2 — re-baselining the record (`rebaseline.py`)
+
+Four products, **identical shape, no refit anywhere**, differing only in what
+the profile is scaled to: `oracle-500` (the exp53 incumbent), `oracle-100`
+(same, pinned at the measured anchor), `hybrid-mean` (out-of-fold predicted
+amplitude), `hybrid-draw` (+ a cross-epoch-correlated draw). Amplitude provider
+is Stage 1's best halo-only row; its residual correlation across epochs runs
+0.60 (0.4-0.7) down to 0.12 (0.4-2.0), which is why the draw must be correlated.
+
+**Read the column that matches the metric — getting this backwards inverts the
+conclusion.** Paired metrics (tier 1+2 scatter, tier 3) compare a model galaxy
+to its own truth, so read `hybrid-mean`; a draw is a realization, not a
+prediction of that galaxy, and inflates paired error by ~sqrt(2). Distribution
+metrics (tiers 2b/2c/2d/2e, all energy ratios) are pairing-blind, so read
+`hybrid-draw`; `hybrid-mean` is under-dispersed by construction and is
+penalized for it.
+
+| metric | oracle-500 | hybrid | change |
+|---|---|---|---|
+| tier 3 max\|rel\| z=0.4 (paired) | 0.1951 | **0.2690** | **+38%** |
+| M(<100) dex scatter z=0.4 (paired) | 0.029 | **0.105** | was pinned |
+| tier 2b plane z=0.4 (distribution) | 2.17 | **2.20** | **+1%** |
+| tier 2d mass-size R50 z=0.4 (distribution) | 5.09 | 5.17 | +2% |
+| **tier 2c Mtot growth 0.4->1.0** | **0.27** | **1.23** | **the pin's hiding place** |
+
+**Three findings.**
+
+1. **The plan's headline cost estimate was wrong, and in an instructive way.**
+   It predicted the tier 2b z=0.4 plane would move 2.1 -> 2.9 under a 0.137 dex
+   amplitude error. Measured: **2.17 -> 3.38 if the error is injected into the
+   MEAN, but 2.17 -> 2.20 with a properly cross-epoch-correlated DRAW.** The
+   predicted degradation is largely an artifact of applying a paired operation
+   to a pairing-blind metric. Population-level conclusions in exp38/40/47/48/53
+   are far more robust to unpinning than the plan assumed.
+
+2. **Per-galaxy conclusions are NOT robust.** Tier 3 profile max|rel| degrades
+   +38% at z=0.4 and +91% at z=2.0 (0.1648 -> 0.3150). Any exp38-53 claim about
+   an individual galaxy or a paired residual needs the `hybrid-mean` column.
+
+3. **The pin's real hiding place is the cross-epoch GROWTH tier.** `Mtot`
+   growth energy ratios sit at **0.27-0.33** under the pin — *below the truth's
+   own split-half floor*, i.e. "indistinguishable from reality", achieved by
+   construction rather than merit. Unpinned they are **1.22-1.60**. `R_half`
+   growth is identical in all four columns (9.19-12.29), a clean sanity check
+   that only the amplitude moved.
+
 ## Measured before any fitting (see plan §3.2 and §4.4)
 
 - The **absolute deposition law works**: `eps = 0.00318 (Mh/10^13.5)^-0.190
