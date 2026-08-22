@@ -100,34 +100,83 @@ def cmd_plan():
           f"the\n  tree root (snap 72) and have no main-branch entry to join on.")
 
 
+#: per-read socket timeout. NOT the whole-file timeout: a stalled TNG
+#: connection must fail fast enough to retry, and a 3 GB file at a few MB/s
+#: takes many minutes, so a whole-file timeout is the wrong instrument.
+READ_TIMEOUT = 120
+RETRIES = 12
+
+
+def _remote_size(url, key):
+    """Content-Length via a Range probe (the API does not answer HEAD)."""
+    req = urllib.request.Request(url, headers={"api-key": key,
+                                               "Range": "bytes=0-0"})
+    with urllib.request.urlopen(req, timeout=READ_TIMEOUT) as r:
+        cr = r.headers.get("Content-Range")            # "bytes 0-0/12345"
+    return int(cr.split("/")[-1]) if cr else None
+
+
+def _fetch_one(snap, key):
+    """Download one snapshot, RESUMING a partial `.part` if one exists.
+
+    These are ~3 GB over a link that stalls: the first version used a single
+    urlopen with timeout=3600, so a dead socket hung for an hour and lost the
+    whole file. This resumes with an HTTP Range request, so a stall costs at
+    most READ_TIMEOUT and never re-downloads what is already on disk.
+    """
+    dst = CACHE / f"halo_structure.{snap}.hdf5"
+    if dst.exists() and dst.stat().st_size > 0:
+        print(f"  cached  snap {snap:2d}  ({dst.stat().st_size / 1e9:.2f} GB)",
+              flush=True)
+        return
+    url = BASE + f"halo_structure.{snap}.hdf5"
+    tmp = dst.with_suffix(".part")
+    total = _remote_size(url, key)
+    for attempt in range(1, RETRIES + 1):
+        have = tmp.stat().st_size if tmp.exists() else 0
+        if total is not None and have >= total:
+            break
+        headers = {"api-key": key}
+        if have:
+            headers["Range"] = f"bytes={have}-"
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=READ_TIMEOUT) as r:
+                if have and r.status != 206:
+                    # server ignored the Range -- start over rather than
+                    # appending a second copy of the file to the first
+                    have, mode = 0, "wb"
+                else:
+                    mode = "ab" if have else "wb"
+                with open(tmp, mode) as fh:
+                    while True:
+                        chunk = r.read(1 << 24)
+                        if not chunk:
+                            break
+                        fh.write(chunk)
+        except (urllib.error.URLError, TimeoutError, ConnectionError,
+                OSError) as e:
+            got = tmp.stat().st_size if tmp.exists() else 0
+            print(f"    snap {snap:2d} attempt {attempt}/{RETRIES} stalled at "
+                  f"{got / 1e9:.2f} GB ({type(e).__name__}); resuming",
+                  flush=True)
+            continue
+        if total is None or tmp.stat().st_size >= total:
+            break
+    got = tmp.stat().st_size if tmp.exists() else 0
+    if total is not None and got < total:
+        raise SystemExit(f"snap {snap}: gave up at {got}/{total} bytes after "
+                         f"{RETRIES} attempts; re-run `fetch` to resume")
+    tmp.rename(dst)          # never leave a truncated file at the real name
+    print(f"  fetched snap {snap:2d}  ({dst.stat().st_size / 1e9:.2f} GB)",
+          flush=True)
+
+
 def cmd_fetch():
     key = api_key()
     CACHE.mkdir(parents=True, exist_ok=True)
     for s in SNAPS:
-        dst = CACHE / f"halo_structure.{s}.hdf5"
-        if dst.exists() and dst.stat().st_size > 0:
-            print(f"  cached  snap {s:2d}  ({dst.stat().st_size / 1e9:.2f} GB)",
-                  flush=True)
-            continue
-        url = BASE + f"halo_structure.{s}.hdf5"
-        tmp = dst.with_suffix(".part")
-        try:
-            req = urllib.request.Request(url, headers={"api-key": key})
-            with urllib.request.urlopen(req, timeout=3600) as r, \
-                    open(tmp, "wb") as fh:
-                # stream: these are ~3 GB, do not read() them into memory
-                while True:
-                    chunk = r.read(1 << 24)
-                    if not chunk:
-                        break
-                    fh.write(chunk)
-        except urllib.error.HTTPError as e:
-            tmp.unlink(missing_ok=True)
-            raise SystemExit(f"HTTP {e.code} on {url}\n  {e.read()[:300]!r}")
-        tmp.rename(dst)          # never leave a truncated file at the real name
-        print(f"  fetched snap {s:2d}  ({dst.stat().st_size / 1e9:.2f} GB)",
-              flush=True)
-
+        _fetch_one(s, key)
 
 def group_ids(snaps=SNAPS):
     """(n, n_snap) FoF group index per galaxy per snapshot, -1 where absent."""
