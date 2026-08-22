@@ -8,8 +8,8 @@ Sources: the exp53 branch investigation; the user's formulation (2026-08-22);
 the independent review at
 `hongshao_internal_review_2026_08_16/docs/internal/2026-08-22-truth-pinned-normalization-review.md`
 (sections 7, 8, 10, addendum 11); and **eight new measurements made while
-refining this plan** (§3.2), which changed three of revision 1's structural
-conclusions.
+refining this plan** (§3.2, reproducible), which overturned four of revision
+1's structural conclusions and one of its scope decisions.
 
 ---
 
@@ -355,40 +355,39 @@ assert it; an off-by-one here is a silent 0.01-0.03 dex systematic in `a_M`.
 
 ---
 
-## 5. Scope of exp54 — and one decision reopened
+## 5. Scope of exp54
 
-**Agreed with the user (2026-08-22):** exp54 = Stages 0-2 (contract, amplitude
-scoreboard, hybrid + re-baselining); the absolute deposition law becomes
-**exp55**. Success criterion: **deployability, not victory.** The deliverable is
-an honest unpinned forward model that predicts mass and profile jointly with
-its amplitude error measured and reported; the halo-only baselines are reported
-context, not a gate. It is adoptable at ~0.15 dex because it runs on an N-body
-catalogue where the pinned model cannot.
+**Success criterion (user, 2026-08-22): deployability, not victory.** The
+deliverable is an honest unpinned forward model that predicts mass and profile
+jointly, with its amplitude error measured and reported. The halo-only
+baselines of §3.2.B are reported context, not a gate. The model is adoptable at
+~0.15 dex because it runs on an N-body catalogue where the pinned model cannot.
 
-**That decision was taken before §3.2.D and §4.3.3 were known, and both cut
-against it.** Stated plainly so the next session can re-take it:
+**Stages: 0, 1, 2, 3, 4 — all in exp54. There is no exp55.**
 
-- exp54a turned out to be *much cheaper* than budgeted — it is a measurement,
-  not a fit campaign — so exp54 as scoped will not fill a branch.
-- exp55's amplitude is *already done*: 3 parameters, CV'd, shuffle-controlled,
-  competitive, near-zero bias — and with the mass x redshift cross-term it
-  **beats the epoch-matched halo-mass baseline at z=0.4 too** (0.1176 vs
-  0.1209). What remains for exp55 is the joint fit, i.e. the §3.2.F window
-  tension.
-- None of the pre-registered predictions 1-4 can be tested under the current
-  exp54 scope; predictions 5-7 are Stage 1/3 questions.
+Stages 0-2 (contract, amplitude scoreboard, hybrid + re-baselining) are the
+deliverable that **ships first**, and are unchanged from the scope originally
+agreed. Stage 3, the jointly-fitted absolute deposition law, was originally
+deferred to a separate experiment and was folded back in once §3.2.D and
+§4.3.3 were measured. Three reasons it moved:
 
-The counter-argument, which is why this is a question and not a correction:
-the §3.2.F tension is real and structural, and the joint fit is where it bites.
-Keeping exp55 separate keeps a clean boundary between "we measured what the pin
-was hiding" and "we built its replacement".
+- **Stages 0-2 are a measurement, not a fit campaign.** §4.3.3 shows the
+  hybrid's "refit" is a no-op, so the scope as originally drawn would not fill
+  a branch.
+- **The absolute law's amplitude is already done** — 3 parameters, CV'd,
+  shuffle-controlled, near-zero bias, and with the mass x redshift cross-term
+  it beats the epoch-matched halo-mass baseline at z=0.4 as well (0.1176 vs
+  0.1209). What remains is the *joint* fit, i.e. the §3.2.F window tension.
+- **None of pre-registered predictions 1-4 can be tested without Stage 3**,
+  because they all require the kernel to supply its own amplitude.
 
-**Recommendation: fold product C into exp54** as Stage 3, keeping Stages 0-2
-exactly as agreed and as the deliverable that ships first. The split still
-protects the staging — Stage 3 cannot corrupt Stages 0-2, because §4.3.2
-guarantees the shape fit is independent of the amplitude provider. If the
-answer is no, exp54 stands as scoped and this section becomes exp55's opening
-argument.
+**The staging is safe.** §4.3.2 guarantees the shape fit is independent of the
+amplitude provider, so Stage 3 cannot retroactively corrupt Stages 0-2.
+
+The counter-case, recorded because it is not worthless: keeping the absolute
+law separate would draw a clean boundary between "we measured what the pin was
+hiding" and "we built its replacement". It was not taken, because the split
+objective already supplies that boundary inside one experiment.
 
 ---
 
@@ -436,7 +435,7 @@ amplitude-pinned residual curve (`qa.py::_tercile_curves`) which becomes the
 shape diagnostic, and its tier 1+2 bias/scatter cells become real forward
 scores for the first time.
 
-**Stage 3 (pending §5) — the absolute law, jointly fitted.** No per-object
+**Stage 3 — the absolute law, jointly fitted.** (Folded into exp54, §5.) No per-object
 rescaling. Start at one epoch, then multi-epoch. Proceed only after Stages 0-1
 pass. Consider separate in-situ and accreted channels: late ex-situ mass is not
 determined by the smooth main-branch `dMh` — it depends on progenitor SHMRs,
@@ -457,7 +456,7 @@ third is the stated use case.
    Shape wants mu = 1.522, sig = 0.235 (sharp, peaked at z ~ 3.6); amplitude
    wants a monotone `(1+z)^0.355` rise with no peak. The *new* prediction is
    about the price: **the joint fit lands between them and `L_F` degrades
-   measurably.** That degradation is exp55's headline number. Testable only in
+   measurably.** That degradation is Stage 3's headline number. Testable only in
    product C.
 2. **Over-reach will cost, but not the way revision 1 said.** `moffat-q0` puts
    6.61% of deposits beyond 500 kpc against `sersic-q0`'s 0.48%. Un-normalized,
@@ -550,12 +549,15 @@ supplied, which radial kernel distributes it best.
    absolute-mass emulator as both baseline and amplitude provider.
 5. Treat the absolute deposition-efficiency model as a separate, more physical
    experiment, measured against final-halo-mass-only and shuffled-MAH controls.
+   **Superseded by 7**: the controls stand, the separation does not.
 
 **From 2026-08-22, user (revision 2):**
 
 6. Success criterion is **deployability, not victory** (§5).
-7. exp54 = Stages 0-2; the absolute law becomes exp55 — **reopened in §5** on
-   evidence that arrived after the decision.
+7. exp54 = Stages 0-2 with the absolute law **folded in as Stage 3** — the
+   original Stages-0-2-only scope was reopened in §5 on evidence that arrived
+   after the decision, and re-taken. **There is no exp55.** Stages 0-2 still
+   ship first.
 8. The amplitude anchor is **`M*(<100 kpc)`**; 148 and 500 kpc are reported as
    free out-of-model predictions.
 9. Epoch-local conditioning goes **deep** — each deposit conditioned at its own
