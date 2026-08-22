@@ -160,13 +160,18 @@ Base coordinate: `x = ln(1+z_j)`, `m = logMh(t_j) - 13.5`.
 | **E2** | E1 `+ a_Mz m x` | the mass dependence tilts with redshift; measured to help at every epoch | **measured** |
 | **E3** | E1/E2 `+ a_c * dlogc(t_j)` | concentration excess over Diemer19; measured to help | **measured** |
 | **E4** | E1 with `a_z x` -> free cubic spline in `x`, 3-5 knots | exp36's prescription (D), WITHOUT its monotonicity constraint — let the data say whether a peak exists | new |
-| **E5** | double power law in mass: `eps = 2 eps0(z) / [ (M/M1)^-beta + (M/M1)^gamma ]` | the standard SHMR form (Moster/Behroozi); contains a peak in MASS | new |
+| **E5** | double power law in mass: `eps = 2 eps0(z) / [ (M/M1)^-beta + (M/M1)^gamma ]` | the standard SHMR form (Moster/Behroozi); contains a peak in MASS | **BUILD NOW** (user) |
 
-**Recommendation: E1 as the base, E2/E3/E4 as switchable extensions; E5 built
-but not required for this sample.** Scope statement to carry: this sample is
+**E1 is the base; E2/E3/E4 are switchable extensions; E5 IS BUILT AND TESTED
+NOW** (user, 2026-08-22 — "build it now, test it anyway"). Scope statement to
+carry, and the reason E5's outcome must be read carefully: this sample is
 logMh = 13.01/13.29/14.36 (1/50/99th percentile), entirely above the SHMR peak
-at ~10^12, so a single power law in mass is adequate **here** and E5 matters
-only if the model is later applied below the peak.
+at ~10^12, so a single power law in mass is adequate **here**. **Pre-registered
+consequence**: E5's peak mass `M1` and its low-mass slope `beta` should come out
+UNIDENTIFIED — the sample never samples them. If the identifiability report says
+otherwise, the fit is absorbing something else through them and E5 must not be
+adopted on that evidence. E5 earns its place as the honest general form for
+later application below the peak, not as a better fit here.
 
 **Do NOT impose monotonicity in redshift.** The measurement says only that a
 peak is *unconstrained* by the mass budget, not that it is excluded — the free
@@ -192,8 +197,44 @@ R99( theta_prof )  <=  C * R200c(t_j),     C a fixed constant (start at C = 3)
 This is a physical statement — stars are not deposited a hundred virial radii
 out — and it replaces the arbitrary 300 kpc ceiling with something dimensionally
 sensible. **It immediately excludes the incumbent Moffat at its fitted `gam`**
-(R99 = 192 R50 ~ 9.6 Mpc against R200c ~ 0.5 Mpc). Implement it as a penalty or
-a bound, and report which candidates it binds.
+(R99 = 192 R50 ~ 9.6 Mpc against R200c ~ 0.5 Mpc).
+
+**DECIDED (user, 2026-08-22): `C = 3`, ENFORCED BY TRUNCATION, and `C` is
+scanned rather than fixed.**
+
+*The TNG evidence for `C = 3`.* Measured on the truth:
+
+| z | R200c (physical) | 148 kpc / R200c | 500 kpc / R200c | M(<148)/M(<500) |
+|---|---|---|---|---|
+| 0.4 | 492.9 kpc | 0.301 | 1.014 | 0.9285 |
+| 0.7 | 394.5 | 0.376 | 1.267 | 0.9463 |
+| 1.0 | 325.9 | 0.455 | 1.534 | 0.9597 |
+| 1.5 | 234.7 | 0.631 | 2.130 | 0.9761 |
+| 2.0 | 172.0 | 0.862 | 2.906 | 0.9898 |
+
+Essentially all stellar mass sits inside **~1 R200c at z=0.4** and ~3 R200c at
+z=2, so `C = 3` never excludes anything TNG has. **Caveat to carry: `C = 3` is
+LOOSE at low z and TIGHT at high z** — 1479 kpc at z=0.4 against 516 kpc at
+z=2. That asymmetry is defensible for a DEPOSIT constraint (early deposits form
+in small haloes and should be compact) but it means `C` does less work at z=0.4
+than the number suggests. Scan `C` over {1, 2, 3, 5} and report the sensitivity.
+
+*Enforcement is by TRUNCATION, not by penalty.* For any family, define the
+deposit's effective total mass inside the truncation radius and renormalize:
+
+```
+R_trunc(t_j)  =  C * R200c(t_j)
+F_eff(R)      =  F(R) / F(R_trunc)          for R <= R_trunc,   1 beyond
+```
+
+so `Delta M*_j` is by construction the mass inside `R_trunc`. Three advantages
+over a penalty: every family's total mass becomes well-defined and directly
+comparable (the incumbent Moffat's was not — Stage 0 needed a 1e15 kpc
+"infinity" to close it); mass conservation stays exact; and no fit has to
+negotiate with a soft constraint, which is one fewer degenerate direction.
+
+**This is NOT the truth pin.** `R_trunc` depends only on `R200c(t_j)`, a halo
+quantity. Stage 0's poisoned-data test must still pass, and is the check.
 
 | id | form | rationale |
 |---|---|---|
@@ -239,8 +280,29 @@ formation time:
 ```
 cond(t_j) = [ logMh(t_j),  dlogc(t_j),  f_form(t_j) ]
 dlogc(t_j)  =  log10[ c200c(t_j) / c_Diemer19(Mh(t_j), z_j) ]      the EXCESS
-f_form(t_j) =  a formation-time measure from the MAH TRUNCATED at t_j
+f_form(t_j) =  t_half(t_j) / t_j                                   the TIMING
 ```
+
+**`f_form` in words**: `t_half(t_j)` is the cosmic time at which the halo first
+reached **half the mass it has at `t_j`**, so `f_form` answers *"of the mass
+this halo has right now, how long ago did it acquire half of it, as a fraction
+of its current age?"* Near 0 means it assembled early; near 1 means it only
+recently reached half its current mass.
+
+**Why not the existing `fz2` or `t50`.** Both divide by the FINAL mass
+(`exp32/dataset.py`: `fz2 = Mh(z=2)/Mh(final)`, `t50` = when the halo reached
+half its final mass), so computing either for a halo AT z=2 requires knowing
+what it becomes by z=0.4. `f_form` is computed from the MAH truncated at `t_j`,
+is dimensionless and bounded in (0,1) so standardization behaves and it does not
+drift with epoch, is always defined for any halo in any simulation, and reduces
+to `t50/t_obs` at `t_j = t_obs`.
+
+**Expect it to gain LESS than `fz2` did, and check that it does.** Stage 1
+measured `+fz2` adding 0.0004 dex at z=0.4 but 0.0148 at z=1.5 and 0.0126 at
+z=2.0 — but part of that high-z gain IS the descendant leak: dividing by the
+final mass effectively hands the regression `Mh(z=2)/Mh(z=0.4)`, which helps pin
+`Mh(z=2)`. An epoch-local `f_form` cannot do that. **If `f_form` matches `fz2`
+at high z, look for a leak before celebrating.**
 
 All three are available: `logMh(t_j)` from the official DiffMAH curve;
 `dlogc` from `exp54/outputs/halo_structure_history.npz` (16 snapshots,
@@ -401,22 +463,24 @@ independent halo catalogue. Only the third is the stated use case.
    0.0016 dex** under the shuffle control, but will not reach the linear
    regression's 0.0098 dex. Reaching it would mean the physical form has become
    as expressive as an unconstrained fit, which would be surprising.
+7. **E5's peak mass `M1` and low-mass slope `beta` will be UNIDENTIFIED** on
+   this sample (logMh 13.0-14.4, entirely above the peak). If they are not, the
+   fit is absorbing something else through them.
+8. **`f_form` will gain less than `fz2` did at z >= 1.5**, because part of
+   `fz2`'s high-z gain is the descendant leak. If they match, look for a leak.
 
 ---
 
-## 8. Open decisions
+## 8. Decisions taken (user, 2026-08-22)
 
-These need the user before 3a starts.
-
-1. **The convergence constant `C`.** `R99 <= C * R200c(t_j)` with `C = 3` is a
-   proposal, not a measurement. Alternatives: derive `C` from the truth by
-   measuring where TNG's own stellar mass ends relative to `R200c`, or drop the
-   hard constraint and simply REPORT `R99/R200c` per candidate.
-2. **Whether `f_form` earns its place** in `cond`, given `logMh(t_j)` and
-   `dlogc(t_j)` are already there and Stage 1 showed `fz2` adding 0.004-0.015
-   dex on top of concentration.
-3. **Whether to build E5 (the double power law in mass) now or later**, given
-   this sample never samples the SHMR peak.
+1. **`C = 3`, enforced by TRUNCATION** (§3.2), with `C` scanned over {1,2,3,5}
+   and the TNG evidence recorded. Truncation makes every family's total mass
+   well-defined, which the incumbent Moffat's was not.
+2. **`f_form = t_half(t_j)/t_j`** replaces `fz2`/`t50` (§3.4), which are
+   descendant-referenced. Whether it earns its place is now a measurement in
+   3b, with the leak caveat pre-registered.
+3. **Build and test E5 now** (§3.1), with the pre-registered expectation that
+   its peak mass and low-mass slope come out unidentified on this sample.
 
 ---
 
