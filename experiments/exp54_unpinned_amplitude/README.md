@@ -370,3 +370,111 @@ components:**
 
 Reproduce the amplitude measurements with
 `doc/plans/2026-08-22-exp54-evidence-probe.py` (~4 min, writes nothing).
+
+---
+
+## Stage 3.4 (2026-08-23) — two corrections and the selection control
+
+Two defects in the SCORING were found before any model extension was built.
+Both change what the earlier stages mean; neither touches the model's physics.
+
+### Correction 1 — `M200c` is already log10 (`dc226b0`)
+
+`halo.py` and `scoreboard.py` read the halo-structure catalog's `M200c` column
+as a linear mass in `1e10 Msun/h` when it is already `log10(M/Msun)`, so the
+Diemer19 reference concentration was evaluated **2.0006 dex too low** (verified
+against `population.npz["logmh"]`, which the column reproduces to max |diff| =
+0.0000 at snap 72). The concentration excess `log10[c200c / c_Diemer19]` gained
+a spurious 0.15 dex redshift ramp and a halo-mass slope that changes sign at
+z = 0.4 (−0.053 as coded against +0.047 correct, dex/dex).
+
+**Scope.** After removing a linear trend in `log10 Mh`, the buggy and correct
+variables agree to correlation 0.9987–0.9995, so any form with a linear mass
+term absorbs most of it. What consumes the variable at all is `E3`
+(`log_eps` adds `k*dlogc`), **`S2a`** (`r50_of` uses `R200c/c_eff` for every
+size except exactly `S2`) and `S3` (`r50_of` adds `dlogc` again) — **33 of 45
+factorial cells**. `_assert_m200c_is_log10` now makes the units a test rather
+than a comment: it checks the column against the project's independently
+derived halo mass and refuses to proceed above 1e-3 dex.
+
+### Correction 2 — `SIGMA_A` was inflated by one galaxy (`91a26f3`)
+
+Row 181's measured `M*(<100 kpc)` collapses from 10^11.712 at z = 0.4 to a flat
+~10^7.96 at all four higher-redshift epochs — a broken cross-match, 2.5 dex
+below the sample's 0.1st percentile. It is in Stage 1's 2397, which sets
+`SIGMA_A`, but in **none** of the model-fitting subsamples (300 / 240 / 1199,
+all of which take every second galaxy; 181 is odd).
+
+| best halo-only row | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| as published | 0.1047 | 0.1359 | 0.1417 | 0.1456 | 0.1744 |
+| row 181 rejected | 0.1044 | 0.1120 | 0.1204 | 0.1279 | 0.1611 |
+
+| `gompertz_log-E2-S2` score_A | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| as published (1199) | 1.128 | 0.907 | 0.899 | 0.929 | 0.970 |
+| corrected, same 1199 | 1.131 | 1.100 | 1.059 | 1.058 | 1.050 |
+| corrected, 1197 held out | 1.114 | 1.079 | 1.052 | 1.070 | 1.077 |
+
+**The adopted model does not beat the best halo-only regression at any epoch;
+it is 5–13% worse.** `scoreboard.py` now rejects such histories at source
+(`MAX_BACKWARD_DEX = 3.0`, against a largest genuine backward growth of 2.03
+dex) and stores the `rows` it kept.
+
+**There is no generalization gap.** The NMAD of the amplitude residual is
+identical between the fitted and held-out halves at every epoch
+(0.1136/0.1178/0.1226/0.1310/0.1530 against 0.1156/0.1202/0.1218/0.1305/0.1507).
+Seven global parameters generalize, as they should.
+
+### `selection.py` — the progenitor-selection control
+
+**Completeness** = `N(ours) / N(all TNG300 central haloes)` in bins of
+`log10 M200c`, read from the raw catalogs (346k–460k centrals per epoch). The
+z = 0.4 ceiling is **0.781**, set by the CoG and cross-match quality flags,
+which are evaluated on the z = 0.4 galaxy and therefore cost the same at every
+epoch. The **fair-sample cut** is where completeness first reaches 60% of that
+ceiling and stays there.
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| cut, `log10 M200c` | >13.00 | >13.00 | >13.00 | >12.90 | >12.80 |
+| galaxies kept | 2397 | 1780 | 1435 | 1144 | 839 |
+
+At z = 0.4 the cut keeps everything — the right sanity check, since there is no
+progenitor bias at the selection epoch.
+
+**The z = 2 halo-mass tilt is an artifact of the incomplete regime.** With
+theta frozen:
+
+| tilt at z=2 [dex/dex] | 5 kpc | 10 kpc | 75 kpc | 148 kpc |
+|---|---|---|---|---|
+| full sample | −0.135 | −0.075 | −0.083 | −0.094 |
+| fair sample | −0.011 | **+0.066** | **+0.099** | **+0.089** |
+
+It does not shrink, it flips — onto the same positive tilt the fair sample
+shows at z = 0.7–1.5, so removing the incomplete regime makes z = 2 consistent
+with the other epochs rather than an outlier.
+
+**The amplitude deficit is real and larger than reported**: the median of
+`log10[model/truth]` at 100 kpc moves from −0.0255 to **−0.0421 dex** at z = 2.
+
+**The mechanism is confirmed, not assumed.** A selection can only bias a
+residual if the residual depends on the variable it truncated. That variable is
+future growth `G_k = log10 Mh(z=0.4) − log10 Mh(z_k)`, which the z = 0.4
+selection cuts on and the model — reading only epoch-local halo quantities —
+cannot see. The partial correlation of the residual with `G_k` at fixed halo
+mass is **+0.19 / +0.22 / +0.23 / +0.21** with **dy/dG = +0.18 / +0.16 / +0.15
+/ +0.15 dex per dex** at z = 0.7 / 1.0 / 1.5 / 2.0.
+
+**A delivery-delay kernel fitted to the z = 2 tilt would have been fitting the
+survey.** The amplitude deficit is the part that survives the control.
+
+### A caveat on the high-redshift ceiling
+
+Completeness at the massive end settles near 0.61–0.65 at z = 1–2 rather than
+returning to 0.781. Halo mass only grows, so a 10^13.5 halo at z = 2 certainly
+clears the z = 0.4 threshold and the shortfall is not the growth selection: it
+is that the sample follows **one main progenitor per galaxy**, so when two
+massive high-redshift haloes merge into a single z = 0.4 galaxy only one is
+counted. Those haloes do end up inside a massive z = 0.4 galaxy, which is a far
+more benign kind of missingness.
