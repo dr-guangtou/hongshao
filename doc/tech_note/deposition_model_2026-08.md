@@ -217,6 +217,15 @@ affordable. There the interpolated epochs are *z* = 0.7, 1.0 and 1.5, not
 *z* = 2. So at no stage is *z* = 2 an extrapolation; in the factorial it is one
 of only two epochs that constrain the fit at all.
 
+**A test worth running that has not been run.** Fit only *z* ≤ 1.5 and hold
+*z* = 2.0 out entirely, then score it. That converts *z* = 2 from a constraint
+into a genuine **extrapolation in redshift**, which is a much stronger claim
+about the model than fitting it: a physical law calibrated over 0.4 ≤ *z* ≤ 1.5
+that also predicts *z* = 2 has demonstrated something a fitted curve has not.
+It is cheap — one extra fit per model — and it is the natural way to advertise
+the model's capability rather than its flexibility. Recorded in
+`doc/todo.md`.
+
 ### 4.1 The split: amplitude and shape
 
 Every predicted curve of growth is split losslessly into two independent parts:
@@ -362,10 +371,33 @@ The failure in the most massive tercile is **not** uniform across radius. At
 148 kpc the top tercile is no worse than the bottom (−3.5 against −4.1 at
 *z* = 0.4). What grows is the **misplacement**: −12.6% in the centre together
 with **+6.3% at 27.5 kpc**, against −4.0% and −1.6% in the lightest tercile.
-The most massive haloes are where the model most strongly puts mass at the
-wrong radius, and the same pattern is three times stronger at *z* = 2. All
-three short-listed models show it, so it is a property of the framework, not of
-one profile family.
+All three short-listed models show it, so it is a property of the framework,
+not of one profile family.
+
+**Binned by halo mass at the epoch itself, inside the mh-complete sample, the
+statement sharpens into the single worst thing the model does:**
+
+| `log10 M200c(z=2)` | n | 2.8 | 4.9 | 10.2 | 27.5 | 79.8 | 148.2 kpc |
+|---|---|---|---|---|---|---|---|
+| 12.80–12.91 | 280 | −21.6 | −16.6 | −11.9 | −11.5 | −11.6 | −12.4 |
+| 12.91–13.09 | 280 | −27.5 | −19.0 | −13.6 | −12.3 | −12.3 | −13.0 |
+| **13.09–14.12** | 280 | **−29.2** | −16.1 | **−1.7** | **+1.5** | −2.5 | −4.9 |
+
+**In the most massive *z* = 2 haloes the model is 29% too light inside 3 kpc
+and essentially correct from 10 kpc outward.** That is a pure central failure,
+not a global one — and the two lighter bins fail differently, being uniformly
+~12% too light at every radius. The central deficit in the top mass bin grows
+monotonically with redshift: **−12.6% at *z* = 0.4, −20.4% at *z* = 1.0,
+−29.2% at *z* = 2.0.**
+
+(The galaxy-to-galaxy scatter is wide — 16th–84th percentile width ~60% at
+2.8 kpc — but with n = 280 per bin the median is determined to about ±2%.)
+
+**Plainly: the model cannot build the dense centres of the most massive
+galaxies at *z* = 2.** Those are exactly the compact, early-forming systems the
+project set out to study, so this is not a peripheral failure — it is the
+model failing hardest on its target population. It is also the strongest
+motivation for the compact second channel of Section 9.
 
 ### 5.4 The standing structural defect: the model under-fills the centre
 
@@ -383,7 +415,7 @@ simulation does. Measured on the corrected fit:
 | z = 1.5 | −0.073 | −0.048 | −0.012 | +0.002 | +0.001 | −0.002 |
 | z = 2.0 | −0.084 | −0.065 | −0.038 | −0.026 | −0.024 | −0.024 |
 
-**Fair sample** (the completeness-controlled galaxies of Section 6):
+**Mh-complete sample** (the completeness-controlled galaxies of Section 6):
 
 | R [kpc] | 2.8 | 4.9 | 10.2 | 27.5 | 79.8 | 148.2 |
 |---|---|---|---|---|---|---|
@@ -401,14 +433,14 @@ be quoted as:
    fit does not reproduce — the measured value is −0.034.)
 
 2. **It grows strongly with redshift**, to −0.084 dex on the full sample and
-   **−0.133 dex (26% too light) on the fair sample at *z* = 2**. The model most
+   **−0.133 dex (26% too light) on the mh-complete sample at *z* = 2**. The model most
    badly under-fills the centres of high-redshift galaxies — which is exactly
    the population known independently to be unusually compact.
 
 3. **At low redshift it is genuinely misplaced mass; at high redshift it is
    also missing mass.** At *z* = 0.4 the outer profile is within 0.016 dex, so
    the total is roughly right and the error is one of distribution. At *z* = 2
-   on the fair sample the whole curve is low (−0.043 dex at 148 kpc) with the
+   on the mh-complete sample the whole curve is low (−0.043 dex at 148 kpc) with the
    centre lower still, so there are two errors superposed: not enough mass, and
    too little of it in the middle.
 
@@ -440,7 +472,7 @@ central haloes per epoch.
 
 The *z* = 0.4 ceiling is **0.781**, set by data-quality flags that are applied
 to the *z* = 0.4 galaxy and therefore cost the same at every epoch. The
-**fair-sample cut** is the halo mass at which completeness first reaches 60% of
+**mh-complete cut** is the halo mass at which completeness first reaches 60% of
 that ceiling and stays there:
 
 | | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
@@ -458,10 +490,10 @@ The model's halo-mass tilt at *z* = 2, with parameters frozen:
 | tilt at z=2 [dex/dex] | 5 kpc | 10 kpc | 75 kpc | 148 kpc |
 |---|---|---|---|---|
 | full sample | −0.135 | −0.075 | −0.083 | −0.094 |
-| fair sample | −0.011 | **+0.066** | **+0.099** | **+0.089** |
+| mh-complete sample | −0.011 | **+0.066** | **+0.099** | **+0.089** |
 
 It does not shrink — **it flips sign**, and lands on the same positive tilt the
-fair sample shows at *z* = 0.7–1.5. Removing the incomplete regime makes *z* = 2
+mh-complete sample shows at *z* = 0.7–1.5. Removing the incomplete regime makes *z* = 2
 consistent with the other epochs instead of an outlier.
 
 Meanwhile the *amplitude* deficit at *z* = 2 gets **worse**, from −0.0255 to
@@ -501,7 +533,7 @@ mechanism is the right one. **The size of the tilt shift needs no physics.**
 
 ### 6.4b A trap in reading fair-sample figures
 
-**The fair sample is a different set of galaxies at each epoch.** The cut is
+**The mh-complete sample is a different set of galaxies at each epoch.** The cut is
 applied to the halo mass *at that epoch*, so the surviving galaxies are 2397 /
 1781 / 1436 / 1145 / 840, and they are progressively more massive:
 
@@ -513,7 +545,7 @@ applied to the halo mass *at that epoch*, so the surviving galaxies are 2397 /
 | z = 1.5 | 1145 | 13.541 |
 | z = 2.0 | 840 | 13.623 |
 
-So a figure that plots each epoch's fair sample side by side is **not an
+So a figure that plots each epoch's mh-complete sample side by side is **not an
 evolutionary sequence** — most of what changes between the curves is which
 galaxies are in them. Quantified at 2.8 kpc: the apparent rise in central
 stellar mass from *z* = 0.4 to *z* = 2 is **+0.247 dex as plotted**, but only
@@ -549,7 +581,7 @@ not massive ellipticals. Two consequences are accepted scope limits:
 1. **The model cannot yet be applied to a halo sample selected at high redshift
    and evolved forward.** It has only ever been calibrated on backward-traced
    progenitors.
-2. High-redshift performance must be *quoted* on the fair sample, not the full
+2. High-redshift performance must be *quoted* on the mh-complete sample, not the full
    one, because the full one flatters (Section 5.3).
 
 ---
@@ -656,10 +688,10 @@ no single galaxy can move a 2397-galaxy mean. Every `score_F` stands.
 ### 8.3 About two terms that turned out to be fitting the survey
 
 9. **The size-law conditioning (`S3`) absorbs selection structure, not
-   physics.** Two independently-constructed fair samples both drive all three of
+   physics.** Two independently-constructed mh-complete samples both drive all three of
    its slopes to near zero from large full-sample values:
 
-   | parameter | full sample | fair sample A | fair sample B |
+   | parameter | full sample | mh-complete sample A | mh-complete sample B |
    |---|---|---|---|
    | `s_M` (mass) | 0.0992 | 0.0032 | 0.0202 |
    | `s_c` (concentration) | −0.3380 | −0.0165 | −0.0242 |

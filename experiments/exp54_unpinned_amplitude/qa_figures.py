@@ -4,10 +4,10 @@ Three figures per model, all with the truth SOLID and the model DASHED, one
 colour per observation epoch:
 
   `qa_cog_<label>`     the AVERAGE curve of growth, in three views. Col 1: all
-                       2397 galaxies. Col 2: each epoch's OWN fair sample --
+                       2397 galaxies. Col 2: each epoch's OWN mh-complete sample --
                        a different galaxy set at each epoch, so its
                        epoch-to-epoch differences are NOT evolution. Col 3: one
-                       FIXED set (fair at z=2) followed everywhere, which is
+                       FIXED set (mh-complete at z=2) followed everywhere, which is
                        both completeness-controlled and a real evolutionary
                        sequence. Cols 1 and 3 may be read as evolution; col 2
                        may not, and mistaking it for one overstates the inner
@@ -20,7 +20,7 @@ colour per observation epoch:
                        and that artifact is strongest at small radii, exactly
                        where the model's known defect lives.
 
-  `qa_resid_<label>`   the residual alone, full against fair, at every epoch,
+  `qa_resid_<label>`   the residual alone, full against mh-complete, at every epoch,
                        with the population scatter as a band.
 
 TERMS USED IN THE AXES, none of which should be read as obvious:
@@ -37,7 +37,7 @@ TERMS USED IN THE AXES, none of which should be read as obvious:
     mass was put. Plotting both separates a "wrong total" failure from a
     "wrong distribution" failure, which look identical in the raw residual.
 
-  **fair sample**  the galaxies at each epoch whose halo is massive enough that
+  **mh-complete sample**  the galaxies at each epoch whose halo is massive enough that
     being a progenitor of a z=0.4-selected galaxy is no longer a strong extra
     condition (`selection.py`). At z=0.4 that is all 2397; at z=2 it is 840.
 
@@ -82,14 +82,14 @@ def cog_figure(label, model, truth, mask, name):
 
     THE TRAP THIS FIGURE IS BUILT TO AVOID. Column 2 uses a DIFFERENT set of
     galaxies at each epoch -- 2397 at z=0.4 falling to 840 at z=2 -- because the
-    fair-sample cut removes the halo masses where our sample is badly
+    mh-complete cut removes the halo masses where our sample is badly
     incomplete, and which masses those are depends on the epoch. Reading its
     epoch-to-epoch differences as EVOLUTION is wrong: most of what changes is
     the sample. Measured at 2.8 kpc, the apparent inner rise from z=0.4 to z=2
     is +0.247 dex as plotted, of which only +0.062 dex survives when the same
     galaxies are followed -- **75% of it is the changing sample.**
 
-    Column 3 fixes that: one FIXED set (the galaxies fair at z=2) followed at
+    Column 3 fixes that: one FIXED set (the galaxies mh-complete at z=2) followed at
     every epoch, so it is both completeness-controlled and a genuine
     evolutionary sequence. Columns 1 and 3 may be read as evolution; column 2
     may not.
@@ -97,15 +97,15 @@ def cog_figure(label, model, truth, mask, name):
     import matplotlib.pyplot as plt
     set_style()
     cols = _zcolors(len(Z))
-    fixed = mask[:, 4]                      # fair at z=2, followed everywhere
+    fixed = mask[:, 4]                      # mh-complete at z=2, followed everywhere
     fixed_col = np.repeat(fixed[:, None], len(Z), axis=1)
     fig, ax = plt.subplots(2, 3, figsize=(15.5, 7.2), sharex=True,
                            height_ratios=[2, 1])
     rmax = 0.0
     for c, (sel, ttl) in enumerate((
             (np.ones_like(mask), "all 2397 galaxies\n(same set every epoch = evolution)"),
-            (mask, "each epoch's own fair sample\n(DIFFERENT set each epoch - NOT evolution)"),
-            (fixed_col, f"fixed set: the {int(fixed.sum())} fair at z=2\n"
+            (mask, "each epoch's own mh-complete sample\n(DIFFERENT set each epoch - NOT evolution)"),
+            (fixed_col, f"fixed set: the {int(fixed.sum())} mh-complete at z=2\n"
                         f"(same set every epoch = evolution)"))):
         for k in range(len(Z)):
             g = sel[:, k] & np.isfinite(model[:, k, :]).all(axis=1)
@@ -200,13 +200,13 @@ def cogmass_figure(label, model, truth, lmh, name):
 
 
 def resid_figure(label, model, truth, mask, name):
-    """Residual alone, one panel per epoch, full against fair, with scatter."""
+    """Residual alone, one panel per epoch, full against mh-complete, with scatter."""
     import matplotlib.pyplot as plt
     set_style()
     fig, ax = plt.subplots(1, 5, figsize=(16.0, 3.4), sharey=True)
     for k in range(len(Z)):
         for sel, c, ls, ttl in ((np.ones(len(mask), bool), "0.45", "-", "all"),
-                                (mask[:, k], "#0072B2", "-", "fair")):
+                                (mask[:, k], "#0072B2", "-", "mh-complete")):
             g = sel & np.isfinite(model[:, k, :]).all(axis=1)
             if g.sum() < 10:
                 continue
@@ -224,7 +224,7 @@ def resid_figure(label, model, truth, mask, name):
     ax[0].set_ylabel(_tex(f"(model - truth)/truth  [{_pct()}]"))
     ax[0].set_ylim(-45, 45)
     fig.suptitle(_tex(f"exp54 {label} — residual, all galaxies against the "
-                      f"fair sample (band = 16th-84th percentile)"),
+                      f"mh-complete sample (band = 16th-84th percentile)"),
                  fontsize=12)
     fig.tight_layout()
     print("wrote", save_fig(fig, FIGDIR / f"qa_resid_{name}")[0], flush=True)
@@ -250,7 +250,7 @@ def main(labels=None):
     labels = labels or [str(v) for v in refit["labels"]]
 
     print(f"exp54 QA FIGURES — {len(recs)} galaxies, {len(labels)} models")
-    print(f"  fair-sample galaxies per epoch: "
+    print(f"  mh-complete galaxies per epoch: "
           + " ".join(str(int(v)) for v in mask.sum(0)) + "\n")
 
     for label in labels:

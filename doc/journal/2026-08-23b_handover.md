@@ -78,7 +78,7 @@ Seven global parameters generalize, as they should.
 halo-structure catalog at each epoch (346k–460k centrals). **Completeness** =
 `N(ours)/N(all centrals)` per bin of `log10 M200c`. The z=0.4 ceiling is
 **0.781**, set by the CoG and quality flags, which are evaluated on the z=0.4
-galaxy and so cost the same at every epoch. The **fair-sample cut** is where
+galaxy and so cost the same at every epoch. The **mh-complete cut** is where
 completeness first reaches 60% of that ceiling and stays there.
 
 | | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
@@ -91,9 +91,9 @@ completeness first reaches 60% of that ceiling and stays there.
 | tilt at z=2 [dex/dex] | 5 kpc | 10 kpc | 75 kpc | 148 kpc |
 |---|---|---|---|---|
 | full sample | −0.135 | −0.075 | −0.083 | −0.094 |
-| fair sample | −0.011 | **+0.066** | **+0.099** | **+0.089** |
+| mh-complete sample | −0.011 | **+0.066** | **+0.099** | **+0.089** |
 
-It flips, not shrinks, and lands on the same positive tilt the fair sample
+It flips, not shrinks, and lands on the same positive tilt the mh-complete sample
 shows at z=0.7–1.5.
 
 **The amplitude deficit is real and LARGER**: median `log10[model/truth]` at
@@ -175,7 +175,7 @@ run; all three held.
 ## Stage 3.3 re-run (`2994086`)
 
 Six fits: top three of the re-judged factorial, on the published 1199 and on
-the 751 above the fair cut at all five epochs.
+the 751 above the mh-complete cut at all five epochs.
 
 **The parameters do NOT depend on the selected regime.** `score_A` cost of
 using the fair-fitted theta on the full sample:
@@ -190,7 +190,7 @@ At most 2.5%. The efficiency is the stable part (`a0` +0.06, `a_M` +0.03,
 `a_z` −0.06, `a_Mz` −0.06); the size law moves more (`log_f0` +0.20, `b` −0.22).
 
 **A NEW LEAD**: in `moffat-E5-S2+S3` all three S3 conditioning slopes collapse
-toward zero on the fair sample — `f:logMh` 0.099→0.003, `f:dlogc`
+toward zero on the mh-complete sample — `f:logMh` 0.099→0.003, `f:dlogc`
 −0.338→−0.017, `f:fform` −0.334→+0.004. **S3 may be absorbing selection
 structure rather than physics.** With the factorial's finding that S3 does not
 collapse the tilt the way E2 does, that is two independent reasons to distrust
@@ -201,10 +201,10 @@ intersection is **assembly-biased**. At fixed z=0.4 halo mass (13.2–13.6,
 n=987) it has `t50` = 4.14 Gyr against 5.59 (p = 2e-53) and `fz2` = 0.350
 against 0.175 (p = 1e-83). This does not weaken the robustness answer — the
 second sample differs in two ways, so transferring parameters passed a harder
-test — but the `score_A` values ON the fair sample describe an early-forming
+test — but the `score_A` values ON the mh-complete sample describe an early-forming
 massive subset and must not be quoted as a complete-sample number.
 
-## The per-epoch fair mask (`2168c84`) — DONE, and it changes the short list
+## The per-epoch mh-complete mask (`2168c84`) — DONE, and it changes the short list
 
 `stage33_perepoch.py` repairs the intersection's assembly bias: each epoch is
 scored on its own fair galaxies, **7599 galaxy-epochs against 3755**, no galaxy
@@ -213,7 +213,7 @@ subclasses `fit.Problem` behind an equivalence gate — with an all-true mask it
 must reproduce the parent, and does (**|Δ| = 0.00e+00** on `score_A`, 4.4e-16
 on `score_F`).
 
-**1. THE S3 COLLAPSE IS REAL.** Two fair samples of different construction, one
+**1. THE S3 COLLAPSE IS REAL.** Two mh-complete samples of different construction, one
 assembly-biased and one not, both drive all three slopes to near zero:
 
 | parameter | full | intersection | per-epoch |

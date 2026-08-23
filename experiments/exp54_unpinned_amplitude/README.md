@@ -432,7 +432,7 @@ Seven global parameters generalize, as they should.
 `log10 M200c`, read from the raw catalogs (346k–460k centrals per epoch). The
 z = 0.4 ceiling is **0.781**, set by the CoG and cross-match quality flags,
 which are evaluated on the z = 0.4 galaxy and therefore cost the same at every
-epoch. The **fair-sample cut** is where completeness first reaches 60% of that
+epoch. The **mh-complete cut** is where completeness first reaches 60% of that
 ceiling and stays there.
 
 | | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
@@ -449,9 +449,9 @@ theta frozen:
 | tilt at z=2 [dex/dex] | 5 kpc | 10 kpc | 75 kpc | 148 kpc |
 |---|---|---|---|---|
 | full sample | −0.135 | −0.075 | −0.083 | −0.094 |
-| fair sample | −0.011 | **+0.066** | **+0.099** | **+0.089** |
+| mh-complete sample | −0.011 | **+0.066** | **+0.099** | **+0.089** |
 
-It does not shrink, it flips — onto the same positive tilt the fair sample
+It does not shrink, it flips — onto the same positive tilt the mh-complete sample
 shows at z = 0.7–1.5, so removing the incomplete regime makes z = 2 consistent
 with the other epochs rather than an outlier.
 
@@ -547,7 +547,7 @@ why the rank moves above are attributable to the concentration fix.
 **Short list for Stage 3.3**: `gompertz_log-E2-S2`, `moffat-E5-S2+S3`,
 `moffat-E2-S2`, `moffat-E5-S2`.
 
-### The per-epoch fair mask — S3 is fitting the selection, and so is E5
+### The per-epoch mh-complete mask — S3 is fitting the selection, and so is E5
 
 `stage33_perepoch.py` repairs the intersection's assembly bias by scoring each
 epoch on its own fair galaxies: **7599 galaxy-epochs** against the
@@ -556,7 +556,7 @@ is not scored. `MaskedProblem` subclasses `fit.Problem` and is gated by an
 equivalence check — with an all-true mask it must reproduce the parent, and does
 (|Δ| = 0.00e+00 on `score_A`, 4.4e-16 on `score_F`).
 
-**1. THE S3 COLLAPSE IS REAL.** Two fair samples of different construction, one
+**1. THE S3 COLLAPSE IS REAL.** Two mh-complete samples of different construction, one
 assembly-biased and one not, both drive all three size-law conditioning slopes
 to near zero from large full-sample values:
 
@@ -584,7 +584,7 @@ galaxies against a regression refitted on those same galaxies:
 | `gompertz_log-E2-S2` score_A | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
 |---|---|---|---|---|---|
 | full (progenitor-selected) sample | 1.131 | 1.100 | 1.059 | 1.058 | 1.050 |
-| fair sample, vs the same regression | 1.116 | **1.356** | **1.339** | **1.360** | **1.371** |
+| mh-complete sample, vs the same regression | 1.116 | **1.356** | **1.339** | **1.360** | **1.371** |
 
 On a complete sample of massive haloes the model is ~36% worse than a halo-only
 regression at z ≥ 0.7, against 5–10% on the full sample. The regression barely

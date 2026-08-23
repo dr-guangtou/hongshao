@@ -13,7 +13,7 @@ framework describes the descendants of massive low-redshift galaxies, and the
 haloes it discards are ones whose growth stalls and whose centrals are not the
 massive ellipticals the project is about. What the limitation demands is not a
 reweighting toward a population we do not model, but HONEST EVALUATION: the
-high-redshift numbers must be quoted where the sample is a fair one.
+high-redshift numbers must be quoted where the sample is complete in halo mass.
 
 WHAT THIS MODULE DOES
 
@@ -24,18 +24,18 @@ WHAT THIS MODULE DOES
    of that mass at that epoch is in our sample, 0.01 means we keep one in a
    hundred. Requires the raw HDF5 cache (``$HONGSHAO_HALO_STRUCTURE_DIR``).
 
-2. **Defines a FAIR-SAMPLE CUT per epoch.** Completeness cannot reach 1 even at
+2. **Defines an MH-COMPLETE CUT per epoch.** Completeness cannot reach 1 even at
    z = 0.4, because the CoG and cross-match quality flags remove ~25% of massive
    centrals at every mass. Those flags are evaluated on the z = 0.4 galaxy, so a
    halo at any epoch is in our sample only if (a) its descendant clears the
    z = 0.4 threshold and (b) that descendant passes the flags -- and (b) costs
    the same mass-independent fraction at every epoch. The CEILING is therefore
    the measured z = 0.4 plateau, used unchanged at all five epochs, and the
-   fair-sample cut is the lowest mass at which completeness reaches ``C_FRAC``
+   mh-complete cut is the lowest mass at which completeness reaches ``C_FRAC``
    of that ceiling and never falls back below it. Above the cut the sample is a
-   fair draw from the box; below it, a progenitor-selected minority.
+   complete draw from the box; below it, a progenitor-selected minority.
 
-3. **Re-scores the adopted model on the fair sample, WITH THETA FROZEN.** The
+3. **Re-scores the adopted model on the mh-complete sample, WITH THETA FROZEN.** The
    model's parameters stay exactly as Stage 3.3 fitted them, on the full and
    therefore biased sample. Only the galaxies the numbers are quoted over
    change. The halo-only regression IS refitted on the restricted rows, because
@@ -112,7 +112,7 @@ BIN_DEX = 0.1
 #: a bin needs this many catalog haloes before its completeness is quoted --
 #: at the massive end the box holds only a handful and the ratio is pure noise
 MIN_CATALOG = 50
-#: the fair-sample cut is where completeness first reaches this FRACTION OF THE
+#: the mh-complete cut is where completeness first reaches this FRACTION OF THE
 #: MEASURED z=0.4 PLATEAU (not of unity: the quality flags cap it below 1)
 C_FRAC = 0.60
 #: a measured M*(<100 kpc) this many dex below the galaxy's own z=0.4 value is
@@ -189,7 +189,7 @@ def plateau(c):
     return float(np.median(c[ok[-6:]])) if len(ok) >= 3 else np.nan
 
 
-def fair_cut(centres, c, ceiling):
+def mh_complete_cut(centres, c, ceiling):
     """Lowest mass at which completeness reaches C_FRAC of the ceiling and
     never falls back below it. 'Never falls back' matters: a single noisy bin
     on the rising part must not be allowed to define the cut."""
@@ -328,7 +328,7 @@ def predicted_spurious_tilt(lmh_cat, curve, ceiling, dydg, growth, masks):
 
     # TWO ESTIMATES, because a single `s_G` cannot be right everywhere.
     #
-    # (a) the conservative one: the fair subsample's scatter, applied at all
+    # (a) the conservative one: the mh-complete subsample's scatter, applied at all
     #     masses. It is a LOWER BOUND -- see the note where it is printed.
     #
     # (b) the truncation-corrected one. Measuring `G` inside a sample that
@@ -407,7 +407,7 @@ def main(label="", n_total=0, make_fig=True):
         own = plateau(c)
         if ceiling is None:                    # set once, at z = 0.4
             ceiling = own
-        cut = fair_cut(ctr, c, ceiling)
+        cut = mh_complete_cut(ctr, c, ceiling)
         cuts.append(cut); ceilings.append(own); curves.append((ctr, c))
         shown = [(ctr[i], c[i]) for i in range(len(c))
                  if np.isfinite(c[i]) and i % 3 == 0]
@@ -417,7 +417,7 @@ def main(label="", n_total=0, make_fig=True):
         print("    " + "  ".join(f"{m:.1f}:{v:.3f}" for m, v in shown))
         print(f"    this epoch's own top-bin completeness {own:.3f}; "
               f"ceiling used {ceiling:.3f} (the z=0.4 quality-flag cost); "
-              f"FAIR-SAMPLE CUT log10 M200c > {cut:.2f}")
+              f"MH-COMPLETE CUT log10 M200c > {cut:.2f}")
     cuts = np.array(cuts)
     print(f"\n  The cut keeps galaxies whose halo at that epoch is massive "
           f"enough that\n  {100 * C_FRAC:.0f}% of the ceiling is reached — "
@@ -444,11 +444,11 @@ def main(label="", n_total=0, make_fig=True):
         np.save(cache, pred)
     finite = np.isfinite(pred).all(axis=(1, 2))
 
-    fair = np.isfinite(m_sample) & (m_sample >= cuts[None, :])
+    complete = np.isfinite(m_sample) & (m_sample >= cuts[None, :])
     print(f"\n{RULE}\n2. THE MODEL ON THE FAIR SAMPLE — theta frozen, "
           f"galaxies restricted\n{RULE}")
-    print(f"  {'epoch':>7}{'n full':>9}{'n fair':>9}"
-          f"{'bias full':>12}{'bias fair':>12}   (bias = median log10 "
+    print(f"  {'epoch':>7}{'n full':>9}{'n compl':>9}"
+          f"{'bias full':>12}{'bias compl':>12}   (bias = median log10 "
           f"model/truth at 100 kpc, dex)")
     y100 = residual_at(pred, data, epochs, 100.0)
 
@@ -475,7 +475,7 @@ def main(label="", n_total=0, make_fig=True):
     bias = np.full((5, 2), np.nan)
     for k in range(5):
         mf = finite[:, k] & np.isfinite(y100[:, k])
-        mr = mf & fair[:, k]
+        mr = mf & complete[:, k]
         bias[k] = [np.median(y100[mf, k]), np.median(y100[mr, k])]
         print(f"  z={ANCHOR_Z[k]:5.1f}{int(mf.sum()):9d}{int(mr.sum()):9d}"
               f"{bias[k, 0]:+12.4f}{bias[k, 1]:+12.4f}")
@@ -483,14 +483,14 @@ def main(label="", n_total=0, make_fig=True):
     print(f"\n  HALO-MASS TILT (dex of stellar-mass error per dex of halo "
           f"mass; 0 = no tilt)")
     print(f"  {'R [kpc]':>9}{'epoch':>7}"
-          f"{'full sample':>26}{'fair sample':>26}")
+          f"{'full sample':>26}{'mh-complete sample':>26}")
     tilts = {}
     for r in TILT_RADII:
         y = residual_at(pred, data, epochs, r)
         rowset = []
         for k in range(5):
             a = tilt(y[:, k], lmh_dm[:, k], finite[:, k], seed=k)
-            b = tilt(y[:, k], lmh_dm[:, k], finite[:, k] & fair[:, k],
+            b = tilt(y[:, k], lmh_dm[:, k], finite[:, k] & complete[:, k],
                      seed=100 + k)
             rowset.append((a, b))
             print(f"  {r:9.1f}{ANCHOR_Z[k]:7.1f}"
@@ -520,7 +520,7 @@ def main(label="", n_total=0, make_fig=True):
     sig_used = np.full((5, 2), np.nan)
     for k in range(5):
         mf = finite[:, k] & np.isfinite(y100[:, k])
-        mr = mf & fair[:, k]
+        mr = mf & complete[:, k]
         for j, m in enumerate((mf, mr)):
             sig = float(F.SIGMA_A[k])
             if sb_rows is not None:
@@ -536,7 +536,7 @@ def main(label="", n_total=0, make_fig=True):
             sA[k, j] = float(np.sqrt(np.mean((y100[m, k] / sig) ** 2)))
         print(f"  z={ANCHOR_Z[k]:5.1f}   score_A full {sA[k, 0]:.4f} "
               f"(regression sigma {sig_used[k, 0]:.4f})   "
-              f"fair {sA[k, 1]:.4f} (sigma {sig_used[k, 1]:.4f})")
+              f"compl {sA[k, 1]:.4f} (sigma {sig_used[k, 1]:.4f})")
 
     # ---- 4. the leakage test -------------------------------------------- #
     print(f"\n{RULE}\n4. LEAKAGE — does the residual depend on FUTURE GROWTH "
@@ -559,13 +559,13 @@ def main(label="", n_total=0, make_fig=True):
     # ---- 5. does the mechanism PREDICT the observed shift? --------------- #
     print(f"\n{RULE}\n5. IS THE SHIFT THE RIGHT SIZE? — the completeness "
           f"curve and the measured\n   dy/dG together predict a tilt from "
-          f"selection alone. Compare it with the\n   observed full-minus-fair "
+          f"selection alone. Compare it with the\n   observed full-minus-complete "
           f"shift. Restricting the mass range would move a\n   slope for other "
           f"reasons; this asks whether it moves by the PREDICTED amount."
           f"\n{RULE}")
     r0 = TILT_RADII[-1]
     print(f"  tilt at {r0:.0f} kpc, dex per dex")
-    print(f"  {'epoch':>7}{'observed full':>15}{'observed fair':>15}"
+    print(f"  {'epoch':>7}{'observed full':>15}{'observed compl':>15}"
           f"{'obs shift':>11}{'pred (bound)':>13}{'pred (corr)':>12}{'s_G':>8}")
     pred_shift = np.full(5, np.nan)
     for k in range(5):
@@ -575,7 +575,7 @@ def main(label="", n_total=0, make_fig=True):
             continue
         (plain, corr), s_g = predicted_spurious_tilt(
             m_sample[:, k], curves[k], ceilings[k], leak[k, 1], growth[:, k],
-            [finite[:, k], finite[:, k] & fair[:, k]])
+            [finite[:, k], finite[:, k] & complete[:, k]])
         obs_f, obs_r = tilts[r0][k][0][0], tilts[r0][k][1][0]
         pred_shift[k] = plain[0] - plain[1]
         print(f"  z={ANCHOR_Z[k]:5.1f}{obs_f:>+15.4f}{obs_r:>+15.4f}"
@@ -583,7 +583,7 @@ def main(label="", n_total=0, make_fig=True):
               f"{corr[0] - corr[1]:>+11.4f}{s_g:>8.3f}")
     print("\n  Neither prediction uses any fitted model quantity beyond "
           "dy/dG. They BRACKET\n  the observation: `pred (bound)` takes the "
-          "growth scatter straight from the\n  fair subsample and so "
+          "growth scatter straight from the\n  mh-complete subsample and so "
           "understates it wherever the sample is truncated;\n  `pred (corr)` "
           "divides out the truncation with the standard-normal formula and\n"
           "  so overstates it in the far tail, where a real growth "
@@ -620,20 +620,20 @@ def figure(curves, cuts, ceilings, tilts):
     ax[0].set_ylabel(_tex("completeness: ours / all TNG300 centrals"))
     ax[0].set_ylim(0, 1.05)
     ax[0].legend(fontsize=8, loc="upper left")
-    ax[0].set_title(_tex("the selection function (dotted = fair-sample cut)"),
+    ax[0].set_title(_tex("the selection function (dotted = mh-complete cut)"),
                     fontsize=9)
 
     r0 = TILT_RADII[-1]
     full = [t[0][0] for t in tilts[r0]]
-    fairv = [t[1][0] for t in tilts[r0]]
+    completev = [t[1][0] for t in tilts[r0]]
     lo_f = [t[0][0] - t[0][1] for t in tilts[r0]]
     hi_f = [t[0][2] - t[0][0] for t in tilts[r0]]
     lo_r = [t[1][0] - t[1][1] for t in tilts[r0]]
     hi_r = [t[1][2] - t[1][0] for t in tilts[r0]]
     ax[1].errorbar(ANCHOR_Z, full, yerr=[lo_f, hi_f], fmt="-o", ms=4,
                    color=OKABE_ITO[0], label=_tex("full sample"))
-    ax[1].errorbar(np.array(ANCHOR_Z) + 0.03, fairv, yerr=[lo_r, hi_r],
-                   fmt="-s", ms=4, color=OKABE_ITO[2], label=_tex("fair sample"))
+    ax[1].errorbar(np.array(ANCHOR_Z) + 0.03, completev, yerr=[lo_r, hi_r],
+                   fmt="-s", ms=4, color=OKABE_ITO[2], label=_tex("mh-complete sample"))
     ax[1].axhline(0, color="0.5", lw=1)
     ax[1].set_xlabel(_tex("redshift"))
     ax[1].set_ylabel(_tex("halo-mass tilt [dex per dex]"))

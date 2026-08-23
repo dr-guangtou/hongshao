@@ -1,6 +1,6 @@
-"""exp54 Stage 3.3 — the fair-sample fit done WITHOUT the assembly bias.
+"""exp54 Stage 3.3 — the mh-complete fit done WITHOUT the assembly bias.
 
-WHAT THIS REPAIRS. `stage33_refit.py` built its fair sample as the INTERSECTION
+WHAT THIS REPAIRS. `stage33_refit.py` built its mh-complete sample as the INTERSECTION
 of the five per-epoch completeness cuts: galaxies above the cut at every epoch.
 That removes the progenitor-selection bias and introduces an assembly bias in
 its place, because requiring a halo to be massive at every epoch selects early
@@ -9,7 +9,7 @@ intersection has `t50` = 4.14 Gyr against 5.59 for the rest -- 1.45 Gyr
 earlier, Mann-Whitney p = 2e-53 -- and `fz2` = 0.350 against 0.175, p = 1e-83.
 
 The repair is to stop taking an intersection. Each epoch is scored on ITS OWN
-fair galaxies: 2397 at z = 0.4, then 1781 / 1436 / 1145 / 840 -- **7599
+mh-complete galaxies: 2397 at z = 0.4, then 1781 / 1436 / 1145 / 840 -- **7599
 galaxy-epochs against the intersection's 751 x 5 = 3755**, and no galaxy is
 required to be massive at an epoch where it is not being scored.
 
@@ -25,7 +25,7 @@ the run refuses to proceed if they do not.
 
 WHAT IT ANSWERS that the intersection could not:
 
-  1. **How the model actually does on a fair sample**, epoch by epoch, without
+  1. **How the model actually does on an mh-complete sample**, epoch by epoch, without
      the early-assembler contamination. The intersection's `score_A` values
      could not be quoted as this.
   2. **Whether the S3 collapse is real.** In `moffat-E5-S2+S3` all three size-
@@ -171,7 +171,7 @@ def main(smoke=False):
         raise SystemExit("run selection.py first — the cuts come from there")
     cuts = np.load(SEL, allow_pickle=True)["cuts"]
     m200 = S.sample_masses(np.load(S.HS_NPZ, allow_pickle=True))
-    fair_all = np.isfinite(m200) & (m200 >= cuts[None, :])
+    complete_all = np.isfinite(m200) & (m200 >= cuts[None, :])
 
     rows = all_rows[::2] if smoke else all_rows
     if smoke:
@@ -180,9 +180,9 @@ def main(smoke=False):
     sel = np.array([h.row for h in recs])
     data = pop["data"][sel]
     lmh = pop["logmh_zk_diffmah"][sel]
-    mask = fair_all[sel]
+    mask = complete_all[sel]
 
-    print(f"exp54 STAGE 3.3 — PER-EPOCH fair mask (no intersection, no "
+    print(f"exp54 STAGE 3.3 — PER-EPOCH mh-complete mask (no intersection, no "
           f"assembly bias)")
     print(f"  SIGMA_A: " + " ".join(f"{v:.4f}" for v in F.SIGMA_A))
     print(f"  cuts    : " + " ".join(f"{c:.2f}" for c in cuts) + "  log10 M200c")
@@ -229,7 +229,7 @@ def main(smoke=False):
         print(f"\n    PARAMETERS — three samples")
         names = sp.theta_names
         tf = refit[f"{label}_theta_full"] if refit is not None else None
-        ti = refit[f"{label}_theta_fair"] if refit is not None else None
+        ti = refit[f"{label}_theta_complete"] if refit is not None else None
         print(f"      {'parameter':<12}{'full':>11}{'intersect':>11}"
               f"{'per-epoch':>11}{'per-ep - full':>15}")
         for i, nm in enumerate(names):
@@ -240,7 +240,7 @@ def main(smoke=False):
 
         pr = MaskedProblem(sp, recs, data, mask, epochs=(0, 1, 2, 3, 4))
         sa, sf = pr.per_epoch(th)
-        print(f"\n    SCORES on each epoch's own fair galaxies "
+        print(f"\n    SCORES on each epoch's own mh-complete galaxies "
               f"(1.0 = the full-sample halo-only regression)")
         print(f"      {'':<10}" + "".join(f"{f'z={z}':>10}" for z in Z))
         print(f"      {'n':<10}" + "".join(f"{int(v):>10}" for v in mask.sum(0)))

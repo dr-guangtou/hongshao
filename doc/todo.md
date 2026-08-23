@@ -1400,3 +1400,17 @@ Cross-experiment plan. Mirrors the phase sequence in
   σ(t) time→radius rule cannot — exp25's flagged structural limitation, untouched by `p`.
 - [ ] (optional follow-ons) the **density profile in Re units**; feed the
   predictive profile uncertainty to the forward model.
+
+## exp54 — deferred tests (2026-08-23)
+
+- [ ] **Hold z=2.0 out of the fit.** Every five-epoch fit currently uses all
+  five epochs simultaneously, so z=2 is a constraint, not a prediction. Fit on
+  z <= 1.5 only and score z=2.0 as a genuine EXTRAPOLATION IN REDSHIFT. A law
+  calibrated over 0.4 <= z <= 1.5 that also predicts z=2 demonstrates something
+  a fitted curve does not, and it is the honest way to advertise the model's
+  capability rather than its flexibility. Cost: one extra fit per model
+  (~7 min for an E2 model, ~30 min for E5). Note the counterpart risk: the
+  Stage 3.2 factorial fits only the two ENDPOINTS (z=0.4 and z=2.0), so a model
+  selected there has already seen z=2 — the hold-out must therefore re-select
+  as well as re-fit, or be reported as a hold-out test of an already-chosen
+  model rather than a clean one.

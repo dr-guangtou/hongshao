@@ -14,14 +14,14 @@ high-redshift galaxies are a progenitor-selected minority below
 that regime. The parameters were nevertheless fitted with those galaxies
 included. So: **do the adopted parameters depend on the biased regime?**
 
-The FAIR sample is the 751 galaxies that clear their epoch's fair-sample cut at
+The MH-COMPLETE sample is the 751 galaxies that clear their epoch's mh-complete cut at
 ALL FIVE epochs. It is not a subsample of the published 1199; it is drawn from
 the whole 2397, because 751 is already small and there is no reason to halve it.
 
 **THE INTERSECTION IS ASSEMBLY-BIASED, AND THAT LIMITS WHAT IT CAN BE USED
 FOR.** Requiring a halo to be above the cut at EVERY epoch selects haloes that
 were already massive at z = 2, i.e. early assemblers. Measured at fixed z = 0.4
-halo mass (a 13.2-13.6 slice, n = 987): the fair galaxies have
+halo mass (a 13.2-13.6 slice, n = 987): the mh-complete galaxies have
 `t50` = 4.14 Gyr against 5.59 for the rest -- 1.45 Gyr earlier, Mann-Whitney
 p = 2e-53 -- and `fz2` = 0.350 against 0.175, twice the mass in place by z = 2,
 p = 1e-83. So it removes the progenitor-selection bias and introduces an
@@ -30,21 +30,21 @@ assembly bias in its place.
 What that does and does not invalidate:
 
   * **The robustness answer is VALID and if anything conservative.** It asks
-    whether the FITTED PARAMETERS move, by scoring `theta_fair` on the full
+    whether the FITTED PARAMETERS move, by scoring `theta_complete` on the full
     sample. The second sample now differs from the first in two ways rather
     than one, so parameters that still transfer have passed a harder test.
-  * **The `score_A` values ON the fair sample must NOT be read as "how the
+  * **The `score_A` values ON the mh-complete sample must NOT be read as "how the
     model does on a complete sample."** They are measured on an early-forming
     massive subset, which is a different population, and the model is known to
     behave differently there.
 
-The fix is a per-epoch galaxy mask, so each epoch is scored on its own fair
+The fix is a per-epoch galaxy mask, so each epoch is scored on its own mh-complete
 galaxies and no intersection is taken -- 2397+1781+1436+1145+840 galaxy-epochs
 instead of 751x5, and no assembly bias. That is `stage33_perepoch.py`.
 
 WHAT IS REPORTED. For each model on the short list, both fits, and then the
 2x2 CROSS-EVALUATION: each theta scored on both samples. That last table is
-the actual answer. If `theta_fair` scores the full sample about as well as
+the actual answer. If `theta_complete` scores the full sample about as well as
 `theta_full` does, the biased regime was not driving the fit. If it does not,
 the published parameters are partly a description of the selection.
 
@@ -81,8 +81,8 @@ MONO_FLOOR = S33.MONO_FLOOR
 RULE = "=" * 96
 
 
-def fair_rows(all_rows):
-    """Rows that clear their epoch's fair-sample cut at ALL five epochs."""
+def mh_complete_rows(all_rows):
+    """Rows that clear their epoch's mh-complete cut at ALL five epochs."""
     import selection as S
     if not SEL.exists():
         raise SystemExit("run selection.py first — the cuts come from there")
@@ -131,21 +131,21 @@ def main(top=3, smoke=False):
              for i in np.argsort(s32["mean_rank"])[:top]]
 
     rows_full = all_rows[::2]                       # as published: every 2nd
-    rows_fair, cuts = fair_rows(all_rows)
+    rows_complete, cuts = mh_complete_rows(all_rows)
     if smoke:
-        rows_full, rows_fair, short = rows_full[::12], rows_fair[::8], short[:1]
+        rows_full, rows_complete, short = rows_full[::12], rows_complete[::8], short[:1]
 
     print(f"exp54 STAGE 3.3 RE-RUN — corrected SIGMA_A, two samples")
     print(f"  SIGMA_A: " + " ".join(f"{v:.4f}" for v in F.SIGMA_A)
           + "   (was 0.1047 0.1359 0.1417 0.1456 0.1744)")
     print(f"  short list from the re-judged factorial: {short}")
     print(f"  FULL sample: {len(rows_full)} galaxies (every 2nd, as published)")
-    print(f"  FAIR sample: {len(rows_fair)} galaxies — above "
+    print(f"  MH-COMPLETE sample: {len(rows_complete)} galaxies — above "
           + "/".join(f"{c:.2f}" for c in cuts) + " log10 M200c at all "
           f"five epochs\n")
 
     recs = {}
-    for tag, rr in (("full", rows_full), ("fair", rows_fair)):
+    for tag, rr in (("full", rows_full), ("complete", rows_complete)):
         r = H.build_records(rows=rr, verbose=False)
         sel = np.array([h.row for h in r])
         recs[tag] = (r, pop["data"][sel], pop["logmh_zk_diffmah"][sel], sel)
@@ -163,7 +163,7 @@ def main(top=3, smoke=False):
         sp = S33.spec_from_label(label)
         print(f"\n{RULE}\n{label}   {sp.n_theta} parameters\n{RULE}")
         theta = {}
-        for tag in ("full", "fair"):
+        for tag in ("full", "mh-complete"):
             key = f"{label}::{tag}"
             if key in done:
                 theta[tag] = done[key]["theta"]
@@ -178,9 +178,9 @@ def main(top=3, smoke=False):
 
         print(f"\n    PARAMETERS — fitted on each sample")
         names = sp.theta_names
-        print(f"      {'parameter':<12}{'full':>12}{'fair':>12}{'change':>12}")
+        print(f"      {'parameter':<12}{'full':>12}{'complete':>12}{'change':>12}")
         for i, nm in enumerate(names):
-            a, b = theta["full"][i], theta["fair"][i]
+            a, b = theta["full"][i], theta["complete"][i]
             print(f"      {nm:<12}{a:>12.4f}{b:>12.4f}{b - a:>+12.4f}")
 
         print(f"\n    CROSS-EVALUATION — each theta scored on each sample; "
@@ -188,8 +188,8 @@ def main(top=3, smoke=False):
         print(f"      {'theta':<6}{'scored on':<11}" + "".join(
             f"{f'z={z}':>9}" for z in Z) + f"{'growth':>10}")
         cross = {}
-        for ta in ("full", "fair"):
-            for tb in ("full", "fair"):
+        for ta in ("full", "mh-complete"):
+            for tb in ("full", "mh-complete"):
                 r, d, _, _ = recs[tb]
                 sa, sf, gb, gs, _ = score_on(sp, theta[ta], r, d)
                 cross[f"{ta}->{tb}"] = dict(sA=sa, sF=sf, gbias=gb, gscat=gs)
@@ -199,7 +199,7 @@ def main(top=3, smoke=False):
                       + f"{'':>10}   score_F")
 
         # the answer, stated as one number per epoch
-        pen = cross["fair->full"]["sA"] - cross["full->full"]["sA"]
+        pen = cross["complete->full"]["sA"] - cross["full->full"]["sA"]
         print(f"\n    THE ROBUSTNESS ANSWER: score_A cost of using the "
               f"FAIR-fitted theta\n    on the FULL sample, per epoch "
               f"(0 = the biased regime did not drive the fit):")
@@ -217,7 +217,7 @@ def main(top=3, smoke=False):
             cells = [f"{v:+.3f} [{a:+.3f},{b:+.3f}]" for v, a, b in rowset]
             print(f"      {rr:>9.0f}" + "".join(f"{c:>22}" for c in cells))
 
-        out[label] = dict(theta_full=theta["full"], theta_fair=theta["fair"],
+        out[label] = dict(theta_full=theta["full"], theta_complete=theta["complete"],
                           cross=cross, penalty=pen)
 
     if smoke:
@@ -225,10 +225,10 @@ def main(top=3, smoke=False):
         return out
 
     np.savez_compressed(
-        OUT, labels=np.array(short), rows_full=rows_full, rows_fair=rows_fair,
+        OUT, labels=np.array(short), rows_full=rows_full, rows_complete=rows_complete,
         sigma_a=F.SIGMA_A, cuts=cuts,
         **{f"{l}_theta_full": v["theta_full"] for l, v in out.items()},
-        **{f"{l}_theta_fair": v["theta_fair"] for l, v in out.items()},
+        **{f"{l}_theta_complete": v["theta_complete"] for l, v in out.items()},
         **{f"{l}_penalty": v["penalty"] for l, v in out.items()},
         **{f"{l}_{k}_{m}": v["cross"][k][m]
            for l, v in out.items() for k in v["cross"] for m in ("sA", "sF")})
