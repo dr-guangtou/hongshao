@@ -66,6 +66,10 @@ import stage32 as S32                                    # noqa: E402
 POP = ROOT / "experiments/exp32_full_population/outputs/population.npz"
 CACHED = HERE / "outputs" / "stage32.npz"
 OUT = HERE / "outputs" / "stage32_rejudged.npz"
+#: per-cell checkpoint. A 45-cell factorial is ~2 hours; a kill at cell 11 threw
+#: away 29 minutes of fits once, so every completed cell is written immediately
+#: and a restart skips what is already done. Delete it to force a clean re-run.
+PARTIAL = HERE / "outputs" / "stage32_rejudged_partial.npz"
 RULE = "=" * 108
 
 #: cells that read NO concentration information -- the twelve S2 cells with a
@@ -134,10 +138,24 @@ def main(n_total=240, smoke=False):
           f"S3); all 45 are re-run\n  because SIGMA_A changed too, and SIGMA_A "
           f"enters the loss.\n")
 
+    done = {}
+    if PARTIAL.exists() and not smoke:
+        z = np.load(PARTIAL, allow_pickle=True)
+        done = {str(k): v.item() for k, v in z.items()}
+        if done:
+            print(f"  resuming: {len(done)} of {len(cells)} cells already "
+                  f"complete in {PARTIAL.name}\n")
+
     results, t0 = [], time.time()
     for i, (en, fam, sn) in enumerate(cells):
         lab = cell_label(en, fam, sn)
         tag = "conc" if reads_concentration(en, sn) else "    "
+        if lab in done:
+            r = done[lab]
+            results.append(r)
+            print(f"  [{i + 1:2d}/{len(cells)}] {tag} {lab:<26} "
+                  f"loss={r['loss']:7.4f}  (cached)", flush=True)
+            continue
         try:
             r = run_cell(en, fam, sn, recs, data, lmh_s)
         except Exception as e:                    # a cell may be degenerate
@@ -149,6 +167,9 @@ def main(n_total=240, smoke=False):
                                     **dict(S32.SIZES)[sn]).n_theta))
             continue
         results.append(r)
+        if not smoke:
+            done[lab] = r
+            np.savez(PARTIAL, **done)      # checkpoint after EVERY cell
         was = old.get(lab, {}).get("loss", np.nan)
         print(f"  [{i + 1:2d}/{len(cells)}] {tag} {lab:<26} p={r['npar']:<3d} "
               f"loss={r['loss']:7.4f} (was {was:7.4f}, d={r['loss'] - was:+.5f})"
@@ -199,6 +220,7 @@ def main(n_total=240, smoke=False):
         **{f"theta::{r['label']}": r["theta"] for r in good if "theta" in r},
         **{k: np.array([r[k] for r in good]) for k in keys})
     print(f"  wrote {OUT}")
+    PARTIAL.unlink(missing_ok=True)        # the full result supersedes it
     return good, order
 
 
