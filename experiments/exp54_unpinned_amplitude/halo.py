@@ -92,6 +92,27 @@ def _diemer19(logmh, z):
     return out
 
 
+def _assert_m200c_is_log10(hs, pop):
+    """Guard the units of the halo-structure `M200c` column.
+
+    The Anbajagane catalog stores `M200c` as **log10(M/Msun)**, not as a linear
+    mass in 1e10 Msun/h. Treating it as linear evaluates the Diemer19 reference
+    concentration ~2 dex too low and distorts the concentration excess's
+    dependence on halo mass -- a bug this project shipped once already. The
+    column is checkable against the project's own halo mass, which is derived
+    independently, so check it rather than trust a comment.
+    """
+    j = list(hs["snaps"]).index(72)                        # snap 72 == z = 0.4
+    cat, own = np.asarray(hs["M200c"], float)[:, j], np.asarray(pop["logmh"], float)
+    ok = np.isfinite(cat) & np.isfinite(own)
+    dev = float(np.max(np.abs(cat[ok] - own[ok])))
+    if dev > 1e-3:
+        raise ValueError(
+            f"halo-structure M200c is not log10(M/Msun): it disagrees with "
+            f"population.npz logmh by up to {dev:.4f} dex at snap 72. Do NOT "
+            f"'fix' this by rescaling -- find out what the column actually is.")
+
+
 def _f_form(t, logmh):
     """t_half(t_j)/t_j: when the halo first had half its t_j mass, over t_j.
 
@@ -129,8 +150,8 @@ def build_records(rows=None, verbose=True):
     so_i = {int(v): i for i, v in enumerate(so["index"])}
     hs_snap, hs_z = list(hs["snaps"]), np.asarray(hs["z"], float)
     c_grid = np.where(hs["GroupFlag"] == 1, hs["c200c"], np.nan)
-    m_grid = np.log10(np.where(np.isfinite(c_grid), hs["M200c"], np.nan)
-                      * 1e10 / H_LITTLE)
+    _assert_m200c_is_log10(hs, pop)
+    m_grid = np.where(np.isfinite(c_grid), hs["M200c"], np.nan)
     exc_grid = np.full_like(c_grid, np.nan)
     for j, zz in enumerate(hs_z):
         exc_grid[:, j] = np.log10(c_grid[:, j]) - np.log10(

@@ -46,6 +46,9 @@ for p in (ROOT, ROOT / "experiments/exp38_deposit_rethink"):
 import stage2_multiepoch as s2                          # noqa: E402
 from hongshao.metrics import crps_gaussian, interval_coverage   # noqa: E402
 
+sys.path.insert(0, str(HERE))
+from halo import _assert_m200c_is_log10                 # noqa: E402
+
 OUTDIR = HERE / "outputs"
 CACHE = OUTDIR / "scoreboard_features.npz"
 HS = OUTDIR / "halo_structure_history.npz"
@@ -132,8 +135,8 @@ def build():
     hsel = np.array([hs_idx[int(pop["index"][r])] for r in rows])
     c_cat = np.where(hs["GroupFlag"][hsel] == 1, hs["c200c"][hsel], np.nan)
     hs_snap, hs_z = list(hs["snaps"]), hs["z"]
+    _assert_m200c_is_log10(hs, pop)          # the column is ALREADY log10 Msun
     m200 = np.where(np.isfinite(c_cat), hs["M200c"][hsel], np.nan)
-    m200 = np.log10(m200 * 1e10 / 0.6774)                # -> h-free log Msun
     excess_grid = np.full_like(c_cat, np.nan)
     for j, zz in enumerate(hs_z):
         excess_grid[:, j] = (np.log10(c_cat[:, j])
