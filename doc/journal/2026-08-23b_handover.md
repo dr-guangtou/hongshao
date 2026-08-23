@@ -246,26 +246,108 @@ flattering the model.** The adopted model's own parameters barely move
 (`a0` −0.004, `a_z` +0.012); what moves is the mass dependence (`a_M` −0.110,
 `a_Mz` +0.080) — exactly the part the selection acts on.
 
+## The R^(1/4) density view, and what it changed (`ddc15a4`, `9500a67`)
+
+`qa_dens_*` plots `log10 Sigma(R) = dM/dA` against `R^(1/4)`, the coordinate in
+which a de Vaucouleurs (n = 4) profile is a straight line. It is now part of the
+project-wide `qa.evaluate()` suite, so every experiment gets it.
+
+**It exposes what the cumulative view hides.** Outer logarithmic slope
+`d log10 Sigma / d log10 R` over 50-148 kpc:
+
+| epoch | truth | model | model - truth |
+|---|---|---|---|
+| z = 0.4 | -2.78 | -2.74 | +0.04 |
+| z = 1.0 | -2.91 | -2.81 | +0.10 |
+| **z = 2.0** | **-3.38** | **-2.90** | **+0.48** |
+
+The truth steepens with redshift; the model barely does. Yet the z = 2 curve of
+growth is only -0.024 dex low at 148 kpc -- a shallow outer slope adds mass in
+the outermost annuli while the total stays low, so a CoG figure cannot see it.
+
+**The full four-zone slope error** (model - truth; positive = model shallower):
+
+| band | z=0.4 | z=1.0 | z=2.0 |
+|---|---|---|---|
+| 2-6 kpc | +0.37 | +0.43 | +0.47 |
+| 6-25 kpc | -0.12 | -0.17 | +0.09 |
+| 25-70 kpc | -0.13 | -0.11 | -0.13 |
+| 70-148 kpc | +0.08 | +0.13 | **+0.64** |
+
+The truth steepens monotonically and continuously (-1.80 -> -1.90 -> -2.42 ->
+-2.84 at z = 0.4); the model steepens too fast through the middle and then
+flattens. **This is a CURVATURE error, not a slope offset**, and
+`moffat-E5-S2+S3` shows the same four zones, so it belongs to the framework.
+
+**All the high-redshift failures are one statement: the model's z = 2 galaxies
+are TOO DIFFUSE.** It makes roughly the right total mass and spreads it too far
+-- 29% too light inside 3 kpc in the most massive z = 2 haloes, 0.48 dex/dex too
+shallow beyond 70 kpc.
+
 ## In Progress
 
 **Nothing is running.**
 
-## NEXT
+## NEXT -- the profile-shape representational ceiling (AGREED WITH THE USER)
 
-1. **Drop S3 from the short list**, and treat E5 as suspect for the same
+This mirrors Stage 3.0, which computed a ceiling for the AMPLITUDE (0.0456) and
+correctly killed the survival term before anyone built it. The same question has
+never been asked about the SHAPE.
+
+**The experiment.** For each galaxy the deposits form a fixed BASIS: one
+truncated unit profile `F_j(<R)` per MAH step, `R50` from the fitted size law,
+truncated at `3 R200c(t_j)`. The model chooses non-negative weights
+`dM*_j = eps_surv * dMh_j`. Ask instead:
+
+> over ALL non-negative weights `w_j >= 0`, respecting causality (`w_j` enters
+> epoch `k` only if `t_j <= t_k`), what is the best fit to that galaxy's
+> measured profile at all five epochs?
+
+That is **non-negative least squares** -- convex, no optimiser tuning, no
+multi-start, seconds per galaxy. Its residual is the SHAPE CEILING: the best any
+deposition model with this basis could do given a PERFECT efficiency law.
+
+**Why it is decisive.** It separates three culprits that currently look
+identical in the loss:
+
+| if the ceiling is | the limitation is | the fix is |
+|---|---|---|
+| near zero | the **efficiency law** -- the basis can make the right profile, `eps_surv` is not choosing the right weights | enrich `eps_surv`, now knowing it is worth it despite E4/E5 failing |
+| large, concentrated at small R | the **basis** -- no non-negative sum of these deposits is compact enough | a compact second channel, or a redshift-dependent shape parameter |
+| large at all radii | the **size law** -- deposits are the wrong size everywhere | a different functional form for `R50`, not another additive term |
+
+**Cost**: an afternoon. NNLS over ~72 deposits x 24 radii x 5 epochs per galaxy,
+a few hundred galaxies. No global fitting.
+
+**The caution to report with it.** The ceiling gives the basis unconstrained
+PER-GALAXY weights, far more freedom than a seven-parameter global law. So a
+large ceiling PROVES the basis is inadequate; a small ceiling does NOT prove any
+global efficiency law can reach it. Report it as a bound, never as a target.
+
+**Contingent follow-up.** If the basis is the limit (my expectation, ~70%), test
+one nested parameter before any new component: a redshift-dependent deposit
+shape, `c = c0 + c_z * ln(1+z)`, so high-redshift deposits are intrinsically
+more concentrated. It targets "too diffuse at high z" directly and goes through
+the same identifiability check as everything else. A compact second channel is
+the fallback.
+
+## ALSO PENDING
+
+1. **Drop `S3` from the short list**, and treat `E5` as suspect for the same
    reason. The short list should become `gompertz_log-E2-S2` and `moffat-E2-S2`
    until something else earns a place.
-2. **Build the compact second channel**, leashed to `f_form`. It is the only
-   well-posed extension left, and the inner deficit is the one thing none of
-   these corrections touched. Score it on the PER-EPOCH FAIR MASK, not the full
-   sample — the full sample is now known to flatter.
+2. Score any new extension on the **per-epoch mh-complete mask**, not the full
+   sample -- the full sample is now known to flatter.
 3. The delivery-delay kernel is a last resort, and if built must carry an
    empirical halo-mass dependence (the user's condition), not a bare
    `eta * t_dyn`.
-4. **An open question worth its own probe**: why does the model degrade so much
-   on massive, complete samples while the regression barely does? That is the
-   deployment case, and it is not the inner deficit — it is an amplitude
-   failure at high halo mass.
+4. **Hold z = 2.0 out of the fit** and score it as a genuine extrapolation in
+   redshift (`doc/todo.md`). The catch: the Stage 3.2 factorial fits only the
+   two ENDPOINTS (z=0.4 and z=2.0), so a model selected there has already seen
+   z=2 -- a clean hold-out must re-select as well as re-fit.
+5. **Why does the model degrade on massive complete samples while the
+   regression barely does?** ~36% worse at z >= 0.7. Unexplained, and it is the
+   deployment case.
 
 ## Warnings carried forward (new ones first)
 
