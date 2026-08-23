@@ -387,6 +387,18 @@ def pareto_figure(path=None, name="pareto"):
         ax[0].annotate(f"{ww:g}", (par[j, 1], par[j, 2]), fontsize=6.5,
                        xytext=(5, 4), textcoords="offset points")
     fig.colorbar(sc, ax=ax[0], label=_tex("log10 of the z=2 epoch weight"))
+    if "pred_model" in z and "mask" in z:
+        # where the fitted model sits relative to the achievable frontier
+        import stage34_ceiling as _C
+        pm = np.asarray(z["pred_model"], float)
+        dz = np.load(_C.POP)["data"][np.asarray(z["rows"])]
+        i2 = int(np.argmin(np.abs(R - 2.0)))
+        mx = 100 * np.median(pm[:, 4, i2] / dz[:, 4, i2] - 1)
+        my = 100 * np.median(pm[:, 0, i2] / dz[:, 0, i2] - 1)
+        ax[0].plot(mx, my, "X", c="#D55E00", ms=13, mec="k", mew=0.7, zorder=4)
+        ax[0].annotate(_tex("the fitted model"), (mx, my), fontsize=7.5,
+                       color="#D55E00", xytext=(9, 7),
+                       textcoords="offset points")
     ax[0].axhline(0, c="0.85", lw=0.8)
     ax[0].axvline(0, c="0.85", lw=0.8)
     ax[0].set_xlabel(_tex(f"z = 2 residual at 2.0 kpc  [{_pct()}]"))
@@ -412,7 +424,10 @@ def pareto_figure(path=None, name="pareto"):
         "along this curve, so quoting any single value of it as irreducible is "
         "wrong: what is structural is the trade-off, not the number. Driving "
         "the z = 2 residual to zero costs a large central overshoot at z = 0.4 "
-        "and a substantially worse loss."))
+        "and a substantially worse loss. The cross marks the fitted model, "
+        "which sits OUTSIDE the frontier: it is further from the truth at "
+        "z = 2 than any point on the curve and buys nothing at z = 0.4 for "
+        "it."))
     fig.tight_layout(rect=(0, bot, 1, 1))
     print("wrote", save_fig(fig, FIGDIR / f"stage34_{name}")[0], flush=True)
 
