@@ -142,7 +142,7 @@ def ceiling_of(stack, cols, target=None, wmod=None):
         A = np.concatenate([B * stack.em[k][g][None, :]
                             for k in range(stack.ne)], axis=0)
         if wmod is not None:
-            grp = C._interval_groups(stack.em[:, g])
+            grp = C.interval_groups(stack.em[:, g])
             w = wmod[i][g]
             G = np.zeros((A.shape[0], stack.ne))
             for gg in range(stack.ne):
@@ -254,7 +254,9 @@ def main(smoke=False):
     prev = np.load(C.OUT, allow_pickle=True) if C.OUT.exists() else None
     print(f"\n  CEILING GATE (this module vs stage34_ceiling at the fitted basis)")
     if prev is not None and not smoke:
-        want = np.asarray(prev[f"{LABEL}_ceiling_sF"], float)
+        # this module solves on all five epochs with no mask, so the
+        # matching product in stage34_ceiling is the `all5` sample definition
+        want = np.asarray(prev[f"{LABEL}|all5|ceiling_sF"], float)
         dev = float(np.max(np.abs(ref_sf - want)))
         print(f"    per-epoch score_F  " + " ".join(f"{v:.5f}" for v in ref_sf))
         print(f"    stage34_ceiling    " + " ".join(f"{v:.5f}" for v in want))
@@ -270,8 +272,10 @@ def main(smoke=False):
 
     idx = np.arange(stack.n)[::(1 if smoke else SCAN_STRIDE)]
     sub = stack.sub(idx)
-    print(f"  scanning on {sub.n} galaxies; the winner is re-measured on all "
-          f"{stack.n}\n")
+    print(f"  scanning on {sub.n} galaxies; every point quoted as a CONCLUSION "
+          f"is then re-measured\n  on all {stack.n} (`confirm` below). The "
+          f"first draft of this file printed that promise\n  and did not keep "
+          f"it.\n")
 
     n_g = 3 if smoke else 7
     print(f"{RULE}\n  SCAN A — the SIZE LAW at the ceiling: R50 = f0 R200c(t_j) "
@@ -320,10 +324,41 @@ def main(smoke=False):
     Cc = scan(sub, spec.family, pts, clip, wmod=wmod)
     _report_cz(Cc, "the 5-weight `interval5` rung")
 
+    print(f"\n{RULE}\n  CONFIRMATION ON ALL {stack.n} GALAXIES\n{RULE}")
+    print(f"     The scan grid runs on every {SCAN_STRIDE}rd galaxy. These are "
+          f"the four points the\n     conclusions rest on, re-measured on the "
+          f"whole sample.\n")
+    b_cz0 = B[np.abs(B[:, 3]) < 1e-12][
+        np.argmin(B[np.abs(B[:, 3]) < 1e-12][:, 4])]
+    best_cz = B[np.abs(B[:, 3]) > 1e-12][
+        np.argmin(B[np.abs(B[:, 3]) > 1e-12][:, 4])]
+    confirm_pts = [
+        ("the fitted basis", (log_f0_0, b_0, c_0, 0.0)),
+        ("the ceiling-optimal size law", (lf_b, b_b, c_0, 0.0)),
+        ("best with c_z = 0", tuple(b_cz0[:4])),
+        ("best with c_z != 0", tuple(best_cz[:4])),
+    ]
+    conf = scan(stack, spec.family, [p for _, p in confirm_pts], clip,
+                verbose=False)
+    coh = stack.sub(np.where(stack.mask[:, 4])[0])
+    conf_c = scan(coh, spec.family, [p for _, p in confirm_pts], clip,
+                  permuted=False, verbose=False)
+    print(f"     {'point':<30}{'log_f0':>8}{'b':>8}{'c0':>8}{'c_z':>8}"
+          f"{'all5':>9}{'permuted':>10}{'cohort':>9}")
+    for (nm, _), row, rc in zip(confirm_pts, conf, conf_c):
+        print(f"     {nm:<30}{row[0]:>8.3f}{row[1]:>8.3f}{row[2]:>8.3f}"
+              f"{row[3]:>8.3f}{row[4]:>9.4f}{row[5]:>10.4f}{rc[4]:>9.4f}")
+    print(f"\n     On all {stack.n} galaxies a non-zero c_z changes the "
+          f"ceiling by {conf[3][4] - conf[2][4]:+.4f} in mean score_F, and on "
+          f"the\n     {coh.n}-galaxy z=2 cohort by "
+          f"{conf_c[3][4] - conf_c[2][4]:+.4f}. Positive means WORSE.")
+
     if smoke:
         print("\n  smoke run: writing nothing")
         return
     np.savez_compressed(OUT, scan_size=A, scan_shape=B, scan_shape_i5=Cc,
+                        confirm=conf, confirm_cohort=conf_c,
+                        confirm_names=np.array([n for n, _ in confirm_pts]),
                         columns=np.array(["log_f0", "b", "c0", "c_z",
                                           "ceiling", "permuted",
                                           *[f"sF_z{z}" for z in Z]]),

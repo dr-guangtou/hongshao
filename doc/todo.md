@@ -1415,41 +1415,78 @@ Cross-experiment plan. Mirrors the phase sequence in
   as well as re-fit, or be reported as a hold-out test of an already-chosen
   model rather than a clean one.
 
-### exp54 Stage 3.4 — settled by the representational ceiling (2026-08-23)
+### exp54 Stage 3.4 — the representational ceiling, v2 (2026-08-24)
 
-- [x] **The profile-shape representational ceiling** (`stage34_ceiling.py`).
-  Non-negative least squares over per-galaxy deposit weights against the
-  measured curve of growth at all five epochs, basis fixed, causality respected.
-  Answer: **the basis is not the limitation** (given per-epoch freedom it draws
-  every profile to ~1% at every radius); **the limitation is that ONE causal
-  weight vector must serve all five epochs**, which raises the bound by a factor
-  of 3.3 with no change of basis. Two thirds of the z=2 central deficit is the
-  deposition-only monotonicity premise, not the model.
-- [x] **`c = c0 + c_z ln(1+z)`** (`stage34_basis_scan.py`). Scanned at the bound
-  at two freedom levels; optimum at `c_z` = 0 in both. **Not built.**
-- [~] ~~The compact second deposit channel~~ — **retired.** The ceiling, free to
-  place 71 non-negative weights including on sub-kpc deposits from z > 10, lands
-  on the basis-free monotone floor at 2 kpc and z=2 (−17.1% against −17.4%). A
-  compact channel would be fitting a structural residual.
+- [x] **The ceiling, with the mask INSIDE the solve** (`stage34_ceiling.py`).
+  Three sample definitions; the ladder's ordering is identical in all three.
+  The basis draws any single epoch's profile to 0.9-2.2 per cent, so the
+  profile family and size law are not the limitation; one causal weight vector
+  for five epochs is what costs.
+- [x] **The EXACT production-objective bounds** (`stage34_objective.py`).
+  `score_F` and `score_A^2` are means over galaxies, so each is minimised galaxy
+  by galaxy exactly. The exact shape ceiling is **0.282**, not the surrogate's
+  0.538, against a model at 0.898 — and the permuted control under the same
+  objective is **0.319**, so seven eighths of that gap is dictionary
+  overcompleteness.
+- [x] **The increment test, solved in the units it reports.** The truth's own
+  decline costs more than the basis at every interval, reversing v1.
+- [x] **The temporal-resolution ladder.** K=1,2 are an identity at z=2; most of
+  the reachable improvement arrives by K=3-8.
+- [x] **The central-decline split.** 53 per cent of cohort galaxies decline at
+  4.92 kpc; the model is -37.4 per cent there and only -11.5 per cent among the
+  rest.
+- [x] **`c = c0 + c_z ln(1+z)` rejected at the bound**, at two freedom levels
+  and confirmed on all 2397 galaxies and on the 840 cohort. Not built.
+- [~] ~~The compact second deposit channel~~ — **deprioritised, not retired.**
+  It cannot address a temporal decline, which is the larger half of the z=2
+  central deficit. It remains a conditional hypothesis for the non-declining
+  galaxies, whose positive increments are the ones the current basis fits worst
+  (4.65 per cent against 2.11 per cent).
 
-### exp54 — what the ceiling leaves open
+### exp54 — what the ceiling now points at, in order
 
-- [ ] **The amplitude, and why the model degrades on complete massive samples.**
-  `score_A` is 1.24 (mean over epochs) against a ceiling of 0.15 — but the
-  permuted control reaches 0.26 while fitting a DIFFERENT galaxy, so most of
-  that gap is per-galaxy flexibility and not accessible to a global law. The
-  honest headroom is the gap to the five-weight `interval5` bound: 0.27. Still
-  the deployment case and still unexplained.
-- [ ] **Change the objective before changing the model, if the shape is to
-  improve.** The production loss is a fractional residual on the cumulative
-  profile and cannot see the outskirts at high redshift: at z=2 only 6.3% of the
-  stellar mass lies beyond 52 kpc, so a sub-per-cent error on the curve of
-  growth is a 30% error in that annulus. exp48 already measured a
-  density-plus-log-residual objective that improves the compact-centre defect;
-  it was not adopted for unrelated reasons and deserves re-examination now that
-  the blindness is quantified.
-- [ ] **Re-check every diagnostic quoted on the full sample against the
-  mh-complete mask.** The R^(1/4) outer-slope headline (truth steepening to
-  −3.38, model +0.48 dex/dex too shallow) is more than half survey; on the
-  mh-complete sample it is −2.95 and +0.21. The same correction was needed for
-  the inner profile a day earlier.
+- [ ] **Enrich the efficiency law's TIME dependence.** The strongest positive
+  lead: the temporal ladder puts most of the reachable improvement at three to
+  eight independent components in time, which a richer global redshift
+  dependence could plausibly express. Score any candidate against the permuted
+  control, not against the ceiling.
+- [ ] **Repair the objective before the profile family.** The production loss
+  cannot see the outskirts at high redshift (at z=2 only 6.3 per cent of the
+  mass lies beyond 52 kpc) and is nearly blind to monotonicity once each epoch
+  is renormalised. Re-examine exp48's density-plus-log-residual objective.
+- [ ] **The high-mass amplitude failure.** `score_A` 1.278 on the cohort. Not
+  explained by the shape ceiling and still the deployment case.
+- [ ] **A compact channel, IF it earns it**, following the reviewer's nested
+  sequence: map the inner residual against epoch-local halo variables with a
+  shuffled-secondary null; then a fixed compact fraction; then mass/redshift
+  dependence; then formation history only if it beats its shuffle. Test on the
+  non-declining subset, where it is the only remaining candidate.
+- [ ] **A mass-dependent size-evolution exponent** (`b_M m log10(1+z)`), which
+  `S3` never tested — it varied the size NORMALISATION with halo properties,
+  not the redshift EXPONENT.
+
+### exp54 — corrections owed to the record (from the 2026-08-23 review)
+
+- [x] The curve of growth is a PROJECTED elliptical-aperture mass, not a
+  spherical enclosed mass (verified in `hongshao.tng_data`: it is a cumulative
+  integral of the X-Y isophote surface density).
+- [x] The sample is selected on PEAK HALO MASS at z=0.4, not on stellar mass.
+- [x] `C = 3` is an empirical convention, not a scanned optimum.
+- [x] `fit.identifiability`'s per-parameter curves are CONDITIONAL SLICES, not
+  profile scans — the other parameters are held fixed.
+- [x] The 0.03 dex growth figure is a median bias. Re-measured here: per-galaxy
+  sd **0.208 dex**, NMAD 0.179, correlation 0.71, and a predicted growth
+  distribution **half as wide** as TNG's (0.145 against 0.284 dex).
+- [ ] **Re-optimised parameter profiles for E2-S2** — fix one parameter on a
+  9-15 point grid and re-optimise the other six with multiple starts. Not run;
+  this is the missing piece of the identifiability claim.
+- [ ] **A truncation-factor sensitivity test**: refit at `C = 1, 2, 3, 5` and
+  report amplitude and shape scores, mass beyond the last aperture, and the
+  change in the fitted efficiency.
+- [ ] **Completeness-threshold sensitivity**: repeat the Section 6 conclusions
+  over the 50/60/70/80 per cent fraction, the mass-bin width and the plateau
+  rule.
+- [ ] **Persist the recalibrated per-epoch regression benchmarks** so the
+  mh-complete `score_A` table is reproducible from one output file.
+- [ ] **A stochastic residual layer.** The mean law cannot generate TNG's
+  growth diversity by construction; this is scope, not a defect.

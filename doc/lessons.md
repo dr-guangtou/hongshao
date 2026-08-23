@@ -1132,3 +1132,44 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   profile a day earlier. **The habit**: once a completeness mask exists, apply
   it the FIRST time a new diagnostic is plotted, not after it has produced a
   headline.
+- **A bound must be optimised on the same objects and the same functional it is
+  reported on — three ways to get that wrong appeared in one afternoon (exp54,
+  2026-08-24).** (1) The ceiling's solve used all five epochs while its score
+  used a per-epoch completeness mask, so the reported object was not the
+  optimum of the problem it was compared against. (2) The increment test's
+  non-negative solve was weighted by the increment and its cost reported as a
+  fraction of the later total, which reversed the ordering of the two failure
+  modes it existed to separate. (3) Non-negative least squares minimises a
+  fractional residual on the ABSOLUTE curve of growth, and its result was
+  quoted as if it were the production shape loss — worth a factor of two
+  (0.538 against the exact 0.282). **The habit**: write down the reported
+  quantity first, then optimise exactly that; and when the reported loss is a
+  mean over objects of a per-object term, minimise it per object and the
+  population optimum is exact rather than approximate.
+- **Check whether a constraint actually binds the quantity you are reporting
+  (exp54, 2026-08-24).** "Deposition-only implies enclosed mass never falls" is
+  a true theorem, and it puts almost NO floor under a shape loss that
+  renormalises each epoch at 100 kpc — because any set of shapes can be made
+  monotone by inflating the later epochs. The basis-free monotone bound is
+  0.009 in `score_F`, not the 0.29 an isotonic projection scored; that 0.29 was
+  the projection choosing to match the amplitude. **A reference is not a bound
+  until it is the argmin of the reported loss.**
+- **A control can be an identity (exp54, 2026-08-24).** Giving each galaxy one
+  free amplitude per epoch interval CANNOT change its z=2 normalised profile,
+  because every pre-z=2 deposit sits in one interval — so that rung had to
+  equal the fitted model at z=2, and the equality was read as "no headroom at
+  z=2". **Before quoting a control, ask what it is able to change**; if the
+  answer is "nothing, at the epoch you care about", it is not a control.
+- **When a defect has two candidate mechanisms, split the sample on the
+  mechanism before modelling it (exp54, 2026-08-24).** The z=2 central deficit
+  looked like a uniform 25 per cent failure. Preregistering "did the central
+  mass later FALL?" split it into -37 per cent for the 53 per cent that
+  declined — which no static deposition model can follow — and -11.5 per cent
+  for the rest. A compact deposit channel had been queued to fix the population
+  number; it addresses only the smaller half. **One binary split retired a
+  planned experiment more decisively than any fit would have.**
+- **Never let a smoke path write production filenames (exp54, 2026-08-24).**
+  A `--smoke --figures` run made to test the plotting code silently overwrote
+  the full-sample ladder figure with a 60-galaxy version, and it took an
+  outside reviewer to notice the sample sizes in the panel titles. Smoke
+  outputs get a suffix.

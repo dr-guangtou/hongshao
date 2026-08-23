@@ -599,161 +599,181 @@ The adopted model's own parameters barely move under the per-epoch fit
 
 ---
 
-## Stage 3.4 — the profile-shape representational ceiling (`stage34_ceiling.py`, `stage34_basis_scan.py`), COMPLETE
+## Stage 3.4 — the representational ceiling (`stage34_ceiling.py`, `stage34_objective.py`, `stage34_basis_scan.py`), COMPLETE (v2)
 
 Stage 3.0 bounded the AMPLITUDE and killed a survival term before anyone built
-it. This asks the same question of the SHAPE, and answers three questions that
-looked identical in the loss: is the model limited by its efficiency law, by
-its deposit basis, or by its size law?
+it. This asks the same question of the SHAPE. **This section describes v2**,
+rebuilt after an independent review found four defects in v1; v1's output is
+kept at `outputs/stage34_ceiling_v1_provisional.npz` and its conclusions are
+listed as withdrawn at the end.
 
 ### What was computed
 
 For each galaxy the model's deposits are a fixed **basis**: one truncated
-unit-mass cumulative profile `F_j(<R)` per MAH step, with `R50` from the fitted
-size law and truncation at `3 R200c(t_j)`. The model picks the weights with
-seven global parameters. Replace that with **non-negative least squares** over
-all 71 weights, respecting causality (`w_j` enters epoch `k` only if
-`t_j <= t_k`), and the residual is the best any deposition model with this
-basis could do given a perfect efficiency law. Convex, no optimiser, 5 ms per
-galaxy.
+unit-mass cumulative profile per MAH step, `R50` from the fitted size law,
+truncated at `3 R200c(t_j)`. Replace the seven-parameter weight law with a free
+non-negative weight per deposit, respecting causality, and the residual bounds
+what any deposition model with this basis could do given a perfect efficiency
+law.
 
-One number cannot separate the three culprits, so the run builds a **ladder of
-bounds of decreasing per-galaxy freedom**, all scored with the production
-`score_A` / `score_F` on the per-epoch mh-complete mask. Two gates make the
-comparison legitimate: `_score_masked` must reproduce
-`stage33_perepoch.MaskedProblem.per_epoch` exactly (it does, to 0.00e+00), and
-`B @ (eps dMh)` must reproduce `model.forward` exactly (it does, to 0.00e+00),
-so the bound really is on the model's own deposits and is scored by the model's
-own arithmetic.
+Three gates make the comparison legitimate, all at `0.00e+00`: the scorer
+reproduces `stage33_perepoch.MaskedProblem.per_epoch`; `B @ (eps dMh)`
+reproduces `model.forward`; and an all-true epoch mask reproduces the unmasked
+solve.
 
-### The ladder — `gompertz_log-E2-S2`, `score_F` (lower is better)
+**The sample quoted below is the fixed z=2-threshold cohort** — the 840
+galaxies above the *z* = 2 mh-complete cut, followed at all five epochs, so
+that an evolution statement is about the same objects. ("mh-complete" = above
+the halo mass where our completeness first reaches 60 per cent of its z=0.4
+ceiling of 0.781, i.e. absolute completeness ~0.47. A threshold, not
+completeness 1.) The run also reports an `all5` and a `masked` definition;
+the ladder's ordering is identical in all three.
 
-| rung | freedom per galaxy | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | mean |
-|---|---|---|---|---|---|---|---|
-| `monotone` — enclosed mass may not fall with time | none (basis-free) | 0.349 | 0.293 | 0.263 | 0.255 | 0.309 | 0.294 |
-| `epoch-alone` — each epoch fitted separately | 5 x ~71 | 0.094 | 0.134 | 0.184 | 0.220 | 0.212 | 0.169 |
-| **`ceiling`** — one causal weight vector | **71** | **0.604** | **0.542** | **0.541** | **0.530** | **0.581** | **0.559** |
-| `ceiling_fb` — the same with `eps_surv <= f_b` | 71, capped | 0.609 | 0.546 | 0.543 | 0.532 | 0.582 | 0.563 |
-| `interval5` — one weight per epoch interval | 5 | 0.856 | 0.785 | 0.783 | 0.697 | 0.777 | 0.780 |
-| `model` — the fitted law | 0 (7 global) | 0.934 | 0.909 | 0.897 | 0.846 | 0.777 | 0.872 |
-| *control*: the ceiling fitted to ANOTHER galaxy | 71 | 0.756 | 0.709 | 0.686 | 0.597 | 0.613 | 0.672 |
-| *reference*: another galaxy's truth, unfitted | — | 1.728 | 1.717 | 1.675 | 1.459 | 1.215 | 1.559 |
+**The objective matters and is not optional.** NNLS minimises a fractional
+residual on the *absolute* curve of growth, not the production shape loss.
+Because `score_F` and `score_A^2` are means over galaxies of per-galaxy terms,
+each can be minimised galaxy by galaxy and the population minimum obtained
+EXACTLY; `stage34_objective.py` does that with analytic gradients (checked
+against finite differences to 1e-8).
 
-`score_A` on the same rungs: `monotone` 0.026, `epoch-alone` 0.072, `ceiling`
-0.153, `interval5` 0.273, **`model` 1.237** (mean over epochs).
+### The ladder — `score_F`, cohort, lower is better
+
+| bound | freedom/galaxy | mean over epochs |
+|---|---|---|
+| monotone in time, shape loss only | basis-free | **0.009** — *not a floor* |
+| monotone in time, amplitude + shape | basis-free | 0.195 |
+| monotone in time, absolute-fractional (exact PAVA) | basis-free | 0.286 |
+| each epoch fitted alone (not causal) | 5 x ~71 | <= 0.164 |
+| **one causal weight vector, EXACT shape loss** | **~71** | **0.282** |
+| the same under the NNLS surrogate | ~71 | 0.538 |
+| *control*: fitted to ANOTHER galaxy, exact loss | ~71 | **0.319** |
+| 8 deposit-group amplitudes (surrogate) | 8 | 0.614 |
+| 5 epoch-interval amplitudes (surrogate) | 5 | 0.762 |
+| **the fitted model** | 0 (7 global) | **0.898** |
+
+`score_A` on the cohort: exact amplitude bound 0.022, surrogate ceiling 0.150,
+permuted control 0.200, **model 1.278**.
 
 ### What it says
 
-**1. THE BASIS IS NOT THE LIMITATION.** Given per-epoch freedom the basis draws
-every galaxy's profile to `score_F` 0.09–0.22 and to about one per cent at
-every radius. The profile family, the size law and the truncation can represent
-these galaxies. The three-way question in the plan therefore has a fourth
-answer, and it is none of the three.
+**1. THE BASIS CAN DRAW THE PROFILES.** With independent weights per epoch it
+reproduces every galaxy's curve of growth to a median 0.9–2.2 per cent RMS.
+The profile family, the size law and the truncation are not the limitation, and
+the fitted `(log_f0, b)` is already within 0.4 per cent of the ceiling-optimal
+size law.
 
-**2. THE LIMITATION IS THAT ONE CAUSAL WEIGHT VECTOR MUST SERVE ALL FIVE
-EPOCHS.** Imposing that raises the bound from 0.169 to 0.559 — a factor of 3.3
-— with no change of basis. `increment_test` locates it exactly: the deposits of
-one epoch interval are the only ones that can build that interval's rise in
-`M*(<R)`, and
+**2. THE COST IS THAT ONE CAUSAL VECTOR MUST SERVE ALL FIVE EPOCHS** — the
+whole gap from <=0.164 to 0.282, with no change of basis.
 
-| interval | radii where the truth DECREASES | cost of clipping that to zero | cost of the basis on the rise |
+**3. BUT ALMOST NONE OF THE MODEL-TO-CEILING GAP IS INFORMATION A GLOBAL LAW
+COULD USE.** Under the exact objective, this galaxy's deposits fitted to a
+DIFFERENT galaxy's measured profile reach **0.319** against the true ceiling's
+**0.282**. The wrong galaxy costs 13 per cent. The dictionary is overcomplete;
+halo-specific basis information is about an eighth of the ceiling's advantage.
+(The control has no matching halo basis but full access to the target's stellar
+data — it measures dictionary flexibility, not what a predictor could learn.)
+
+**4. MONOTONICITY DOES NOT FLOOR THE SHAPE LOSS.** The production shape loss
+renormalises at 100 kpc while monotonicity constrains the absolute profile, and
+any set of shapes can be made monotone by inflating the later epochs. Optimised
+against the shape loss alone the basis-free monotone bound is **0.009**. Stage
+3.0's isotonic projection scored ~0.29 because it matched the amplitude.
+
+**5. WHERE MONOTONICITY DOES BIND, PRICED IN ITS OWN UNITS.** RMS error in the
+cumulative curve as a fraction of `M*(<R)` at the later epoch, 400-sample
+bootstrap:
+
+| interval | radii where the truth FALLS | cost of clipping | cost of the basis on the rise |
 |---|---|---|---|
-| z=2.0 → 1.5 | 31.4% | 2.88% | 6.29% |
-| z=1.5 → 1.0 | 31.8% | 4.26% | 8.32% |
-| z=1.0 → 0.7 | 36.3% | 2.48% | 5.67% |
-| z=0.7 → 0.4 | 34.3% | 2.67% | 5.79% |
+| z=2.0 to 1.5 | 32.2% | 3.68% [3.44,3.83] | 3.17% [3.08,3.26] |
+| z=1.5 to 1.0 | 33.1% | 4.65% [4.43,4.97] | 2.43% [2.27,2.58] |
+| z=1.0 to 0.7 | 38.2% | 2.35% [2.18,2.57] | 1.93% [1.80,1.98] |
+| z=0.7 to 0.4 | 36.6% | 2.67% [2.53,2.87] | 1.76% [1.69,1.83] |
 
-both priced as an RMS error in the cumulative curve, in per cent of `M*(<R)`.
-**The basis can draw the profiles and cannot draw the CHANGES between them.**
+**The decline costs more than the basis at every interval.** v1 reported the
+opposite because its solve minimised a differently-weighted quantity from the
+one it printed.
 
-**3. THE z=2 INNER DEFICIT IS MOSTLY THE DEPOSITION-ONLY PREMISE.** At 2 kpc,
-z=2, on the mh-complete sample: the model is **−25.4%**, the ceiling **−17.1%**,
-and the basis-free monotone floor **−17.4%**. So about **two thirds of the
-model's central deficit at z=2 is irreducible for any deposition-only model of
-any basis**, and the ceiling — with 71 free weights and every compact deposit it
-could want — recovers essentially nothing beyond it. **A compact second channel
-cannot fix this**, because the obstacle is not that compact mass is unavailable
-but that it cannot later be removed: TNG's enclosed mass at 2 kpc genuinely
-falls between z=2 and z=0.4.
+**6. THE z=2 CENTRAL DEFICIT: THE TRADE-OFF IS STRUCTURAL, THE NUMBER IS NOT.**
+Re-solving the basis-free monotone bound with the z=2 epoch up-weighted:
 
-**4. THE OUTER-SLOPE FAILURE IS A BLINDNESS OF THE OBJECTIVE, NOT OF THE
-BASIS.** `epoch-alone` matches the cumulative curve to ~1 per cent at every
-radius and is still 0.2 dex/dex too shallow in `d log Sigma / d log R` over
-50–148 kpc, because at z=2 only **6.3 per cent** of the stellar mass lies
-outside 52 kpc — a sub-per-cent error on the cumulative curve is a 30 per cent
-error in that annulus. Nothing in the production objective penalises it.
+| z=2 weight | 0.2 | 1.0 | 2.0 | 5.0 | 20.0 |
+|---|---|---|---|---|---|
+| `score_F` | 0.209 | **0.188** | 0.193 | 0.289 | 0.477 |
+| z=2 at 2 kpc | −23.2% | **−17.2%** | −13.2% | −6.0% | −0.9% |
+| z=0.4 at 2 kpc | +4.6% | **+9.0%** | +10.4% | +25.4% | +40.4% |
 
-**5. AND HALF OF THE APPARENT OUTER-SLOPE FAILURE IS THE SURVEY.** The tech
-note's "the truth steepens from −2.78 to −3.38 while the model barely moves"
-is measured on the full progenitor-selected sample. On the per-epoch
-mh-complete sample the truth steepens only to **−2.95**, and on a fixed galaxy
-set from −2.56 to −2.95. The model's z=2 error is **+0.21** dex/dex
-(`gompertz_log`) or **+0.06** (`moffat`), not +0.48. This is the same trap as
-§6.4b of the tech note, in a new figure.
+A deposition-only model can put the z=2 residual anywhere on that curve. At the
+production weighting the optimum is −17.2%; the model sits at −25.4%.
 
-### The caution, measured rather than asserted
+**7. AND THE MECHANISM SPLIT IS SHARPER THAN ANY NUMBER.** Preregistering
+"declined" as a fall in `M*(<4.92 kpc)` from z=2 to z=0.4, median
+`100 (pred-truth)/truth` at 2 kpc, z=2:
 
-NNLS gets 71 non-negative numbers per galaxy where the model has seven global
-ones, so a small ceiling proves nothing on its own. The **permuted control** —
-this galaxy's deposits fitted to a *different* galaxy's measured profile — puts
-a number on it: `score_F` **0.672** and `score_A` **0.260**, against the
-ceiling's 0.559 and 0.153. **A 71-weight solve fitted to the WRONG galaxy
-(0.672) beats a 5-weight oracle fitted to the RIGHT one (0.780), and is 4–5
-times better than the fitted model in amplitude while carrying no information
-about the galaxy at all.** Most of the ceiling's margin is generic flexibility
-that no global law can supply. The honest headroom for a richer efficiency law
-is the gap to `interval5` — 0.09 in mean `score_F`, and zero at z=2.
+| group | n | model | ceiling | epoch-alone | monotone |
+|---|---|---|---|---|---|
+| centre declined | 443 (53%) | **−37.4** | −22.4 | +3.6 | −25.9 |
+| centre did not | 397 | **−11.5** | −5.9 | +3.6 | −10.2 |
 
-Sparsity supports the same reading in the other direction: NNLS activates a
-median of only **6 of 71** weights (10th–90th percentile 4–7), so the fit is
-not using its nominal freedom evenly — it is using a handful of very sharp
-directions.
+The population's −25.4% is mostly the declining half, which no static
+non-negative deposition model can follow. Among non-decliners the model is only
+11.5 per cent low and the ceiling recovers half of that.
 
-The `eps_surv <= f_b = Omega_b/Omega_m` cap costs **+0.004** in mean `score_F`,
-so the ceiling is physically admissible: 2.6 per cent of the ceiling's deposits
-ask for more stars than baryons, and forbidding it changes nothing.
+**8. HOW MUCH TIME RESOLUTION A GLOBAL LAW WOULD NEED.** K contiguous deposit
+groups, within-group distribution held at the fitted law's:
 
-`moffat-E2-S2` gives the same ladder to within 0.03 everywhere, so all of this
-belongs to the framework and not to one profile family.
+| K | 1 | 2 | 3 | 5 | 8 | 12 | 20 | free |
+|---|---|---|---|---|---|---|---|---|
+| mean `score_F` | 0.898 | 0.817 | 0.661 | 0.645 | 0.614 | 0.598 | 0.570 | 0.538 |
+| at z = 2 | 0.777 | 0.777 | **0.584** | 0.565 | 0.568 | 0.605 | 0.603 | 0.581 |
 
-### The contingent extension, pre-empted (`stage34_basis_scan.py`)
+K = 1 and K = 2 are an IDENTITY, not a result: every pre-z=2 deposit is in one
+group, so rescaling it cannot change a profile normalised at 100 kpc, and the
+z=2 score must equal the model's. **Most of the reachable improvement arrives
+by K = 3–8**, a resolution a richer global redshift dependence could plausibly
+express. This is the strongest positive lead the ceiling produced.
 
-The agreed next step was one nested parameter, a redshift-dependent deposit
-shape `c = c0 + c_z ln(1+z)`, aimed at "the model's z=2 galaxies are too
-diffuse". It was tested **at the level of the bound**, where it cannot be
-rescued by refitting something else: the basis parameters were scanned on a
-grid while the per-galaxy freedom was held fixed, so a drop in the surface would
-be a statement about the basis and not about degrees of freedom.
+**9. THE FREEDOM AUDIT.** A median of **6 of ~71** weights are active — a
+sparse, bursty history, not an even use of the nominal freedom. Capping
+`eps_surv` at `f_b = Omega_b/Omega_m` costs **+0.002** in mean `score_F`, so
+the ceiling **passes the universal-baryon mass-budget check** — a necessary
+condition, not a sufficient one.
 
-| scan | result |
-|---|---|
-| **A** — the size law `(log_f0, b)` at the ceiling, 7x7 grid | ceiling-optimal `(-0.646, -1.286)` against fitted `(-0.846, -0.886)`, for a gain of **+0.4 per cent**. The size law is already at its ceiling optimum along a degenerate ridge. |
-| **B** — `(c0, c_z)` at the 71-weight ceiling, 7x7 | optimum at **`c_z` = 0.0000**, `c0` = 0.798 — the fitted value. Interior minimum; the surface rises in both directions. |
-| **C** — `(c0, c_z)` at the 5-weight `interval5` rung, 7x7 | optimum at **`c_z` = 0.0000**, `c0` = 0.798. |
+`moffat-E2-S2` reproduces the whole ladder to within 0.03.
 
-**A redshift-dependent deposit shape cannot raise the ceiling at either freedom
-level, so it cannot lower the fitted loss by the mechanism it was proposed
-for.** Scan C exists because the 71-weight ceiling could in principle be
-insensitive to the deposit shape while the fitted model is not; it is not.
-**Do not build it.** (What the scan does not formally exclude is a `c_z` that
-helps by compensating for the rigidity of the `E2` efficiency law rather than
-by improving the basis — a mechanism nobody has proposed and which the
-"too diffuse" argument does not supply.)
+### The contingent extension, rejected at the bound (`stage34_basis_scan.py`)
+
+`c = c0 + c_z ln(1+z)` was scanned on a 7x7 grid of GLOBAL basis parameters
+with the per-galaxy freedom held fixed, at two freedom levels. The optimum is
+at **`c_z` = 0** in both, on an interior minimum; re-measured on all 2397
+galaxies and on the 840 cohort the best non-zero `c_z` is worse by +0.001 and
++0.019. The ceiling-optimal size law is worth +0.4 per cent. **Not built** —
+strong negative evidence against the proposed mechanism, not a proof of
+impossibility.
 
 ### Figures
 
-- `figures/stage34_ladder_<label>.png` — the ladder and where each bound's
-  residual sits in radius, with the permuted control drawn alongside.
-- `figures/stage34_cz_<label>.png` — the `(c0, c_z)` surface at both freedom
-  levels, and a cut at the fitted `c0`.
+`figures/stage34_ladder_*`, `stage34_temporal_*` (the K ladder and its
+identity), `stage34_galaxies_*` (four individual galaxies, two declining and
+two not), `stage34_rms_*` (the distribution of per-galaxy error), and
+`stage34_pareto` (the trade-off). All are generated from the saved full-sample
+output; the smoke path writes a `_smoke` suffix so it can never overwrite them
+again.
 
-### What this leaves
+### WITHDRAWN from v1 of this section
 
-The model's shape loss decomposes, in `score_F` units, as roughly: 0.29
-deposition-only monotonicity that no model of this class can remove, 0.56 the
-ceiling with this basis, 0.78 what a per-galaxy oracle over the coarse time
-distribution reaches, and 0.87 the fitted law. **The framework is close to its
-own limit; the limit itself is the deposition-only premise.** The remaining
-open item is the amplitude, where the model is 1.24 against a ceiling of 0.15
-and a permuted control of 0.26 — a large gap whose accessible fraction the
-control says is small, but which is the deployment case.
+1. ~~"Two thirds of the z=2 central deficit is irreducible."~~ It compared two
+   medians from two particular compromises. See item 6.
+2. ~~"The monotone floor is 0.29 in `score_F`."~~ 0.009 under the shape loss;
+   the projection was matching the amplitude. See item 4.
+3. ~~"Zero headroom at z=2."~~ An identity of the five-interval control. See
+   item 8.
+4. ~~"The basis cannot draw the changes between epochs."~~ With the increment
+   solve in the units it reports, the decline costs more than the basis at
+   every interval. See item 5.
+5. ~~"The compact second channel is retired."~~ Deprioritised. See item 7.
+6. The v1 ladder figure was regenerated from a 60-galaxy smoke sample.
+
+The one v1 conclusion that survives unchanged is that a redshift-dependent
+deposit shape does not earn a fit — and it now survives a full-sample
+confirmation it did not have.

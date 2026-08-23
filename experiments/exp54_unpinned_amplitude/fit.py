@@ -23,7 +23,13 @@ loss distinguishes neither. Every fit ships:
   * a scaled residual-Jacobian SVD -- cheaper and better conditioned than a
     finite-difference Hessian, and it does not need second differences;
   * the effective parameter count at a noise-set threshold;
-  * a profile scan per parameter, re-optimizing the rest;
+  * a one-parameter CONDITIONAL LOSS SLICE per parameter. **It is not a
+    profile scan**: the other parameters are held FIXED while one is displaced,
+    so it measures conditional curvature. A genuine profile would re-optimise
+    the remaining parameters at every grid point, and in a correlated model the
+    conditional slice can rise steeply along a direction the profiled curve
+    leaves nearly flat. Do not quote it as evidence of identifiability on its
+    own;
   * bootstrap stability over galaxies;
   * profiles of DERIVED quantities (R50/R200c, deposited mass by redshift),
     which are often identified where their constituents are not.
@@ -236,7 +242,8 @@ def identifiability(problem, theta, names, n_boot=12, verbose=True):
             print(f"      the FLATTEST direction is a combination, not a "
                   f"parameter:\n        {comp}")
 
-    # profile scans
+    # ONE-PARAMETER CONDITIONAL SLICES -- not profile scans. The other
+    # parameters are held at `theta` throughout; nothing is re-optimised.
     prof = {}
     lo, hi = np.array(problem.spec.bounds()).T
     for j, nm in enumerate(names):
@@ -251,8 +258,9 @@ def identifiability(problem, theta, names, n_boot=12, verbose=True):
         curv = (min(losses) - base) / max(base, 1e-12)
         prof[nm] = float(np.min(losses) - base)
     if verbose:
-        print(f"      profile rise at +-2 steps (a FLAT profile means "
-              f"unidentified):")
+        print(f"      CONDITIONAL loss rise at +-2 steps, others held FIXED "
+              f"(flat => unidentified,\n      but a steep rise does NOT prove "
+              f"identified -- see the module docstring):")
         for nm in names:
             flag = "  <-- FLAT" if prof[nm] < 1e-4 else ""
             print(f"        {nm:<12}{prof[nm]:+.3e}{flag}")
