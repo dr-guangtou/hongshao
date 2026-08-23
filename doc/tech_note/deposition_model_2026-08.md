@@ -57,21 +57,15 @@ For one galaxy, let `t_j` index the steps of its halo's mass accretion history
 
 **(1) The budget** — how much stellar mass this step deposits:
 
-```
-dM*_j = eps_surv(H_j) * dMh_j
-```
+$$\Delta M_{*,j} \;=\; \varepsilon_{\rm surv}(H_j)\,\Delta M_{h,j}$$
 
 **(2) The boundary** — the outer edge of the deposit:
 
-```
-R_trunc,j = C * R200c(t_j)          with C = 3 throughout
-```
+$$R_{{\rm trunc},j} \;=\; C\,R_{200c}(t_j), \qquad C = 3 \;\text{throughout}$$
 
 **(3) The sum** — the galaxy's curve of growth at observation epoch `t_k`:
 
-```
-M*(<R, t_k) = SUM over all j with t_j <= t_k  of  dM*_j * F_j(<R)
-```
+$$M_*(<R,\,t_k) \;=\; \sum_{j\,:\,t_j \le t_k} \Delta M_{*,j}\; F_j(<R)$$
 
 `F_j(<R)` is a **unit-mass cumulative profile**: a function rising from 0 to 1
 that says what fraction of deposit `j`'s mass lies inside radius `R`. It is
@@ -125,11 +119,9 @@ The model therefore parameterises by the **true post-truncation half-mass
 radius**. Writing `F0` for the untruncated unit profile in units of its own
 half-mass radius (so `F0(1) = 0.5`) and `u = R_trunc / R50_untruncated`:
 
-```
-F_trunc(x) = F0(x) / F0(u)                    the renormalised profile
-x_h(u)     = F0^-1( 0.5 * F0(u) )             its half-mass radius
-h(u)       = x_h(u) / u  =  R50_true / R_trunc
-```
+$$F_{\rm trunc}(x) = \frac{F_0(x)}{F_0(u)}, \qquad
+x_h(u) = F_0^{-1}\!\left(\tfrac{1}{2}F_0(u)\right), \qquad
+h(u) = \frac{x_h(u)}{u} = \frac{R_{50}^{\rm true}}{R_{\rm trunc}}$$
 
 `h` decreases monotonically, so it can be inverted: given the size law's
 requested `R50_true`, the code solves `h(u) = R50_true / R_trunc` for `u` and
@@ -212,14 +204,25 @@ wrong impact assessment (Section 7).
 
 ## 4. How models are scored
 
+### 4.0 Which epochs are fitted
+
+**All five.** The five-epoch fits (`stage33*.py`) minimise a single loss summed
+over *z* = 0.4, 0.7, 1.0, 1.5 and 2.0 simultaneously — `epochs=(0,1,2,3,4)`.
+There is no extrapolation in redshift: *z* = 2 is fitted like every other epoch.
+
+The one place a reduced epoch set is used is the 45-cell **model-selection
+factorial** (`stage32*.py`), which fits only `epochs=(0,4)` — *z* = 0.4 and
+*z* = 2.0, the two **endpoints** — because it runs 45 models and needs to be
+affordable. There the interpolated epochs are *z* = 0.7, 1.0 and 1.5, not
+*z* = 2. So at no stage is *z* = 2 an extrapolation; in the factorial it is one
+of only two epochs that constrain the fit at all.
+
 ### 4.1 The split: amplitude and shape
 
 Every predicted curve of growth is split losslessly into two independent parts:
 
-```
-A     = log10 M*(<100 kpc)                the AMPLITUDE — how much mass
-F(<R) = M*(<R) / M*(<100 kpc)             the SHAPE — how it is distributed
-```
+$$A \;=\; \log_{10} M_*(<100\,{\rm kpc}) \quad\text{(amplitude: how much mass)}$$
+$$F(<R) \;=\; \frac{M_*(<R)}{M_*(<100\,{\rm kpc})} \quad\text{(shape: how it is distributed)}$$
 
 They are scored separately because they fail independently: a model can have
 the right total and the wrong distribution, or vice versa, and a single number
@@ -227,10 +230,9 @@ cannot tell those apart.
 
 ### 4.2 The two scores
 
-```
-score_A = rms over galaxies and epochs of [ (A_model - A_truth) / sigma_A(z) ]
-score_F = Objective(F_model, F_truth, R) / L_F_ref
-```
+$$\mathrm{score}_A = \sqrt{\Big\langle \Big(\tfrac{A_{\rm model}-A_{\rm truth}}{\sigma_A(z)}\Big)^{\!2} \Big\rangle_{\rm galaxies,\,epochs}}
+\qquad
+\mathrm{score}_F = \frac{\mathcal{L}\big(F_{\rm model},F_{\rm truth},R\big)}{L_F^{\rm ref}}$$
 
 Both are **normalised by a measured benchmark, so that 1.0 means "as good as
 what we already know how to do"**:
@@ -293,12 +295,13 @@ magnitude worse conditioned. **The loss rewards exactly the degenerate models.**
 
 ### 5.1 The adopted model
 
-```
-log10 eps_surv = a0 + a_M*m + a_z*x + a_Mz*m*x        (E2)
-R50            = f0 * R200c(t_j) * (1+z_j)^b          (S2)
-F0             = exp(-ln2 * (R/R50)^-c)               (gompertz_log)
-truncated at 3*R200c(t_j) and renormalised
-```
+$$\log_{10}\varepsilon_{\rm surv} = a_0 + a_M\,m + a_z\,x + a_{Mz}\,m\,x
+\qquad\text{(E2)}$$
+$$R_{50} = f_0\,R_{200c}(t_j)\,(1+z_j)^{\,b}
+\qquad\text{(S2)}$$
+$$F_0(R) = \exp\!\big[-\ln 2\,(R/R_{50})^{-c}\big]
+\qquad\text{(gompertz\_log)}$$
+$$\text{truncated at } 3R_{200c}(t_j) \text{ and renormalised}$$
 
 **Seven global parameters. No per-object freedom. No pinning to the truth.**
 Fitted values on the full sample: `a0` = −2.549, `a_M` = −0.452, `a_z` = 0.488,
@@ -342,6 +345,27 @@ only 3–15% — while the model degrades sharply.
 **The plain reading: the model is weakest exactly where the data are best**, on
 massive, well-resolved, completely-sampled haloes. That is the deployment case,
 and it is currently the strongest argument against the model as it stands.
+
+**Where in the profile that failure sits.** Median `100*(model-truth)/truth`
+by tercile of `log10 Mh(z=0.4)`, for the adopted model:
+
+| tercile | epoch | 2.8 kpc | 10.2 kpc | 27.5 kpc | 148.2 kpc |
+|---|---|---|---|---|---|
+| 13.00–13.18 | z = 0.4 | −4.0 | −2.0 | −1.6 | −4.1 |
+| 13.18–13.46 | z = 0.4 | −6.5 | −2.2 | +0.3 | −3.9 |
+| **13.46–15.14** | z = 0.4 | **−12.6** | +1.3 | **+6.3** | −3.5 |
+| 13.00–13.18 | z = 2.0 | −12.6 | −9.3 | −7.0 | −5.1 |
+| 13.18–13.46 | z = 2.0 | −16.6 | −10.0 | −7.9 | −6.6 |
+| **13.46–15.14** | z = 2.0 | **−24.8** | −6.2 | −2.8 | −4.9 |
+
+The failure in the most massive tercile is **not** uniform across radius. At
+148 kpc the top tercile is no worse than the bottom (−3.5 against −4.1 at
+*z* = 0.4). What grows is the **misplacement**: −12.6% in the centre together
+with **+6.3% at 27.5 kpc**, against −4.0% and −1.6% in the lightest tercile.
+The most massive haloes are where the model most strongly puts mass at the
+wrong radius, and the same pattern is three times stronger at *z* = 2. All
+three short-listed models show it, so it is a property of the framework, not of
+one profile family.
 
 ### 5.4 The standing structural defect: the model under-fills the centre
 
@@ -475,6 +499,47 @@ estimate matches where truncation is mildest, the corrected one matches *z* = 2
 where truncation is most severe — which is how each should behave if the
 mechanism is the right one. **The size of the tilt shift needs no physics.**
 
+### 6.4b A trap in reading fair-sample figures
+
+**The fair sample is a different set of galaxies at each epoch.** The cut is
+applied to the halo mass *at that epoch*, so the surviving galaxies are 2397 /
+1781 / 1436 / 1145 / 840, and they are progressively more massive:
+
+| epoch | n | median `log10 Mh(z=0.4)` of that set |
+|---|---|---|
+| z = 0.4 | 2397 | 13.293 |
+| z = 0.7 | 1781 | 13.415 |
+| z = 1.0 | 1436 | 13.489 |
+| z = 1.5 | 1145 | 13.541 |
+| z = 2.0 | 840 | 13.623 |
+
+So a figure that plots each epoch's fair sample side by side is **not an
+evolutionary sequence** — most of what changes between the curves is which
+galaxies are in them. Quantified at 2.8 kpc: the apparent rise in central
+stellar mass from *z* = 0.4 to *z* = 2 is **+0.247 dex as plotted**, but only
+**+0.062 dex** when the same galaxies are followed. **Three quarters of it is
+the changing sample.**
+
+Following one fixed set (the 840 fair at *z* = 2) at every epoch gives the real
+picture, median `log10 M*(<R)`:
+
+| R [kpc] | 2.8 | 10.2 | 27.5 | 148.2 |
+|---|---|---|---|---|
+| z = 0.4 | 10.744 | 11.154 | 11.364 | 11.540 |
+| z = 1.0 | 10.766 | 11.129 | 11.289 | 11.430 |
+| z = 2.0 | 10.806 | 11.044 | 11.134 | 11.197 |
+
+**This is inside-out growth, and it is the central physical fact the model has
+to reproduce.** Between *z* = 2 and *z* = 0.4 the outskirt grows by 0.34 dex
+while the central 2.8 kpc does not grow at all — it is very slightly *higher*
+at *z* = 2. Galaxies of this mass finished their centres before *z* = 2 and
+spent the next 9 Gyr adding mass at large radii.
+
+(The small central *decrease* toward low redshift is not a measurement error:
+TNG's enclosed mass genuinely decreases in 50–58% of these galaxies at ~5 kpc,
+which is why the model carries a measured monotonicity floor rather than a
+survival term.)
+
 ### 6.5 What is a limitation, not a bug
 
 The framework describes the descendants of massive low-redshift galaxies. The
@@ -505,7 +570,7 @@ slope that changes sign at *z* = 0.4 (−0.053 as coded against +0.047 correct).
 **Scope**: 33 of 45 factorial cells read the variable — via `E3`, via `S2a`,
 and via `S3`. After re-running all 45, `gompertz_log-E2-S2` was still rank 1,
 but **the four largest upward rank moves in the factorial were all E1+E3
-cells** (29→13, 34→18, 37→23, 36→22). The earlier verdict "concentration never
+cells** (29 to 13, 34 to 18, 37 to 23, 36 to 22). The earlier verdict "concentration never
 reaches the top 15" was partly an artifact of feeding it a corrupted variable.
 Correcting it does not make concentration competitive with the cross-term, but
 it had not been given a fair hearing.

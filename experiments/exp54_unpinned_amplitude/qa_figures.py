@@ -3,12 +3,15 @@
 Three figures per model, all with the truth SOLID and the model DASHED, one
 colour per observation epoch:
 
-  `qa_cog_<label>`     the AVERAGE curve of growth. Left column: the full
-                       2397-galaxy sample. Right column: each epoch's own
-                       fair-sample galaxies (see `selection.py`). The two
-                       columns are the same model; the difference between them
-                       is entirely which galaxies are averaged, and it is the
-                       single most important thing this experiment learned.
+  `qa_cog_<label>`     the AVERAGE curve of growth, in three views. Col 1: all
+                       2397 galaxies. Col 2: each epoch's OWN fair sample --
+                       a different galaxy set at each epoch, so its
+                       epoch-to-epoch differences are NOT evolution. Col 3: one
+                       FIXED set (fair at z=2) followed everywhere, which is
+                       both completeness-controlled and a real evolutionary
+                       sequence. Cols 1 and 3 may be read as evolution; col 2
+                       may not, and mistaking it for one overstates the inner
+                       growth by a factor of four.
 
   `qa_cogmass_<label>` the same curves split into terciles of HALO mass. Binned
                        by a model INPUT, never by the truth stellar mass:
@@ -75,16 +78,35 @@ def _predict(label, theta, recs, data):
 
 
 def cog_figure(label, model, truth, mask, name):
-    """Average curve of growth, full sample against fair sample."""
+    """Average curve of growth, three views that must not be confused.
+
+    THE TRAP THIS FIGURE IS BUILT TO AVOID. Column 2 uses a DIFFERENT set of
+    galaxies at each epoch -- 2397 at z=0.4 falling to 840 at z=2 -- because the
+    fair-sample cut removes the halo masses where our sample is badly
+    incomplete, and which masses those are depends on the epoch. Reading its
+    epoch-to-epoch differences as EVOLUTION is wrong: most of what changes is
+    the sample. Measured at 2.8 kpc, the apparent inner rise from z=0.4 to z=2
+    is +0.247 dex as plotted, of which only +0.062 dex survives when the same
+    galaxies are followed -- **75% of it is the changing sample.**
+
+    Column 3 fixes that: one FIXED set (the galaxies fair at z=2) followed at
+    every epoch, so it is both completeness-controlled and a genuine
+    evolutionary sequence. Columns 1 and 3 may be read as evolution; column 2
+    may not.
+    """
     import matplotlib.pyplot as plt
     set_style()
     cols = _zcolors(len(Z))
-    fig, ax = plt.subplots(2, 2, figsize=(11.0, 7.0), sharex=True,
+    fixed = mask[:, 4]                      # fair at z=2, followed everywhere
+    fixed_col = np.repeat(fixed[:, None], len(Z), axis=1)
+    fig, ax = plt.subplots(2, 3, figsize=(15.5, 7.2), sharex=True,
                            height_ratios=[2, 1])
     rmax = 0.0
     for c, (sel, ttl) in enumerate((
-            (np.ones_like(mask), "all 2397 galaxies (progenitor-selected)"),
-            (mask, "each epoch's fair sample"))):
+            (np.ones_like(mask), "all 2397 galaxies\n(same set every epoch = evolution)"),
+            (mask, "each epoch's own fair sample\n(DIFFERENT set each epoch - NOT evolution)"),
+            (fixed_col, f"fixed set: the {int(fixed.sum())} fair at z=2\n"
+                        f"(same set every epoch = evolution)"))):
         for k in range(len(Z)):
             g = sel[:, k] & np.isfinite(model[:, k, :]).all(axis=1)
             if g.sum() < 10:
@@ -104,7 +126,7 @@ def cog_figure(label, model, truth, mask, name):
             ax[1, c].axhline(y, c="0.85", lw=0.7, ls=":")
         ax[1, c].set_xlabel(_tex("R [kpc]"))
     lim = float(np.clip(1.3 * rmax, 8.0, 60.0))
-    for c in (0, 1):
+    for c in (0, 1, 2):
         ax[1, c].set_ylim(-lim, lim)
     ax[0, 0].set_ylabel(_tex("median log10 M*(<R)  [Msun]"))
     ax[1, 0].set_ylabel(_tex(f"median (model - truth)/truth  [{_pct()}]"))
@@ -115,12 +137,15 @@ def cog_figure(label, model, truth, mask, name):
     fig.suptitle(_tex(f"exp54 {label} — average curve of growth "
                       f"(truth solid, model dashed)"), fontsize=12)
     fig.text(0.5, 0.005, _tex(
-        "Left and right show the SAME model. The only difference is which "
-        "galaxies are averaged: the right column drops the halo masses at "
-        "which our sample keeps only a small, growth-selected minority of the "
-        "simulation's haloes. Dotted residual = each model curve rescaled to "
-        "its galaxy's true total, so it shows only where the mass was put, "
-        "not how much was made."),
+        "All three columns show the SAME model; only the galaxies averaged "
+        "differ. COLUMN 2 USES A DIFFERENT SET AT EACH EPOCH (2397 at z=0.4 "
+        "falling to 840 at z=2), so its epoch-to-epoch differences are NOT "
+        "evolution: at 2.8 kpc the apparent rise from z=0.4 to z=2 is +0.247 "
+        "dex, of which only +0.062 dex survives when the same galaxies are "
+        "followed. Columns 1 and 3 hold the galaxy set fixed and may be read "
+        "as evolution. Dotted residual = each model curve rescaled to its "
+        "galaxy's true total, so it shows only WHERE the mass was put, not "
+        "HOW MUCH was made."),
         ha="center", va="bottom", fontsize=7.0, style="italic", color="0.35",
         wrap=True)
     fig.tight_layout(rect=(0, 0.045, 1, 1))
