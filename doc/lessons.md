@@ -1075,3 +1075,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   against 35-minute-old output; (3) any run measured in hours should
   checkpoint per unit of work, because the cheapest defence against a job dying
   for reasons outside the script is not needing it to survive.
+- **An UNBOUNDED metric can be dominated by one object; a BOUNDED one cannot —
+  so check them separately (exp54, 2026-08-23).** The same corrupt galaxy that
+  inflated the amplitude benchmark `SIGMA_A` by 8-18% moved the SHAPE loss by
+  **0.043%**. The asymmetry is structural, not luck: the amplitude residual is
+  `log10(model/truth)`, unbounded, and that galaxy's was 3.76 dex, so its
+  squared contribution swamped 2396 others; the shape residual is `(m-d)/d` on
+  a curve of growth NORMALIZED to 1 at 100 kpc, so it lives near unity and no
+  single galaxy can move a population mean far. **The habit**: when a data
+  defect is found, do not assume it contaminates every metric equally — write
+  down which metrics are unbounded in the direction the defect points, audit
+  those, and MEASURE the leverage on the rest rather than re-deriving them all.
+  It bounds the damage quickly, and here it kept the entire shape half of the
+  experiment intact.

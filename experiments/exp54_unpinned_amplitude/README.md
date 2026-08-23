@@ -478,3 +478,24 @@ is that the sample follows **one main progenitor per galaxy**, so when two
 massive high-redshift haloes merge into a single z = 0.4 galaxy only one is
 counted. Those haloes do end up inside a massive z = 0.4 galaxy, which is a far
 more benign kind of missingness.
+
+### How far the `SIGMA_A` correction reaches — the shape side is intact
+
+Row 181's curve of growth is broken in shape as well as amplitude: `F(<R)` pins
+to exactly 1.0000 from 23 kpc outward at every epoch above z = 0.4, i.e. all of
+its mass is inside 23 kpc. But its leverage on the two metrics differs by three
+orders of magnitude:
+
+| metric | shift when row 181 is removed |
+|---|---|
+| `SIGMA_A` (amplitude benchmark) | −0.3% / **−17.6%** / **−15.0%** / **−12.2%** / **−7.6%** |
+| population shape loss | **+0.043%** |
+
+The asymmetry is structural. The amplitude residual is `log10(model/truth)`,
+unbounded, and row 181's is 3.76 dex, so its square swamps 2396 others. The
+shape residual is `(m−d)/d` on a curve of growth normalized to 1 at 100 kpc, so
+it lives near unity and no single galaxy can move the mean far.
+
+**So `L_F_REF` and every `score_F` stand**, including the Stage 3.3 shape scores
+(0.919 / 0.916 / 0.875 / 0.797 / 0.716). The correction reaches the amplitude
+comparison and nothing else.
