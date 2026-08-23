@@ -49,6 +49,11 @@ from hongshao.metrics import crps_gaussian, interval_coverage   # noqa: E402
 sys.path.insert(0, str(HERE))
 from halo import _assert_m200c_is_log10                 # noqa: E402
 
+#: a measured M*(<100 kpc) this many dex below the galaxy's own z=0.4 value is
+#: not a progenitor, it is a broken cross-match. The sample's largest genuine
+#: backward growth is 2.03 dex, so 3.0 rejects only the impossible.
+MAX_BACKWARD_DEX = 3.0
+
 OUTDIR = HERE / "outputs"
 CACHE = OUTDIR / "scoreboard_features.npz"
 HS = OUTDIR / "halo_structure_history.npz"
@@ -101,6 +106,27 @@ def build():
     data = pop["data"][rows]
     y = np.array([[np.interp(np.log10(R_ANCHOR), lr, np.log10(d))
                    for d in data[:, k]] for k in range(5)]).T
+
+    # --- reject physically impossible measured histories ------------------ #
+    # A main progenitor cannot have been orders of magnitude LIGHTER than its
+    # own descendant by more than the sample's real growth. `MAX_BACKWARD_DEX`
+    # is set far above the largest genuine case (2.03 dex) so this catches
+    # broken cross-matches and nothing else. It matters out of all proportion
+    # to its count: the benchmark scatter `SIGMA_A`, which every `score_A` in
+    # this experiment divides by, was inflated 8-21% at z >= 0.7 by ONE such
+    # galaxy that no model-fitting subsample ever contained -- so the model was
+    # never charged for it while the benchmark always was.
+    sane = np.all(y[:, [0]] - y <= MAX_BACKWARD_DEX, axis=1)
+    if not sane.all():
+        print(f"  REJECTED {int((~sane).sum())} galaxy(ies) whose measured "
+              f"M*(<{R_ANCHOR:.0f} kpc) is >{MAX_BACKWARD_DEX:.0f} dex below "
+              f"their own z=0.4 value:")
+        for i in np.where(~sane)[0]:
+            print(f"    row {rows[i]}: log10 M*(<{R_ANCHOR:.0f} kpc) = "
+                  + " ".join(f"{v:.3f}" for v in y[i]))
+        rows, data, y, gals = rows[sane], data[sane], y[sane], \
+            [g for g, ok in zip(gals, sane) if ok]
+        n = len(rows)
 
     # --- official DiffMAH: the curve, and its four parameters ------------- #
     off = np.load(OFFICIAL)
@@ -170,7 +196,7 @@ def build():
 
     OUTDIR.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
-        CACHE, y=y, lmh_cat=pop["logmh"][rows], lmh_k=lmh_k, dm4=dm4,
+        CACHE, rows=rows, y=y, lmh_cat=pop["logmh"][rows], lmh_k=lmh_k, dm4=dm4,
         refit_rms=refit_rms, ours=ours, c_exc_k=c_exc_k, fz2=pop["fz2"][rows],
         z_dep=z_dep, dmh=dmh, lmh_dep=lmh_dep, mask=mask, exc_dep=exc_dep,
         exc_have=exc_have)

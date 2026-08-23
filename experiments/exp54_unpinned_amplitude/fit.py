@@ -55,7 +55,24 @@ R_GRID = np.array([2., 2.76, 3.72, 4.92, 6.38, 8.14, 10.25, 12.74, 15.66,
 I100 = int(np.argmin(np.abs(R_GRID - 100.0)))
 #: Stage 1's best halo-only amplitude scatter, per epoch -- the benchmark, NOT
 #: automatically the correct weight (review §5.1); see `lam_A`/`lam_F`.
-SIGMA_A = np.array([0.1047, 0.1359, 0.1417, 0.1456, 0.1744])
+#:
+#: CORRECTED 2026-08-23. The previous values
+#:     0.1047  0.1359  0.1417  0.1456  0.1744
+#: were inflated 8-21% at z >= 0.7 by ONE galaxy, row 181, whose measured
+#: M*(<100 kpc) collapses from 10^11.71 at z=0.4 to a flat ~10^8 at all four
+#: higher-redshift epochs -- a broken cross-match, not a progenitor. Removing
+#: it alone moves the best halo-only row to
+#:     0.1044  0.1120  0.1204  0.1279  0.1611
+#: (the next-largest backward drop in the sample is 2.03 dex and moves it by
+#: <= 0.0015 dex, so this is one galaxy, not a tail).
+#:
+#: WHY IT MATTERED OUT OF ALL PROPORTION TO ITS COUNT: row 181 is in Stage 1's
+#: 2397 but in NONE of the model-fitting subsamples -- not Stage 3.1's 300, not
+#: Stage 3.2's 240, not Stage 3.3's 1199. So every `score_A` in this experiment
+#: divided a model error measured on clean galaxies by a benchmark charged for
+#: a corrupt one. `scoreboard.py` now rejects such histories at source
+#: (`MAX_BACKWARD_DEX`), so this array and that rejection must move together.
+SIGMA_A = np.array([0.1044, 0.1120, 0.1204, 0.1279, 0.1611])
 #: Stage 0's incumbent shape loss at the 100 kpc anchor
 L_F_REF = 0.158196
 #: a failed theta must be PRICED, never dropped (exp53's lesson)
