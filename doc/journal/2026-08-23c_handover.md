@@ -223,7 +223,7 @@ the issue.
 
 ## Branch State
 
-Branch **`exp54-unpinned-amplitude`**, clean, **46 commits ahead of master, NOT
+Branch **`exp54-unpinned-amplitude`**, clean, **48 commits ahead of master, NOT
 pushed**. master @ `3b376f1`. Read `doc/tech_note/deposition_model_2026-08.md`
 §8.5 for the full write-up (also in the PDF, rebuilt).
 
