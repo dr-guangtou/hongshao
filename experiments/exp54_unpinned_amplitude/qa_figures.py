@@ -13,6 +13,10 @@ colour per observation epoch:
                        may not, and mistaking it for one overstates the inner
                        growth by a factor of four.
 
+  `qa_dens_<label>`    the same three views as SURFACE-DENSITY profiles on an
+                       R^(1/4) axis, on which a de Vaucouleurs (n=4) profile is
+                       a straight line. Residual in DEX here, not per cent.
+
   `qa_cogmass_<label>` the same curves split into terciles of HALO mass. Binned
                        by a model INPUT, never by the truth stellar mass:
                        selecting on the noisy quantity tilts the residual by
@@ -60,6 +64,7 @@ import fit as F                                          # noqa: E402
 import halo as H                                         # noqa: E402
 import stage33 as S33                                    # noqa: E402
 from hongshao.plotting import save_fig, set_style        # noqa: E402
+from hongshao.profile_emulator import density_from_cog   # noqa: E402
 from hongshao.qa import _pct, _tercile_curves, _tex, _zcolors   # noqa: E402
 
 POP = ROOT / "experiments/exp32_full_population/outputs/population.npz"
@@ -150,6 +155,117 @@ def cog_figure(label, model, truth, mask, name):
         wrap=True)
     fig.tight_layout(rect=(0, 0.045, 1, 1))
     print("wrote", save_fig(fig, FIGDIR / f"qa_cog_{name}")[0], flush=True)
+
+
+def _sigma(cogs):
+    """(n, R) linear cumulative masses -> (n, R-1) log10 surface density and the
+    midpoint radii.
+
+    Uses the project's own `density_from_cog`, so the model and the truth pass
+    through the SAME operator. That matters: differencing a cumulative profile
+    over a finite annulus gives the area-AVERAGED density across that annulus,
+    not the density at the midpoint, and the two differ wherever the profile has
+    curvature across the bin -- most strongly in the inner few kpc, which is the
+    region this figure exists to show. Evaluating the model analytically while
+    differencing the truth would inject a bias shaped like the signal.
+    """
+    ls, mid = density_from_cog(np.log10(np.clip(cogs, 1.0, None)), R)
+    return ls, mid
+
+
+def _r4_axis(ax, rticks=(2, 5, 10, 20, 50, 100, 150)):
+    """Label an R^(1/4) axis in kpc rather than in the transformed variable."""
+    ax.set_xticks([r ** 0.25 for r in rticks])
+    ax.set_xticklabels([str(r) for r in rticks])
+    ax.set_xlabel(_tex("R [kpc], on an ") + r"$R^{1/4}$" + _tex(" scale"))
+
+
+def density_figure(label, model, truth, mask, name):
+    """Average SURFACE-DENSITY profile on an R^(1/4) axis.
+
+    WHY THIS PROJECTION. For massive early-type galaxies R^(1/4) is the natural
+    radial coordinate: it expands the inner region far more than a linear axis
+    but far less violently than log R, and -- the useful part -- a de Vaucouleurs
+    profile (a Sersic profile with n = 4) is a STRAIGHT LINE in
+    (R^(1/4), log10 Sigma). Curvature away from the grey guide line is therefore
+    read directly as departure from an r^(1/4) law, with no fitting.
+
+    The quantity is the projected surface density Sigma(R) = dM/dA with
+    dA = pi(R_out^2 - R_in^2), i.e. mass per unit AREA, differenced from the
+    curve of growth. The residual panel is in DEX of log10 Sigma, not per cent
+    -- unlike the `qa_cog_*` figures, whose residual is a linear fractional
+    difference. Densities span orders of magnitude and dex is the readable unit;
+    the two conventions must not be confused (0.043 dex = 10 per cent).
+
+    Columns match `qa_cog_*`: all galaxies, each epoch's own mh-complete sample
+    (a DIFFERENT galaxy set per epoch, so not an evolutionary sequence), and one
+    fixed set followed everywhere.
+    """
+    import matplotlib.pyplot as plt
+    set_style()
+    cols = _zcolors(len(Z))
+    fixed = mask[:, 4]
+    fixed_col = np.repeat(fixed[:, None], len(Z), axis=1)
+    fig, ax = plt.subplots(2, 3, figsize=(15.5, 7.2), sharex=True,
+                           height_ratios=[2, 1])
+    guide, rmax = None, 0.0
+    for c, (sel, ttl) in enumerate((
+            (np.ones_like(mask), "all 2397 galaxies\n(same set every epoch = evolution)"),
+            (mask, "each epoch's own mh-complete sample\n(DIFFERENT set each epoch - NOT evolution)"),
+            (fixed_col, f"fixed set: the {int(fixed.sum())} mh-complete at z=2\n"
+                        f"(same set every epoch = evolution)"))):
+        for k in range(len(Z)):
+            g = sel[:, k] & np.isfinite(model[:, k, :]).all(axis=1)
+            if g.sum() < 10:
+                continue
+            ls_d, mid = _sigma(truth[g, k])
+            ls_m, _ = _sigma(model[g, k])
+            med_d = np.nanmedian(ls_d, axis=0)
+            med_m = np.nanmedian(ls_m, axis=0)
+            x = mid ** 0.25
+            ax[0, c].plot(x, med_d, "-", c=cols[k], lw=1.9,
+                          label=f"z = {Z[k]}  (n={int(g.sum())})")
+            ax[0, c].plot(x, med_m, "--", c=cols[k], lw=1.4)
+            dres = np.nanmedian(ls_m - ls_d, axis=0)
+            rmax = max(rmax, np.nanmax(np.abs(dres)))
+            ax[1, c].plot(x, dres, "-", c=cols[k], lw=1.5)
+            if c == 0 and k == 0:
+                # a de Vaucouleurs law IS a straight line here; fit it to the
+                # z=0.4 truth so the eye has a reference with no free choice
+                ok = np.isfinite(med_d)
+                guide = (np.polyfit(x[ok], med_d[ok], 1), x)
+        if guide is not None:
+            co, gx = guide
+            ax[0, c].plot(gx, np.polyval(co, gx), ":", c="0.45", lw=1.2,
+                          label=_tex("de Vaucouleurs (n=4), fit to z=0.4 truth")
+                          if c == 0 else None)
+        ax[0, c].set_title(_tex(ttl), fontsize=10)
+        ax[1, c].axhline(0, c="0.6", lw=0.8)
+        for y in (-0.1, 0.1):
+            ax[1, c].axhline(y, c="0.85", lw=0.7, ls=":")
+        _r4_axis(ax[1, c])
+    lim = float(np.clip(1.25 * rmax, 0.15, 0.8))     # adaptive, shared
+    for c in (0, 1, 2):
+        ax[1, c].set_ylim(-lim, lim)
+    ax[0, 0].set_ylabel(r"median $\log_{10}\Sigma$ [M$_\odot$ kpc$^{-2}$]")
+    ax[1, 0].set_ylabel(r"median $\log_{10}(\mathrm{model}/\mathrm{truth})$ [dex]")
+    ax[0, 0].legend(loc="upper right", fontsize=8)
+    fig.suptitle(_tex(f"exp54 {label} — average surface-density profile on an ")
+                 + r"$R^{1/4}$" + _tex(" scale (truth solid, model dashed)"),
+                 fontsize=12)
+    fig.text(0.5, 0.005, _tex(
+        "Sigma(R) = dM/dA differenced from the curve of growth, the same "
+        "operator applied to model and truth. A de Vaucouleurs (n=4) profile is "
+        "a STRAIGHT LINE in these coordinates, so curvature away from the grey "
+        "guide is departure from an R to the one-quarter law. NOTE the "
+        "residual here is in "
+        "DEX, unlike the qa_cog figures which use per cent: 0.043 dex = 10 per "
+        "cent. Column 2 uses a different galaxy set at each epoch and is not an "
+        "evolutionary sequence."),
+        ha="center", va="bottom", fontsize=7.0, style="italic", color="0.35",
+        wrap=True)
+    fig.tight_layout(rect=(0, 0.045, 1, 1))
+    print("wrote", save_fig(fig, FIGDIR / f"qa_dens_{name}")[0], flush=True)
 
 
 def cogmass_figure(label, model, truth, lmh, name):
@@ -263,6 +379,7 @@ def main(labels=None):
             print(f"  {label}  [{tag}-fitted theta]", flush=True)
             model = _predict(label, theta, recs, truth)
             cog_figure(label, model, truth, mask, name)
+            density_figure(label, model, truth, mask, name)
             cogmass_figure(label, model, truth, lmh, name)
             resid_figure(label, model, truth, mask, name)
 

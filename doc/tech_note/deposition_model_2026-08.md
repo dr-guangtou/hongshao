@@ -399,6 +399,45 @@ project set out to study, so this is not a peripheral failure — it is the
 model failing hardest on its target population. It is also the strongest
 motivation for the compact second channel of Section 9.
 
+### 5.5 The same failure seen as a density profile: the outskirts are too shallow
+
+The curve of growth is cumulative, so it is dominated by the inner regions and
+hides what the outer profile is doing. Differencing it into a **surface density**
+`Sigma(R) = dM/dA` and plotting `log10 Sigma` against `R^(1/4)` — the
+coordinate in which a de Vaucouleurs (n = 4) profile is a straight line —
+exposes a second, independent statement of the same defect.
+
+Outer logarithmic slope `d log10 Sigma / d log10 R`, fitted over 50–148 kpc on
+the median profile (more negative = steeper):
+
+| epoch | truth | model | model − truth |
+|---|---|---|---|
+| z = 0.4 | −2.78 | −2.74 | +0.04 |
+| z = 0.7 | −2.85 | −2.78 | +0.07 |
+| z = 1.0 | −2.91 | −2.81 | +0.10 |
+| z = 1.5 | −3.01 | −2.86 | +0.15 |
+| **z = 2.0** | **−3.38** | **−2.90** | **+0.48** |
+
+**The simulation's galaxies get steeper with redshift; the model's barely
+change.** By *z* = 2 the model's outskirt is 0.48 dex per dex too shallow. In
+the cumulative view this is nearly invisible — the *z* = 2 curve of growth is
+only −0.024 dex low at 148 kpc — because a shallow outer slope adds mass in the
+outermost annuli while the total stays low.
+
+**The two high-redshift failures are one statement.** Too little mass in the
+centre *and* too shallow an outer slope both say: **the model's high-redshift
+galaxies are too diffuse.** It is not that the model makes too little stellar
+mass at *z* = 2; it makes roughly the right amount and spreads it out too far.
+That is a much sharper target than "an inner deficit plus an amplitude
+deficit", and it points squarely at the deposit size law
+`R50 = f0 R200c(t_j) (1+z)^b`: the fitted `b = −0.735` shrinks deposits toward
+high redshift, but evidently nowhere near enough.
+
+(The truth's own slope is worth noting independently: these galaxies really are
+close to de Vaucouleurs at *z* = 0.4 — the *z* = 0.4 truth tracks a straight
+line in `R^(1/4)` across the whole 2–148 kpc range — and they steepen
+substantially by *z* = 2.)
+
 ### 5.4 The standing structural defect: the model under-fills the centre
 
 Per galaxy, `log10[M*_model(<R)] - log10[M*_truth(<R)]`, median over galaxies.
