@@ -204,32 +204,68 @@ second sample differs in two ways, so transferring parameters passed a harder
 test — but the `score_A` values ON the fair sample describe an early-forming
 massive subset and must not be quoted as a complete-sample number.
 
+## The per-epoch fair mask (`2168c84`) — DONE, and it changes the short list
+
+`stage33_perepoch.py` repairs the intersection's assembly bias: each epoch is
+scored on its own fair galaxies, **7599 galaxy-epochs against 3755**, no galaxy
+required to be massive at an epoch where it is not scored. `MaskedProblem`
+subclasses `fit.Problem` behind an equivalence gate — with an all-true mask it
+must reproduce the parent, and does (**|Δ| = 0.00e+00** on `score_A`, 4.4e-16
+on `score_F`).
+
+**1. THE S3 COLLAPSE IS REAL.** Two fair samples of different construction, one
+assembly-biased and one not, both drive all three slopes to near zero:
+
+| parameter | full | intersection | per-epoch |
+|---|---|---|---|
+| `f:logMh` | 0.0992 | 0.0032 | **0.0202** |
+| `f:dlogc` | −0.3380 | −0.0165 | **−0.0242** |
+| `f:fform` | −0.3342 | +0.0043 | **+0.0051** |
+
+**S3 absorbs progenitor-selection structure, not physics.** Drop the size-law
+conditioning.
+
+**2. AND SO DOES E5.** On the per-epoch fit `moffat-E5-S2+S3` has a z=2 tilt of
++0.005/+0.033/−0.002/−0.015 against `gompertz_log-E2-S2`'s
+−0.126/−0.076/−0.089/−0.099. E5's whole advantage was closing that tilt, and
+the tilt is the survey. **E5's four extra parameters buy a fit to a selection
+artifact.** The case for seven-parameter `E2-S2` is STRONGER after the control.
+
+**3. THE MODEL IS WEAKEST WHERE THE DATA ARE BEST.** Against a regression
+refitted on each epoch's own fair galaxies:
+
+| `gompertz_log-E2-S2` score_A | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| full (progenitor-selected) | 1.131 | 1.100 | 1.059 | 1.058 | 1.050 |
+| fair, same regression | 1.116 | **1.356** | **1.339** | **1.360** | **1.371** |
+
+~36% worse at z ≥ 0.7 on a complete sample of massive haloes, against 5–10% on
+the full one. The regression barely notices the restriction (scatter falls
+3–15%); the model degrades sharply. **The progenitor-selected sample was
+flattering the model.** The adopted model's own parameters barely move
+(`a0` −0.004, `a_z` +0.012); what moves is the mass dependence (`a_M` −0.110,
+`a_Mz` +0.080) — exactly the part the selection acts on.
+
 ## In Progress
 
-**`stage33_perepoch.py` was running at handover** (`47d4095`). It repairs the
-intersection flaw with a per-epoch galaxy mask: each epoch scored on its own
-fair galaxies, **7599 galaxy-epochs against the intersection's 3755**, no
-assembly bias. `MaskedProblem` subclasses `fit.Problem` and is gated by an
-equivalence check — with an all-true mask it must reproduce the parent to
-1e-10, verified at **|d| = 0.00e+00** on both scores.
-
-It answers two things the intersection could not: how the model does on a fair
-sample without early-assembler contamination, and whether the S3 collapse is
-real or an artifact of the intersection's narrow assembly range.
-
-Check `$CLAUDE_JOB_DIR/tmp/perep.log`; output `outputs/stage33_perepoch.npz`.
-Checkpointed per fit in `stage33_perepoch_partial.npz`.
+**Nothing is running.**
 
 ## NEXT
 
-1. Read the per-epoch result. If the S3 slopes stay near zero, S3 is absorbing
-   selection and should be dropped from the short list.
+1. **Drop S3 from the short list**, and treat E5 as suspect for the same
+   reason. The short list should become `gompertz_log-E2-S2` and `moffat-E2-S2`
+   until something else earns a place.
 2. **Build the compact second channel**, leashed to `f_form`. It is the only
    well-posed extension left, and the inner deficit is the one thing none of
-   these corrections touched.
+   these corrections touched. Score it on the PER-EPOCH FAIR MASK, not the full
+   sample — the full sample is now known to flatter.
 3. The delivery-delay kernel is a last resort, and if built must carry an
    empirical halo-mass dependence (the user's condition), not a bare
    `eta * t_dyn`.
+4. **An open question worth its own probe**: why does the model degrade so much
+   on massive, complete samples while the regression barely does? That is the
+   deployment case, and it is not the inner deficit — it is an amplitude
+   failure at high halo mass.
 
 ## Warnings carried forward (new ones first)
 
