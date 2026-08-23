@@ -499,3 +499,50 @@ it lives near unity and no single galaxy can move the mean far.
 **So `L_F_REF` and every `score_F` stand**, including the Stage 3.3 shape scores
 (0.919 / 0.916 / 0.875 / 0.797 / 0.716). The correction reaches the amplitude
 comparison and nothing else.
+
+### The 45-cell factorial, re-judged under both corrections
+
+204.7 min, all 45 cells refitted (`stage32_rejudge.py`). Three predictions were
+put on record in the script's docstring before the run; all three held.
+
+**1. `gompertz_log-E2-S2` is still the judge's winner** (mean rank 12.86, was
+rank 1 before). The adopted model survives both corrections.
+
+**2. E1+E3 improves sharply but does not reach the top six.** The four largest
+upward rank moves in the whole factorial are all E1+E3 cells:
+
+| cell | was | now |
+|---|---|---|
+| `moffat-E1+E3-S2+S3` | 29 | **13** |
+| `gompertz_log-E1+E3-S2+S3` | 34 | 18 |
+| `moffat-E1+E3-S2` | 37 | 23 |
+| `gompertz_log-E1+E3-S2` | 36 | 22 |
+
+So the concentration excess WAS being unfairly penalised by the corrupted
+variable — the earlier verdict "E1+E3 never reaches the top 15" was partly an
+artifact — but correcting it does not make concentration competitive with the
+mass x redshift cross-term.
+
+**3. E2 still replaces transport; E3 still does not.** The halo-mass tilt at
+z = 0.4 is **+0.003 to +0.012 for every E2 cell** and **+0.0396** for the best
+E1+E3 cell. A concentration term does not collapse the tilt; the cross-term
+does. (This tilt is measured at z = 0.4, where `selection.py` shows there is no
+progenitor bias, so it is clean.)
+
+**Unchanged verdicts.** E4, the free spline, is still the worst family in the
+factorial — `sersic-E4-S2` last at 35.14, the E4-S2a cells at 33.57, with
+`ident` ~1.5e-07. No peak in the efficiency's redshift dependence is identified.
+
+**The judge still overrules the loss.** Loss-ranking picks `moffat-E5-S2+S3`,
+`gompertz_log-E5-S2+S3` and `sersic-E5-S2+S3` — `ident` 7.8e-04, 8.9e-04 and
+8.7e-04 against the winner's **7.8e-03**, an order of magnitude better
+conditioned. Judge ranks 2, 10 and 6.
+
+Every cell's loss rose by a near-uniform 0.07–0.09, which is the expected
+signature of the smaller `SIGMA_A` rather than of the concentration fix: a
+smaller denominator raises `score_A`, and the loss is
+`score_A**2 + score_F**2`. A uniform shift cannot reorder a ranking, which is
+why the rank moves above are attributable to the concentration fix.
+
+**Short list for Stage 3.3**: `gompertz_log-E2-S2`, `moffat-E5-S2+S3`,
+`moffat-E2-S2`, `moffat-E5-S2`.
