@@ -1062,3 +1062,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   same-named sibling module BY FILE PATH via `importlib.util.spec_from_file_location`
   rather than by name. Check for name collisions with
   `ls experiments/*/<name>.py` before writing `import <name>`.
+- **`setsid` does not exist on macOS, and a `ps` snapshot taken one second
+  after launch does not prove a job started (exp54, 2026-08-23).**
+  `nohup setsid wrapper.sh &` returned cleanly, `ps | grep -c` reported one
+  match, and nothing was running — the match was the dying launcher. Two
+  separate long jobs were believed to be in flight for half an hour while the
+  log sat unchanged. **The habits**: (1) confirm a background job by watching
+  its LOG ADVANCE past a line it could not already have written, never by a
+  process count; (2) truncate or delete the log before relaunching, so a stale
+  completion marker from the previous run cannot satisfy the wait condition —
+  that is exactly how the second job's `until grep EXIT=` returned instantly
+  against 35-minute-old output; (3) any run measured in hours should
+  checkpoint per unit of work, because the cheapest defence against a job dying
+  for reasons outside the script is not needing it to survive.
