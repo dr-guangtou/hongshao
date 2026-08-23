@@ -15,14 +15,32 @@ that regime. The parameters were nevertheless fitted with those galaxies
 included. So: **do the adopted parameters depend on the biased regime?**
 
 The FAIR sample is the 751 galaxies that clear their epoch's fair-sample cut at
-ALL FIVE epochs -- a single set that is a fair draw from the box everywhere it
-is scored. It is not a subsample of the published 1199; it is drawn from the
-whole 2397, because 751 is already small and there is no reason to halve it.
+ALL FIVE epochs. It is not a subsample of the published 1199; it is drawn from
+the whole 2397, because 751 is already small and there is no reason to halve it.
 
-A per-epoch mask would use more data (2397+1781+1436+1145+840 galaxy-epochs
-against 751x5) but would make "the sample" a different object at every epoch.
-The intersection is the interpretable choice and is what is reported; the
-per-epoch variant is the obvious next refinement if the two fits disagree.
+**THE INTERSECTION IS ASSEMBLY-BIASED, AND THAT LIMITS WHAT IT CAN BE USED
+FOR.** Requiring a halo to be above the cut at EVERY epoch selects haloes that
+were already massive at z = 2, i.e. early assemblers. Measured at fixed z = 0.4
+halo mass (a 13.2-13.6 slice, n = 987): the fair galaxies have
+`t50` = 4.14 Gyr against 5.59 for the rest -- 1.45 Gyr earlier, Mann-Whitney
+p = 2e-53 -- and `fz2` = 0.350 against 0.175, twice the mass in place by z = 2,
+p = 1e-83. So it removes the progenitor-selection bias and introduces an
+assembly bias in its place.
+
+What that does and does not invalidate:
+
+  * **The robustness answer is VALID and if anything conservative.** It asks
+    whether the FITTED PARAMETERS move, by scoring `theta_fair` on the full
+    sample. The second sample now differs from the first in two ways rather
+    than one, so parameters that still transfer have passed a harder test.
+  * **The `score_A` values ON the fair sample must NOT be read as "how the
+    model does on a complete sample."** They are measured on an early-forming
+    massive subset, which is a different population, and the model is known to
+    behave differently there.
+
+The fix is a per-epoch galaxy mask, so each epoch is scored on its own fair
+galaxies and no intersection is taken -- 2397+1781+1436+1145+840 galaxy-epochs
+instead of 751x5, and no assembly bias. That is `stage33_perepoch.py`.
 
 WHAT IS REPORTED. For each model on the short list, both fits, and then the
 2x2 CROSS-EVALUATION: each theta scored on both samples. That last table is
