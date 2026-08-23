@@ -1414,3 +1414,42 @@ Cross-experiment plan. Mirrors the phase sequence in
   selected there has already seen z=2 — the hold-out must therefore re-select
   as well as re-fit, or be reported as a hold-out test of an already-chosen
   model rather than a clean one.
+
+### exp54 Stage 3.4 — settled by the representational ceiling (2026-08-23)
+
+- [x] **The profile-shape representational ceiling** (`stage34_ceiling.py`).
+  Non-negative least squares over per-galaxy deposit weights against the
+  measured curve of growth at all five epochs, basis fixed, causality respected.
+  Answer: **the basis is not the limitation** (given per-epoch freedom it draws
+  every profile to ~1% at every radius); **the limitation is that ONE causal
+  weight vector must serve all five epochs**, which raises the bound by a factor
+  of 3.3 with no change of basis. Two thirds of the z=2 central deficit is the
+  deposition-only monotonicity premise, not the model.
+- [x] **`c = c0 + c_z ln(1+z)`** (`stage34_basis_scan.py`). Scanned at the bound
+  at two freedom levels; optimum at `c_z` = 0 in both. **Not built.**
+- [~] ~~The compact second deposit channel~~ — **retired.** The ceiling, free to
+  place 71 non-negative weights including on sub-kpc deposits from z > 10, lands
+  on the basis-free monotone floor at 2 kpc and z=2 (−17.1% against −17.4%). A
+  compact channel would be fitting a structural residual.
+
+### exp54 — what the ceiling leaves open
+
+- [ ] **The amplitude, and why the model degrades on complete massive samples.**
+  `score_A` is 1.24 (mean over epochs) against a ceiling of 0.15 — but the
+  permuted control reaches 0.26 while fitting a DIFFERENT galaxy, so most of
+  that gap is per-galaxy flexibility and not accessible to a global law. The
+  honest headroom is the gap to the five-weight `interval5` bound: 0.27. Still
+  the deployment case and still unexplained.
+- [ ] **Change the objective before changing the model, if the shape is to
+  improve.** The production loss is a fractional residual on the cumulative
+  profile and cannot see the outskirts at high redshift: at z=2 only 6.3% of the
+  stellar mass lies beyond 52 kpc, so a sub-per-cent error on the curve of
+  growth is a 30% error in that annulus. exp48 already measured a
+  density-plus-log-residual objective that improves the compact-centre defect;
+  it was not adopted for unrelated reasons and deserves re-examination now that
+  the blindness is quantified.
+- [ ] **Re-check every diagnostic quoted on the full sample against the
+  mh-complete mask.** The R^(1/4) outer-slope headline (truth steepening to
+  −3.38, model +0.48 dex/dex too shallow) is more than half survey; on the
+  mh-complete sample it is −2.95 and +0.21. The same correction was needed for
+  the inner profile a day earlier.

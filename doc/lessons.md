@@ -1088,3 +1088,47 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   those, and MEASURE the leverage on the rest rather than re-deriving them all.
   It bounds the damage quickly, and here it kept the entire shape half of the
   experiment intact.
+- **Bound the framework before enriching it — and price the bound's own freedom
+  (exp54, 2026-08-23).** Three candidate limitations (the efficiency law, the
+  deposit basis, the size law) looked identical in the loss. Replacing the
+  model's seven-parameter weight law with per-galaxy non-negative least squares
+  over the same deposits — convex, 5 ms per galaxy, no optimiser — separated
+  them in an afternoon and retired two queued extensions, one of which was
+  already agreed as the next thing to build. **But a ceiling computed with
+  per-object freedom will always look reachable.** What makes it interpretable
+  is the control: fit the same machinery to a DIFFERENT object. Here the
+  71-weight solve fitted to the *wrong* galaxy reached `score_F` 0.672 against
+  the true ceiling's 0.559 and the model's 0.872 — so most of the apparent
+  headroom was flexibility, not information, and quoting the ceiling alone
+  would have licensed exactly the extensions it was built to forestall.
+  **The habit**: every ceiling ships with (1) a permuted-target control, (2) a
+  count of how much of its nominal freedom it actually uses (here a median of 6
+  active weights out of 71), and (3) a rung of the same bound at a freedom
+  level a global law could plausibly reach.
+- **Test a proposed parameter at the BOUND before fitting it (exp54,
+  2026-08-23).** A redshift-dependent deposit shape `c = c0 + c_z ln(1+z)` was
+  the agreed next extension. Scanning it over a grid of GLOBAL basis
+  parameters, with the per-galaxy freedom held fixed so a gain could not come
+  from degrees of freedom, put its optimum at `c_z` = 0 at two different
+  freedom levels — minutes of compute against a day of implementing a
+  per-deposit shape in shared code. **A term that cannot lower the bound cannot
+  lower the fitted loss by the mechanism it was proposed for.** Scan it at more
+  than one freedom level: the widest bound can be insensitive to a basis change
+  that the actual model would still feel.
+- **A metric can be blind in a region and still look converged there (exp54,
+  2026-08-23).** The production loss is a fractional residual on the CUMULATIVE
+  profile. At z = 2 only 6.3% of the stellar mass lies outside 52 kpc, so a
+  sub-per-cent error the loss cannot see is a thirty-per-cent error in that
+  annulus — and a per-epoch-free fit that matched the curve of growth to ~1% at
+  every radius was still 0.2 dex/dex too shallow in the outer density slope.
+  **Before naming a defect, ask whether the objective could have detected it at
+  all**; if not, the fix is the objective, not the model.
+- **The completeness trap recurs in every new view (exp54, 2026-08-23).** "The
+  truth's outer density slope steepens from −2.78 to −3.38 by z = 2 while the
+  model barely moves" was measured on the progenitor-selected sample. On the
+  mh-complete sample it steepens only to −2.95, and the model's error is +0.21
+  dex/dex rather than +0.48 — **more than half of the headline was the changing
+  sample.** The identical correction had already been made for the inner
+  profile a day earlier. **The habit**: once a completeness mask exists, apply
+  it the FIRST time a new diagnostic is plotted, not after it has produced a
+  headline.
