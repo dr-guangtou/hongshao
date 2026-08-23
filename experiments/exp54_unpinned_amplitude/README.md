@@ -546,3 +546,53 @@ why the rank moves above are attributable to the concentration fix.
 
 **Short list for Stage 3.3**: `gompertz_log-E2-S2`, `moffat-E5-S2+S3`,
 `moffat-E2-S2`, `moffat-E5-S2`.
+
+### The per-epoch fair mask — S3 is fitting the selection, and so is E5
+
+`stage33_perepoch.py` repairs the intersection's assembly bias by scoring each
+epoch on its own fair galaxies: **7599 galaxy-epochs** against the
+intersection's 3755, and no galaxy required to be massive at an epoch where it
+is not scored. `MaskedProblem` subclasses `fit.Problem` and is gated by an
+equivalence check — with an all-true mask it must reproduce the parent, and does
+(|Δ| = 0.00e+00 on `score_A`, 4.4e-16 on `score_F`).
+
+**1. THE S3 COLLAPSE IS REAL.** Two fair samples of different construction, one
+assembly-biased and one not, both drive all three size-law conditioning slopes
+to near zero from large full-sample values:
+
+| parameter | full | intersection | per-epoch |
+|---|---|---|---|
+| `f:logMh` | 0.0992 | 0.0032 | **0.0202** |
+| `f:dlogc` | −0.3380 | −0.0165 | **−0.0242** |
+| `f:fform` | −0.3342 | +0.0043 | **+0.0051** |
+
+**S3 is absorbing progenitor-selection structure, not physics.** With the
+factorial's separate finding that S3 does not collapse the halo-mass tilt the
+way E2 does, that is two independent reasons to drop the size-law conditioning.
+
+**2. AND SO, APPARENTLY, IS E5.** On the per-epoch fit, `moffat-E5-S2+S3` has a
+z=2 tilt of +0.005 / +0.033 / −0.002 / −0.015 at 5 / 10 / 75 / 148 kpc, against
+`gompertz_log-E2-S2`'s −0.126 / −0.076 / −0.089 / −0.099. E5's known advantage
+was that it closes the z=2 tilt — but `selection.py` shows that tilt is the
+survey, not the galaxies. **E5's four extra parameters buy a fit to a selection
+artifact.** The case for the seven-parameter `E2-S2` is stronger after the
+control than before it.
+
+**3. THE MODEL IS WEAKEST WHERE THE DATA ARE BEST.** Scoring each epoch's fair
+galaxies against a regression refitted on those same galaxies:
+
+| `gompertz_log-E2-S2` score_A | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| full (progenitor-selected) sample | 1.131 | 1.100 | 1.059 | 1.058 | 1.050 |
+| fair sample, vs the same regression | 1.116 | **1.356** | **1.339** | **1.360** | **1.371** |
+
+On a complete sample of massive haloes the model is ~36% worse than a halo-only
+regression at z ≥ 0.7, against 5–10% on the full sample. The regression barely
+notices the restriction (its scatter falls only 3–15%); the model degrades
+sharply. **The progenitor-selected sample was flattering the model**, and the
+deployment case is weaker than either the original or the corrected full-sample
+numbers suggested.
+
+The adopted model's own parameters barely move under the per-epoch fit
+(`a0` −0.004, `a_z` +0.012); what does move is the mass dependence
+(`a_M` −0.110, `a_Mz` +0.080), which is exactly the part the selection acts on.
