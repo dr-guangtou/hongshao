@@ -1014,3 +1014,51 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   is usually free — the un-normalized prediction is already computed — and it
   is exactly where a model can be most wrong while looking fine, because the
   normalization is applied before anything measures it.
+- **A benchmark and the thing it benchmarks must be scored on THE SAME
+  GALAXIES — one corrupt object overturned an experiment's headline
+  (exp54, 2026-08-23).** `score_A` is `rms[(model - truth)/sigma_A(z)]`, where
+  `sigma_A(z)` is Stage 1's best halo-only regression scatter. Stage 1 measured
+  it on all 2397 galaxies; Stages 3.1/3.2/3.3 measured the model on stratified
+  subsamples of 300/240/1199. **Row 181 fell in the first set and none of the
+  others** (it is an odd row, and those subsamples take every second galaxy).
+  Its measured `M*(<100 kpc)` collapses from 10^11.712 at z=0.4 to a flat
+  ~10^7.96 at all four higher-redshift epochs — a broken cross-match, 2.5 dex
+  below the sample's 0.1st percentile. That single object inflated `sigma_A` by
+  **18/15/12/8% at z = 0.7/1.0/1.5/2.0**, and the model was never charged for
+  it. Correcting it moved `score_A` from **1.128/0.907/0.899/0.929/0.970** to
+  **1.131/1.100/1.059/1.058/1.050**: the adopted model does not beat the
+  halo-only regression at any epoch, where the published claim was that it beat
+  it at four of five. **Three habits.** (1) When a metric is a RATIO of two
+  numbers computed by different scripts, assert that both were computed over
+  the same object set — a one-line `set` comparison, cheap and decisive.
+  (2) Reject physically impossible measurements AT SOURCE, in the feature
+  builder, loudly, so every consumer inherits the rejection; `MAX_BACKWARD_DEX`
+  is now a named constant next to the target it guards. (3) A benchmark
+  degraded by outliers flatters whatever it is compared against, so an
+  unexpectedly GOOD result is as much a reason to audit the denominator as a
+  bad one is to audit the numerator.
+- **Classify which code a fix invalidates from what the code READS, not from a
+  list you write by hand (exp54, 2026-08-23).** After fixing the concentration
+  excess I judged that 21 of 45 factorial cells consumed it — the E3 and S3
+  cells — and re-ran only those. `model.r50_of` contains
+  `scale = halo.r200c if spec.size == "S2" else halo.r200c / halo.c_eff`, and
+  the `else` branch belongs to **S2a**, which I had reasoned about as if it
+  were absent from the factorial. The true count was 33 of 45. The error was
+  caught within three cells because the re-run deliberately included CONTROL
+  cells asserted to be unaffected and required them to reproduce the cached
+  loss exactly: `moffat-E5-S2a` came back at 1.7476 against a cached 1.7385.
+  **The habits**: (1) express "which cells does this touch" as a predicate over
+  the model spec, in code, next to the thing it describes; (2) any partial
+  re-run must include controls that are asserted NOT to move and must refuse to
+  merge if they do — a seeded sample and a seeded multi-start make the
+  assertion exact, and an exact assertion is what makes it useful.
+- **Never wrap an import in a bare `except` (exp54, 2026-08-23).** A
+  `try: import scoreboard ... except Exception: d = None` fallback silently
+  turned off the entire baseline-refit section of a diagnostic and printed a
+  misleading "cache absent" message instead. The real error was
+  `module 'scoreboard' has no attribute 'CACHE'`: three experiments in this
+  repository ship a module named `scoreboard`, and which one wins depends on
+  import order. **Fix both halves**: let the exception surface, and import a
+  same-named sibling module BY FILE PATH via `importlib.util.spec_from_file_location`
+  rather than by name. Check for name collisions with
+  `ls experiments/*/<name>.py` before writing `import <name>`.
