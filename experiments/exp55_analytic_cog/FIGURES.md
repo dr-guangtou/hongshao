@@ -214,10 +214,11 @@ Exp50 comparison.
   predictable (R2=0.060 and 0.068). The reconstructed profile is more useful
   than a deterministic reading of each component parameter.
 - The conditional mean is too narrow in the fixed-kpc population planes. The
-  correlated draws restore and sometimes exceed the missing diversity. In the
-  tight size-scaled `<2Re` versus `2--4Re` plane, their 0.213 dex scatter is
-  nearly three times the TNG scatter of 0.072 dex. The stochastic residual
-  model needs another round before it is a satisfactory population generator.
+  correlated draws restore and sometimes exceed the missing diversity. When
+  each generated galaxy is measured at its own `Re`, the tight size-scaled
+  `<2Re` versus `2--4Re` plane has 0.188 dex scatter, compared with 0.072 dex
+  in TNG. The earlier 0.213 dex value used the TNG counterpart's true `Re` and
+  is not a valid generated-population statistic.
 - Pointwise profile intervals are nevertheless close to calibrated: the
   nominal 68% interval contains 68.3% of TNG profile points, and the nominal
   90% interval contains 87.4%. This is useful but demonstrably insufficient as
@@ -331,3 +332,99 @@ Re-fit the conditional distribution and require its population draws to match
 the fixed-kpc and size-scaled planes as well as pointwise CoG coverage. Only
 after that calibration test passes should the same fixed analytic family be
 carried across the Exp51 epochs.
+
+## Part III: halo-map refinement, Stages 1--4
+
+### What changed
+
+The refinement keeps the selected analytic profile and the original sparse
+degree-2 conditional mean unless a broader mean passes predeclared held-out and
+radial-residual gates. It first separates analytic representation error from
+halo-mapping error, then rotates the four parameter residuals according to
+their effect on the CoG, and finally compares stochastic generators. All model
+selection and residual calibration occur inside each outer training fold.
+
+The selected stochastic model resamples complete four-coordinate residual
+vectors from nearby training halos and multiplies them by one scale chosen from
+inner held-out profile coverage. This preserves measured cross-coordinate
+structure. It is an empirical conditional distribution around an analytic
+mean, not a new analytic equation for the scatter.
+
+### `exp55_refinement_decomposition`
+
+The upper row separates the analytic representation floor from the held-out
+halo-map error in three halo-mass bins. The lower row uses the analytic decoder
+Jacobian to attribute the conditional mean's shape residual to errors in total
+mass, compact fraction, compact scale, and extended-to-compact scale ratio.
+The low-mass 5--10 kpc bump is driven mainly by the radius-ratio coordinate and
+partly cancelled by compact-fraction and compact-scale errors. In the high-mass
+bin, compact fraction and compact scale produce the central excess, while the
+radius ratio suppresses mass at intermediate radii. The residual not closed by
+the linearized decomposition has 0.00886 dex median RMS, so the attribution is
+useful but not exact.
+
+### `exp55_refinement_mean_candidates`
+
+The left panels compare held-out profile CRPS, density-profile RMS, and the
+largest mass-bin median shape residual for four predeclared conditional means.
+The right panels show their radial residuals directly. The complete degree-2
+basis produces the best scalar CRPS, only 0.45% below the sparse mean, but
+worsens the largest coherent radial residual from 5.45% to 6.49%. The cubic
+mass variant reduces that residual to 4.98% without a sufficiently large CRPS
+gain. No candidate passes the combined gate, so the original sparse mean is
+retained.
+
+### `exp55_refinement_residual_modes`
+
+The first panel shows that four profile-effect modes contain 62.5%, 24.4%,
+10.2%, and 2.9% of residual CoG variance. The second gives held-out skill for
+their absolute coordinates; modes 1 and 3 retain most of the halo-predictable
+information. The radial curves show the profile deformation associated with a
+positive unit change in each mode. The final annotated heatmap shows that mode
+residuals have less than 0.005 Pearson correlation with every original halo
+input after the existing mean is fitted. The mode transform is diagnostic and
+is not counted as a new mean-model improvement.
+
+### `exp55_refinement_stochastic_candidates`
+
+Six stochastic generators are compared using held-out profile CRPS, nominal
+68% pointwise coverage, and energy distance in the two fixed-kpc population
+planes plus the self-consistent size-scaled plane. Raw Gaussian draws over-
+broaden the size-scaled plane. Empirical nearest-neighbour residuals recover
+the joint geometry but initially under-cover. The selected nested-calibrated
+version gives 68.4% coverage for the nominal 68% interval, improves profile
+CRPS from 0.06429 to 0.06368 dex, and lowers the self-consistent size-scaled
+energy ratio from 1.73 to 1.38 times the TNG split-half sampling floor. CRPS
+and coverage use all 32 draws per galaxy; the population-distance statistics
+are averaged over four complete draws because each distance compares all
+2,539 generated galaxies with the full TNG sample.
+
+### `exp55_refinement_population_draws`
+
+One complete generated draw is compared directly with TNG in the three
+standard population planes and the stellar-mass relations for R50, R80, and
+R90. Each generated galaxy's own half-mass radius defines the size-scaled
+apertures. The calibrated generator closely restores the two fixed-kpc planes
+and reduces the size-scaled scatter from the raw Gaussian value of 0.188 dex to
+0.084 dex, compared with 0.072 dex in TNG. R50 and R80 are broadly recovered.
+R90 remains the clearest limitation: its scatter is realistic, but its mean
+mass dependence is too shallow and its median is high by 0.024 dex.
+
+### Standard QA for the selected refinement
+
+The `standard_qa` subdirectory repeats the complete ten-figure QA battery for
+the retained sparse conditional mean and the selected calibrated population
+draws. The conditional-mean panels are intentionally unchanged from Part II;
+they remain the appropriate paired checks of held-out profile error. The new
+stochastic conclusions should be read from the self-consistent population-draw
+figure above, because the standard size-scaled paired panels deliberately use
+each TNG counterpart's known `Re`.
+
+### Decision and remaining question
+
+Retain the sparse analytic conditional mean and use nested-calibrated empirical
+neighbour residuals for redshift-0.4 experimental draws. Do not broaden the
+polynomial mean, free the two global profile indices, or add redshift evolution
+as a response to these residuals. The next targeted analysis should explain
+the opposite central/intermediate residual signatures at low and high halo
+mass and repair the mean R90 trend without merely increasing stochastic width.

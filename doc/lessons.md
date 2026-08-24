@@ -969,10 +969,42 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   radius. The reconstructed profile still ties the Exp50 readable map. Judge
   the halo map through reconstructed observables and residual modes, and do not
   equate profile-fit identifiability with deterministic halo predictability.
-- **Correct marginal coverage does not certify a generative population model
-  (exp55 halo map).** Correlated analytic-parameter draws give 68.3% coverage
-  for nominal 68% pointwise CoG intervals, but broaden the `<2Re` versus
-  `2--4Re` stellar-mass plane to 0.213 dex scatter when TNG has 0.072 dex. Test
-  stochastic draws directly in every scientifically used derived plane; a
-  residual covariance that is calibrated one radius at a time can still have
-  the wrong joint geometry.
+- **A generated galaxy must be evaluated at its own generated size (exp55
+  correction).** The first stochastic QA used the standard paired diagnostic,
+  which deliberately evaluates model and TNG at the TNG galaxy's true `Re`, and
+  reported 0.213 dex scatter in the `<2Re` versus `2--4Re` plane. That is useful
+  for conditional-mean profile error but invalid for a generated population.
+  Measuring each draw at its own `Re` gives 0.188 dex for the raw Gaussian and
+  0.084 dex after nested residual calibration, versus 0.072 dex in TNG. Keep
+  paired fixed-scale diagnostics and self-consistent population diagnostics as
+  explicitly separate products.
+- **More algebraic flexibility can improve a scalar score while worsening the
+  coherent radial error (exp55 refinement).** A complete degree-2 halo map
+  lowered held-out profile CRPS by 0.45% relative to the sparse degree-2 map,
+  but increased the largest halo-mass-bin median shape residual from 5.45% to
+  6.49%. Candidate mean models must pass both a held-out distribution score and
+  direct mass-binned radial-residual checks; a small average improvement is not
+  evidence that the visible systematic was repaired.
+- **A coordinate rotation organizes residual physics but does not create new
+  predictive information (exp55 refinement).** Rotating the four analytic
+  profile coordinates by their effects on the CoG revealed distinct broad-
+  amplitude, central-transfer, intermediate-versus-outer, and weak-inner modes.
+  Because this transform is invertible, fitting the same linear design in the
+  rotated coordinates cannot be credited as a better conditional mean. Its
+  value is to expose which radial combinations are halo-predictable and which
+  should remain stochastic.
+- **Calibrate an empirical residual generator on inner held-out galaxies, not
+  on the final evaluation fold (exp55 refinement).** Nearest-neighbour
+  resampling recovered the population-plane geometry but covered only 62.7% of
+  profile points with a nominal 68% interval. Rebuilding the residual library
+  from cross-fitted predictions did not fix this, whereas one inflation factor
+  selected independently within each outer training fold gave 68.4% coverage
+  and lower profile CRPS. The selected factors were 1.16 in four folds and 1.08
+  in one, supporting a simple calibration rather than an unrestricted residual
+  density model.
+- **Correct stochastic scatter does not repair an incorrect mean population
+  relation (exp55 refinement).** The calibrated generator reproduces the TNG
+  R90 scatter to within 0.005 dex, yet its R90 distribution remains 3.63 times
+  the TNG split-half energy-distance floor because the predicted mass--R90
+  relation is too shallow and the median radius is high by 0.024 dex. Treat
+  residual width and conditional-mean structure as separate failure modes.

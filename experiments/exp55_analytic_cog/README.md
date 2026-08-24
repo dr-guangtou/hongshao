@@ -1,7 +1,7 @@
 # exp55 — Analytic curve-of-growth representation
 
-Status: COMPLETE for profile representation and the initial redshift-0.4
-halo-mapping test.
+Status: COMPLETE for profile representation, the initial redshift-0.4
+halo-mapping test, and Stages 1--4 of the halo-map refinement.
 
 ## Question
 
@@ -362,13 +362,15 @@ representation floor, not failures of the continuous profile formula alone.
 
 The correlated draws give 68.3% pointwise coverage for a nominal 68% interval
 and 87.4% for a nominal 90% interval. Pointwise coverage is not sufficient,
-however. Averaged over four independent population draws, the scatter in the
-`M*(<2 R_e)` versus `M*(2--4 R_e)` plane is 0.213 dex, compared with 0.072 dex
-in TNG, and its energy-distance ratio to the TNG split-half sampling floor is
-4.21. The conditional mean has the opposite failure in the fixed-kpc planes:
-it is too narrow because it omits residual diversity. The present Gaussian
-residual model therefore captures marginal uncertainty better than all derived
-joint population structure.
+however. The first analysis incorrectly evaluated a generated population at
+each TNG counterpart's true `Re`, obtaining 0.213 dex scatter in the
+`M*(<2 R_e)` versus `M*(2--4 R_e)` plane. Measuring every draw at its own `Re`
+gives the correct generative value, 0.188 dex, compared with 0.072 dex in TNG.
+The qualitative conclusion survives but the original number and metric were
+wrong. The conditional mean has the opposite failure in the fixed-kpc planes:
+it is too narrow because it omits residual diversity. The Gaussian residual
+model captures marginal uncertainty better than all derived joint population
+structure.
 
 ### Decision after the halo map
 
@@ -388,6 +390,216 @@ on the standard fixed-kpc and size-scaled population planes, not only on
 coordinate R2 or pointwise coverage. If that improves joint calibration without
 degrading the held-out CoGs, the same fixed analytic family can then be tested
 at the other Exp51 epochs.
+
+## Halo-map refinement: predeclared Stages 1--4
+
+The first halo map passes the assembly controls but leaves coherent radial
+residuals with halo mass and a miscalibrated stochastic population. The next
+work block changes neither the fixed `n = 1`, `gamma = 1.25` analytic profile
+family nor the redshift scope. It addresses the map in four gated stages.
+
+### Stage 1 — locate the radial systematics
+
+Decompose the median profile residual in three equal-number `log M_peak` bins
+into (a) analytic-representation error and (b) halo-mapping error. Linearize the
+analytic decoder at each galaxy's fitted coordinates and project the mapping
+error onto the four parameter derivatives. Report the non-linear closure error
+so that a visually appealing decomposition is not mistaken for an exact one.
+
+Decision: change the profile family only if the representation error is
+comparable to the mapping error. Otherwise retain the family and target the
+responsible parameter combinations in the halo map.
+
+### Stage 2 — improve the conditional mean conservatively
+
+Compare the existing sparse degree-2 basis with a fixed small set of analytic
+extensions: the two missing final-mass interactions
+`log M_peak × log t_c` and `log M_peak × c_200c`, a complete degree-2 basis,
+and a complete degree-2 basis plus a cubic final-mass term. Use training-fold
+standardization and the existing five held-out folds. Rank candidates by
+profile CRPS, median cumulative- and density-profile RMS, and the maximum
+absolute median shape residual across the three halo-mass bins.
+
+Decision: accept extra terms only if they improve the reconstructed held-out
+profiles and reduce the mass-binned radial structures. Parameter-coordinate
+loss alone is not an acceptance criterion. Retain the final-mass-only and
+mass-conditioned shuffled-MAH/concentration controls for the selected model.
+Adopt a more complex mean only if it lowers profile CRPS by at least 0.5%,
+reduces the worst mass-bin median shape residual by at least 0.5 percentage
+point, and does not worsen median density RMS by more than 0.001 dex. If several
+candidates pass, select the one with the fewest terms within 0.25% of the best
+profile CRPS.
+
+### Stage 3 — organize residuals by their profile effect
+
+Construct a global parameter-space metric from the analytic decoder Jacobians,
+then rotate held-out coordinate residuals into orthogonal modes ordered by
+their contribution to CoG variance. Report each mode's profile variance,
+held-out halo predictability, correlations with the halo inputs, and decoded
+radial signature. This is a diagnostic reparameterization: because every target
+uses the same linear design, an invertible rotation is not allowed to claim an
+artificial improvement in the conditional mean.
+
+Decision: retain modes with distinct radial effects as stochastic coordinates;
+only modes with reproducible held-out halo information should receive a more
+complex deterministic mean.
+
+### Stage 4 — repair the population draws
+
+Compare the incumbent heteroscedastic Gaussian with fixed residual correlation
+against simple, measurable alternatives: residual modes with diagonal
+heteroscedastic scatter, mass-binned mode correlations, and empirical
+mass-neighbour residual resampling. No flexible density estimator is introduced
+until these controls establish what fails. Evaluate complete population draws
+in the standard fixed-kpc planes, the size-scaled plane, mass--R50/R80/R90,
+pointwise coverage, and per-galaxy profile CRPS.
+
+For the generated population, measure each draw's size-scaled apertures using
+that draw's own predicted `Re`. The standard paired QA continues to use the TNG
+`Re` for both truth and conditional mean because it answers a different
+question: profile error at a fixed known physical scale. A generated galaxy
+cannot use its TNG counterpart's true size.
+
+If ordinary neighbour resampling undercovers, run one diagnostic follow-up in
+which every residual in the training library is itself generated by an inner
+held-out prediction. This tests the specific possibility that residuals from
+the model's own training galaxies are artificially narrow; it does not use the
+outer validation galaxies to tune a scale factor.
+
+If empirical residuals reproduce the population geometry but miss marginal
+coverage, permit one nested calibration: choose a single residual inflation
+from `[1.00, 1.08, 1.16, 1.24, 1.32]` using only inner held-out profile
+coverage inside each outer training fold. Freeze that scale before evaluating
+the outer fold. This remains a one-parameter calibration of an empirical
+distribution, not a new flexible likelihood.
+
+Decision: the selected stochastic model must improve the size-scaled plane
+without destroying the fixed-kpc planes or marginal coverage. If no candidate
+does so, record the failure and stop before multi-epoch extension. Quantitatively,
+require a lower size-scaled-plane energy distance, no more than a 10% increase
+in the worse of the two fixed-kpc energy distances, nominal 68% pointwise
+coverage within three percentage points, and profile CRPS no more than 1% worse
+than the incumbent.
+
+## Results of Stages 1--4
+
+All results use 2,539 galaxies and the same five outer folds as the initial halo
+map. Profile CRPS and interval coverage use 32 profile draws per galaxy. The
+more expensive population-plane and size statistics are averages over four
+complete population draws. Model selection and residual calibration use
+training or inner-validation galaxies only; the quoted results are from the
+untouched outer folds.
+
+### Stage 1 result — the halo map dominates the coherent residual
+
+The median RMS difference between the halo-predicted analytic profile and the
+best analytic fit to the same galaxy is 0.08494 dex. The median analytic
+representation error relative to TNG is only 0.00437 dex. Thus the halo map,
+not the fixed Sérsic-plus-cored-power-law family, dominates the present radial
+systematic by a factor of about 19 in RMS.
+
+The amplitude-removed median residual reaches +3.73% near 8.1 kpc in the lowest
+halo-mass tercile, -3.40% near 2.8 kpc in the middle tercile, and +5.45% at
+2 kpc in the highest tercile. The Jacobian decomposition explains the signs.
+At low halo mass, an underpredicted extended-to-compact radius coordinate adds
+too much intermediate-radius mass and is partly cancelled by compact-fraction
+and compact-radius errors. At high halo mass, excess compact fraction and a
+slightly over-concentrated compact scale raise the centre, while the extended
+radius combination suppresses the 10--30 kpc region. The median non-linear
+closure RMS is 0.00886 dex, so this derivative decomposition is informative but
+not exact.
+
+### Stage 2 result — more polynomial terms do not solve the mean bias
+
+No added mean basis passes the predeclared gate. The incumbent sparse degree-2
+mean has profile CRPS 0.06429 dex, median density RMS 0.13287 dex, and a 5.45%
+worst mass-bin shape residual. Adding the two missing mass interactions makes
+CRPS slightly worse at 0.06432 dex and raises the worst residual to 5.61%.
+The complete degree-2 basis improves CRPS by only 0.45%, below the 0.5% gate,
+while worsening the radial residual to 6.49%. Adding a cubic mass term reduces
+the worst residual to 4.98% but improves CRPS by only 0.38% and the residual by
+only 0.47 percentage point, both below their gates.
+
+The sparse degree-2 mean is therefore retained. Real MAH shape still lowers
+CRPS by 13.0% relative to its mass-conditioned shuffle, real concentration
+lowers it by 4.3% relative to its shuffle, and the complete halo vector lowers
+it by 25.8% relative to final halo mass alone. The coherent radial bias is not
+evidence that the assembly signal disappeared; it is evidence that adding
+generic polynomial flexibility is the wrong correction.
+
+### Stage 3 result — four profile-effect modes separate distinct roles
+
+The profile-metric rotation orders residual-coordinate combinations by their
+actual CoG effect. Modes 1--4 contain 62.5%, 24.4%, 10.2%, and 2.9% of the
+residual profile variance. Their held-out absolute-coordinate R2 values are
+0.776, 0.115, 0.765, and 0.155. Modes 1 and 3 therefore contain most of the
+halo-predictable structure, while modes 2 and 4 are predominantly stochastic.
+
+Mode 1 changes the whole profile with a broad maximum near 10 kpc; mode 2
+transfers mass sharply from the centre to intermediate and outer radii; mode 3
+adds mass near 10 kpc while removing it in the outskirts; mode 4 is a weak
+central/intermediate adjustment. After fitting the existing mean, all four
+mode residuals have Pearson correlations below 0.005 with every original halo
+input. This is expected for the fitted linear directions and shows that a
+simple residual-linear correction cannot remove the remaining structure.
+
+As predeclared, the invertible rotation is not credited with a better mean.
+Its value is diagnostic: it identifies which combinations should be modeled as
+stochastic and supplies interpretable radial signatures for future targeted
+features.
+
+### Stage 4 result — nested empirical residuals improve the generator
+
+The key procedural correction is to measure generated size-scaled apertures at
+each generated galaxy's own `Re`. Under this definition, the raw Gaussian has
+0.188 dex scatter in `M*(<2Re)` versus `M*(2--4Re)`, not the retired 0.213 dex
+paired-scale value; TNG has 0.072 dex.
+
+Ordinary nearest-neighbour residual resampling substantially improves all three
+population planes but covers only 62.7% of profile points with its nominal 68%
+interval. Rebuilding the residual library from inner held-out fits produces the
+same undercoverage, showing that ordinary in-sample residual shrinkage is not
+the cause. A single residual inflation was therefore selected independently
+inside every outer training fold. Four folds select 1.16 and one selects 1.08,
+so the calibration is stable rather than driven by one split.
+
+The nested-calibrated neighbour model passes every predeclared gate:
+
+- Nominal 68% pointwise coverage is 68.4%, compared with 67.6% for the raw
+  Gaussian; nominal 90% coverage is 88.4%.
+- Mean profile CRPS improves from 0.06429 to 0.06368 dex, a 0.95% reduction.
+- In the `<30 kpc` versus `30--50 kpc` plane, generated scatter is 0.178 dex
+  versus 0.172 dex in TNG; the energy-distance ratio to the TNG sampling floor
+  improves from 1.75 to 0.71.
+- In the `<30 kpc` versus `50--100 kpc` plane, generated scatter is 0.197 dex
+  versus 0.206 dex in TNG; the energy ratio changes from 1.19 to 1.27, remaining
+  inside the allowed fixed-kpc gate while its centered distribution improves.
+- In the self-consistent `<2Re` versus `2--4Re` plane, generated scatter is
+  0.084 dex versus 0.072 dex in TNG; the energy ratio improves from 1.73 to
+  1.38.
+
+The remaining population limitation is the far-outer size distribution. The
+R50 and R80 energy-distance ratios are 1.28 and 1.68 times the TNG sampling
+floor, while R90 remains 3.63 times the floor. The generated R90 scatter is
+0.099 dex, close to TNG's 0.104 dex, but its mean relation is too shallow and
+its median radius is high by 0.024 dex. This agrees with the conditional mean's
+outer-density and mass-beyond-100-kpc defects: the model now generates realistic
+overall diversity but has not learned the outermost radial dependence fully.
+
+### Decision after Stages 1--4
+
+Retain the sparse analytic mean and replace the raw-coordinate Gaussian draws
+with nested-calibrated nearest-neighbour residual draws for the experimental
+redshift-0.4 generator. The calibration procedure is fold-local and portable:
+it stores the training residual catalogue, standardized halo features, the
+neighbour count, and one inner-selected scalar inflation.
+
+Do not add generic polynomial terms, free the global component indices, or
+extend to other epochs yet. The next focused question is why the halo map has
+opposite central/intermediate residual signatures at low and high halo mass,
+and why R90 retains a distribution offset. Candidate explanations should be
+tested through targeted halo information or a profile-relevant mean correction,
+not through unrestricted algebraic flexibility.
 
 ## Files and commands
 
@@ -410,4 +622,9 @@ PYTHONPATH=. uv run python experiments/exp55_analytic_cog/qa_figures.py
 EXP55_MAP_NMAX=60 EXP55_MAP_N_DRAW=4 PYTHONPATH=. uv run python \
   experiments/exp55_analytic_cog/halo_map.py demo
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/halo_map.py fit
+EXP55_REFINE_NMAX=90 EXP55_REFINE_N_DRAW=4 PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/refine_halo_map.py demo
+PYTHONPATH=. uv run python experiments/exp55_analytic_cog/refine_halo_map.py run
+PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/refine_halo_map.py figures
 ```

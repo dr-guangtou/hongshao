@@ -1343,8 +1343,34 @@ Cross-experiment plan. Mirrors the phase sequence in
   to its shuffle. Stellar mass within 148.2 kpc is predictable (held-out
   R2=0.865), but compact fraction and compact radius are mostly stochastic
   (R2=0.060 and 0.068). Correlated draws have accurate marginal 68% profile
-  coverage (68.3%) but over-broaden the tight TNG `<2Re` versus `2--4Re` plane
-  to 0.213 dex scatter from the TNG value of 0.072 dex. **Decision:** retain the
+  coverage (68.3%) but broaden the tight TNG `<2Re` versus `2--4Re` plane to
+  0.188 dex scatter from the TNG value of 0.072 dex when every generated galaxy
+  is correctly measured at its own `Re`. The initially reported 0.213 dex used
+  the TNG counterpart's true `Re` and is retired. **Decision:** retain the
   analytic CoG as a viable continuous halo-map target, but revise the residual
   coordinates and joint stochastic model before adding epochs or freeing the
   globally fixed component shapes.
+- [x] **exp55 halo-map refinement, Stages 1--4.** Decompose the
+  halo-mass-dependent radial residuals into representation, mapping, and
+  parameter-derivative contributions; compare a predeclared small set of
+  fold-clean analytic mean expansions; rotate the residual coordinates using
+  the analytic profile metric; and test simple stochastic alternatives against
+  both pointwise profile coverage and the standard population planes. Do not
+  add epochs or free the globally fixed profile indices in this work block.
+  **Result:** the halo-to-profile map contributes 0.08494 dex median profile
+  RMS, about 19 times the analytic function's 0.00437 dex representation error.
+  None of three broader polynomial means passed the predeclared combined gate:
+  the complete degree-2 basis lowered profile CRPS by only 0.45% while
+  increasing the worst mass-bin shape residual from 5.45% to 6.49%. A
+  profile-metric rotation separates four residual modes containing 62.5%,
+  24.4%, 10.2%, and 2.9% of residual profile variance, but is not claimed as a
+  mean-model improvement. Replacing raw Gaussian residuals with fold-local
+  nearest-neighbour residuals, inflated by a single scale selected on inner
+  held-out galaxies, lowers profile CRPS from 0.06429 to 0.06368 dex and gives
+  68.4% coverage for the nominal 68% interval. It reduces the generated
+  self-consistent `<2Re` versus `2--4Re` scatter from 0.188 to 0.084 dex,
+  compared with 0.072 dex in TNG. **Decision:** retain the sparse mean and use
+  the nested-calibrated empirical residual generator experimentally. The main
+  unresolved defect is the R90 population relation: its energy distance is
+  3.63 times the TNG split-half sampling floor because its mean mass trend is
+  too shallow, despite realistic scatter.
