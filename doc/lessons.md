@@ -926,3 +926,31 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   rasterizes only the dense hexbin collections, retains vector axes and labels,
   and can rebuild these diagnostics from the saved held-out predictions. The
   report uses the 300-dpi PNG versions for viewer-independent rendering.
+- **A low cumulative-profile residual does not establish an identifiable
+  analytic coordinate system (exp55).** A five-parameter radial-sigmoid CoG
+  reached 0.00556 dex median cumulative-profile RMS, but 89.6% of galaxies put
+  at least one parameter within 1% of a bound and the median scaled-Jacobian
+  singular-value ratio was only `10^-3.42`. Multiple starts, re-optimized
+  profile scans, synthetic recovery, boundary incidence, and radial jackknifes
+  must be treated as selection criteria rather than after-the-fact diagnostics.
+- **Restricted mixtures can be usable without claiming that their components
+  are physical populations (exp55).** Fixing the component shape indices
+  globally, defining the component fraction within the measured outer
+  aperture, and enforcing ordered radii produced a four-parameter
+  Sérsic-plus-Moffat representation with exact synthetic recovery and typical
+  radial-jackknife changes below 0.008 dex. This does not solve unrestricted
+  multi-Sérsic degeneracy and does not identify the components as in-situ and
+  ex-situ stars; it creates stable phenomenological coordinates that can be
+  tested against halo assembly.
+- **Test analytic CoGs in differential as well as cumulative form (exp55).**
+  The best restricted two-Sérsic model had a respectable 0.00727 dex median CoG
+  RMS but a 0.145 dex annular-density RMS because both components have
+  exponential outer tails. Giving the extended component a Moffat power-law
+  tail reduced the corresponding errors to 0.00437 and 0.0660 dex. Cumulative
+  residuals alone can hide an incorrect density slope.
+- **A numerical integral is not an analytic profile merely because its
+  integrand has a formula (exp55 correction).** The first radial-sigmoid
+  implementation evaluated the cumulative profile on an internal integration
+  grid. Visual and implementation review exposed that it did not meet the
+  portability requirement, so it was replaced with the exact softplus
+  antiderivative before the family comparison was accepted.

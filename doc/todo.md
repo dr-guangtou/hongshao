@@ -1299,3 +1299,27 @@ Cross-experiment plan. Mirrors the phase sequence in
   profile figures, control logic, claim qualifications, and a reproducibility
   map. The source compiles without unresolved references or overflowing text;
   the generated PDF and staged figure copies are gitignored.
+
+## exp55 — analytic CoG representation and identifiability
+
+- [x] Test whether a continuous three-to-five-parameter CoG function can match
+  the low-dimensional PCA representation at redshift 0.4 while retaining
+  parameters stable enough for a later DiffMAH-to-profile map. Compare PCA-3/5,
+  the Exp50 five-coordinate decoder, one-component analytic families, and a
+  deliberately restricted compact-plus-extended Sérsic mixture. Treat
+  reconstruction quality and parameter identifiability as equal gates. Use
+  multiple starts, re-optimized profile scans, residual-Jacobian singular
+  values, synthetic recovery, boundary audits, and direct CoG plus density
+  figures. Do not fit the halo relation until a profile representation passes.
+  **Result:** on all 2,545 usable redshift-0.4 CoGs, a four-parameter compact
+  exponential plus extended Moffat profile reaches 0.00441 dex median
+  cumulative-profile RMS under fold-clean selection of the two global shape
+  indices. Its paired median difference from Exp50's five sampled coordinates
+  is -0.000061 dex, with a bootstrap 16th--84th percentile interval spanning
+  zero, while PCA-3 remains better by 0.000975 dex. The selected analytic
+  family has a median scaled-Jacobian singular-value ratio of `10^-1.70`, only
+  2.55% boundary incidence, exact synthetic recovery, and median parameter
+  changes below 0.008 dex (or 0.004 in compact fraction) when alternating radii
+  are removed. **Decision:** adopt this function as the profile target for a
+  separate held-out DiffMAH mapping experiment, with per-object conditioning
+  flags and no in-situ/ex-situ interpretation.
