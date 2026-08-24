@@ -1008,3 +1008,74 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the TNG split-half energy-distance floor because the predicted mass--R90
   relation is too shallow and the median radius is high by 0.024 dex. Treat
   residual width and conditional-mean structure as separate failure modes.
+- **A small integrated-profile error can bias an outer quantile relation
+  systematically (exp55 outer-envelope test).** The individually fitted
+  `gamma=1.25` analytic family has only 0.00437 dex median CoG RMS, yet changes
+  the TNG mass--R90 slope from 0.291 to 0.251 before any halo mapping. Diagnose
+  population sizes at the representation, conditional-mean, and stochastic
+  layers separately; aggregate CoG RMS does not bound errors in derived
+  population relations.
+- **Fix the stochastic ensemble size before calibrating empirical quantiles
+  (exp55 outer-envelope test).** The inner-selected residual inflation changed
+  between 16 and 32 draws because sample 16th and 84th percentiles are discrete.
+  Production comparisons now use 32 draws consistently and report complete-
+  population variation across draws for geometry metrics.
+- **A stochastic generator can improve one population plane while worsening
+  another (exp55 outer-envelope test).** Neighbour-residual draws improve
+  profile CRPS and the self-consistent size-scaled plane relative to raw
+  Gaussian draws, but worsen the R90 energy distance. Retain a standard set of
+  fixed-kpc, size-scaled, and outer-quantile diagnostics for every generator;
+  no single distribution score is a sufficient selection criterion.
+- **Use mass-conditioned nulls before blaming compressed halo histories
+  (exp55 outer-envelope test).** Actual-minus-DiffMAH anchor residuals correlate
+  only -0.030 to +0.045 with R90 errors, and neither they nor the DiffMAH fit
+  RMS improve the held-out profile coherently relative to shuffled controls.
+  For this failure, the evidence points to the analytic outer profile rather
+  than lost MAH diversity.
+- **A global profile hyperparameter may have negligible CoG cost but large
+  population consequences (exp55 outer-envelope test).** Changing the fixed
+  outer Moffat slope from 1.25 to 1.4 worsens median CoG RMS by only 0.000030
+  dex while improving density RMS, boundary incidence, and the generated R90
+  relation. Select such coordinates with fold-clean multi-metric gates, not
+  only the original fitting loss.
+- **A successful hard boundary is evidence for smooth dependence, not for a
+  physical discontinuity (exp55 mass-dependent outer slope).** A fold-local
+  two-regime slope rule brings the generated R90 distribution to the TNG
+  sampling floor and reduces coherent mass-bin residuals, but it leaves visible
+  structure near its arbitrary 2/3-mass split. Use it as a diagnostic ceiling
+  and next test one smooth, low-complexity mass dependence; do not free the
+  slope independently per galaxy.
+- **Visual review must check panel-to-bin routing and numerical axis offsets
+  (exp55 overnight QA).** A first comparison figure overplotted low- and
+  middle-mass residuals because integer panel routing mapped both to one axis,
+  and Matplotlib hid the absolute halo-mass threshold behind an offset. Direct
+  image inspection caught both; the final figure shows only the lowest and
+  highest bins and disables the misleading offset.
+- **Every named mass--size relation must state which mass defines the x-axis
+  (exp55 smooth-slope correction).** An initial Stage 10 selector minimized the
+  R90-slope error against halo mass even though the population failure and
+  standard mass--size QA use stellar mass. The wrong selector chose a 0.05-dex
+  logistic width in every fold; the corrected stellar-mass--R90 selector chose
+  0.20 dex in every fold and materially changed the generated population.
+  Encode the x-variable in function names or call the same audited size-relation
+  helper used by final QA.
+- **Do not reinterpret a candidate selected at the edge of a small grid as a
+  measured optimum (exp55 smooth outer slope).** All five folds choose the
+  initially widest tested logistic transition, 0.20 dex. A separately declared
+  extension to 0.30, 0.50, and 0.80 dex then selects 0.20 dex again in every
+  fold, making it an interior grid choice. The extension closes the numerical
+  direction without turning a coarse grid result into a high-precision physical
+  transition-scale measurement.
+- **Full draw-to-draw geometry is a final robustness product, not an inner-loop
+  metric (exp55 smooth outer slope).** Recomputing all two-dimensional energy
+  distances for 32 complete populations and two models took about ten minutes,
+  longer than fitting all smooth profile cells from cache and refitting the
+  halo map. Cache fixed truth sampling floors and vectorize repeated distances
+  before expanding such comparisons.
+- **Derive diagnostic-figure styling from the declared candidate grid (exp55
+  Stage 11 correction).** Extending the smooth-width grid from three to six
+  values completed and saved all numerical results, but the first figure build
+  failed because its color dictionary still contained three hard-coded entries.
+  The figure now assigns a sequential `cividis` color from the active grid and
+  regenerates from saved outputs, so future grid extensions cannot repeat this
+  failure.

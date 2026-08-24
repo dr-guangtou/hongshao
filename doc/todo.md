@@ -1374,3 +1374,64 @@ Cross-experiment plan. Mirrors the phase sequence in
   unresolved defect is the R90 population relation: its energy distance is
   3.63 times the TNG split-half sampling floor because its mean mass trend is
   too shallow, despite realistic scatter.
+- [x] **exp55 outer-envelope diagnosis, Stages 5--9.** Establish stochastic
+  robustness; separate R50/R80/R90 errors at the analytic-representation,
+  held-out mean, and generated-population layers; test whether actual-minus-
+  DiffMAH history residuals explain the failure; compare the existing fixed
+  outer-slope candidates under fold-clean multi-metric gates; audit a small set
+  of added halo features with mass-conditioned shuffles; and test one
+  predeclared mass-dependent boundary. **Result:** the original fixed
+  `gamma=1.25` representation itself changes the TNG mass--R90 slope from
+  0.291 to 0.251 despite only 0.00437 dex median CoG RMS. DiffMAH history misses
+  correlate only -0.030 to +0.045 with the R90 residual and do not beat their
+  shuffled controls. Fixed `gamma=1.4` improves density RMS from 0.06601 to
+  0.06093 dex and the generated R90 energy-distance ratio from 3.40 to 2.20 at
+  negligible CoG and CRPS cost. A fold-local boundary using `gamma=1.4` below
+  the training 2/3 halo-mass quantile and `gamma=1.25` above it passes every
+  declared gate: 68.9% nominal-68% coverage, 0.06377 dex profile CRPS, and R90
+  energy-distance ratio 0.96 relative to the TNG sampling floor. Its complete-
+  population R90 slope is 0.302 versus 0.291 in TNG. **Decision:** retain
+  `gamma=1.4` as the preferred global baseline and the hard boundary as a
+  diagnostic ceiling. The result establishes mass dependence of the required
+  outer slope, not a physical discontinuity.
+- [x] **exp55 smooth outer-slope law.** Replace the successful hard boundary
+  with one low-complexity continuous `gamma(log M_peak)` relation. Select any
+  transition scale and width only inside each outer training fold. Refit the
+  profile representation at the resulting per-halo slopes rather than
+  interpolating final predictions, and repeat identifiability, density, radial-
+  residual, null-control, coverage, and complete-population gates. Compare
+  against both fixed `gamma=1.4` and the two-regime diagnostic. Do not free
+  `gamma` independently for every galaxy, and do not add epochs until this
+  single-epoch coordinate system is stable. **Result:** a logistic law between
+  the tested slopes 1.4 and 1.25 selects the widest tested transition, 0.20 dex,
+  in all five training folds. On 2,539 held-out galaxies it has 0.06391 dex
+  profile CRPS, 69.5% coverage for a nominal 68% interval, and a generated
+  stellar-mass--R90 slope of 0.2895 versus 0.2909 in TNG. Its R90
+  energy-distance ratio is 0.93 relative to the TNG sampling floor, and both
+  fixed-kpc population planes pass. It formally fails replacement because the
+  self-consistent size-scaled ratio is 10.0034% above the hard boundary, barely
+  outside its 10% gate, and the largest mass-bin profile residual is 3.34%
+  versus 2.74%. **Decision:** keep the formal non-selection, but regard the
+  continuous law as a successful feasibility demonstration. At this stage the
+  0.20-dex width was the widest tested value; the separately declared closure
+  test below establishes it as an interior coarse-grid choice, not a
+  high-precision physical scale.
+- [x] **exp55 smooth-law closure.** In a newly declared test, extend the
+  transition-width grid above 0.20 dex and diagnose the smooth model's 3.34%
+  intermediate-radius mass-bin residual. Retain the same outer folds and final
+  gates; do not relax the just-missed size-scaled threshold after seeing it.
+  Stop if the wider law merely moves to a new boundary or if the radial
+  residual does not improve. Only a candidate with an interior width and stable
+  geometry should be considered for multi-epoch testing. **Result:** after
+  adding widths 0.30, 0.50, and 0.80 dex, every fold still chooses 0.20 dex.
+  The median training stellar-mass--R90 slope error decreases from 0.0107 at
+  width 0.10 to 0.0020 at 0.20, then rises to 0.0051, 0.0134, and 0.0196. Thus
+  0.20 dex is an interior, reproducible grid choice. The held-out result is
+  unchanged and still fails the same radial-shape and size-scaled gates.
+  **Decision:** close the width scan; diagnose the 5--30 kpc radial residual
+  before considering an epoch extension.
+- [ ] **exp55 population-QA performance.** Cache the truth measurements and
+  fixed TNG split-half sampling floors, then vectorize repeated energy-distance
+  calculations across complete draws. The Stage 10--11 all-32-draw comparison
+  currently takes about ten minutes and should remain a final robustness step
+  until this mechanical optimization is verified to reproduce every metric.

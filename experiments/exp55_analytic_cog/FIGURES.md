@@ -428,3 +428,211 @@ polynomial mean, free the two global profile indices, or add redshift evolution
 as a response to these residuals. The next targeted analysis should explain
 the opposite central/intermediate residual signatures at low and high halo
 mass and repair the mean R90 trend without merely increasing stochastic width.
+
+## Part IV: stochastic robustness and the fixed outer-slope test
+
+### What is being evaluated
+
+These figures ask why the selected Stage 4 generator misses the TNG
+stellar-mass--R90 distribution even though its profile coverage and most
+population planes are good. They separate four possible sources: Monte Carlo
+variation, the residual-resampling prescription, compression of the actual MAH
+by DiffMAH, and the globally fixed Moffat outer slope. The tests use the same
+five outer held-out folds; all scale calibration and candidate decisions use
+only the corresponding training galaxies.
+
+### `exp55_stochastic_robustness`
+
+The upper panels compare profile CRPS, nominal 68% coverage, and population
+energy distances for three random seeds, four neighbour counts, and three
+definitions of distance between halos. The lower panels show the distribution
+of complete-population slopes and energy distances across all 32 saved draws.
+The shaded interval is the 16th--84th percentile range; the dotted reference
+is the raw Gaussian generator.
+
+The profile metrics are stable, but every neighbour configuration misses R90:
+its energy-distance ratio is 3.27--3.77 times the TNG split-half sampling
+floor. Across the 32 complete populations the median is 3.64, with a
+16th--84th percentile range of 3.47--3.76. This figure establishes that the
+failure is a model feature, not an unlucky draw. It also shows why no one
+stochastic metric is sufficient: the empirical generator improves profile
+CRPS and the self-consistent size-scaled plane while worsening R90 relative to
+the raw Gaussian.
+
+### `exp55_outer_failure_source`
+
+The left panels compare the TNG R50, R80, and R90 relations with the individually
+fitted analytic profile, the held-out conditional mean, and a complete generated
+population. The fixed `gamma=1.25` representation itself changes the R90 slope
+from 0.291 in TNG to 0.251 despite only 0.00437 dex median CoG RMS. The right
+panels test whether this error follows actual-minus-DiffMAH history residuals or
+the DiffMAH fit RMS. The correlations are weak, from about -0.03 to +0.05.
+
+The figure therefore assigns the dominant outer-size failure to the analytic
+tail before the halo map. It does not prove DiffMAH is lossless for every
+profile feature; it shows that the specific R90 residual lacks the signature
+expected if MAH smoothing were its main cause.
+
+### `exp55_outer_feature_audit`
+
+Each candidate extra halo quantity is fitted in the outer folds and compared
+with a mass-conditioned shuffle of that same quantity. The upper row uses the
+original `gamma=1.25` profile and the lower row uses `gamma=1.4`. One panel
+shows the change in median held-out CoG RMS; the other shows the largest
+mass-bin radial residual, so a tiny average gain cannot hide a newly worsened
+coherent profile shape.
+
+Portable DiffMAH-predicted growth, actual anchor growth, DiffMAH misses and fit
+RMS, formation redshift, concurrent accretion rate, and halo axis ratio all fail
+the combined gate. Several improve median RMS by a few ten-thousandths of a dex,
+but none also improves the radial residual relative to its shuffle. No extra
+halo feature is adopted from this audit.
+
+### `exp55_gamma_generator_comparison`
+
+This figure compares the fixed `gamma=1.25` and `gamma=1.4` profile families
+at every relevant layer: individually fitted representation, held-out mean
+radial residuals, profile CRPS and coverage, standard population planes, and
+R50/R80/R90 relations. The steeper `gamma=1.4` tail lowers density RMS from
+0.06601 to 0.06093 dex while changing CoG RMS by only +0.000030 dex. Its
+generated R90 energy-distance ratio improves from 3.40 to 2.20, and its
+self-consistent size-scaled-plane ratio improves from 1.47 to 0.68.
+
+The remaining R90 slope is 0.259, still below TNG's 0.291. The figure supports
+`gamma=1.4` as the better global baseline, but it also shows that no single
+fixed slope matches all halo masses.
+
+### Standard QA for fixed gamma=1.4
+
+The `outer_envelope/standard_qa_gamma1p4` directory contains the complete ten
+standard figures for the held-out `gamma=1.4` conditional mean and calibrated
+draws:
+
+- `qa_bins_exp55_gamma1p4_halo_map` and
+  `qa_dens_exp55_gamma1p4_halo_map` show the mass-binned cumulative and
+  differential profiles. The high-mass bin retains a coherent radial swing.
+- `qa_mass_kpc_aper`, `qa_mass_kpc_diff`, `qa_mass_Re_aper`, and
+  `qa_mass_Re_diff` give the cumulative and differential mass diagnostics in
+  physical and TNG-size-scaled apertures.
+- `qa_planes`, `qa_size`, `qa_cdf`, and `qa_cases` show the conditional mean's
+  population planes, size relations, marginal distributions, and representative
+  individual successes and failures.
+
+These standard panels deliberately distinguish the held-out conditional mean
+from a complete generated population. The stochastic population conclusions
+come from the experiment-specific figures, where every draw is measured at its
+own generated size.
+
+## Part V: mass-dependent outer-slope boundary test
+
+### `exp55_mass_dependent_outer`
+
+Panel A shows the R90 error of the individually fitted representation versus
+DiffMAH final peak halo mass for fixed `gamma=1.25`, fixed `gamma=1.4`, and the
+predeclared two-regime rule. The rule uses `gamma=1.4` below each training
+fold's 2/3 halo-mass quantile and `gamma=1.25` above it. Panels B and E compare
+held-out median shape residuals in the lowest and highest halo-mass terciles.
+Panel C compares energy-distance ratios in the two fixed-kpc planes, the
+self-consistent size-scaled plane, and R90. Panel D shows profile CRPS, and
+Panel F verifies that the fold-local mass thresholds are stable at
+`log10(M_peak/Msun)=13.452--13.459`.
+
+The two-regime generator reaches an R90 energy-distance ratio of 0.96, where
+one is the TNG sampling floor, compared with 2.20 for fixed `gamma=1.4` and
+3.40 for fixed `gamma=1.25`. Its profile CRPS is 0.06377 dex, only 0.40% worse
+than the best fixed-slope value, while all three standard population-plane
+ratios improve. The high-mass radial residual also shrinks substantially.
+
+Panel A is equally important: it shows structure around the hard transition.
+The figure therefore demonstrates a halo-mass dependence of the required outer
+slope, not a physical discontinuity at the adopted threshold. The next test
+must replace this boundary with a smooth low-complexity law.
+
+### Standard QA for the mass-dependent boundary
+
+The `mass_dependent_outer/standard_qa` directory repeats the complete standard
+battery for the held-out two-regime model:
+
+- `qa_bins_exp55_mass_dependent_outer` shows average CoGs and separates the raw
+  residual, which includes predicted amplitude, from the amplitude-pinned shape
+  residual. The largest raw median residual is about 5% at small radius in the
+  middle halo-mass bin; after removing amplitude it is about 2.7%.
+- `qa_dens_exp55_mass_dependent_outer` shows median surface-density residuals
+  mostly within about 0.04 dex across all three halo-mass terciles. The smooth
+  radial oscillation remains visible even when the cumulative CoGs overlap.
+- `qa_size_exp55_mass_dependent_outer` shows that the conditional mean is much
+  narrower than TNG, as a conditional mean must be. Its R50, R80, and R90
+  median offsets are small; stochastic recovery is judged in the custom figure.
+- `qa_mass_kpc_aper`, `qa_mass_kpc_diff`, `qa_mass_Re_aper`, and
+  `qa_mass_Re_diff` report cumulative and differential masses in physical and
+  TNG-size-scaled apertures.
+- `qa_planes`, `qa_cdf`, and `qa_cases` inspect conditional-mean plane geometry,
+  population marginals, and individual held-out profiles.
+
+The complete stochastic populations, rather than the conditional mean shown
+in several standard panels, have an R90 slope of 0.302 with a 16th--84th
+percentile range of 0.299--0.307, compared with 0.291 in TNG, and R90 scatter
+of about 0.099 dex compared with 0.104 dex in TNG. This distinction prevents a
+correctly narrow conditional mean from being mistaken for an under-dispersed
+generator.
+
+## Part VI: smooth outer-slope feasibility
+
+### `exp55_smooth_outer`
+
+The smooth candidate fixes the outer slope through
+
+```text
+gamma = 1.25 + 0.15 / [1 + exp((logMpeak - transition) / width)],
+```
+
+with the transition fixed at each outer-training fold's 2/3 halo-mass quantile.
+Panels A--C show the training median CoG RMS, density RMS, and absolute error in
+the stellar-mass--R90 slope for six predeclared widths from 0.05 to 0.80 dex.
+Each point is one outer fold. Width 0.20 dex is selected in every fold and is
+an interior grid value after the Stage 11 extension. The slope error decreases
+through 0.20 dex and then increases again, closing the original one-sided test.
+
+Panel D divides each smooth-model metric by the corresponding hard-boundary
+metric. Values below one favor the smooth law. The smooth model is essentially
+tied in profile CRPS, improves the second fixed-kpc plane and R90, but worsens
+the self-consistent size-scaled plane by 10.0034%, just beyond its 10% gate.
+Panel E shows median R90 versus halo mass for TNG, one hard-boundary population,
+and one smooth population. Panel F confirms the unanimous 0.20-dex training
+selection across all five outer folds.
+
+The complete result is formally not selected because it also raises the
+largest held-out mass-bin shape residual from 2.74% to 3.34%. Nevertheless, it
+is a strong feasibility result: profile CRPS is 0.06391 dex, nominal 68%
+coverage is 69.5%, the two fixed-kpc energy ratios are both about 0.61, and the
+R90 ratio is 0.93. The generated stellar-mass--R90 slope is 0.2895, compared
+with 0.2909 in TNG. Across all 32 complete populations the R90 energy ratio has
+median 0.92 and a 16th--84th percentile range of 0.85--0.95.
+
+### Standard QA for the smooth candidate
+
+The `smooth_outer/standard_qa` directory contains the full standard battery
+even though the candidate missed its formal gate, because the result is
+scientifically informative:
+
+- `qa_bins_exp55_smooth_outer` shows a raw inner-mass residual reaching about
+  6% in the middle halo-mass tercile, while the amplitude-pinned shape residual
+  peaks near 3.3%. This is the coherent failure that prevents selection.
+- `qa_dens_exp55_smooth_outer` shows that the cumulative residual corresponds
+  to a smooth density oscillation of roughly -0.04 to +0.04 dex around
+  5--30 kpc. The high-mass outer density is well controlled.
+- `qa_size_exp55_smooth_outer` shows the narrow held-out conditional mean. The
+  complete generated mass--size relation must be read from the custom figure
+  and the all-draw intervals, not from this mean-only panel.
+- `qa_mass_kpc_aper`, `qa_mass_kpc_diff`, `qa_mass_Re_aper`, and
+  `qa_mass_Re_diff` report the complete cumulative and differential mass
+  diagnostics in physical and TNG-size-scaled apertures.
+- `qa_planes`, `qa_cdf`, and `qa_cases` give the paired conditional-mean
+  population planes, marginal distributions, and representative individual
+  held-out predictions.
+
+The visual conclusion agrees with the gates: the smooth outer law solves the
+far-outer population relation, but a smaller intermediate-radius radial
+systematic remains. The extended grid shows that 0.20 dex is no longer a tested
+boundary. Further work should diagnose the radial systematic; changing the 10%
+gate after seeing the answer is not justified.

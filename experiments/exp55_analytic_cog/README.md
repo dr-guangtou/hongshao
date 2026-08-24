@@ -1,7 +1,10 @@
 # exp55 — Analytic curve-of-growth representation
 
 Status: COMPLETE for profile representation, the initial redshift-0.4
-halo-mapping test, and Stages 1--4 of the halo-map refinement.
+halo-mapping test, and Stages 1--11 of the halo-map refinement. The selected
+fixed-slope generator is retained as a baseline; the Stage 9 hard boundary is
+the strongest diagnostic generator, and the Stage 10 smooth law is promising
+but remains formally unselected because two final gates fail.
 
 ## Question
 
@@ -601,6 +604,369 @@ and why R90 retains a distribution offset. Candidate explanations should be
 tested through targeted halo information or a profile-relevant mean correction,
 not through unrestricted algebraic flexibility.
 
+## Predeclared overnight continuation: Stages 5--8
+
+The immediate failure to explain is the generated mass--R90 relation, not the
+overall CoG score. These stages preserve the five outer folds and keep all
+calibration inside the corresponding training galaxies.
+
+### Stage 5 — stochastic robustness
+
+First establish whether the selected neighbour-residual generator depends on
+Monte Carlo realization or arbitrary neighbour settings. Evaluate all 32 saved
+draws individually, repeat the generator with at least three random seeds, and
+compare 32, 64, 128, and 256 neighbours. Compare distances defined by final
+mass alone, the four DiffMAH coordinates, and all five halo inputs. Profile
+CRPS and 68%/90% coverage use every draw; population-plane and size statistics
+must report their draw-to-draw distribution rather than one realization.
+
+The stochastic conclusion is robust only if its improvement over the raw
+Gaussian has the same sign across seeds and reasonable neighbour choices. A
+distance choice is not promoted merely because it minimizes one noisy energy
+distance; it must preserve profile CRPS, coverage, both fixed-kpc planes, the
+self-consistent size-scaled plane, and R50/R80/R90.
+
+### Stage 6 — locate the outer-size failure
+
+Measure R50, R80, and R90 for the TNG CoG, the individually fitted analytic
+representation, the held-out conditional mean, and complete stochastic draws.
+This separates errors introduced by the fixed profile function from errors in
+the halo map and residual generator. Repeat the representation diagnostic for
+the existing 3-by-4 Sérsic-index and outer-slope grid; this is a reuse of fitted
+profiles, not a new family search.
+
+Use the actual halo masses at z=0.7, 1.0, 1.5, and 2.0 only as a diagnostic of
+DiffMAH compression. Compare the R90 residual with the actual-minus-DiffMAH
+mass-history residual and with the DiffMAH fit RMS. A weak association argues
+against MAH smoothing as the origin of the R90 defect; these non-portable
+quantities are not model inputs by default.
+
+### Stage 7 — one evidence-motivated profile correction, then halo features
+
+If Stage 6 identifies a fixed outer-slope contribution, compare the incumbent
+`n=1, gamma=1.25` profile with the already-fitted `n=1, gamma=1.4` candidate.
+The latter is eligible only if it simultaneously:
+
+- keeps the median representation CoG RMS within 0.0001 dex of the incumbent;
+- improves differential-density RMS and reduces the R90 mass-trend error;
+- does not worsen held-out profile CRPS by more than 1%;
+- does not increase the worst halo-mass-bin median shape residual by more than
+  10%; and
+- retains identifiable parameters and low boundary incidence.
+
+Only after that comparison, test a small feature audit: portable DiffMAH-
+predicted growth at the four observed redshifts; actual anchor growth and
+actual-minus-DiffMAH residuals as non-portable diagnostic ceilings; and the
+available concurrent accretion rate and halo axis ratio as explicitly labeled
+secondary-property tests. Each added information block receives a
+mass-conditioned shuffle control. No generic polynomial expansion is allowed.
+
+### Stage 8 — population confirmation and stopping rule
+
+For any profile or halo-map candidate that passes Stage 7, refit the nested
+stochastic calibration and run the complete standard QA battery. Require
+nominal 68% coverage within three percentage points, profile CRPS no more than
+1% worse than the Stage 4 generator, no more than 10% degradation in either
+fixed-kpc energy distance, and improvement in the R90 mean relation that is
+larger than its draw-to-draw variation. If no candidate passes, retain the
+Stage 4 model and record whether the missing ingredient is analytic-profile
+flexibility, halo information, or irreducible scatter.
+
+### Stage 9 — mass-dependent outer-slope boundary test
+
+Stage 6 shows opposite outer-size biases: `gamma=1.4` largely repairs the lower
+two halo-mass terciles, whereas `gamma=1.25` remains closer in the highest
+tercile. Test one rule fixed before fitting the halo map: use `gamma=1.4` below
+the outer-training sample's 2/3 halo-mass quantile and `gamma=1.25` above it.
+The threshold must be recomputed from each outer training fold and then frozen
+for its validation galaxies. Fit the profile-coordinate map with an explicit
+known-family indicator and resample residuals only from the same outer-slope
+regime.
+
+This discontinuous rule is a diagnostic ceiling, not the proposed final model.
+It is retained only if it improves representation CoG and density errors,
+keeps 68% coverage within three percentage points, changes profile CRPS by less
+than 1%, does not degrade either fixed-kpc or self-consistent size-scaled plane
+by more than 10%, and lowers the R90 energy distance relative to the best
+constant-slope model. A successful result motivates a later smooth
+`gamma(log M_h)` law; a failed result means that the apparent mass dependence
+does not survive the halo-map and stochastic layers.
+
+## Results of Stages 5--9
+
+All stochastic comparisons below use 2,539 held-out galaxies and 32 profile
+draws per halo. Profile CRPS and coverage use all draws. Population energy
+distances average four complete generated populations unless a draw-to-draw
+interval is stated. An energy-distance ratio near one means that the generated
+and TNG populations differ by no more than two independent TNG subsamples do.
+
+### Stage 5 result — the R90 failure is not Monte Carlo noise
+
+The calibrated neighbour-residual generator is stable in its marginal profile
+performance. Across three random seeds with 128 neighbours, profile CRPS is
+0.06350--0.06383 dex and nominal 68% coverage is 68.2--69.4%. Varying the
+neighbour count from 32 to 256 or defining neighbourhoods using final mass,
+the four DiffMAH coordinates, or all five halo inputs does not remove the
+outer-size failure. The R90 energy-distance ratio remains 3.27--3.77 times the
+TNG sampling floor.
+
+Evaluating all 32 saved complete populations gives a median R90 energy-distance
+ratio of 3.64, with a 16th--84th percentile range of 3.47--3.76. Their median
+mass--R90 slope is 0.250, with a 16th--84th percentile range of 0.241--0.256,
+whereas TNG has slope 0.291. The raw Gaussian residual generator has a smaller
+R90 energy-distance ratio of 2.58 even though it is worse in profile CRPS and
+the self-consistent size-scaled plane. Thus the neighbour generator is retained
+for its overall joint geometry, but it does not deserve credit for the R90
+relation. One stochastic score cannot substitute for the full QA battery.
+
+The inner calibration also depends on the declared draw count because empirical
+16th and 84th percentiles are discrete for a finite ensemble. Production
+comparisons in these stages therefore fix 32 draws; scale factors inferred from
+a 16-draw exploratory ensemble are not reused.
+
+### Stage 6 result — the fixed analytic tail creates most of the R90 trend error
+
+Before any halo mapping, the individually fitted `gamma=1.25` representation
+already changes the mass--R90 slope from the TNG value 0.291 to 0.251, lowers
+the scatter from 0.104 to 0.089 dex, and shifts the median R90 high by about
+0.031 dex. Its overall median CoG RMS is only 0.00437 dex. This is an important
+counterexample: excellent integrated-profile accuracy does not guarantee that
+an outer quantile has the correct population dependence.
+
+The actual-minus-DiffMAH halo-mass residuals at redshifts 0.7, 1.0, 1.5, and
+2.0 have correlations from -0.030 to +0.045 with the R90 error. The DiffMAH
+history-fit RMS has correlation -0.031. Adding these quantities to the
+held-out halo map produces no coherent improvement relative to mass-conditioned
+shuffles. There is therefore no evidence in this test that smoothing the actual
+MAH into four DiffMAH parameters causes the R90 defect. The dominant evidence
+points instead to the globally fixed outer profile shape.
+
+### Stages 7--8 result — gamma=1.4 is a better fixed-slope baseline
+
+Changing only the globally fixed extended-component slope from `gamma=1.25`
+to `gamma=1.4` changes the median representation CoG RMS by just +0.000030 dex,
+from 0.004371 to 0.004402 dex, while lowering the median density RMS from
+0.06601 to 0.06093 dex. The fitted-parameter boundary fraction falls from
+2.55% to about 0.35%. Every one of the five outer-training folds passes the
+predeclared representation, density, R90-trend, and boundary gates.
+
+After refitting the halo map and stochastic calibration, `gamma=1.4` keeps
+profile CRPS essentially unchanged at 0.06352 dex, compared with 0.06350 dex
+for `gamma=1.25`, and gives nominal 68% coverage of 68.6%. It lowers the
+generated R90 energy-distance ratio from 3.40 to 2.20 and the self-consistent
+size-scaled-plane ratio from 1.47 to 0.68. The R90 mass slope improves only
+from 0.253 to 0.259, still short of TNG's 0.291. The fixed `gamma=1.4` family is
+therefore a clearly better global baseline, not a complete solution.
+
+None of the audited halo features earns adoption. Portable DiffMAH-predicted
+growth, non-portable actual anchor growth, actual-minus-DiffMAH residuals,
+DiffMAH fit RMS, formation redshift, concurrent accretion rate, and halo axis
+ratio were each compared with a mass-conditioned shuffle. Some lower the
+median profile RMS by a few ten-thousandths of a dex, but none also improves
+the coherent radial residual. This negative result prevents a profile-family
+error from being misidentified as missing halo information.
+
+### Stage 9 result — a halo-mass-dependent outer slope passes the full test
+
+The predeclared boundary rule is
+
+```text
+gamma = 1.40,  log10(M_peak/Msun) < log10(M_threshold/Msun)
+      = 1.25,  otherwise,
+```
+
+where each outer fold determines `M_threshold` from the 2/3 quantile of its
+training galaxies only. The five thresholds span 13.452--13.459. The profile
+family is known from halo mass before fitting the held-out galaxy; it is not
+selected from that galaxy's stellar profile. The halo map includes the known
+family indicator, and stochastic residuals are resampled only among training
+galaxies in the same family.
+
+At the representation level, the boundary model lowers the median CoG RMS to
+0.004009 dex and the density RMS to 0.05624 dex. Its largest median shape
+residual across the three halo-mass bins is 1.14%, compared with 2.37% for
+fixed `gamma=1.25` and 2.85% for fixed `gamma=1.4`. At the held-out
+conditional-mean level, its median CoG RMS is 0.08417 dex and its largest
+mass-bin shape residual is 2.74%, compared with 0.08415 dex and 5.59% for the
+fixed `gamma=1.4` mean. The improvement is therefore mainly removal of a
+coherent mass-dependent radial bias, not a change in typical per-galaxy error.
+
+The generated population passes every predeclared gate. Profile CRPS is
+0.06377 dex, only 0.40% worse than the fixed `gamma=1.4` value of 0.06352 dex,
+and nominal 68% coverage is 68.9%. The energy-distance ratios are 0.61 and
+0.74 for the two fixed-kpc planes, 0.66 for the self-consistent size-scaled
+plane, and 0.96 for R90. The R90 ratio is below the fixed `gamma=1.4` value
+of 2.20 and consistent with the TNG sampling floor. Across eight individual
+complete populations, the median R90 ratio is 0.98 with a 16th--84th
+percentile range of 0.93--1.12. Their median R90 mass slope is 0.302, with a
+range of 0.299--0.307, compared with 0.291 in TNG; their median R90 scatter is
+0.099 dex, compared with 0.104 dex in TNG.
+
+The assembly controls remain decisive under the changed profile family. The
+complete halo map has 0.08417 dex median held-out CoG RMS. Final mass alone has
+0.11029 dex, a mass-conditioned shuffled MAH has 0.09526 dex, and shuffled
+concentration has 0.08787 dex. The real pairing therefore improves this error
+by 23.7%, 11.6%, and 4.2%, respectively. The outer-slope correction does not
+replace the assembly and concentration information.
+
+### Decision after Stages 5--9
+
+Stage 9 establishes a specific result: one globally fixed outer density slope
+is too restrictive, and its required change is strongly organized by halo
+mass. It does not establish a discontinuous physical transition at
+`log10(M_peak/Msun) about 13.456`. The representation R90 residual visibly
+changes across that hard boundary, and the threshold was chosen as a simple
+diagnostic split rather than inferred as a physical scale.
+
+Retain three distinct records:
+
+1. `gamma=1.25` is the original Exp55 representation baseline.
+2. `gamma=1.4` is the preferred single-slope baseline because it improves the
+   density profile, parameter conditioning, and outer population geometry at
+   negligible CoG cost.
+3. The fold-local two-regime model is the strongest diagnostic generator and
+   demonstrates the value available from a mass-dependent slope. It is not the
+   final analytic prescription.
+
+The next model change should replace the hard family switch with one smooth,
+low-complexity `gamma(log M_peak)` law. Its transition scale and width must be
+selected inside the outer training folds, and it must repeat the same
+representation, identifiability, null-control, coverage, radial-residual, and
+population-geometry gates. Do not free `gamma` independently for every galaxy:
+that would reintroduce the component degeneracies Exp55 was designed to avoid.
+
+### Stage 10 — predeclared smooth outer-slope feasibility test
+
+Because the Stage 9 boundary passes, test the minimum continuous replacement
+before adding any new halo feature or profile component:
+
+```text
+gamma(m) = 1.25 + 0.15 / [1 + exp((m - m_transition) / width)],
+m = log10(M_peak/Msun).
+```
+
+The two asymptotic slopes are the already-tested values, not new fitted galaxy
+parameters. In every outer fold, set `m_transition` to the 2/3 quantile of the
+training halo masses and compare only widths 0.05, 0.10, and 0.20 dex. Select
+the width on the training galaxies using these ordered gates: median CoG RMS
+must be within 0.0001 dex of fixed `gamma=1.4`, density RMS must not be worse,
+and boundary incidence must remain below the original `gamma=1.25` value; among
+passing widths, choose the smallest absolute error in the training stellar-
+mass--R90 slope, using each representation's own stellar mass within 148.2 kpc.
+If none passes, retain fixed `gamma=1.4` and stop.
+
+Fit each galaxy's four profile coordinates at its prescribed gamma; do not
+interpolate final CoGs between the two fixed families. Before the full run,
+benchmark the existing four-start solver and a 90-galaxy end-to-end path. Use a
+warm-start shortcut only if the full solver is prohibitive, and then compare it
+with the four-start result on at least 100 representative galaxy--gamma pairs.
+For a passing smooth representation, repeat the same held-out halo map,
+local-neighbour residual calibration, null controls, and Stage 9 population
+gates. A smooth law is preferred to the hard boundary only if it preserves the
+boundary model's R90 improvement without worsening profile CRPS or the coherent
+mass-bin residual. This is a feasibility test at redshift 0.4, not yet a claim
+that the law transfers across epoch.
+
+For the final comparison, require nominal 68% coverage within three percentage
+points; profile CRPS and each standard population-plane energy distance no more
+than 1% and 10% above the boundary model, respectively; the largest mass-bin
+shape residual no larger than the boundary model; and R90 energy distance no
+more than 10% above the boundary model and still below fixed `gamma=1.4`.
+Failure of any gate keeps the hard boundary as a diagnostic ceiling and fixed
+`gamma=1.4` as the deployable single-slope baseline.
+
+### Stage 10 result — the smooth law is feasible but not formally selected
+
+The established four-start profile solver takes 0.0116 seconds per
+galaxy--slope pair in a measured 30-object benchmark, so no warm-start
+approximation was needed. Every galaxy was refitted for all three widths in
+each outer fold, with each fold-and-width cell checkpointed independently.
+
+All three widths pass the training-only CoG, density, and boundary-incidence
+gates. All five folds select width 0.20 dex because it best preserves the
+training stellar-mass--R90 slope. This unanimity is encouraging, but 0.20 dex
+is the largest tested width, so it is a boundary result rather than a measured
+optimum. Across the final held-out galaxies the assigned gamma values have a
+median of 1.352, a 16th--84th percentile range of 1.279--1.380, and a full
+range of 1.250--1.396.
+
+The smooth representation has 0.004041 dex median CoG RMS and 0.05650 dex
+density RMS. Its largest representation-level mass-bin shape residual is
+1.55%, compared with 1.14% for the hard boundary. The held-out conditional
+mean has 0.08427 dex median CoG RMS and 0.12541 dex density RMS, nearly
+unchanged from the hard boundary's 0.08417 and 0.12615 dex, but its largest
+coherent mass-bin shape residual is 3.34%, 21.7% above the hard-boundary value
+of 2.74%.
+
+The generated population otherwise performs extremely well. Its profile CRPS
+is 0.06391 dex, only 0.23% worse than the hard boundary's 0.06377 dex, and its
+nominal 68% interval covers 69.5% of TNG profile points. The two fixed-kpc
+energy-distance ratios are 0.61 and 0.61, compared with 0.61 and 0.74 for the
+hard boundary. The R90 ratio is 0.93, compared with 0.96, and the generated
+stellar-mass--R90 slope is 0.2895, essentially the TNG value of 0.2909. Across
+all 32 complete populations the median R90 energy ratio is 0.92, with a
+16th--84th percentile range of 0.85--0.95; the median slope is 0.2889, with a
+range of 0.2809--0.2929.
+
+The smooth law fails two predeclared final gates. Its self-consistent
+size-scaled energy ratio is 0.72075, which is 10.0034% above the hard-boundary
+value of 0.65521 and therefore just outside the 10% allowance. Across 32
+complete populations, however, the smooth and hard-boundary distributions
+overlap: their median ratios are 0.759 and 0.698, respectively. The second
+failure is not a rounding accident: the 3.34% coherent profile residual is
+meaningfully larger than 2.74%. The formal decision is therefore not to replace
+the hard-boundary diagnostic or the fixed `gamma=1.4` baseline.
+
+The scientific conclusion is narrower and positive. A continuous
+halo-mass-dependent outer slope reproduces the TNG R90 population relation
+without sacrificing marginal profile accuracy or either fixed-kpc population
+plane. The remaining disagreement concerns the exact conditional-mean radial
+shape and the self-consistent size-scaled plane. This one-sided width result
+motivates the separately declared Stage 11 closure below; it does not justify
+tuning the current gate after seeing the result.
+
+The null controls remain intact. Relative to the complete smooth model, final
+halo mass alone has 23.0% larger median held-out CoG RMS, a mass-conditioned
+shuffled MAH has 11.1% larger error, and shuffled concentration has 3.8% larger
+error. Smoothing the outer-slope law does not remove the independently measured
+assembly and concentration information.
+
+### Stage 11 — predeclared smooth-width closure
+
+Stage 10 selects the largest tested width in every outer fold, so it does not
+close the smooth-law question. Extend only the width grid by adding 0.30, 0.50,
+and 0.80 dex to the existing 0.05, 0.10, and 0.20 dex values. Keep the logistic
+endpoints, fold-local 2/3-mass transition, training gates, stellar-mass--R90
+selection metric, halo map, residual generator, null controls, and final
+boundary comparison unchanged.
+
+Every new galaxy--width profile must be fitted with the established four-start
+solver and checkpointed. A wider law is adopted only if it passes the exact
+Stage 10 final gates; overlapping draw-to-draw intervals do not override a
+failed predeclared gate. Stop after this grid. If 0.80 dex is selected, report
+another one-sided result rather than extending again. If an interior width is
+selected but the radial-shape or size-scaled gate still fails, retain the
+formal non-selection and locate that residual before any multi-epoch test.
+
+### Stage 11 result — width 0.20 dex is an interior choice
+
+The extended grid resolves the one-sided result without changing the selected
+law. All five outer folds again choose width 0.20 dex after considering 0.30,
+0.50, and 0.80 dex. The median training absolute error in the stellar-mass--R90
+slope, across the five folds, is 0.0146, 0.0107, 0.0020, 0.0051, 0.0134, and
+0.0196 for widths 0.05, 0.10, 0.20, 0.30, 0.50, and 0.80 dex, respectively.
+Thus 0.20 dex is now an interior, reproducible grid choice rather than a
+parameter pinned at the edge. The grid is still coarse and does not imply a
+high-precision physical measurement of the transition width.
+
+Because the selected width is unchanged, the held-out profile, population,
+null-control, and all-32-draw results are numerically unchanged from Stage 10.
+The smooth law remains formally unselected: it misses the size-scaled gate by
+the declared tiny margin and has a genuinely larger 3.34% coherent radial
+residual than the hard boundary's 2.74%. The width grid is closed. The next
+analysis should target that 5--30 kpc radial pattern rather than add more
+transition widths or relax a gate.
+
 ## Files and commands
 
 The implementation lives entirely in this folder. Figures and numerical
@@ -627,4 +993,19 @@ EXP55_REFINE_NMAX=90 EXP55_REFINE_N_DRAW=4 PYTHONPATH=. uv run python \
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/refine_halo_map.py run
 PYTHONPATH=. uv run python \
   experiments/exp55_analytic_cog/refine_halo_map.py figures
+EXP55_OUTER_NMAX=90 EXP55_OUTER_N_DRAW=4 PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/outer_envelope.py demo
+PYTHONPATH=. uv run python experiments/exp55_analytic_cog/outer_envelope.py run
+PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/outer_envelope.py figures
+EXP55_MASS_GAMMA_NMAX=90 EXP55_MASS_GAMMA_N_DRAW=4 PYTHONPATH=. \
+  uv run python experiments/exp55_analytic_cog/mass_dependent_outer.py demo
+PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/mass_dependent_outer.py run
+PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/mass_dependent_outer.py figures
+EXP55_SMOOTH_NMAX=90 EXP55_SMOOTH_N_DRAW=4 PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/smooth_outer.py demo
+PYTHONPATH=. uv run python experiments/exp55_analytic_cog/smooth_outer.py run
+PYTHONPATH=. uv run python experiments/exp55_analytic_cog/smooth_outer.py figures
 ```
