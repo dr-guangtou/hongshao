@@ -599,7 +599,15 @@ The adopted model's own parameters barely move under the per-epoch fit
 
 ---
 
-## Stage 3.4 — the representational ceiling (`stage34_ceiling.py`, `stage34_objective.py`, `stage34_basis_scan.py`), COMPLETE (v2)
+## Stage 3.4 — how good could a model of this kind ever be? (`stage34_ceiling.py`, `stage34_objective.py`, `stage34_basis_scan.py`), COMPLETE (v2)
+
+> **Read `doc/tech_note/deposition_model_2026-08.md` Section 8 instead if you
+> want this in plain language.** What follows is the working record, written for
+> someone editing the code: it uses the internal metric names (`score_F` is the
+> profile-shape error divided by the previous generation's 15.8 per cent, so
+> multiply by 15.8 to get a typical per-cent error of the normalised cumulative
+> profile; `score_A` is the total-mass error divided by a plain statistical
+> fit's scatter, so 1.30 means 30 per cent more scatter than a regression).
 
 Stage 3.0 bounded the AMPLITUDE and killed a survival term before anyone built
 it. This asks the same question of the SHAPE. **This section describes v2**,
@@ -638,18 +646,18 @@ against finite differences to 1e-8).
 
 ### The ladder — `score_F`, cohort, lower is better
 
-| bound | freedom/galaxy | mean over epochs |
-|---|---|---|
-| monotone in time, shape loss only | basis-free | **0.009** — *not a floor* |
-| monotone in time, amplitude + shape | basis-free | 0.195 |
-| monotone in time, absolute-fractional (exact PAVA) | basis-free | 0.286 |
-| each epoch fitted alone (not causal) | 5 x ~71 | <= 0.164 |
-| **one causal weight vector, EXACT shape loss** | **~71** | **0.282** |
-| the same under the NNLS surrogate | ~71 | 0.538 |
-| *control*: fitted to ANOTHER galaxy, exact loss | ~71 | **0.319** |
-| 8 deposit-group amplitudes (surrogate) | 8 | 0.614 |
-| 5 epoch-interval amplitudes (surrogate) | 5 | 0.762 |
-| **the fitted model** | 0 (7 global) | **0.898** |
+| bound | freedom/galaxy | `score_F` | = shape error |
+|---|---|---|---|
+| monotone in time, shape loss only | basis-free | **0.009** — *not a floor* | 0.1% |
+| monotone in time, amplitude + shape | basis-free | 0.195 | 3.1% |
+| monotone in time, absolute-fractional (exact PAVA) | basis-free | 0.286 | 4.5% |
+| each epoch fitted alone (not causal) | 5 x ~71 | <= 0.164 | 2.6% |
+| **one causal weight vector, EXACT shape loss** | **~71** | **0.282** | **4.5%** |
+| the same under the NNLS surrogate | ~71 | 0.538 | 8.5% |
+| *control*: fitted to ANOTHER galaxy, exact loss | ~71 | **0.319** | **5.0%** |
+| 8 deposit-group amplitudes (surrogate) | 8 | 0.614 | 9.7% |
+| 5 epoch-interval amplitudes (surrogate) | 5 | 0.762 | 12.1% |
+| **the fitted model** | 0 (7 global) | **0.898** | **14.2%** |
 
 `score_A` on the cohort: exact amplitude bound 0.022, surrogate ceiling 0.150,
 permuted control 0.200, **model 1.278**.
