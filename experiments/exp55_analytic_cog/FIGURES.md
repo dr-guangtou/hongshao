@@ -1,10 +1,15 @@
 # exp55 figure guide
 
-This guide describes the complete QA set for the selected analytic curve of
-growth (CoG): a compact Sérsic component with globally fixed index `n = 1`
-plus an extended Moffat component with globally fixed `gamma = 1.25`.
+This guide has two parts. The first describes how well the selected analytic
+curve of growth (CoG) represents a known galaxy profile. The second describes
+the new held-out prediction of that analytic profile from halo assembly. The
+fixed function in both parts is a compact Sérsic component with globally fixed
+index `n = 1` plus an extended Moffat component with globally fixed
+`gamma = 1.25`.
 
-## What is being evaluated
+## Part I: profile representation
+
+### What is being evaluated
 
 Each of the 2,545 redshift-0.4 TNG300 CoGs is fitted independently with four
 galaxy-level parameters: stellar mass within 148.2 kpc, compact mass fraction
@@ -22,7 +27,7 @@ Sérsic/Moffat index pair selected on the other folds. The per-galaxy profile
 parameters still come from that galaxy's own CoG because representation, not
 halo prediction, is the question in exp55.
 
-## Main conclusions from the QA battery
+### Main conclusions from the QA battery
 
 - Cumulative aperture masses are reproduced extremely well. The scatter in
   `log10(model/truth)` is 0.005 dex inside 10 and 30 kpc, 0.006 dex inside
@@ -44,7 +49,7 @@ halo prediction, is the question in exp55.
 These results support the analytic function as a compact CoG representation,
 but they do not justify ignoring its outer-density limitation.
 
-## Why a good CoG can have a visibly worse density residual
+### Why a good CoG can have a visibly worse density residual
 
 The CoG is cumulative, while the plotted surface density is derived from the
 mass in each finite annulus:
@@ -66,7 +71,7 @@ annulus centred near 140 kpc, the corresponding values are 1.09%, 0.00531 dex,
 and 0.132 dex. Both TNG and model pass through the same finite-difference
 operator, so this is a genuine local-slope limitation, not a rendering error.
 
-## Figure-by-figure captions
+### Figure-by-figure captions
 
 ### `exp55_qa_radial_summary`
 
@@ -168,7 +173,7 @@ error over the measured radii. The worst examples reach 15--20% local error,
 even though the median galaxy's maximum error is 2.2%. These tails motivate
 retaining a per-object fit-quality and conditioning flag.
 
-## What should happen next
+### What should happen next
 
 The next experiment should predict the four profile parameters from halo
 properties in held-out galaxies. The same standard QA set should then be
@@ -176,3 +181,153 @@ repeated on those halo-predicted profiles. The expected errors will be much
 larger than the representation errors measured here, and the total stellar mass
 will become a genuine halo-model prediction rather than a parameter fitted from
 the known galaxy CoG.
+
+## Part II: held-out halo-to-analytic-profile map
+
+### What is being evaluated
+
+The halo map predicts all four galaxy-level analytic coordinates from the four
+DiffMAH parameters and redshift-0.4 halo concentration. All predictions are
+held out in five folds. The conditional mean measures how much galaxy-to-galaxy
+structure is predictable from the halo; 32 correlated parameter draws per halo
+represent the remaining conditional distribution. The relevant comparison is
+therefore the TNG CoG itself, not the fitted analytic representation.
+
+The map uses 2,539 galaxies rather than the 2,545 representation sample because
+six galaxies lack a complete finite halo-feature vector. The standard QA plots
+show the selected degree-2 model. The three experiment-specific figures add the
+null controls, parameter-level interpretation, representation floor, and direct
+Exp50 comparison.
+
+### Main conclusions from the halo-map QA
+
+- The analytic conditional mean and the Exp50 readable-coordinate conditional
+  mean have effectively identical cumulative-profile accuracy. Their median
+  per-galaxy CoG RMS errors differ by only -0.000058 dex in favor of the
+  analytic map, and each wins for approximately half of the galaxies.
+- The complete halo input lowers profile CRPS by 25.84% relative to final halo
+  mass alone, by 13.20% relative to mass-conditioned shuffled DiffMAH shape,
+  and by 4.44% relative to mass-conditioned shuffled concentration. Assembly
+  and concentration therefore contribute distinct held-out information.
+- Stellar mass within 148.2 kpc is strongly predictable from the halo
+  (held-out R2=0.865), while compact fraction and compact radius are weakly
+  predictable (R2=0.060 and 0.068). The reconstructed profile is more useful
+  than a deterministic reading of each component parameter.
+- The conditional mean is too narrow in the fixed-kpc population planes. The
+  correlated draws restore and sometimes exceed the missing diversity. In the
+  tight size-scaled `<2Re` versus `2--4Re` plane, their 0.213 dex scatter is
+  nearly three times the TNG scatter of 0.072 dex. The stochastic residual
+  model needs another round before it is a satisfactory population generator.
+- Pointwise profile intervals are nevertheless close to calibrated: the
+  nominal 68% interval contains 68.3% of TNG profile points, and the nominal
+  90% interval contains 87.4%. This is useful but demonstrably insufficient as
+  the sole calibration test.
+
+### Experiment-specific figures
+
+#### `exp55_halo_map_skill`
+
+Three matched bar charts compare final mass alone, real and shuffled assembly
+features, linear and degree-2 means, the selected analytic map, and the Exp50
+reference. The panels report mean profile CRPS, median cumulative-profile RMS,
+and median density-profile RMS. The ordered control improvements establish the
+incremental value of MAH shape and concentration, while the Exp50 bars show
+that the analytic target changes interpretability and continuity more than raw
+predictive accuracy.
+
+#### `exp55_halo_map_parameters`
+
+The upper row compares each fitted analytic coordinate with its held-out
+conditional mean; the lower row shows residual versus truth. The total mass is
+tightly predicted, extended radius has moderate information, and compact
+fraction plus compact radius show strong regression toward their population
+means. These panels explain why a good reconstructed CoG does not imply that
+every component parameter is a well-determined halo outcome.
+
+#### `exp55_halo_map_radial`
+
+Median absolute profile and density errors are shown as functions of radius for
+final mass alone, shuffled MAH shape, the selected analytic map, the analytic
+representation floor, and Exp50. The analytic map tracks Exp50 closely in the
+CoG, is slightly worse in density, and remains far above the representation
+floor. Halo prediction, not the fixed analytic formula, dominates the present
+error budget.
+
+### Standard QA figures for the halo map
+
+#### `qa_mass_kpc_aper_exp55_halo_map`
+
+Held-out predicted versus TNG cumulative stellar masses inside 10, 30, 50, and
+100 kpc, with residuals versus true mass. Median biases stay between -0.5% and
++2.1%, while per-galaxy scatter decreases from 0.111 dex at 10 kpc to 0.097 dex
+at 100 kpc.
+
+#### `qa_mass_kpc_diff_exp55_halo_map`
+
+Held-out annular and outer-envelope masses. Scatter is 0.153, 0.164, and 0.166
+dex in the 10--30, 30--50, and 50--100 kpc annuli. Mass beyond 100 kpc retains
+a +15.8% median bias and 0.188 dex scatter, making it the clearest physical-kpc
+limitation.
+
+#### `qa_mass_Re_aper_exp55_halo_map`
+
+Cumulative masses inside one, two, and four TNG half-mass radii. The TNG radius
+is used for both truth and model in each pair, separating mass-profile error
+from error in the model's own predicted size.
+
+#### `qa_mass_Re_diff_exp55_halo_map`
+
+Annular and envelope masses in TNG half-mass-radius units. The figure tests
+whether the halo map places stellar mass correctly relative to each galaxy's
+true size, including the weakly constrained outer envelope.
+
+#### `qa_bins_exp55_halo_map`
+
+Median TNG and conditional-mean CoGs in three DiffMAH final-mass bins, with
+fractional residuals. The solid residual includes the predicted total stellar
+mass; the dotted residual removes amplitude to isolate profile shape.
+
+#### `qa_dens_exp55_halo_map`
+
+Median annular surface-density profiles and residuals in the same three halo-
+mass bins. The conditional mean overpredicts the outer density most clearly in
+the lower-mass bin; this radial structure is less apparent in cumulative CoGs.
+
+#### `qa_planes_exp55_halo_map`
+
+The three standard redshift-0.4 population planes for TNG and the conditional
+mean. The two fixed-kpc planes are too narrow: for example, the `<30 kpc`
+versus `50--100 kpc` vertical scatter contracts from 0.206 dex in TNG to 0.083
+dex in the mean prediction. This is expected for a conditional mean but sets
+the diversity that stochastic draws must recover.
+
+#### `qa_size_exp55_halo_map`
+
+The TNG and conditional-mean mass--R50 plane plus median offsets in R50, R80,
+and R90. Median offsets are small, from -0.004 dex for R50 to +0.018 dex for
+R90, while the predicted mean relations remain substantially narrower than
+TNG.
+
+#### `qa_cdf_exp55_halo_map`
+
+Population cumulative distributions for representative aperture and annular
+masses. Solid curves are TNG and dashed curves are the conditional mean; the
+lower panels show model-minus-TNG distribution differences relative to the
+truth's split-half sampling floor.
+
+#### `qa_cases_exp55_halo_map`
+
+Two best and two worst held-out predictions ranked by the maximum fractional
+CoG error. The worst cases are failures of the halo-to-profile prediction,
+especially its regressed total stellar mass, rather than evidence that the
+analytic function cannot fit those known profiles.
+
+### What should happen next
+
+Do not free the two globally fixed component indices or add redshift evolution
+yet. First rotate or otherwise reorganize the four-coordinate residuals into
+modes that distinguish halo-predictable structure from stochastic structure.
+Re-fit the conditional distribution and require its population draws to match
+the fixed-kpc and size-scaled planes as well as pointwise CoG coverage. Only
+after that calibration test passes should the same fixed analytic family be
+carried across the Exp51 epochs.

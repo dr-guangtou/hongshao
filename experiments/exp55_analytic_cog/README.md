@@ -1,6 +1,7 @@
 # exp55 — Analytic curve-of-growth representation
 
-Status: COMPLETE for the profile-representation and identifiability question.
+Status: COMPLETE for profile representation and the initial redshift-0.4
+halo-mapping test.
 
 ## Question
 
@@ -15,9 +16,10 @@ This experiment deliberately separates two questions:
 1. Can a function represent an individual galaxy profile?
 2. Can halo assembly predict the function's parameters?
 
-Only the first is tested here. A profile parameterization that is degenerate on
-the measured CoG is not a suitable halo-map target, regardless of how small its
-residuals are.
+The first stage tests the representation and its identifiability. The second
+stage tests the halo map in held-out galaxies. A profile parameterization that
+is degenerate on the measured CoG is not a suitable halo-map target, regardless
+of how small its residuals are.
 
 ## Scope
 
@@ -276,7 +278,7 @@ The component shape grid is deliberately small. Before any physical reading,
 the parameters must survive observational degradation, other epochs, and
 comparison with independently tagged in-situ/ex-situ stellar populations.
 
-## Next experiment
+## Halo-mapping stage
 
 Map the four selected parameters from epoch-local DiffMAH and concurrent halo
 properties using the same held-out folds as Exp50--Exp51. Compare against
@@ -285,6 +287,107 @@ parameters jointly with their residual covariance, reconstruct full profiles,
 and judge the result on held-out cumulative and density profiles. Do not add
 redshift evolution or free component indices until that single-epoch halo map
 shows that the parameters are predictable.
+
+The predeclared implementation is:
+
+1. use the fixed global `n = 1`, `gamma = 1.25` representation and its four
+   per-galaxy optimizer coordinates as the joint target;
+2. predict their conditional distribution from the portable z=0.4 feature
+   vector `[DiffMAH(4), c_200c]` in five held-out folds;
+3. compare a linear mean with the established sparse degree-2 mean, final halo
+   mass alone, DiffMAH without concentration, mass-conditioned shuffled MAH
+   shape, and mass-conditioned shuffled concentration;
+4. reconstruct every held-out mean and correlated parameter draw into a full
+   CoG, then score the profile rather than only the intermediate parameters;
+5. report parameter variance explained, cumulative- and density-profile error,
+   calibrated profile draws, and the complete standard QA battery, including
+   best and worst individual galaxies and population planes.
+
+The assembly claim is gated on the correctly paired full model outperforming
+the shuffled-MAH control. The analytic target is useful only if its reconstructed
+held-out profiles remain competitive with the Exp50 readable-coordinate map;
+good parameter scores alone are insufficient.
+
+### Halo-mapping results
+
+The halo map uses 2,539 galaxies with finite analytic-profile fits, DiffMAH
+parameters, and redshift-0.4 concentration. Every number is evaluated on the
+held-out member of the same five deterministic folds used by Exp50 and Exp51.
+The selected model predicts the four optimizer coordinates jointly from the
+four DiffMAH parameters and `c_200c`, using a degree-2 mean and a full,
+input-dependent residual covariance. Thirty-two correlated parameter draws per
+halo propagate the remaining scatter into full CoGs.
+
+The conditional-mean profiles have a median per-galaxy RMS error of 0.08519 dex
+in `log10 M*(<R)` relative to the TNG CoGs. On the identical galaxies, this is
+0.000058 dex lower than the Exp50 readable-coordinate map, and the analytic map
+has the lower error for 50.2% of galaxies: their mean-profile accuracy is
+effectively tied. The analytic map's mean profile CRPS is 0.06421 dex, 0.00094
+dex worse than Exp50's 0.06327 dex, and its median density-profile RMS error is
+0.00371 dex worse. The continuous analytic profile therefore retains the
+predictive information of Exp50 to useful precision, but it is not a more
+accurate halo map.
+
+The null controls establish a real assembly signal under this model. Relative
+to final halo mass alone, the complete model lowers mean profile CRPS by 25.84%.
+It lowers CRPS by 13.20% relative to a control that shuffles the three DiffMAH
+shape parameters among galaxies of similar final halo mass, and by 4.44%
+relative to the analogous shuffled-concentration control. The complete model
+also improves by 3.84% over a linear mean using the same five halo inputs. In a
+paired comparison, using the real rather than shuffled MAH shape lowers the
+median galaxy's cumulative-profile RMS error by 0.01077 dex; the bootstrap
+16th--84th percentile interval is 0.00992--0.01203 dex, and the real pairing is
+better for 61.6% of galaxies. Thus halo assembly and concentration contain
+profile information beyond final halo mass, although most individual galaxies
+still retain large stochastic scatter.
+
+The four analytic coordinates are not equally predictable. The held-out
+variance explained is 86.5% for stellar mass within 148.2 kpc and 33.7% for the
+extended-component radius, but only 6.0% for compact fraction and 6.8% for
+compact-component radius. This does not invalidate the reconstructed profile:
+different combinations of the weakly predicted coordinates can describe
+similar profile variations, and their joint residual distribution carries
+information that their conditional means do not. It does mean that the fitted
+compact fraction and compact radius should not be treated as deterministic halo
+outcomes or assigned an in-situ/ex-situ interpretation.
+
+The standard QA exposes the difference between a useful probabilistic profile
+prediction and a complete population model. For the conditional mean, the
+median bias is +2.1% for `M*(<10 kpc)`, +0.6% for `M*(<30 kpc)`, and -0.5% for
+`M*(<100 kpc)`; the corresponding per-galaxy scatters are 0.111, 0.101, and
+0.097 dex. Differential masses are harder: the 50--100 kpc annulus has 0.166
+dex scatter, while mass beyond 100 kpc has +15.8% median bias and 0.188 dex
+scatter. These are halo-prediction errors, roughly twenty times the analytic
+representation floor, not failures of the continuous profile formula alone.
+
+The correlated draws give 68.3% pointwise coverage for a nominal 68% interval
+and 87.4% for a nominal 90% interval. Pointwise coverage is not sufficient,
+however. Averaged over four independent population draws, the scatter in the
+`M*(<2 R_e)` versus `M*(2--4 R_e)` plane is 0.213 dex, compared with 0.072 dex
+in TNG, and its energy-distance ratio to the TNG split-half sampling floor is
+4.21. The conditional mean has the opposite failure in the fixed-kpc planes:
+it is too narrow because it omits residual diversity. The present Gaussian
+residual model therefore captures marginal uncertainty better than all derived
+joint population structure.
+
+### Decision after the halo map
+
+The fixed-shape analytic CoG is a viable continuous target for a direct
+DiffMAH-to-profile model at redshift 0.4. It reproduces held-out CoGs as well as
+the Exp50 sampled-coordinate decoder and passes both assembly and concentration
+shuffle controls. It has not demonstrated that its individual compact and
+extended coordinates are physical halo variables, nor has its stochastic
+population model passed all joint-distribution tests.
+
+The next step should therefore refine the residual representation before
+adding redshift evolution or freeing the global component shapes. A practical
+test is to rotate the four fitted coordinates into data-constrained residual
+modes, predict only the halo-dependent modes, and model any nearly halo-
+independent modes as explicitly stochastic. The revised draws must be judged
+on the standard fixed-kpc and size-scaled population planes, not only on
+coordinate R2 or pointwise coverage. If that improves joint calibration without
+degrading the held-out CoGs, the same fixed analytic family can then be tested
+at the other Exp51 epochs.
 
 ## Files and commands
 
@@ -304,4 +407,7 @@ PYTHONPATH=. uv run python experiments/exp55_analytic_cog/mixed.py demo
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/mixed.py run
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/diagnostics.py
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/qa_figures.py
+EXP55_MAP_NMAX=60 EXP55_MAP_N_DRAW=4 PYTHONPATH=. uv run python \
+  experiments/exp55_analytic_cog/halo_map.py demo
+PYTHONPATH=. uv run python experiments/exp55_analytic_cog/halo_map.py fit
 ```

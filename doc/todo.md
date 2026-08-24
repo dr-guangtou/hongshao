@@ -1328,3 +1328,23 @@ Cross-experiment plan. Mirrors the phase sequence in
   bias and 0.161 dex scatter, and the median absolute annular-density error
   reaches 0.132 dex near 140 kpc. The halo-mapping experiment must therefore
   judge differential profiles as well as CoGs.
+- [x] **exp55 halo-mapping stage.** Predict the four selected
+  analytic CoG coordinates from `[DiffMAH(4), c_200c]` on the same five
+  held-out folds as exp50. Require final-mass-only, mass-conditioned shuffled
+  MAH-shape, and shuffled-concentration controls; predict the joint residual
+  distribution; reconstruct full CoGs; compare directly with exp50 on common
+  galaxies; and run the full standard QA battery on both the conditional mean
+  and correlated draws before deciding whether these analytic coordinates are
+  suitable Ultimate-SHMR targets. **Result:** on 2,539 held-out galaxies, the
+  analytic map has 0.08519 dex median cumulative-profile RMS error, effectively
+  tied with the Exp50 sampled-coordinate map, and its mean profile CRPS is
+  0.00094 dex worse. Real MAH shape lowers CRPS by 13.20% relative to its
+  mass-conditioned shuffle, and real concentration lowers it by 4.44% relative
+  to its shuffle. Stellar mass within 148.2 kpc is predictable (held-out
+  R2=0.865), but compact fraction and compact radius are mostly stochastic
+  (R2=0.060 and 0.068). Correlated draws have accurate marginal 68% profile
+  coverage (68.3%) but over-broaden the tight TNG `<2Re` versus `2--4Re` plane
+  to 0.213 dex scatter from the TNG value of 0.072 dex. **Decision:** retain the
+  analytic CoG as a viable continuous halo-map target, but revise the residual
+  coordinates and joint stochastic model before adding epochs or freeing the
+  globally fixed component shapes.

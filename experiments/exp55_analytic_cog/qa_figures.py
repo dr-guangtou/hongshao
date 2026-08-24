@@ -110,7 +110,12 @@ def standard_summary(
 
 
 def density_by_halo_mass_figure(
-    model_log: np.ndarray, truth_log: np.ndarray, log_halo_mass: np.ndarray
+    model_log: np.ndarray,
+    truth_log: np.ndarray,
+    log_halo_mass: np.ndarray,
+    figdir: Path = QA_FIGDIR,
+    model_name: str = MODEL_NAME,
+    model_label: str = "analytic CoG",
 ) -> None:
     """Exp54-style surface-density QA split by a model input."""
     edges = np.quantile(log_halo_mass, [0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0])
@@ -137,7 +142,7 @@ def density_by_halo_mass_figure(
             "--",
             color=OKABE_ITO[2],
             linewidth=1.6,
-            label="analytic CoG",
+            label=model_label,
         )
         axes[1, column].plot(x, residual, color=OKABE_ITO[2], linewidth=1.6)
         axes[1, column].axhline(0.0, color="0.55", linewidth=0.8)
@@ -180,7 +185,7 @@ def density_by_halo_mass_figure(
         )
     fig.suptitle(
         "exp55 — surface-density QA by halo-mass tercile; "
-        "TNG solid, analytic model dashed"
+        f"TNG solid, {model_label} dashed"
     )
     fig.text(
         0.5,
@@ -196,11 +201,16 @@ def density_by_halo_mass_figure(
         wrap=True,
     )
     fig.tight_layout(rect=(0, 0.04, 1, 1))
-    save_fig(fig, QA_FIGDIR / f"qa_dens_{MODEL_NAME}")
+    save_fig(fig, figdir / f"qa_dens_{model_name}")
     plt.close(fig)
 
 
-def single_epoch_planes_figure(result: dict) -> None:
+def single_epoch_planes_figure(
+    result: dict,
+    figdir: Path = QA_FIGDIR,
+    model_name: str = MODEL_NAME,
+    model_label: str = "analytic CoG",
+) -> None:
     """Replace the multi-epoch QA layout with a readable one-row z=0.4 view."""
     axis_labels = {
         "kpc:M(<30)": r"$\log_{10}M_*(<30\,\mathrm{kpc})$",
@@ -232,7 +242,7 @@ def single_epoch_planes_figure(result: dict) -> None:
             edgecolors="0.2",
             linewidth=0.45,
             alpha=0.45,
-            label="analytic CoG",
+            label=model_label,
         )
         truth_stats, model_stats = result["planes"][(x_name, y_name)][0]
         axis.set_title(
@@ -256,10 +266,10 @@ def single_epoch_planes_figure(result: dict) -> None:
         )
     fig.suptitle(
         "exp55 — standard observational planes at z=0.4; "
-        "TNG filled, analytic representation open"
+        f"TNG filled, {model_label} open"
     )
     fig.tight_layout()
-    save_fig(fig, QA_FIGDIR / f"qa_planes_{MODEL_NAME}")
+    save_fig(fig, figdir / f"qa_planes_{model_name}")
     plt.close(fig)
 
 
@@ -270,7 +280,12 @@ def enclosed_radius_array(cogs: np.ndarray, fraction: float) -> np.ndarray:
 
 
 def single_epoch_size_figure(
-    model_log: np.ndarray, truth_log: np.ndarray, result: dict
+    model_log: np.ndarray,
+    truth_log: np.ndarray,
+    result: dict,
+    figdir: Path = QA_FIGDIR,
+    model_name: str = MODEL_NAME,
+    model_label: str = "analytic CoG",
 ) -> None:
     """Replace the generic one-column multi-epoch size layout."""
     model = 10.0**model_log
@@ -302,7 +317,7 @@ def single_epoch_size_figure(
         color=OKABE_ITO[4],
         alpha=0.35,
         edgecolors="none",
-        label="analytic CoG",
+        label=model_label,
     )
     truth_stats, model_stats = result["sizes"][("R50", 0)]
     axes[0].set(
@@ -360,7 +375,7 @@ def single_epoch_size_figure(
         )
     fig.suptitle("exp55 — standard mass–size QA at z=0.4")
     fig.tight_layout()
-    save_fig(fig, QA_FIGDIR / f"qa_size_{MODEL_NAME}")
+    save_fig(fig, figdir / f"qa_size_{model_name}")
     plt.close(fig)
 
 

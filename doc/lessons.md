@@ -961,3 +961,18 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   cumulative masses are subtracted. Always judge an analytic CoG in cumulative
   apertures, differential annuli, and surface density; none of the three is a
   substitute for the others.
+- **An analytic profile can be identifiable from a known CoG while some of its
+  coordinates remain almost unpredictable from halos (exp55 halo map).** The
+  fixed Sersic-plus-cored-power-law fit has stable per-galaxy parameters, yet
+  held-out DiffMAH plus concentration explains 86.5% of the variance in stellar
+  mass within 148.2 kpc and only 6.0% and 6.8% in compact fraction and compact
+  radius. The reconstructed profile still ties the Exp50 readable map. Judge
+  the halo map through reconstructed observables and residual modes, and do not
+  equate profile-fit identifiability with deterministic halo predictability.
+- **Correct marginal coverage does not certify a generative population model
+  (exp55 halo map).** Correlated analytic-parameter draws give 68.3% coverage
+  for nominal 68% pointwise CoG intervals, but broaden the `<2Re` versus
+  `2--4Re` stellar-mass plane to 0.213 dex scatter when TNG has 0.072 dex. Test
+  stochastic draws directly in every scientifically used derived plane; a
+  residual covariance that is calibrated one radius at a time can still have
+  the wrong joint geometry.
