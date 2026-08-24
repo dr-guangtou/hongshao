@@ -113,6 +113,10 @@ Z = (0.4, 0.7, 1.0, 1.5, 2.0)
 BOUND_FREE_DEPOSITS, WRONG_GALAXY = 4.5, 5.0
 #: Stage 3.3's loss and profile-shape error for the incumbent on this exact
 #: sample and mask -- checked at run time, not trusted
+#: PRE-FIX values, kept so the change is visible: these were measured with the
+#: broken cross-match row 181 still inside the sample (see
+#: `selection.sane_history_mask`). The clean-sample values are printed at run
+#: time by the gate below.
 LOSS_E2_PREV, SHAPE_E2_PREV = 2.2792734407262394, 13.80
 RULE = "=" * 100
 #: a literal percent sign, for plain-text reports (figures use `qa._pct`)
@@ -364,7 +368,12 @@ def main(smoke=False, n_starts=3, labels=None, fit_only=False,
         raise SystemExit("run selection.py first — the cuts come from there")
     cuts = np.load(SEL, allow_pickle=True)["cuts"]
     m200 = S.sample_masses(np.load(S.HS_NPZ, allow_pickle=True))
-    complete_all = np.isfinite(m200) & (m200 >= cuts[None, :])
+    # The completeness cut is not the only condition on a scored galaxy-epoch:
+    # the measured history must also be physical. `sane_history_mask` was in
+    # `selection.py`'s diagnostics but not in this fitting path, which let one
+    # broken cross-match (row 181) carry 18% of the loss; see that function.
+    complete_all = (np.isfinite(m200) & (m200 >= cuts[None, :])
+                    & S.sane_history_mask(pop["data"]))
 
     rows = all_rows[::24] if smoke else all_rows
     recs = H.build_records(rows=rows, verbose=False)
@@ -413,14 +422,33 @@ def main(smoke=False, n_starts=3, labels=None, fit_only=False,
     # problem and nothing here may be compared with anything there.
     results, th_e2 = [], None
     if PEREPOCH.exists() and not smoke:
-        pr0 = StackedProblem(sp_e2, recs, data, mask, epochs=(0, 1, 2, 3, 4))
-        got, want = pr0.loss(th_e2_prev), float(np.load(PEREPOCH)[
-            f"{FAMILY}-E2-S2_loss"])
-        print(f"  INCUMBENT CHECK: Stage 3.3's E2 theta scores {got:.6f} here, "
-              f"{want:.6f} there, |d| = {abs(got - want):.2e}")
-        if abs(got - want) > 1e-9:
-            raise SystemExit("REFUSING TO RUN: this stage does not reproduce "
-                             "Stage 3.3's loss at Stage 3.3's own optimum.")
+        # THE GATE, in two halves, because the sample deliberately changed.
+        # Stage 3.3 was fitted before `sane_history_mask` removed row 181, so
+        # its stored loss can only be reproduced with that mask switched OFF.
+        # Requiring BOTH -- an exact match without the mask, and a different
+        # number with it -- proves the mask is the ONLY thing that changed.
+        want = float(np.load(PEREPOCH)[f"{FAMILY}-E2-S2_loss"])
+        old_mask = complete_all[sel] & True          # pre-fix definition
+        old_mask = (np.isfinite(m200) & (m200 >= cuts[None, :]))[sel]
+        pr_old = StackedProblem(sp_e2, recs, data, old_mask,
+                                epochs=(0, 1, 2, 3, 4))
+        pr_new = StackedProblem(sp_e2, recs, data, mask, epochs=(0, 1, 2, 3, 4))
+        got_old, got_new = pr_old.loss(th_e2_prev), pr_new.loss(th_e2_prev)
+        print(f"  GATE, both halves, at Stage 3.3's own optimum:")
+        print(f"    with the pre-fix mask : {got_old:.12f} against Stage 3.3's "
+              f"{want:.12f}   |d| = {abs(got_old - want):.2e}")
+        print(f"    with row 181 removed  : {got_new:.12f}   "
+              f"({100 * (1 - got_new / got_old):.1f}% of the loss was that one "
+              f"galaxy)")
+        if abs(got_old - want) > 1e-9:
+            raise SystemExit(
+                "REFUSING TO RUN: with the pre-fix mask this stage does not "
+                "reproduce Stage 3.3's loss, so the sanity mask is not the "
+                "only thing that changed.")
+        if abs(got_new - got_old) < 1e-9:
+            raise SystemExit(
+                "REFUSING TO RUN: the sanity mask changed nothing, so it is "
+                "not being applied.")
         th_e2 = th_e2_prev
         print()
     for li, label in enumerate(labels):

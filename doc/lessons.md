@@ -1215,3 +1215,28 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   profile array against the old path galaxy by galaxy at several thetas
   (1.6e-15), not on the two aggregate scores agreeing — a cancellation inside a
   mean over 2397 galaxies and 24 radii would have passed the weaker check.
+- **A rejection rule written for the diagnostics does not apply itself to the
+  fits (exp54, 2026-08-24).** `MAX_BACKWARD_DEX = 3.0` had existed in
+  `scoreboard.py` and `selection.py` since the day row 181 was identified as a
+  broken cross-match, and `fit.py` carried a comment explaining that the
+  benchmark had been recomputed without it. The model-fitting stages built
+  their samples straight from `population.npz` and never called it. From Stage
+  3.3's per-epoch run onward — the moment the sample went from a 1199-galaxy
+  subsample to all 2397 — that one galaxy was inside every fit, **carrying 18%
+  of the total loss and inflating the amplitude score by 24%**. `fit.py`'s
+  comment that it was "in NONE of the model-fitting subsamples" was true when
+  written and silently expired. **The habit**: when a data-quality rule is
+  written, apply it at the point the data is loaded, not at the point the
+  figure is drawn; and when a sample definition changes, re-check every comment
+  that asserts what is in it.
+- **The corrupt galaxy hid where the sample was smallest (exp54,
+  2026-08-24).** Section 5.3's headline — the model is ~36% worse than a plain
+  regression at total stellar mass on completeness-controlled samples, "the
+  strongest argument against the model" — was one galaxy. The completeness cut
+  shrinks the sample from 2397 to 840, so a single fixed contribution to a mean
+  square grows as a FRACTION as the sample shrinks. That is exactly the
+  signature the note read as physics ("the regression barely notices the
+  restriction; the model degrades sharply"). Corrected, the ratio is 1.03-1.06
+  at z = 0.7-1.5 and **0.94 at z = 2**, where the model beats the benchmark.
+  **The habit**: when a defect grows as a sample shrinks, suspect a fixed
+  contaminant before a physical trend, and check by removing one object.

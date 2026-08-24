@@ -147,6 +147,33 @@ def catalog_masses(snap):
     return np.asarray(m, float)
 
 
+def sane_history_mask(data, epochs=(0, 1, 2, 3, 4)):
+    """(n_galaxies, n_epochs) bool: is this galaxy's MEASURED history physical?
+
+    False at an epoch where the measured `M*(<100 kpc)` is more than
+    `MAX_BACKWARD_DEX` below the same galaxy's own value at z = 0.4. A main
+    progenitor cannot have been that much lighter than its descendant, so such
+    a history is a broken cross-match rather than evolution. The real sample's
+    largest genuine growth is about 2.0 dex, so the 3 dex threshold separates
+    the two cleanly rather than trimming a tail.
+
+    **THIS BELONGS IN THE FITTING PATH, not only in the diagnostics.** It was
+    written for `selection.py`'s figures, and the model-fitting stages built
+    their samples straight from `population.npz` without it. One galaxy —
+    row 181, whose `M*(<100 kpc)` falls 3.76 dex from 10^11.72 at z = 0.4 to a
+    flat ~10^8 at every earlier epoch — was therefore inside every fit from
+    Stage 3.3's per-epoch run onward, where it carried **18% of the total loss
+    and inflated the amplitude score by 24%** at z >= 0.7 on its own. Because
+    the completeness cut shrinks the sample from 2397 galaxies to 840, its
+    fixed contribution grew as the sample shrank, which is what produced the
+    apparent "the model degrades on complete samples". `fit.py`'s `SIGMA_A`
+    benchmark had already been recomputed without it, so the model was being
+    charged for a galaxy the benchmark was not.
+    """
+    A = np.log10(np.clip(np.asarray(data)[:, list(epochs), F.I100], 1.0, None))
+    return (A[:, [0]] - A) <= MAX_BACKWARD_DEX
+
+
 def sample_masses(hs):
     """log10 M200c of our galaxies at the five observation epochs, (n, 5).
 
@@ -452,14 +479,8 @@ def main(label="", n_total=0, make_fig=True):
           f"model/truth at 100 kpc, dex)")
     y100 = residual_at(pred, data, epochs, 100.0)
 
-    # One galaxy's measured curve of growth is physically impossible and would
-    # otherwise dominate every rms and every un-robust slope. `sane` excludes a
-    # galaxy AT AN EPOCH where its measured M*(<100 kpc) is more than
-    # `MAX_BACKWARD_DEX` below its own z=0.4 value -- a main progenitor cannot
-    # have been that much lighter. The real sample's largest genuine growth is
-    # ~2.0 dex, so the threshold catches the broken cross-match and nothing else.
     A_truth = np.log10(np.clip(data[:, list(epochs), F.I100], 1.0, None))
-    sane = (A_truth[:, [0]] - A_truth) <= MAX_BACKWARD_DEX
+    sane = sane_history_mask(data, epochs)
     n_drop = int((~sane).any(axis=1).sum())
     if n_drop:
         rows_drop = sel[(~sane).any(axis=1)]

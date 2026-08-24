@@ -972,3 +972,322 @@ remaining error lives. The next steps in `doc/todo.md` are re-ordered
 accordingly: the objective's blindness beyond 52 kpc at z = 2 is now the
 leading item, because a shared law cannot be shown to be inadequate by a loss
 that cannot see where it fails.
+
+---
+
+## Stage 3.6 (2026-08-25) — repairing the loss, one cause at a time (`stage36_objective.py`), COMPLETE
+
+**Negative, and it relocates the problem.** The loss really is blind in the
+outskirts; repairing that blindness does not improve the outskirts. What the
+comparison quantity does control is the overall LEVEL of central mass, and it
+has no purchase whatever on that level's dependence on epoch — which is the
+actual defect.
+
+### The blindness, measured
+
+Perturb the model's mass in one radial shell by ±1% and watch the loss move.
+Reported as "how many times bigger must an error in this shell be to cost the
+loss as much as one in the shell it watches most":
+
+| objective | worst ratio over all shells and epochs | the innermost 2 kpc |
+|---|---|---|
+| production — cumulative profile, fractional residual, pinned at 100 kpc | **175,570** | the most-watched shell |
+| surface density in log (exp48's winner) | ~60 over 2–148 kpc | **invisible** |
+| shell decomposition in log (new) | 234, typically under 20 | seen |
+
+The production loss's shape term divides each profile by its value at 100 kpc,
+which PINS it there, so the three shells beyond the pin are nearly free. A few
+isolated large cells elsewhere (a few hundred) are turning points where the
+population gradient changes sign, not extra blind spots.
+
+### exp48's winner is disqualified, and the reason was never checked
+
+Building a surface density means differencing the curve of growth between grid
+radii: 24 radii give 23 differences, and **the mass inside the innermost radius
+is never one of them**. Worse, adding mass inside that radius raises every
+later cumulative value by the same constant, so every difference is unchanged.
+
+```
+production  cog x frac      base 0.05349625   x5.0: 1.09025543
+candidate   density x log   base 5.60673286   x5.0: 5.60673286
+candidate   density x frac  base 9.52135432   x5.0: 9.52135432
+```
+
+Multiplying `M*(<2 kpc)` by five leaves it unchanged to a relative **1e-13** —
+floating-point noise from a log10 round-trip inside `density_from_cog`, not a
+response. `hongshao/objective.py` now asserts this in its self-check. That
+aperture holds **12% of the stellar mass at z=0.4 and 32% at z=2**, and it is
+where the model's largest known defect lives.
+
+### The new comparison, and the two causes varied one at a time
+
+`hongshao.objective` gains `quantity="shells"`: compare
+`[M(<R_0), M(R_0..R_1), ...]`, which is **bijective** with the curve of growth,
+so unlike a density it drops nothing. Paired with a log residual it holds a
+shell carrying 1% of the mass to the same relative accuracy as one carrying 30%.
+
+| cell | pin | quantity | what it changes |
+|---|---|---|---|
+| `production` | M*(<100 kpc) | cumulative, frac | nothing — the CONTROL |
+| `pin-total` | the total | cumulative, frac | the pin only |
+| `shell-log` | M*(<100 kpc) | shells, log | the quantity only |
+| `shell-log-tot` | the total | shells, log | both |
+| `density-log` | M*(<100 kpc) | density, log | exp48's winner |
+
+Each cell gets its OWN `score_F` reference, fixed so the incumbent scores the
+same in every cell, because dividing objectives on different raw scales by one
+reference would silently change how hard the fit works on the amplitude.
+
+### The result
+
+**The pin is not a cause of anything.** `pin-total` moves the profile-shape
+error by 0.005 percentage points and the central mass by 0.002 dex.
+
+**The quantity moves the LEVEL of central mass and nothing else.** Median
+log10(model/truth) inside 2 kpc:
+
+| cell | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | **span** |
+|---|---|---|---|---|---|---|
+| production | +0.020 | −0.003 | −0.021 | −0.062 | −0.126 | **0.145** |
+| pin-total | +0.020 | −0.002 | −0.022 | −0.064 | −0.128 | 0.148 |
+| shell-log | +0.116 | +0.095 | +0.074 | +0.031 | −0.035 | 0.150 |
+| shell-log-tot | +0.117 | +0.096 | +0.076 | +0.033 | −0.033 | 0.150 |
+| density-log | +0.149 | +0.128 | +0.108 | +0.065 | −0.003 | 0.152 |
+
+Each shift is essentially **constant across epochs** — it varies by 0.006 dex
+for `shell-log` and 0.008 for `density-log`, against shifts of 0.09 and 0.13.
+A constant offset is absorbable by the efficiency normalisation and is not the
+defect. **The span is the defect, and no objective moves it.**
+
+### And the repair made the outskirts worse
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| median error beyond 52 kpc, production | −0.001 | −0.007 | −0.006 | −0.002 | −0.008 |
+| the same, `shell-log` | −0.011 | −0.023 | −0.034 | −0.028 | −0.033 |
+| outer density slope error, production | +0.12 | +0.10 | +0.09 | +0.03 | +0.21 |
+| the same, `shell-log` | +0.16 | +0.14 | +0.12 | +0.06 | +0.24 |
+
+Amplitude scores are identical across cells to within 0.005. **Nothing
+adopted.** The production objective stands.
+
+**The reading**: giving the loss eyes in the outskirts does not help because
+the model appears to have no freedom that moves the outskirts independently of
+the centre. That is a hypothesis, recorded in `doc/open_questions.md` as C1, and
+it is not yet tested.
+
+### Two gates that caught real bugs
+
+Neither was decoration. The reference-consistency check caught the loss
+normalisation being applied twice. The floor check caught the library's 1 Msun
+shell floor silently truncating dimensionless profiles — every shell clipped,
+every residual exactly zero — and then, on the full sample, caught **row 181**
+(below). The production cell reproduces the incumbent's loss to 0.00e+00.
+
+---
+
+## 2026-08-25 — ONE CORRUPT GALAXY WAS INSIDE EVERY FIT FROM STAGE 3.3 ONWARD
+
+Found by Stage 3.6's floor gate, which refused to run because a measured shell
+contained 2e-4 Msun.
+
+**Row 181's measured `M*(<100 kpc)` falls 3.76 dex** — from 10^11.72 at z=0.4
+to a flat ~10^8 at all four earlier epochs. A broken cross-match, not a
+progenitor. The next largest drop anywhere in the sample is 2.04 dex, so it is
+isolated rather than the tail of a distribution.
+
+**The project already knew, and already had the rule.** `MAX_BACKWARD_DEX = 3.0`
+lives in `scoreboard.py` and `selection.py`, and `fit.py` carries a comment
+explaining that `SIGMA_A` was recomputed without this galaxy. **The rule was
+never applied in the model-fitting path.** `fit.py`'s statement that row 181 is
+"in NONE of the model-fitting subsamples" was true when written and expired the
+moment Stage 3.3 moved from a 1199-galaxy subsample to all 2397.
+
+### What it cost
+
+| | with row 181 | without |
+|---|---|---|
+| total loss, incumbent | 2.279273 | **1.874570** (17.8% was one galaxy) |
+| amplitude score, overall | 1.2321 | **1.0557** |
+| profile-shape error | 13.803% | 13.792% |
+
+**Stage 3.5's conclusion is unaffected** — it turned on the shape error and on
+identifiability, and the shape error moves by 0.011 percentage points, far
+below the 0.18 under discussion. All variants were equally affected.
+
+### The headline it manufactured
+
+Section 5.3 of the technical note reports the model as ~36% worse than a plain
+statistical fit at total stellar mass on completeness-controlled samples, and
+calls it "the strongest argument against the model as it stands". Ratio of the
+model's error to the statistical benchmark:
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| with row 181 | 1.12 | 1.31 | 1.29 | 1.30 | 1.16 |
+| **without it** | 1.12 | **1.06** | **1.03** | **1.04** | **0.94** |
+
+At redshift 2 the model **beats** the benchmark. The mechanism the note read as
+physics — "the regression barely notices the restriction; the model degrades
+sharply" — is arithmetic: the completeness cut shrinks the sample from 2397 to
+840, so one fixed contaminant grows as a fraction of a mean square as the
+sample shrinks. Meanwhile `SIGMA_A` had already been recomputed WITHOUT row
+181, so the model was charged for a galaxy the benchmark was not.
+
+### The fix, and what it obliges
+
+`selection.sane_history_mask` promotes the existing rule to a shared function
+and it is now applied in `stage35_time_law.py` and `stage36_objective.py`.
+Stage 3.5's gate now has two halves — with the pre-fix mask it must reproduce
+Stage 3.3's loss exactly, and with the mask it must differ — which proves the
+sanity mask is the only thing that changed.
+
+**Pre-fix outputs are archived, not deleted**, at
+`outputs/stage35_fits_PRE_ROW181_FIX/` (with a `WHY.txt`),
+`outputs/stage35_ident_PRE_ROW181_FIX/` and
+`outputs/stage35_time_law_PRE_ROW181_FIX.npz`, because the Stage 3.5 conclusion
+was drawn from them and the re-run must be comparable with them.
+
+**Still owed** (`doc/open_questions.md`, A1 and A3): Stage 3.4's ceiling numbers
+and Stage 3.3's reported scores were both computed on the contaminated sample
+and have not been re-derived.
+
+---
+
+## Stage 3.7 (2026-08-25) — the size law's dependence on epoch (`stage37_size_epoch.py`), COMPLETE
+
+Plan: `doc/plans/2026-08-25-exp54-stage37-size-epoch.md`.
+
+**The defect is reachable — and reaching it empties the outskirts.** That trade,
+not the candidates, is the result, and it is a direct quantitative argument for
+a second deposit component.
+
+### The defect, and the pre-check that licensed the stage
+
+The model's median error in `M*(<2 kpc)` runs from **+0.020 dex at z = 0.4 to
+−0.126 at z = 2** — right in the centre today, 25% too light in the centre
+early. Stage 3.5 showed the efficiency law's time dependence cannot move that
+span; Stage 3.6 showed no objective moves it either.
+
+Before fitting anything, `--precheck` asked whether the span is real or is the
+sample's mass composition moving — the completeness-controlled sample runs from
+2397 galaxies to 839 and the survivors are more massive
+(`figures/stage37_precheck.png`).
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | span |
+|---|---|---|---|---|---|---|
+| every admitted galaxy | +0.020 | −0.003 | −0.021 | −0.062 | −0.126 | 0.145 |
+| at fixed halo mass, 13.1–13.4 | +0.030 | +0.009 | −0.021 | −0.092 | −0.146 | **0.175** |
+| at fixed halo mass, 13.4–13.7 | −0.001 | −0.014 | −0.053 | −0.132 | −0.193 | **0.192** |
+| the same 750 galaxies at all five epochs | +0.001 | −0.030 | −0.048 | −0.093 | −0.129 | 0.131 |
+
+**The span survives at fixed halo mass and grows.** The check was worth running
+— the cohort's median halo mass does fall from 13.66 to 12.94 — but the
+composition is not the cause.
+
+**A second reading of the same table, not asked for.** The error also depends
+on halo mass at fixed epoch, and that gradient **steepens with redshift**:
+0.058 dex at z = 0.4, then 0.092, 0.153, 0.192. That is an interaction between
+mass and epoch, which is the functional form of `S4` and not of `S5`. It was
+recorded as a prediction before any fitting.
+
+### The candidates, fitted under the production loss
+
+`model.r50_of` gives every deposit `R50 = 10^(log_f0 + b log10(1+z)) * R200c`,
+one exponent shared by every galaxy and halo mass. Three nested epoch axes were
+added (all reproducing the plain law bit for bit at zero coefficients, asserted
+in `model.py`): `S4`, the exponent depends on halo mass; `S5`, a low-order
+polynomial in redshift; `S6`, a free curve.
+
+| model | extra | **span** | vs base | shape% | >52 kpc | tilt | ident |
+|---|---|---|---|---|---|---|---|
+| incumbent | — | **0.145** | — | 13.787 | −0.005 | −0.0278 | 7.6e-03 |
+| `+S4` | 1 | 0.141 | −0.004 | 13.728 | −0.005 | **−0.0215** | 3.6e-03 |
+| `+S5p1` | 1 | 0.133 | −0.012 | 13.750 | −0.006 | −0.0297 | 2.6e-03 |
+| `+S5p2` | 2 | 0.133 | −0.012 | 13.750 | −0.006 | −0.0296 | 3.0e-04 |
+| `+S4+S5p2` | 3 | **0.132** | −0.013 | 13.724 | −0.005 | −0.0239 | 2.2e-04 |
+
+The preregistered target was **below 0.10 dex**. The best reaches 0.132, a 9%
+reduction. `S5p2`'s cubic coefficient comes out at **+0.0038** and its span,
+shape error and outskirts match `S5p1`'s to three decimals — the extra term
+buys nothing, exactly as in Stage 3.5.
+
+**The pre-check's prediction was half right, and the half that failed is the
+one that mattered.** `S4` wins the loss and the seven-criterion judge, and is
+the only variant that *improves* the halo-mass tilt. But `S5` moves the span
+further, and the span is this stage's declared criterion.
+
+### THE BOUND WAS THE WRONG BOUND — an error, and its correction
+
+`S6f6`, the free shared curve fitted under the production loss, returned the
+**best loss of any cell** (1.8659) and a span of **0.139 — worse than a
+one-parameter polynomial's 0.133**. That is not the optimiser failing. It is
+this project's own standing lesson, re-learned: *a bound must be optimised on
+the same quantity it is reported on.* The free curve was fitted for the loss and
+read as a ceiling on the span, and nothing in the fit ever asked it to reduce
+the span.
+
+Refitted to minimise the span directly, with the loss required to stay within
+5% of the incumbent's so the answer cannot be bought by making the model
+uniformly bad:
+
+```
+minimise  span^2 + 100 * max(0, loss/loss_base - 1.05)^2
+```
+
+| | span | shape% | loss | tilt | ident |
+|---|---|---|---|---|---|
+| incumbent | 0.1454 | 13.787 | 1.874253 | −0.0278 | 7.6e-03 |
+| `S6f6` fitted for the LOSS | 0.1390 | 13.729 | 1.865870 | −0.0288 | 1.2e-05 |
+| **`S6f6` fitted for the SPAN** | **0.0605** | 14.216 | 1.968294 | +0.0365 | 1.2e-05 |
+
+**A shared size law CAN remove 58% of the span.** The defect is reachable. The
+candidates missed it because the loss barely feels it.
+
+### What reaching it costs, which is the actual finding
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| central error, incumbent | +0.020 | −0.003 | −0.021 | −0.062 | −0.126 |
+| central error, span solution | +0.012 | +0.012 | −0.001 | −0.025 | **−0.048** |
+| beyond 52 kpc, incumbent | −0.001 | −0.007 | −0.006 | −0.002 | −0.008 |
+| beyond 52 kpc, span solution | −0.039 | +0.003 | +0.023 | −0.035 | **−0.112** |
+| outer slope error, incumbent | +0.12 | +0.10 | +0.09 | +0.03 | +0.21 |
+| outer slope error, span solution | −0.01 | +0.02 | +0.03 | −0.05 | **+0.12** |
+
+Buying the centre at redshift 2 — closing 0.078 dex of central deficit — costs
+**0.104 dex of outskirt mass at the same epoch**, taking the model from 2% to
+23% too light beyond 52 kpc. The outer *slope* improves markedly at the same
+time, so the deposits are the right shape and in the wrong place, not the wrong
+shape.
+
+The solution is also **not adoptable on its own terms**: `log_f0` sits at its
+bound (−0.0002 against a bound of 0.0), the smallest singular value is 1.2e-05
+so the parameters are undetermined, the halo-mass tilt flips sign, and the
+profile-shape error rises 0.43 points.
+
+### The conclusion, and what it sets up
+
+**With one radial scale per deposit, the central mass at redshift 2 and the
+outer mass at redshift 2 cannot both be right.** Making early deposits compact
+enough to fill the centre necessarily removes them from the outskirts, because
+there is only one scale to move. The span is reachable, the outskirts are
+reachable, and the same parameter controls both.
+
+That is a direct, quantitative argument for **a second component with its own
+scale** — an early compact channel that adds central mass while an extended
+channel keeps the outskirts. It also matches, independently, what a parallel
+experiment (exp55) finds from the profiles alone: an exponential core plus an
+extended Moffat reproduces measured curves of growth as well as a
+three-component decomposition. Two cautions carried into that next stage:
+
+- exp55 constrains a **single epoch**; this model serves five, so only the hint
+  about the inner component's shape transfers, not the conclusion.
+- "Two components" need **not** mean every deposit carries both. The form that
+  matches this stage's defect is an **early exponential deposition and a late
+  Moffat-like deposition** — a mixture weighted by *when* the mass was laid
+  down. That is a different object from the redshift-dependent deposit SHAPE
+  (`c_z`) already rejected, and must not be conflated with it.
+
+**Nothing adopted.** `S4` is the only variant the judge prefers to the
+incumbent and it moves the span by 0.004 dex, which is not worth a parameter.

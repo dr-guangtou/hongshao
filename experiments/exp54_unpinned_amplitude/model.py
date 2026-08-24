@@ -190,7 +190,26 @@ class Spec:
     e3: bool = False               # add the concentration term to any eff
     n_knots: int = 4               # E4 only
     n_time: int = 2                # E6 | E7: how many extra time coefficients
+    size_time: str = ""            # "" | S4 | S5 | S6: the size law's epoch axis
+    n_size_time: int = 2           # S5 degrees used, or S6 knots
     trunc_C: float = 3.0
+
+    #: every size axis this model knows; anything else is a typo, and a typo
+    #: must not silently select a different model. `S2+S4` once parsed as a
+    #: `size` rather than a `size_time`, which sent `r50_of` down the
+    #: concentration-scaled branch and dropped `b_M` -- with the label still
+    #: round-tripping, so nothing complained.
+    SIZES = ("S2", "S2a")
+    SIZE_TIMES = ("", "S4", "S5", "S6", "S4+S5", "S4+S6")
+
+    def __post_init__(self):
+        if self.size not in Spec.SIZES:
+            raise ValueError(f"size must be one of {Spec.SIZES}, got "
+                             f"{self.size!r} -- a size-time axis belongs in "
+                             f"`size_time`, not in `size`")
+        if self.size_time not in Spec.SIZE_TIMES:
+            raise ValueError(f"size_time must be one of {Spec.SIZE_TIMES}, "
+                             f"got {self.size_time!r}")
 
     @property
     def eff_names(self):
@@ -221,6 +240,13 @@ class Spec:
     @property
     def size_names(self):
         n = ["log_f0", "b"]
+        parts = [p for p in self.size_time.split("+") if p]
+        if "S4" in parts:
+            n = n + ["b_M"]
+        if "S5" in parts:
+            n = n + [f"d{d}" for d in range(2, 2 + self.n_size_time)]
+        if "S6" in parts:
+            n = n + [f"u{i}" for i in range(self.n_size_time - 2)]
         return n + (["f:logMh", "f:dlogc", "f:fform"] if self.conditioning else [])
 
     @property
@@ -242,6 +268,13 @@ class Spec:
         elif e == "E8":
             e = f"E8f{self.n_time}"                # f = free curve, n_time knots
         s = f"{self.family}-{e}{'+E3' if self.e3 else ''}-{self.size}"
+        parts = [p for p in self.size_time.split("+") if p]
+        if "S4" in parts:
+            s += "+S4"
+        if "S5" in parts:
+            s += f"+S5p{self.n_size_time}"
+        if "S6" in parts:
+            s += f"+S6f{self.n_size_time}"
         return s + ("+S3" if self.conditioning else "")
 
     def bounds(self):
@@ -251,7 +284,10 @@ class Spec:
              "log_f0": (-4.0, 0.0), "b": (-6.0, 6.0),
              **{f"c{d}": (-3.0, 3.0) for d in range(2, 8)},
              **{f"s{i}": (-3.0, 3.0) for i in range(8)},
-             **{f"v{i}": (-3.0, 3.0) for i in range(20)}}
+             **{f"v{i}": (-3.0, 3.0) for i in range(20)},
+             "b_M": (-3.0, 3.0),
+             **{f"d{d}": (-3.0, 3.0) for d in range(2, 8)},
+             **{f"u{i}": (-3.0, 3.0) for i in range(20)}}
         out = [b.get(n, (-8.0, 8.0)) for n in self.eff_names + self.size_names]
         return out + list(families.shape_bounds(self.family))
 
@@ -446,12 +482,38 @@ def log_eps(spec, eff, halo):
 
 
 def r50_of(spec, size, halo):
-    """The TRUE post-truncation half-mass radius of each deposit [kpc]."""
+    """The TRUE post-truncation half-mass radius of each deposit [kpc].
+
+    The epoch axis (`S4`/`S5`/`S6`) is the size-law analogue of `E6`/`E7`/`E8`
+    on the efficiency, and exists for the same reason: Stage 3.6 showed the
+    model's central-mass error swings 0.145 dex between redshift 0.4 and 2 and
+    that neither the efficiency law's time dependence nor the objective moves
+    that swing. `S5` and `S6` use the SAME orthogonal bases as `E6` and `E8`,
+    which are orthogonal to a constant and to `ln(1+z)` and therefore also to
+    `log10(1+z)`, so none of them can trade against `log_f0` or `b`.
+    """
     scale = halo.r200c if spec.size == "S2" else halo.r200c / halo.c_eff
-    lf = size[0] + size[1] * np.log10(1.0 + halo.z)
+    m = halo.logmh - M_PIV
+    lz = np.log10(1.0 + halo.z)
+    x = np.log1p(halo.z)
+    lf = size[0] + size[1] * lz
+    i = 2
+    parts = [p for p in spec.size_time.split("+") if p]
+    if "S4" in parts:
+        lf = lf + size[i] * m * lz            # a mass-dependent epoch exponent
+        i += 1
+    if "S5" in parts:
+        for d in range(2, 2 + spec.n_size_time):
+            lf = lf + size[i] * _legendre_shifted(x, d)
+            i += 1
+    if "S6" in parts:
+        g = pl_terms(x, spec.n_size_time)
+        for j in range(spec.n_size_time - 2):
+            lf = lf + size[i] * g[j]
+            i += 1
     if spec.conditioning:
-        lf = (lf + size[2] * (halo.logmh - M_PIV)
-              + size[3] * halo.dlogc + size[4] * (halo.f_form - 0.5))
+        lf = (lf + size[i] * m
+              + size[i + 1] * halo.dlogc + size[i + 2] * (halo.f_form - 0.5))
     return 10.0 ** np.clip(lf, -8, 2) * scale
 
 
@@ -601,6 +663,36 @@ if __name__ == "__main__":
           f"BIT\n       when the new coefficients are zero: max |dM*(<R)| = "
           f"{worst_nest:.1e} Msun over 4 random\n       thetas x 5 epochs x 4 "
           f"galaxies x 24 radii")
+
+    # (6d) THE SIZE LAW'S EPOCH AXIS NESTS TOO. S4/S5/S6 must reproduce the
+    #      plain S2 size law bit for bit when their coefficients are zero, at
+    #      an arbitrary theta -- the same warrant E6/E7/E8 needed.
+    sp_s2 = Spec(family="gompertz_log", eff="E2", size="S2")
+    base_s2 = default_theta(sp_s2)
+    rng7 = np.random.default_rng(11)
+    worst_s = 0.0
+    for _ in range(4):
+        t0 = base_s2 + rng7.normal(0, 0.25, base_s2.shape)
+        for st, n in (("S4", 2), ("S5", 1), ("S5", 2), ("S6", 6), ("S6", 8)):
+            spx = Spec(family="gompertz_log", eff="E2", size="S2",
+                       size_time=st, n_size_time=n)
+            n_new = spx.n_theta - sp_s2.n_theta
+            # the size block sits after the four efficiency parameters
+            tx = np.concatenate([t0[:6], np.zeros(n_new), t0[6:]])
+            assert spx.theta_names[:6] == sp_s2.theta_names[:6], spx.label
+            assert spx.n_theta == len(tx)
+            for hh in recs[:4]:
+                a = forward(sp_s2, t0, hh, [0, 2, 4], R)
+                b = forward(spx, tx, hh, [0, 2, 4], R)
+                if a is None or b is None:
+                    assert a is None and b is None, spx.label
+                    continue
+                worst_s = max(worst_s, float(np.max(np.abs(a - b))))
+    assert worst_s == 0.0, f"S4/S5/S6 do not nest S2: max |dM*| = {worst_s:.3e}"
+    print(f"  (6d) S4 (mass-dependent epoch exponent), S5 (1-2 polynomial "
+          f"terms) and S6\n       (6, 8 knots) reproduce the plain size law "
+          f"BIT FOR BIT at zero coefficients:\n       max |dM*(<R)| = "
+          f"{worst_s:.1e} Msun")
 
     # (6c) the new basis functions really are orthogonal to a constant and to x
     #      over the deposit range, which is what stops them fighting a0 and a_z

@@ -1463,12 +1463,46 @@ Cross-experiment plan. Mirrors the phase sequence in
     fitted model, which was the tell.
   - The correction the extra parameters buy is spent above z = 4, where only
     7.3% of the deposited stellar mass is made (1.0% above z = 7).
-- [ ] **Repair the objective before the profile family.** NOW THE LEADING ITEM. The production loss
+- [x] **Repair the objective — DONE 2026-08-25, NEGATIVE** (Stage 3.6,
+  `stage36_objective.py`). The loss IS blind past its 100 kpc pin: an error in
+  the 132-148 kpc shell must be **175,000x larger** than one inside 2 kpc to
+  cost the same. Five objectives fitted, varying the pin and the compared
+  quantity one at a time. The pin is not a cause of anything (0.005 points).
+  The quantity shifts the central error by a **constant** across epochs
+  (varying 0.006 dex) and never changes its epoch dependence. And the repair
+  made the outskirts WORSE. **exp48's winner is disqualified**: a surface
+  density drops the mass inside the innermost radius entirely — verified to a
+  relative 1e-13 and now asserted in `hongshao/objective.py`. New
+  `quantity="shells"` added, bijective with the curve of growth. Nothing
+  adopted.
+- [x] **The size law's dependence on epoch — DONE 2026-08-25** (Stage 3.7,
+  `stage37_size_epoch.py`). The central error's 0.145 dex swing between
+  redshift 0.4 and 2 is real at fixed halo mass (0.175-0.192 in mass bins,
+  0.131 on a fixed cohort). Four nested enrichments reach at best 0.132 against
+  a preregistered target of 0.10. **But a free shared size law fitted to reduce
+  the swing DIRECTLY reaches 0.061 dex, a 58% reduction** — the defect is
+  reachable and the loss simply never asks for it. **The cost is the finding**:
+  closing 0.078 dex of central deficit at redshift 2 costs 0.104 dex of
+  outskirt mass at the same epoch. With one radial scale per deposit the centre
+  and the outskirts cannot both be right. Nothing adopted.
+- [x] **The high-mass amplitude failure — WITHDRAWN, it was one galaxy.** See
+  the row-181 entry below and tech note Section 5.3.1. The production loss
   cannot see the outskirts at high redshift (at z=2 only 6.3 per cent of the
   mass lies beyond 52 kpc) and is nearly blind to monotonicity once each epoch
   is renormalised. Re-examine exp48's density-plus-log-residual objective.
-- [ ] **The high-mass amplitude failure.** `score_A` 1.278 on the cohort. Not
-  explained by the shape ceiling and still the deployment case.
+- [x] ~~**The high-mass amplitude failure.** `score_A` 1.278 on the cohort.~~
+  **WITHDRAWN 2026-08-25**: one broken cross-match (row 181) inside the fitting
+  sample carried 17.8% of the loss. Corrected, the model is 3-11% worse than a
+  plain regression and **6% better at redshift 2**, and the completeness
+  restriction improves it rather than degrading it.
+- [ ] **A compact second channel — NOW THE LEADING ITEM.** Three levers have
+  been tested against the centre's evolution and none fixes it without breaking
+  something else (Stages 3.5, 3.6, 3.7), and all three point at a missing
+  second radial scale. Try an **early compact and late extended mixture
+  weighted by deposition time** — NOT the redshift-dependent deposit shape
+  already rejected, which is a different object. exp55 independently finds an
+  exponential core plus an extended Moffat reproduces measured profiles as well
+  as a three-component fit, at a single epoch. Original wording follows:
 - [ ] **A compact channel, IF it earns it**, following the reviewer's nested
   sequence: map the inner residual against epoch-local halo variables with a
   shuffled-secondary null; then a fixed compact fraction; then mass/redshift

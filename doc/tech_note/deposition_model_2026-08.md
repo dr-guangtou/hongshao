@@ -354,27 +354,59 @@ parameters shared across 1199 galaxies do not memorise them.
 ### 5.3 What it gets wrong: the total stellar mass
 
 **A plain statistical fit to the same halo properties predicts the total stellar
-mass better than the model does, at every epoch.**
+mass slightly better than the model does at most epochs — and slightly worse at
+redshift 2.**
 
 | error in `log10 M*(<100 kpc)` | z = 0.4 | z = 0.7 | z = 1.0 | z = 1.5 | z = 2.0 |
 |---|---|---|---|---|---|
 | statistical benchmark, dex | 0.104 | 0.112 | 0.120 | 0.128 | 0.161 |
-| model on all 2397 galaxies, dex | 0.118 | 0.123 | 0.127 | 0.135 | 0.169 |
-| ratio to the benchmark | 1.13 | 1.10 | 1.06 | 1.06 | 1.05 |
-| model on the completeness-controlled sample, dex | 0.117 | 0.152 | 0.161 | 0.174 | 0.221 |
-| ratio to the benchmark | 1.12 | **1.36** | **1.34** | **1.36** | **1.37** |
+| model on all galaxies, dex | 0.116 | 0.122 | 0.128 | 0.138 | 0.174 |
+| ratio to the benchmark | 1.11 | 1.09 | 1.06 | 1.08 | 1.08 |
+| model on the completeness-controlled sample, dex | 0.116 | 0.118 | 0.124 | 0.133 | 0.152 |
+| ratio to the benchmark | 1.11 | 1.06 | 1.03 | 1.04 | **0.94** |
 
-On the sample as originally selected, the model is 5 to 13% worse than a
-regression. On a sample where the selection has been controlled for
-(Section 6), it is **about 36% worse at redshift 0.7 and above** — a
-scatter of 0.15 to 0.22 dex, meaning a typical galaxy's predicted total stellar
-mass is off by 40 to 65%. The regression barely notices the restriction
-(its own scatter falls by only 3 to 15%); the model degrades sharply.
+The model is 6 to 11% worse than a regression on the sample as selected, and 3
+to 11% worse on a completeness-controlled one — except at redshift 2, where it
+is **6% better**. Restricting to complete, massive haloes makes the model
+BETTER, not worse.
 
-**The plain reading: the model is weakest exactly where the data are best** — on
-massive, well-resolved, completely sampled haloes. That is also the case we
-would want to deploy it on, and it is currently the strongest argument against
-the model as it stands.
+### 5.3.1 A correction: an earlier version of this section said the opposite
+
+**This section previously reported the model as "about 36% worse at redshift
+0.7 and above" on completeness-controlled samples and called that "the
+strongest argument against the model as it stands". That was one corrupt
+galaxy.** The ratios it quoted were 1.36 / 1.34 / 1.36 / 1.37.
+
+Galaxy row 181's measured `M*(<100 kpc)` falls **3.76 dex**, from 10^11.72 at
+redshift 0.4 to a flat ~10^8 at all four earlier epochs — a broken cross-match,
+not a progenitor. The next largest drop anywhere in the sample is 2.04 dex.
+
+The project had identified this galaxy, and had a rule to reject it
+(`MAX_BACKWARD_DEX = 3.0`), and had already recomputed the statistical
+benchmark without it. **The rule was never applied on the model's side of the
+comparison.** It was written for the selection diagnostics; the model-fitting
+code built its sample directly from the profile catalogue. So the model was
+charged for a galaxy the benchmark was not, from the moment the fitting sample
+grew from a 1199-galaxy subsample to all 2397.
+
+**Why it hid where the sample was smallest, which is what made it look like
+physics.** The completeness cut shrinks the sample from 2397 galaxies to 840.
+One galaxy's fixed contribution to a mean square therefore grows as a FRACTION
+as the sample shrinks — which is exactly the signature the earlier text read as
+"the regression barely notices the restriction; the model degrades sharply".
+Removing that one galaxy accounts for **17.8% of the total fitting loss** and
+inflated the amplitude score by 24%.
+
+The general lesson, recorded in `doc/lessons.md`: when a defect grows as a
+sample shrinks, suspect a fixed contaminant before a physical trend, and check
+by removing one object. And a data-quality rule must be applied where the data
+is loaded, not where the figure is drawn.
+
+**What survives.** The profile results are almost untouched — the shape error
+moves from 13.803% to 13.787% — because the corruption was in the total mass,
+not the radial distribution. Every conclusion in Sections 8 and 9 about profile
+shape stands. What does not survive is this section's headline and its place in
+Section 10's priority list.
 
 ### 5.4 What it gets wrong: where the mass is put
 
@@ -944,6 +976,66 @@ per dex below redshift 1.5 and improves at redshift 2 — so nothing was traded
 away either. The conclusion is simply that the efficiency law's dependence on
 time is not where the remaining error lives.
 
+### 8.9 Where the centre's evolution can and cannot be fixed
+
+Section 8.8 closed the efficiency law's dependence on time. Two further levers
+were tested against the same defect, and together they locate it precisely.
+
+**The defect.** The model's error in the stellar mass inside 2 kpc runs from
++0.020 dex at redshift 0.4 to **−0.126 at redshift 2** — correct in the centre
+today, 25% too light in the centre early. That 0.145 dex swing is the defect;
+a uniform offset would simply be absorbed by the efficiency normalisation.
+
+It is not an artefact of the sample. Measured at fixed halo mass the swing is
+*larger* (0.175 to 0.192 dex), and on the same 750 galaxies followed at all
+five epochs it is 0.131 dex (`figures/stage37_precheck.png`).
+
+**The loss cannot see it, and repairing the loss does not help.** The loss
+divides each profile by its value at 100 kpc, which pins it there: an error in
+the 132–148 kpc shell must be **175,000 times larger** than one inside 2 kpc to
+cost the same. Five objectives were fitted, including two that see the centre
+far better. Every one shifted the central error by a nearly CONSTANT offset —
+varying by 0.006 dex across five epochs — and left the swing at 0.145 to 0.152
+dex. (The obvious candidate, comparing surface densities, turns out to be
+structurally blind to the mass inside the innermost radius: differencing a
+cumulative profile gives one fewer number than it has radii, and the missing
+one is the centre. That aperture holds 32% of the stellar mass at redshift 2.)
+
+**The size law can fix most of it — but only by emptying the outskirts.** Every
+deposit is placed at `R50 = 10^(log_f0 + b log10(1+z)) * R200c`, one exponent
+for all galaxies and all halo masses. Fitted under the production loss, four
+nested enrichments of that exponent reduce the swing from 0.145 to at best
+0.132 dex. Fitted to reduce the swing DIRECTLY, holding the overall loss within
+5% of the incumbent's, a free shared size law reaches **0.061 dex — a 58%
+reduction**. The defect is reachable; the loss simply never asks for it.
+
+What reaching it costs is the finding:
+
+| | z = 0.4 | z = 0.7 | z = 1.0 | z = 1.5 | z = 2.0 |
+|---|---|---|---|---|---|
+| central error, adopted model | +0.020 | −0.003 | −0.021 | −0.062 | −0.126 |
+| central error, size law fitted for the swing | +0.012 | +0.012 | −0.001 | −0.025 | **−0.048** |
+| beyond 52 kpc, adopted model | −0.001 | −0.007 | −0.006 | −0.002 | −0.008 |
+| beyond 52 kpc, the same fit | −0.039 | +0.003 | +0.023 | −0.035 | **−0.112** |
+
+Closing 0.078 dex of central deficit at redshift 2 costs **0.104 dex of
+outskirt mass at the same epoch**, taking the model from 2% to 23% too light
+beyond 52 kpc. The outer *slope* improves at the same time, so the deposits are
+the right shape in the wrong place rather than the wrong shape. The solution is
+in any case not adoptable: one parameter sits at its bound, the parameters are
+undetermined, and the halo-mass tilt changes sign.
+
+**The conclusion.** With one radial scale per deposit, the central mass at
+redshift 2 and the outer mass at redshift 2 cannot both be right — the same
+parameter controls both, and it can only trade one for the other. This is a
+quantitative argument for a second deposit component with its own scale: an
+early, compact channel that fills the centre while an extended channel keeps
+the outskirts. It agrees, independently, with what a parallel experiment finds
+from the measured profiles alone — an exponential core plus an extended Moffat
+reproduces curves of growth as well as a three-component decomposition — with
+the caveat that the parallel result constrains a single epoch and this model
+serves five.
+
 ## 9. What we have learned
 
 ### 9.1 About the galaxies and the model
@@ -987,10 +1079,11 @@ less than changing the efficiency law does. What a deposit looks like
    decline, and 11% for the rest. A compact extra component addresses
    only the smaller half.
 
-8. **The model degrades on complete, massive samples** — about 36% worse
-   than a plain statistical fit at redshift 0.7 and above, against 5 to 10% on
-the sample as originally selected. This is a total-mass failure at
-   high halo mass, distinct from the central deficit, and it is unexplained.
+8. **WITHDRAWN 2026-08-25 — it was one corrupt galaxy; see Section 5.3.1.**
+   ~~The model degrades on complete, massive samples, about 36% worse than a
+   plain statistical fit at redshift 0.7 and above.~~ Corrected, the model is
+   3 to 11% worse than the regression and **6% better at redshift 2**, and
+   restricting to complete massive haloes makes it better rather than worse.
 
 9. **It predicts a typical galaxy, not the range of galaxies.** The spread of
    predicted growth histories is half the simulation's. That is inherent to any
@@ -1120,12 +1213,23 @@ with a logarithmic residual, which improves the compact-centre defect; it was
 not adopted for unrelated reasons and deserves re-examination now that the
 blindness is quantified.
 
-**2. Explain why the model degrades on complete, massive samples.** A 36% excess scatter in total stellar mass at redshift 0.7 and above, on exactly
-the galaxies we would want to deploy on, and not explained by anything in
-Section 8. This is the strongest remaining argument against the model, and it is
-a total-mass problem rather than a profile problem.
+**2. WITHDRAWN — there is no such degradation.** ~~Explain why the model
+degrades on complete, massive samples.~~ The 36% excess scatter was one broken
+cross-match inside the fitting sample (Section 5.3.1). On the corrected sample
+the model is 3 to 11% worse than a plain regression and 6% BETTER at redshift 2,
+and the completeness restriction improves it rather than degrading it. **This
+was the strongest remaining argument against the model, and it is gone.**
 
-**3. Only then, and only if it earns it, a compact second component** — and only
+**3. A compact second component — now the leading candidate, not a
+contingency** (Section 8.9). Three levers have been tested against the centre's
+evolution and none can fix it without breaking something else: the efficiency
+law's time dependence has a 0.2 percentage-point budget in total, the objective
+shifts the central error by a constant and never changes its slope with epoch,
+and the size law can remove 58% of the swing only by emptying the outskirts at
+the same epoch. All three point at the same missing thing — a second radial
+scale. The form to try is an EARLY COMPACT and LATE EXTENDED mixture weighted
+by deposition time, which is not the same object as the redshift-dependent
+deposit shape already rejected — and only
 on the galaxies whose centres do not decline (Section 8.3), following a nested
 sequence: first map the central residual against halo properties available at
 the epoch, with a shuffled control; then try a fixed compact fraction; then let

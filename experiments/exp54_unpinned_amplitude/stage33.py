@@ -68,6 +68,22 @@ def spec_from_label(label):
     if "+S3" in size:
         kw["conditioning"] = True
         size = size.replace("+S3", "")
+    # S4 FIRST: it has no numeric suffix, so a combined label like
+    # "S2+S4+S5p2" must have "+S4" stripped before "+S5p" is partitioned, or
+    # the S4 tag is left behind inside `size` and silently selects a different
+    # size scale. `Spec.__post_init__` now rejects that too.
+    parts = []
+    if "+S4" in size:
+        parts.append("S4")
+        size = size.replace("+S4", "")
+    for tag, field in (("+S5p", "S5"), ("+S6f", "S6")):
+        if tag in size:
+            head, _, n = size.partition(tag)
+            parts.append(field)
+            kw["n_size_time"], size = int(n), head
+            break
+    if parts:
+        kw["size_time"] = "+".join(parts)
     kw["size"] = size
     if "+E3" in eff:
         kw["e3"] = True
