@@ -36,11 +36,17 @@ The measured CoG is compared with:
 
 1. PCA reconstructions with three and five shape components;
 2. the Exp50 five-coordinate monotone decoder;
-3. one-component Sérsic, Moffat, Gompertz-in-log-radius, Richards, and radial-
-   sigmoid CoGs;
-4. restricted two-Sérsic mixtures with globally fixed component indices;
+3. six one-component specifications: Sérsic, Moffat,
+   Gompertz-in-log-radius, Richards, a five-parameter radial-slope sigmoid, and
+   that sigmoid with its asymptotic outer slope fixed to zero;
+4. three restricted two-Sérsic mixtures with globally fixed component indices;
 5. a compact Sérsic component plus a power-law-tailed extended Moffat
-   component, again with globally fixed shape indices.
+   component on a 3-by-4 grid of globally fixed shape indices.
+
+The full-sample analytic search therefore contains 21 specifications: six
+one-component functions, three fixed-index two-Sérsic functions, and twelve
+fixed-index Sérsic-plus-Moffat pairs. This is a deliberately limited search,
+not an exhaustive comparison of all possible compact-plus-envelope functions.
 
 The fixed-index mixtures are intentional. Beginning with two freely varying
 components would allow component fraction, scale, and shape index to exchange
@@ -56,6 +62,20 @@ M*(<R) = M*,148 [f_compact F_Sersic(R; R_compact, n=1) / F_Sersic(148; ...)
                  + (1-f_compact) F_Moffat(R; R_extended, gamma=1.25)
                                    / F_Moffat(148; ...)].
 ```
+
+Here “Moffat” names the mathematical function, not a point-spread-function
+origin for the stellar envelope. Its projected surface density is a cored
+power law,
+
+```text
+Sigma(R) proportional to [1 + (R/r_core)^2]^(-gamma),
+```
+
+and therefore approaches `Sigma proportional to R^(-2 gamma)` at large
+radius. The selected `gamma = 1.25` supplies an outer `R^-2.5` surface-density
+tail. The experiment supports the need for a slowly declining power-law-like
+envelope more directly than it supports the Moffat family uniquely. Alternative
+cored or truncated power-law envelopes still need a matched comparison.
 
 It has four galaxy-level parameters:
 
@@ -189,9 +209,54 @@ poorly conditioned galaxy has a 0.77-dex compact-radius change, so the local
 condition diagnostic must accompany any downstream parameter catalogue.
 
 The fitted population has median compact fraction 0.257, median compact radius
-2.47 kpc, and median extended radius 35.7 kpc. Its median radius ratio is 14.0.
-These values summarize the analytic decomposition; they do not license an
-in-situ/ex-situ interpretation.
+2.47 kpc, and median extended radius 35.7 kpc. The respective 16th--84th
+percentile ranges are 0.172--0.380, 1.82--3.42 kpc, and 19.0--57.8 kpc. The
+median extended-to-compact radius ratio is 14.0, with a 16th--84th percentile
+range of 9.89--20.9. Only 2.55% of galaxies place any optimizer coordinate
+within 1% of a bound; almost all of these cases make the two radii nearly equal.
+
+Across galaxies, the strongest Spearman correlations among the four physical
+coordinates are `rho = +0.594` between enclosed stellar mass and extended
+radius, `rho = +0.433` between compact and extended radius, and
+`rho = +0.334` between compact fraction and extended radius. Compact fraction
+is nearly uncorrelated with enclosed mass (`rho = -0.059`) and compact radius
+(`rho = +0.059`). These are population correlations between best-fit values;
+they are not posterior correlations within one galaxy. The local Jacobian,
+profiled scans with all other parameters re-optimized, and radial jackknife are
+the relevant within-galaxy stability checks. These values summarize the
+analytic decomposition; they do not license an in-situ/ex-situ interpretation.
+
+### What is degenerate about the sigmoid candidates
+
+The five-parameter radial-sigmoid candidate is a single CoG, not a two-component
+mixture. It defines the local cumulative logarithmic slope as
+
+```text
+d ln M(<R) / d ln R = beta_out
+                       + delta_beta / [1 + exp((ln R - ln Rc) / width)].
+```
+
+Thus `beta_out` is the asymptotic outer cumulative slope, `delta_beta` is the
+extra inner slope, `Rc` is the transition radius, and `width` is its width in
+log radius. On the finite 2.0--148.2 kpc measured interval, many galaxies do not
+show both asymptotes. Moving the transition outside the well-constrained range
+while compensating with `delta_beta` and `width` can then preserve nearly the
+same integrated CoG.
+
+The fitted symptom is quantitative: 49.0% of galaxies put `beta_out` at its
+zero lower boundary, 34.4% put `delta_beta` at its upper boundary, and 26.0%
+put `Rc` at its 0.3 kpc lower boundary. The population correlations also show
+the trade, including `rho = -0.645` between `delta_beta` and `Rc` and
+`rho = -0.499` between `Rc` and `width`. Fixing `beta_out = 0` reduces one
+freedom but leaves 64.0% of galaxies at some boundary and a median scaled
+Jacobian singular-value ratio of only `10^-3.10`.
+
+This does not condemn every monotone sigmoid-like CoG. The four-parameter
+Richards function is also poorly conditioned (`10^-3.34`; 55.3% at a bound),
+whereas the more restricted three-parameter Gompertz-in-log-radius function is
+much healthier (`10^-1.61`; 7.50% at a bound). The failure mode is too many
+independent controls of the asymptotes and transition over a finite radial
+interval, not sigmoid curvature by itself.
 
 ## Decision and limitations
 
