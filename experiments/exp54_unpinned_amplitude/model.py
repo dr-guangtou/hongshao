@@ -32,11 +32,42 @@ model solves `h(u) = R50_true/R_trunc` for `u` and hence for the family's own
 scale. `demo()` asserts `F(R50) = 0.5` and `F(R_trunc) = 1` numerically for
 every family.
 
+**THE TIME DEPENDENCE OF THE EFFICIENCY (E6, E7), and why the basis matters
+more than the order.** E1/E2 give `log10 eps_surv` a single power law in
+`ln(1+z)`. E4 replaced that with a free piecewise-linear curve whose knot
+VALUES are the parameters, and it was the worst of the 45 variants in Stage
+3.2 with essentially undetermined parameters -- for a reason that is structural
+rather than statistical: `a0 + interp(x, knots, k)` is EXACTLY degenerate,
+because adding a constant to `a0` and subtracting it from every `k` gives the
+identical model. E6 and E7 avoid that by construction. Both keep E2 whole and
+ADD a correction that is orthogonal to a constant and to `x` over the deposits'
+own range of `ln(1+z)`, so the new coefficients cannot trade against `a0` or
+`a_z`:
+
+    E6   + sum_{d=2..} c_d * P_d(s)     shifted Legendre, s = s(x) in [-1, 1]
+    E7   + sum_i       s_i * g_i(x)     hinges at fixed knots, then Gram-Schmidt
+                                        against {1, x} and rescaled
+
+`P_d` for `d >= 2` is orthogonal to `P_0 = 1` and `P_1 = s` by construction;
+`g_i` is made so. Each basis function is normalized to `max |.| = 1` on the
+deposit range, so its coefficient reads directly as the largest swing in
+`log10 eps_surv` that term is allowed to contribute. Setting every new
+coefficient to zero reproduces E2 EXACTLY, which the self-check asserts.
+
+The orthogonality is with respect to the UNIFORM measure on the range of
+`ln(1+z)`, not to the deposits' own mass-weighted measure, which is heavily
+skewed to low redshift (90% of the deposited halo mass sits below z = 2.9).
+So the columns of the fitted Jacobian are decorrelated but not orthogonal, and
+the identifiability report, not this construction, is what settles whether the
+extra coefficients are determined.
+
 Axes are switchable and NESTED, so "does this term earn its place" is a
 question the identifiability report can answer:
 
     efficiency  E1 base | +E2 mass x redshift | +E3 concentration
                 | E4 free spline in ln(1+z) | E5 double power law in mass
+                | E6 E2 + orthogonal polynomial in ln(1+z)
+                | E7 E2 + hinges in ln(1+z)
     profile     sersic | moffat | gompertz_log | richards | expo | gauss
     size        S2 R200c | S2a R200c/c200c    | +S3 conditioning slopes
 
@@ -91,6 +122,32 @@ def r50_ratio(family, shape, u):
     return xh / u
 
 
+_H_CACHE: dict = {}
+
+
+def _h_grid(family, shape):
+    """(u_grid, h(u_grid)) for the truncation inversion, cached on the family.
+
+    `h` depends on nothing that varies from deposit to deposit, so rebuilding it
+    inside every `solve_u` call was recomputing an identical 512-point curve
+    once per galaxy. Caching it is a pure speed change: the returned arrays are
+    the same values the previous code built, and `stage35_time_law.py` checks
+    the whole predicted profile against the pre-change code path.
+    """
+    key = (family, None if shape is None else tuple(np.round(shape, 9)))
+    hit = _H_CACHE.get(key)
+    if hit is None:
+        u_grid = np.geomspace(1e-4, 1e6, 512)
+        h = np.minimum.accumulate(r50_ratio(family, shape, u_grid))
+        u_grid.flags.writeable = False
+        h.flags.writeable = False
+        if len(_H_CACHE) > 64:
+            _H_CACHE.clear()
+        hit = (u_grid, h)
+        _H_CACHE[key] = hit
+    return hit
+
+
 def solve_u(family, shape, rho):
     """Invert h: the u whose truncated half-mass radius is rho * R_trunc.
 
@@ -99,10 +156,7 @@ def solve_u(family, shape, rho):
     truncation) and is clipped, which the caller prices as a bad fit rather
     than a crash.
     """
-    x, _ = _table(family, shape)
-    u_grid = np.geomspace(1e-4, 1e6, 512)
-    h = r50_ratio(family, shape, u_grid)
-    h = np.minimum.accumulate(h)                          # enforce monotone
+    u_grid, h = _h_grid(family, shape)
     rho = np.clip(np.asarray(rho, float), h[-1] * 1.000001, h[0] * 0.999999)
     return np.interp(-rho, -h, u_grid)                    # h decreasing
 
@@ -135,6 +189,7 @@ class Spec:
     conditioning: bool = False     # S3: slopes on cond(t_j)
     e3: bool = False               # add the concentration term to any eff
     n_knots: int = 4               # E4 only
+    n_time: int = 2                # E6 | E7: how many extra time coefficients
     trunc_C: float = 3.0
 
     @property
@@ -147,6 +202,18 @@ class Spec:
             n = ["a0", "a_M"] + [f"k{i}" for i in range(self.n_knots)]
         elif self.eff == "E5":
             n = ["log_eps0", "logM1", "beta", "gamma", "a_z"]
+        elif self.eff == "E6":
+            n = ["a0", "a_M", "a_z", "a_Mz"] + [
+                f"c{d}" for d in range(2, 2 + self.n_time)]
+        elif self.eff == "E7":
+            if self.n_time > len(E7_KNOT_Z):
+                raise ValueError(f"E7 has {len(E7_KNOT_Z)} knots defined, "
+                                 f"asked for {self.n_time}")
+            n = ["a0", "a_M", "a_z", "a_Mz"] + [
+                f"s{i}" for i in range(self.n_time)]
+        elif self.eff == "E8":
+            n = ["a0", "a_M", "a_z", "a_Mz"] + [
+                f"v{i}" for i in range(self.n_time - 2)]
         else:
             raise ValueError(f"unknown eff {self.eff!r}")
         return n + (["a_c"] if self.e3 else [])
@@ -167,14 +234,24 @@ class Spec:
 
     @property
     def label(self):
-        s = f"{self.family}-{self.eff}{'+E3' if self.e3 else ''}-{self.size}"
+        e = self.eff
+        if e == "E6":
+            e = f"E6p{self.n_time}"                # p = polynomial degrees used
+        elif e == "E7":
+            e = f"E7k{self.n_time}"                # k = knots used
+        elif e == "E8":
+            e = f"E8f{self.n_time}"                # f = free curve, n_time knots
+        s = f"{self.family}-{e}{'+E3' if self.e3 else ''}-{self.size}"
         return s + ("+S3" if self.conditioning else "")
 
     def bounds(self):
         b = {"a0": (-6, 2), "a_M": (-3, 3), "a_z": (-3, 3), "a_Mz": (-3, 3),
              "a_c": (-4, 4), "log_eps0": (-6, 2), "logM1": (10.0, 15.5),
              "beta": (0.0, 4.0), "gamma": (0.0, 4.0),
-             "log_f0": (-4.0, 0.0), "b": (-6.0, 6.0)}
+             "log_f0": (-4.0, 0.0), "b": (-6.0, 6.0),
+             **{f"c{d}": (-3.0, 3.0) for d in range(2, 8)},
+             **{f"s{i}": (-3.0, 3.0) for i in range(8)},
+             **{f"v{i}": (-3.0, 3.0) for i in range(20)}}
         out = [b.get(n, (-8.0, 8.0)) for n in self.eff_names + self.size_names]
         return out + list(families.shape_bounds(self.family))
 
@@ -191,6 +268,140 @@ class Spec:
 #: knot positions for E4, in ln(1+z); spans z ~ 0.2 to ~ 12
 E4_KNOTS = np.linspace(np.log(1.2), np.log(13.0), 16)
 
+#: The range of `x = ln(1+z)` the DEPOSITS actually span. Every galaxy in the
+#: sample carries the same 72 merger-tree steps, running from z = 14.989 to
+#: z = 0.400, so this is a property of the snapshot grid and not of a fit.
+#: E6 and E7 build their basis on exactly this interval.
+E6_X_LO, E6_X_HI = np.log(1.4), np.log(16.0)
+#: E7's knot redshifts, in the order they are switched on by `n_time`. z = 1
+#: and z = 3 split the deposits into three spans that each carry a substantial
+#: share of the deposited halo mass; z = 6 is a third knot for completeness and
+#: is expected to be poorly determined, since only a few percent of the
+#: deposited mass is laid down above it.
+E7_KNOT_Z = (1.0, 3.0, 6.0)
+_TIME_BASIS_CACHE: dict = {}
+
+
+def _legendre_shifted(x, degree):
+    """P_degree of the affine map of [E6_X_LO, E6_X_HI] onto [-1, 1].
+
+    Orthogonal to 1 and to x over that interval for `degree >= 2`, and bounded
+    by 1 in absolute value, so the coefficient reads as the largest swing in
+    log10 eps_surv the term may contribute.
+    """
+    t = 2.0 * (np.asarray(x, float) - E6_X_LO) / (E6_X_HI - E6_X_LO) - 1.0
+    if degree == 2:
+        return 0.5 * (3.0 * t ** 2 - 1.0)
+    if degree == 3:
+        return 0.5 * (5.0 * t ** 3 - 3.0 * t)
+    if degree == 4:
+        return 0.125 * (35.0 * t ** 4 - 30.0 * t ** 2 + 3.0)
+    if degree == 5:
+        return 0.125 * (63.0 * t ** 5 - 70.0 * t ** 3 + 15.0 * t)
+    raise ValueError(f"E6 degree {degree} is not low-order; 2-5 are defined")
+
+
+def _hinge_basis(n_time):
+    """(knots, A, B, scale) for E7: the hinge basis made orthogonal to {1, x}.
+
+    `g_i(x) = max(0, x - x_i)` is strongly collinear with 1 and with x, which
+    is what makes a raw hinge spline hard to identify alongside `a0` and `a_z`.
+    Each hinge is therefore projected off the span of {1, x} under the uniform
+    measure on [E6_X_LO, E6_X_HI] -- integrals done exactly, not sampled --
+    and then rescaled so `max |g| = 1` on that interval:
+
+        g_i(x) = [ max(0, x - x_i) - A_i - B_i * x ] / scale_i
+
+    Cached: the coefficients depend on nothing that varies during a fit.
+    """
+    hit = _TIME_BASIS_CACHE.get(("hinge", n_time))
+    if hit is not None:
+        return hit
+    lo, hi = E6_X_LO, E6_X_HI
+    L = hi - lo
+    knots = np.array([np.log(1.0 + z) for z in E7_KNOT_Z[:n_time]])
+    # exact moments of max(0, x - k) over [lo, hi] against 1 and against x
+    A, B, sc = [], [], []
+    for k in knots:
+        m0 = 0.5 * (hi - k) ** 2 / L                       # <g>
+        m1 = ((hi ** 3 - k ** 3) / 3.0 - 0.5 * k * (hi ** 2 - k ** 2)) / L
+        # project onto the orthonormal pair {1, sqrt(12)/L * (x - xbar)}
+        xbar = 0.5 * (lo + hi)
+        var = L ** 2 / 12.0
+        b = (m1 - m0 * xbar) / var                         # slope to remove
+        a = m0 - b * xbar
+        xg = np.linspace(lo, hi, 4096)
+        g = np.maximum(0.0, xg - k) - a - b * xg
+        s_ = float(np.max(np.abs(g)))
+        A.append(a); B.append(b); sc.append(s_)
+    hit = (knots, np.array(A), np.array(B), np.array(sc))
+    _TIME_BASIS_CACHE[("hinge", n_time)] = hit
+    return hit
+
+
+def hinge_terms(x, n_time):
+    """(n_time, ...) orthogonalized, unit-amplitude hinge basis at `x`."""
+    knots, A, B, sc = _hinge_basis(n_time)
+    x = np.asarray(x, float)
+    out = np.empty((n_time,) + x.shape)
+    for i in range(n_time):
+        out[i] = (np.maximum(0.0, x - knots[i]) - A[i] - B[i] * x) / sc[i]
+    return out
+
+
+def _pl_basis(n_knots):
+    """(knots, V) for E8: a FREE piecewise-linear curve in `x`, minus {1, x}.
+
+    E8 is a CEILING, not a candidate model. It asks how well the efficiency law
+    could possibly do if its dependence on time were free rather than
+    low-order, while still being one curve SHARED by every galaxy. The answer
+    bounds E6, E7 and any other shared time law from above, because a
+    piecewise-linear curve on `n_knots` knots contains all of them to within its
+    resolution.
+
+    `V` is (n_knots, n_knots - 2): each column holds the values of one basis
+    function AT THE KNOTS, so evaluation is one `np.interp`. The two dimensions
+    removed are exactly the constant and the linear trend, which `a0` and `a_z`
+    already carry -- without that removal the fit has two exactly flat
+    directions, which is the defect that made E4 useless. Columns are made
+    mutually orthogonal in L2 over the deposit range and rescaled to
+    `max |basis| = 1`.
+    """
+    hit = _TIME_BASIS_CACHE.get(("pl", n_knots))
+    if hit is not None:
+        return hit
+    if n_knots < 4:
+        raise ValueError("E8 needs at least 4 knots to add anything to E2")
+    knots = np.linspace(E6_X_LO, E6_X_HI, n_knots)
+    h = knots[1] - knots[0]
+    # Every integral below is ANALYTIC. Quadrature on a grid is not good enough
+    # here: a hat function has a kink at each knot, so unless the grid lands on
+    # every knot the trapezoid rule leaks O(h) into exactly the overlaps this
+    # construction exists to zero -- which it did, at the 5e-4 level.
+    G = (np.diag(np.r_[h / 3, np.full(n_knots - 2, 2 * h / 3), h / 3])
+         + np.diag(np.full(n_knots - 1, h / 6), 1)
+         + np.diag(np.full(n_knots - 1, h / 6), -1))      # hat mass matrix
+    m0 = np.r_[h / 2, np.full(n_knots - 2, h), h / 2]     # int hat_i dx
+    m1 = np.r_[knots[0] * h / 2 + h ** 2 / 6,             # int hat_i x dx
+               h * knots[1:-1],
+               knots[-1] * h / 2 - h ** 2 / 6]
+    C = np.stack([m0, m1])                                # (2, n_knots)
+    _, _, Vt = np.linalg.svd(C)
+    N = Vt[2:].T                                          # (n_knots, n_knots-2)
+    L = np.linalg.cholesky(N.T @ G @ N)
+    V = N @ np.linalg.inv(L).T                            # L2-orthonormal
+    V = V / np.max(np.abs(V), axis=0, keepdims=True)      # max |basis| = 1
+    hit = (knots, V)
+    _TIME_BASIS_CACHE[("pl", n_knots)] = hit
+    return hit
+
+
+def pl_terms(x, n_knots):
+    """(n_knots-2, ...) free-curve basis at `x`, orthogonal to 1 and to x."""
+    knots, V = _pl_basis(n_knots)
+    x = np.asarray(x, float)
+    return np.stack([np.interp(x, knots, V[:, j]) for j in range(V.shape[1])])
+
 
 def log_eps(spec, eff, halo):
     """log10 eps_surv per deposit."""
@@ -206,6 +417,23 @@ def log_eps(spec, eff, halo):
         k = np.linspace(E4_KNOTS[0], E4_KNOTS[-1], spec.n_knots)
         le = eff[0] + eff[1] * m + np.interp(x, k, eff[2:2 + spec.n_knots])
         i = 2 + spec.n_knots
+    elif spec.eff == "E6":
+        le = eff[0] + eff[1] * m + eff[2] * x + eff[3] * m * x
+        for d in range(2, 2 + spec.n_time):
+            le = le + eff[2 + d] * _legendre_shifted(x, d)
+        i = 4 + spec.n_time
+    elif spec.eff == "E7":
+        le = eff[0] + eff[1] * m + eff[2] * x + eff[3] * m * x
+        g = hinge_terms(x, spec.n_time)
+        for j in range(spec.n_time):
+            le = le + eff[4 + j] * g[j]
+        i = 4 + spec.n_time
+    elif spec.eff == "E8":
+        le = eff[0] + eff[1] * m + eff[2] * x + eff[3] * m * x
+        g = pl_terms(x, spec.n_time)
+        for j in range(spec.n_time - 2):
+            le = le + eff[4 + j] * g[j]
+        i = 2 + spec.n_time
     else:                                                  # E5
         le0, lm1, beta, gam, a_z = eff[:5]
         r = 10.0 ** np.clip(halo.logmh - lm1, -30, 30)
@@ -327,9 +555,10 @@ if __name__ == "__main__":
           "there is nothing to poison")
 
     # (6) every efficiency form runs and nests
-    for eff in ("E1", "E2", "E4", "E5"):
+    for eff in ("E1", "E2", "E4", "E5", "E6", "E7", "E8"):
         for e3 in (False, True):
-            sp = Spec(family="sersic", eff=eff, e3=e3)
+            sp = Spec(family="sersic", eff=eff, e3=e3,
+                      n_time=6 if eff == "E8" else 2)
             m = forward(sp, default_theta(sp), h, [0], R)
             assert m is not None and np.isfinite(m).all(), (eff, e3)
     sp1, sp2 = Spec(eff="E1"), Spec(eff="E2")
@@ -337,7 +566,66 @@ if __name__ == "__main__":
     a = forward(sp1, default_theta(sp1), h, [0], R)
     b = forward(sp2, t2, h, [0], R)
     assert np.allclose(a, b, rtol=1e-12), "E2 does not nest E1"
-    print("  (6) E1/E2/E4/E5 all run, with and without E3; E2 nests E1 exactly")
+    print("  (6) E1/E2/E4/E5/E6/E7/E8 all run, with and without E3; E2 nests "
+          "E1 exactly")
+
+    # (6b) THE NESTING THAT THE NEW TIME LAWS LIVE OR DIE BY. E6 and E7 are only
+    #      interpretable as "E2 plus a correction" if zeroing every new
+    #      coefficient gives back E2 to the last bit, at an ARBITRARY theta and
+    #      not merely at the default one. Checked on all five epochs and on
+    #      several galaxies, for every order of both forms.
+    rng6 = np.random.default_rng(7)
+    sp2 = Spec(family="gompertz_log", eff="E2")
+    base2 = default_theta(sp2)
+    worst_nest = 0.0
+    for trial in range(4):
+        t2 = base2 + rng6.normal(0, 0.25, base2.shape)
+        for eff, nt in (("E6", 1), ("E6", 2), ("E6", 3), ("E7", 2), ("E7", 3),
+                        ("E8", 6), ("E8", 8)):
+            spx = Spec(family="gompertz_log", eff=eff, n_time=nt)
+            n_new = spx.n_theta - sp2.n_theta
+            tx = np.concatenate([t2[:4], np.zeros(n_new), t2[4:]])
+            assert spx.theta_names[:4] == sp2.theta_names[:4]
+            assert spx.n_theta == len(tx), (spx.label, spx.n_theta, len(tx))
+            for hh in recs[:4]:
+                a = forward(sp2, t2, hh, [0, 1, 2, 3, 4], R)
+                b = forward(spx, tx, hh, [0, 1, 2, 3, 4], R)
+                if a is None or b is None:
+                    assert a is None and b is None, spx.label
+                    continue
+                worst_nest = max(worst_nest, float(np.max(np.abs(a - b))))
+    assert worst_nest == 0.0, (f"E6/E7 do not nest E2 exactly: max |dM*| = "
+                               f"{worst_nest:.3e} Msun")
+    print(f"  (6b) E6 (1-3 extra terms), E7 (2-3 knots) and E8 (6, 8 knots) "
+          f"reproduce E2 BIT FOR "
+          f"BIT\n       when the new coefficients are zero: max |dM*(<R)| = "
+          f"{worst_nest:.1e} Msun over 4 random\n       thetas x 5 epochs x 4 "
+          f"galaxies x 24 radii")
+
+    # (6c) the new basis functions really are orthogonal to a constant and to x
+    #      over the deposit range, which is what stops them fighting a0 and a_z
+    # the quadrature grid must CONTAIN every kink, or the test is measuring its
+    # own trapezoid error rather than the basis
+    kinks = np.r_[[np.log(1.0 + z) for z in E7_KNOT_Z],
+                  np.linspace(E6_X_LO, E6_X_HI, 8)]
+    xg = np.union1d(np.linspace(E6_X_LO, E6_X_HI, 20001), kinks)
+    cols = ([_legendre_shifted(xg, d) for d in (2, 3, 4)]
+            + list(hinge_terms(xg, 3)) + list(pl_terms(xg, 8)))
+    bad = 0.0
+    for c in cols:
+        for ref in (np.ones_like(xg), xg - xg.mean()):
+            ov = abs(np.trapezoid(c * ref, xg)) / (
+                np.sqrt(np.trapezoid(ref ** 2, xg) * np.trapezoid(c ** 2, xg)))
+            bad = max(bad, ov)
+        # <= 1 exactly; a fine grid that misses the knots of a piecewise-
+        # linear basis function samples just below its peak
+        pk = float(np.max(np.abs(c)))
+        assert 0.99 < pk <= 1.0 + 1e-9, pk
+    print(f"  (6c) all {len(cols)} time-basis functions: max normalized "
+          f"overlap with "
+          f"1 and with x\n       over the deposit range = {bad:.2e}, and every "
+          f"one peaks at |basis| = 1")
+    assert bad < 1e-6
 
     # (7) both size laws run and differ
     ma = forward(Spec(size="S2"), default_theta(Spec(size="S2")), h, [0], R)

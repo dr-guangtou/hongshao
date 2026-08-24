@@ -1445,12 +1445,25 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ### exp54 — what the ceiling now points at, in order
 
-- [ ] **Enrich the efficiency law's TIME dependence.** The strongest positive
-  lead: the temporal ladder puts most of the reachable improvement at three to
-  eight independent components in time, which a richer global redshift
-  dependence could plausibly express. Score any candidate against the permuted
-  control, not against the ceiling.
-- [ ] **Repair the objective before the profile family.** The production loss
+- [x] **Enrich the efficiency law's TIME dependence — DONE, and NEGATIVE**
+  (Stage 3.5, `stage35_time_law.py`). Five nested shared forms — Legendre
+  polynomials of degree 2-4 in `ln(1+z)`, and hinges at z = 1, 3, 6 — moved the
+  profile-shape error from 13.80% to at best **13.62%**, against a 10-11%
+  target. A FREE shared curve (`E8`) reaches 13.64%, so **0.2 percentage points
+  is the whole budget for a shared time law and two parameters already collect
+  it**. The new coefficients are not determined: conditional loss rise 0.0035
+  to 0.047 against 0.14 to 39.4 for the parameters E2 already had, bootstrap
+  spread 10.6% to 201% of their own value against 0.9% to 8.1%, and three are
+  outright unstable. Adding them also doubles the uncertainty on `a_z`. The
+  judge ranks the incumbent SECOND, ahead of three of five enrichments.
+  **Nothing adopted; `gompertz_log-E2-S2` stands.**
+  - The premise was wrong and is corrected in the record: the K-interval ladder
+    that motivated this is solved **per galaxy**, so its 10.5% at K=3 was never
+    a target for a law with no per-galaxy freedom. `bins1` is identical to the
+    fitted model, which was the tell.
+  - The correction the extra parameters buy is spent above z = 4, where only
+    7.3% of the deposited stellar mass is made (1.0% above z = 7).
+- [ ] **Repair the objective before the profile family.** NOW THE LEADING ITEM. The production loss
   cannot see the outskirts at high redshift (at z=2 only 6.3 per cent of the
   mass lies beyond 52 kpc) and is nearly blind to monotonicity once each epoch
   is renormalised. Re-examine exp48's density-plus-log-residual objective.

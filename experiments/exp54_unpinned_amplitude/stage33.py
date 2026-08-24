@@ -57,7 +57,12 @@ RULE = "=" * 96
 
 
 def spec_from_label(label):
-    """Rebuild a Spec from its label, e.g. 'sersic-E1+E3-S2a+S3'."""
+    """Rebuild a Spec from its label, e.g. 'sersic-E1+E3-S2a+S3'.
+
+    E6 and E7 carry their order in the label -- `E6p2` is E6 with two extra
+    polynomial terms, `E7k2` is E7 with two knots -- because the parameter
+    count, and therefore the whole meaning of the fit, depends on it.
+    """
     fam, eff, size = label.split("-", 2)
     kw = dict(family=fam)
     if "+S3" in size:
@@ -67,8 +72,16 @@ def spec_from_label(label):
     if "+E3" in eff:
         kw["e3"] = True
         eff = eff.replace("+E3", "")
+    for tag in ("E6p", "E7k", "E8f"):
+        if eff.startswith(tag):
+            kw["n_time"] = int(eff[len(tag):])
+            eff = tag[:2]
+            break
     kw["eff"] = eff
-    return M.Spec(**kw)
+    sp = M.Spec(**kw)
+    if sp.label != label:
+        raise ValueError(f"label round-trip failed: {label!r} -> {sp.label!r}")
+    return sp
 
 
 def growth_report(pred, data, epochs):

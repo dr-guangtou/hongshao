@@ -785,3 +785,190 @@ again.
 The one v1 conclusion that survives unchanged is that a redshift-dependent
 deposit shape does not earn a fit — and it now survives a full-sample
 confirmation it did not have.
+
+---
+
+## Stage 3.5 (2026-08-24) — a richer time dependence for the efficiency law (`stage35_time_law.py`, `stage35_figures.py`), COMPLETE
+
+**The result is negative, and it is a clean one.** Giving the efficiency law a
+richer dependence on redshift is worth **0.18 percentage points** of the
+incumbent's 13.80% profile-shape error, and the new coefficients are not
+determined. This was the leading positive lead out of Stage 3.4. It is now
+closed.
+
+### What was fitted
+
+The adopted model `gompertz_log-E2-S2` writes the effective surviving-central
+mass fraction as a single power law in `ln(1+z)`:
+
+```
+log10 eps_surv = a0 + a_M (logMh - 13.5) + a_z ln(1+z) + a_Mz (logMh - 13.5) ln(1+z)
+```
+
+Five nested enrichments were fitted, all sharing every parameter across
+galaxies, on all five epochs, scored on the per-epoch mh-complete mask (2397 /
+1781 / 1436 / 1145 / 840 galaxies, 7599 galaxy-epochs), ranked by the
+seven-criterion judge:
+
+| form | what it adds | extra parameters |
+|---|---|---|
+| `E6p1` `E6p2` `E6p3` | shifted Legendre polynomials in `ln(1+z)`, degrees 2, 2-3, 2-4 | 1, 2, 3 |
+| `E7k2` `E7k3` | hinges at z = 1, 3 and 6 | 2, 3 |
+
+Every basis function is **orthogonal to a constant and to `ln(1+z)`** over the
+deposits' own redshift range and normalized so its largest value is 1, so its
+coefficient reads directly as the biggest swing in `log10 eps_surv` that term
+can contribute. That orthogonalisation is not cosmetic. Stage 3.2's `E4` —
+a free piecewise-linear curve whose knot VALUES were the parameters — was the
+worst of the 45 variants, and the reason is structural rather than statistical:
+`a0 + interp(x, knots, k)` is **exactly degenerate**, because adding a constant
+to `a0` and subtracting it from every knot gives an identical model. E6 and E7
+cannot do that.
+
+`model.py`'s self-check asserts the nesting **bit for bit**: with the new
+coefficients at zero, E6, E7 and E8 reproduce E2 to `max |dM*(<R)| = 0.0 Msun`
+over random thetas, five epochs, several galaxies and 24 radii. Every fit also
+included the incumbent's own optimum with the new coefficients zeroed as one of
+its five starts, so no variant could come out worse than E2 unless the
+optimiser failed.
+
+### The result
+
+| variant | extra | shape error | vs E2 | loss | smallest singular value |
+|---|---|---|---|---|---|
+| `E2` (incumbent) | — | **13.803%** | — | 2.279273 | 7.5e-3 |
+| `E6p1` | 1 | 13.722% | -0.08 | 2.272124 | 3.9e-3 |
+| `E7k2` | 2 | 13.700% | -0.10 | 2.272731 | 1.9e-3 |
+| `E7k3` | 3 | 13.638% | -0.17 | 2.264012 | 1.4e-3 |
+| `E6p3` | 3 | 13.642% | -0.16 | 2.263729 | 2.6e-3 |
+| `E6p2` | 2 | **13.623%** | **-0.18** | 2.267094 | 3.1e-3 |
+
+The judge's order is `E6p3` > **`E2`** > `E6p1` > `E7k3` > `E6p2` > `E7k2`: the
+incumbent comes **second**, ahead of three of the five enrichments, because
+what the extra terms take off the shape error they give back in
+identifiability. The target was 10-11%. Nothing came within 2.6 percentage
+points of it.
+
+### Why it stops there: the ceiling on ANY shared time law
+
+`E8` gives the time dependence a **free** piecewise-linear curve on 6 or 8
+knots, with the constant and linear directions projected out analytically. It
+is not a candidate model and is kept out of the judge; it exists to bound every
+shared time law from above.
+
+```
+incumbent 13.803%  ->  best low-order law 13.623%  ->  FREE shared curve 13.643%
+```
+
+A free curve with four extra coefficients does **not** beat two Legendre terms.
+The 0.02-point difference is the size of the optimiser's own spread in 11-13
+dimensions — `E8f8`, which has strictly more freedom than `E8f6`, came out
+0.018 points **worse**, which can only be Nelder-Mead. So `E8`'s optimum is a
+LOWER bound on the ceiling, stated rather than buried; the conclusion survives
+it, because three independent constructions with one to six extra shared
+coefficients all land between 13.62% and 13.66%.
+
+**A shared time law of any shape is worth about 0.2 percentage points. Two
+extra parameters already collect all of it.**
+
+### The correction is spent where there is no mass
+
+`figures/stage35_time_law.png` panels (a) and (b). Every variant leaves the
+efficiency law essentially unchanged below z = 4 and then turns sharply upward,
+reaching **+1.4 dex above the incumbent by z = 15**. Under the incumbent law
+only **7.3%** of the deposited stellar mass is made above z = 4 and **0.98%**
+above z = 7; of the accreted halo mass, 2.9% and 0.47%. The extra freedom is
+being spent almost entirely on mass that is not there, which explains the
+negligible gain and the poor identifiability at once.
+
+### The identifiability report is the binding constraint, as predicted
+
+`figures/stage35_identifiability.png`. The separation is complete — every new
+coefficient is flat and unstable, every pre-existing parameter is steep and
+stable, with no overlap in either coordinate:
+
+| | conditional loss rise | bootstrap spread / \|value\| |
+|---|---|---|
+| the 7 parameters E2 already had | 0.14 to 39.4 | 0.9% to 8.1% |
+| the 11 new time coefficients | 0.0035 to 0.047 | 10.6% to 201% |
+
+Three coefficients are outright unstable: `E7k2:s0` at **201%** of its own
+value, `E7k3:s1` at 61%, `E7k3:s0` at 53%. The best-behaved new coefficient
+anywhere is `E6p3:c2` at 10.6%, still worse than every one of E2's own.
+
+The enrichment also **degrades the parameters that were already there**. The
+redshift slope `a_z`, which is the term the new coefficients are competing
+with, goes from a 5.0% bootstrap spread in E2 to 8.9-12.1%; `a0` goes from 0.9%
+to 2.4-3.0%. Adding the new terms buys 1.3% off the shape error and costs a
+doubling of the uncertainty on the law's own redshift dependence.
+
+### What did NOT get worse
+
+The halo-mass tilt does not reopen. Measured on Stage 3.3's footing — full
+sample, epoch-matched halo mass, `stage33.tilt_report` — the outer residual's
+slope at 148 kpc moves from `-0.031` (E2) to `-0.039` (E6p2) at z = 0.4 and
+**improves** at z = 2, from `-0.099` to `-0.078`. At 5 kpc and z = 2 it
+improves more, `-0.126` to `-0.095`. The amplitude scores are unchanged to
+within 0.01 at every epoch.
+
+### The premise this stage was launched on was wrong
+
+Stage 3.4's temporal ladder was read as "most of the reachable improvement sits
+at a time resolution a shared law can express", because freeing the deposited
+mass over K time groups moves the shape error 14.2% (K=1) -> 10.5% (K=3) ->
+9.7% (K=8). **Every rung of that ladder is solved PER GALAXY**
+(`stage34_ceiling.py`, `run_sample` loops over galaxies calling
+`solve_galaxy`, and every rung inside it is a per-galaxy non-negative least
+squares). So K = 3 buys its gain by giving each object its own three numbers,
+not by finding a better universal curve. The tell was already in the output and
+was not read: `bins1` is **identical** to the fitted model at every epoch
+(13.80% on the masked sample), because one free amplitude per galaxy cancels
+out of a profile renormalised at 100 kpc.
+
+The right comparison for a shared law is `E8`, and it says the budget was 0.2
+points, not 3.3.
+
+### The speed change, checked rather than assumed
+
+`StackedProblem` evaluates all 2397 galaxies as one array instead of looping in
+Python — every galaxy carries the same 72 merger-tree steps, so the deposits
+stack into (2397, 72). `check_stacking` compares the whole predicted profile
+array against `fit.Problem.predict` galaxy by galaxy at several thetas and
+refuses to run if they differ: **max relative difference 1.6e-15**, and the
+masked scores agree with `stage33_perepoch.MaskedProblem` to 8.9e-16. The run
+also verifies that Stage 3.3's stored E2 optimum reproduces Stage 3.3's stored
+loss here **exactly** (2.2792734407262394, difference 0.0) before fitting
+anything. `model.solve_u` now caches the truncation-inversion grid, which was
+being rebuilt identically once per galaxy.
+
+### Reproducing
+
+```
+export HONGSHAO_DATA_DIR=/path/to/tng300_mah_mprof
+# one variant per process; each writes outputs/stage35_fits/<label>.npz
+PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage35_time_law.py \
+    --only gompertz_log-E6p2-S2 --starts 4
+# then, with every fit on disk, score and rank them
+PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage35_time_law.py
+# the identifiability report for one variant (~25 min: 12 bootstrap refits)
+PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage35_time_law.py \
+    --only gompertz_log-E6p2-S2 --ident
+PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage35_figures.py
+```
+
+`--smoke` writes nothing at all, and `--only` writes only its own per-variant
+file, so neither can touch `outputs/stage35_time_law.npz` or the figures.
+
+### The verdict
+
+**Do not adopt any of these.** The incumbent `gompertz_log-E2-S2` stands. If
+one were adopted anyway it should be `E6p2` — two extra parameters, the lowest
+shape error, and the least badly determined of the enriched forms — but it buys
+1.3% off one score at the price of doubling the uncertainty on `a_z`, and the
+judge already ranks the incumbent above it.
+
+**What this closes.** The efficiency law's dependence on time is not where the
+remaining error lives. The next steps in `doc/todo.md` are re-ordered
+accordingly: the objective's blindness beyond 52 kpc at z = 2 is now the
+leading item, because a shared law cannot be shown to be inadequate by a loss
+that cannot see where it fails.

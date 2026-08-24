@@ -1173,3 +1173,45 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the full-sample ladder figure with a 60-galaxy version, and it took an
   outside reviewer to notice the sample sizes in the panel titles. Smoke
   outputs get a suffix.
+
+- **A bound built from per-object freedom is not a target for a law that has
+  none (exp54, 2026-08-24).** Stage 3.4's temporal ladder — free deposited mass
+  in K time groups, 14.2% at K=1 falling to 9.7% at K=8 — was read as "most of
+  the reachable improvement sits at a time resolution a shared law can
+  express", and a whole stage was launched on it. Every rung of that ladder is
+  solved PER GALAXY. A shared law has no per-galaxy freedom at all, so the
+  ladder never bounded it. Measured properly, by giving the shared law a FREE
+  curve in redshift, the budget is **0.2 percentage points, not 3.3** — and two
+  parameters already collect all of it. **The tell was in the output the whole
+  time**: the K=1 rung was numerically IDENTICAL to the fitted model, because
+  one free amplitude per galaxy cancels out of a profile renormalised at
+  100 kpc. A rung that equals the thing it is supposed to bound is announcing
+  that it measures a different kind of freedom. **The habit**: before treating
+  a number as a target, ask how many free parameters PER OBJECT produced it,
+  and build the matching bound at the freedom the candidate actually has.
+- **Orthogonalise a new basis against what the model already has, or the
+  identifiability report will be about the wrong thing (exp54, 2026-08-24).**
+  `E4`, a free piecewise-linear curve in `ln(1+z)` whose knot VALUES were the
+  parameters, was the worst of 45 variants with undetermined parameters — and
+  the reason was structural, not statistical: `a0 + interp(x, knots, k)` is
+  exactly degenerate, since adding a constant to `a0` and subtracting it from
+  every knot gives an identical model. Rebuilding the same freedom in a basis
+  made orthogonal to a constant and to `ln(1+z)` removed that degeneracy
+  entirely (all 8-13 parameters "effective" at the 1e-3 threshold). It did not
+  make the terms worth having — the honest verdict was still no — but it meant
+  the report was measuring whether the DATA determine the new coefficients
+  rather than re-discovering an algebraic identity.
+- **Say what the extra freedom is being spent ON, not just what it bought
+  (exp54, 2026-08-24).** "13.80% to 13.62%" is a number; "the correction is
+  within 0.01 dex of the incumbent everywhere below z = 4 and reaches +1.4 dex
+  by z = 15, where 1% of the stellar mass is made" is the explanation, and it
+  predicts the poor identifiability rather than merely accompanying it.
+  Plotting the fitted law against the mass-weighted distribution of the
+  variable it depends on turned a null result into a mechanism.
+- **Check a fast path against the slow one on the QUANTITY, not on the score
+  (exp54, 2026-08-24).** Replacing a per-galaxy Python loop with one stacked
+  array evaluation was worth ~3x and made eight fits plus six bootstrap reports
+  feasible in an afternoon. It was gated on comparing the whole predicted
+  profile array against the old path galaxy by galaxy at several thetas
+  (1.6e-15), not on the two aggregate scores agreeing — a cancellation inside a
+  mean over 2397 galaxies and 24 radii would have passed the weaker check.

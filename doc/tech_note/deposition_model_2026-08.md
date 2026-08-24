@@ -825,13 +825,25 @@ normalised at 100 kpc, and the value *must* equal the fitted model's. An earlier
 version of this note read that identity as "no room for improvement at redshift
 2", which was wrong.
 
-Second, and substantively: **most of the available improvement arrives by three
-to eight independent components in time.** That is a resolution a richer
-dependence of the efficiency on redshift could plausibly express — it does not
-need per-galaxy freedom. See
-`figures/stage34_temporal_gompertz_log-E2-S2.png`. It must still be read against
-the wrong-galaxy test of Section 8.1, because these are oracles fitted to the
+Second: **most of the available improvement arrives by three to eight
+independent components in time.** See
+`figures/stage34_temporal_gompertz_log-E2-S2.png`. It must be read against the
+wrong-galaxy test of Section 8.1, because these are oracles fitted to the
 stellar data.
+
+**A correction, dated 2026-08-24.** An earlier version of this section added
+"that is a resolution a richer dependence of the efficiency on redshift could
+plausibly express — it does not need per-galaxy freedom", and Section 10 made
+it the leading next step. **That inference was wrong.** Every column of the
+table above is solved separately for each galaxy: at K = 3 each object gets its
+own three numbers. A law shared by all galaxies has no per-galaxy freedom at
+all, so this table never bounded one. The tell was already in the table — the
+K = 1 column equals the fitted model everywhere, not only at redshift 2,
+because one free amplitude per galaxy cancels out of a profile normalised at
+100 kpc.
+
+Section 8.8 measures the quantity this section should have measured. The answer
+is 0.2 percentage points, not the 3.3 implied here.
 
 ### 8.6 Two checks on the bound itself
 
@@ -869,6 +881,68 @@ and a very flexible set of deposits can be insensitive to a change a rigid
 shared law would still feel. **The extension was not built.**
 
 ---
+
+### 8.8 What a richer dependence on time actually buys
+
+Section 8.5's table was the reason to try this, and Section 8.5 now records why
+it was the wrong reason. The experiment was run anyway, properly bounded, and
+the answer is clear.
+
+The efficiency law's dependence on redshift was replaced by five richer forms,
+each keeping the current law whole and adding a correction on top of it: a
+polynomial of degree two, three or four, and a set of two or three hinges at
+redshift 1, 3 and 6. Each added correction is built to be **orthogonal to a
+constant and to the current redshift term** over the range of redshifts the
+deposits actually span, so its coefficients cannot simply trade against the
+parameters already there — an earlier free-curve attempt failed for exactly
+that reason, and failed as algebra rather than as physics. Setting the new
+coefficients to zero reproduces the current model exactly, to the last bit, and
+every fit was started from the current model's own best-fit values so that no
+enrichment could come out worse unless the optimiser failed.
+
+| | extra parameters | profile-shape error |
+|---|---|---|
+| the current law | — | **13.80%** |
+| polynomial, degree 2 | 1 | 13.72% |
+| two hinges | 2 | 13.70% |
+| polynomial, degrees 2-4 | 3 | 13.64% |
+| three hinges | 3 | 13.64% |
+| polynomial, degrees 2-3 | 2 | **13.62%** |
+| **a completely FREE shared curve** | 4 | 13.64% |
+
+The last row is the point. Giving the time dependence a free shape, rather than
+two coefficients, buys nothing further; the 0.02-point difference is smaller
+than the spread between repeated optimiser runs in that many dimensions. **A
+shared law's dependence on time is worth about 0.2 percentage points of the
+13.80%, and two extra parameters already collect all of it.** The target
+implied by Section 8.5 was 10-11%. Nothing came within 2.6 percentage points.
+
+Two further findings make this a mechanism rather than a null.
+
+**The extra freedom is spent where there is almost no mass.** Every enriched
+form leaves the efficiency essentially unchanged below redshift 4 and then
+turns sharply upward, ending 1.4 dex above the current law by redshift 15. Only
+7% of the stellar mass this model makes is made above redshift 4, and 1% above
+redshift 7 (`figures/stage35_time_law.png`, panels a and b). The new
+coefficients are describing a part of history that carries no weight.
+
+**The new coefficients are not determined, and they damage the ones that are.**
+Displacing any of the seven parameters the model already has raises the loss by
+between 0.14 and 39; displacing any of the eleven new coefficients raises it by
+between 0.0035 and 0.05 — three to four orders of magnitude less. Resampling
+the galaxies moves the existing parameters by 0.9% to 8% of their own values
+and the new ones by 11% to 201%; three of the eleven cannot be pinned to within
+their own size at all. Adding them also **doubles the uncertainty on the
+model's own redshift slope**, from 5% to 9-12%
+(`figures/stage35_identifiability.png`).
+
+**Nothing was adopted.** The judging panel ranks the current seven-parameter
+law *second* out of six, ahead of three of the five enrichments, because what
+they take off the profile error they give back in how well the parameters are
+pinned down. The halo-mass tilt does not reopen — it moves by at most 0.008 dex
+per dex below redshift 1.5 and improves at redshift 2 — so nothing was traded
+away either. The conclusion is simply that the efficiency law's dependence on
+time is not where the remaining error lives.
 
 ## 9. What we have learned
 
@@ -1017,21 +1091,26 @@ to help turned out to be fitting the sample selection.
 is a failure mode no deposition-only model can address — the simulation's
 central mass falls with time in the majority of these galaxies. Of the rest,
 most of the apparent headroom is the flexibility of the deposits rather than
-physics a shared law could learn.
+physics a shared law could learn. And one specific route into that headroom is
+now closed by measurement rather than by argument: enriching the efficiency
+law's dependence on time, in any shape at all, is worth 0.2 percentage points
+of a 13.80% profile error (Section 8.8).
 
 ### 10.2 Next steps, in order
 
-**1. Give the efficiency law a richer dependence on time.** This is the one
-clearly positive lead (Section 8.5): most of the reachable improvement in the
-profile shape arrives once the amount of stellar mass deposited can vary
-independently over three to eight broad time intervals, which a richer
-dependence of efficiency on redshift could express with a handful of extra
-shared parameters. Concretely: replace the single power law in `ln(1+z)` with a
-low-order polynomial or a two-knot spline, fit it, and judge it with the
-existing panel. **Score it against the wrong-galaxy control, not against the
-bound.**
+**0. Give the efficiency law a richer dependence on time — DONE, and it is a
+dead end** (Section 8.8, 2026-08-24). Five richer forms and a completely free
+shared curve all land between 13.62% and 13.66%, against the current law's
+13.80% and a target of 10-11%. The whole budget for a shared dependence on time
+is 0.2 percentage points, and two extra parameters already collect it. The new
+coefficients are three to four orders of magnitude flatter than the existing
+ones and cannot be pinned down by resampling the galaxies. Nothing adopted.
+The lead that pointed here rested on a table of per-galaxy bounds, which never
+constrained a shared law; Section 8.5 now says so.
 
-**2. Repair the loss before touching the profile family.** The loss we fit
+**1. Repair the loss before touching the profile family.** Promoted, and now
+the leading item for a reason this exercise supplied: a shared law cannot be
+shown to be inadequate by a loss that cannot see where it fails. The loss we fit
 cannot see the outskirts at high redshift — at redshift 2 only 6.3% of
 the stellar mass lies beyond 52 kpc, so an error below 1% on the cumulative
 curve is a 30% error in that annulus (Section 8.1 and 5.5) — and it is
@@ -1041,19 +1120,19 @@ with a logarithmic residual, which improves the compact-centre defect; it was
 not adopted for unrelated reasons and deserves re-examination now that the
 blindness is quantified.
 
-**3. Explain why the model degrades on complete, massive samples.** A 36% excess scatter in total stellar mass at redshift 0.7 and above, on exactly
+**2. Explain why the model degrades on complete, massive samples.** A 36% excess scatter in total stellar mass at redshift 0.7 and above, on exactly
 the galaxies we would want to deploy on, and not explained by anything in
 Section 8. This is the strongest remaining argument against the model, and it is
 a total-mass problem rather than a profile problem.
 
-**4. Only then, and only if it earns it, a compact second component** — and only
+**3. Only then, and only if it earns it, a compact second component** — and only
 on the galaxies whose centres do not decline (Section 8.3), following a nested
 sequence: first map the central residual against halo properties available at
 the epoch, with a shuffled control; then try a fixed compact fraction; then let
 it depend on mass and redshift; and let it depend on formation history only if
 that beats its own shuffled control.
 
-**5. Test a halo-mass-dependent size evolution.** The size law's dependence on
+**4. Test a halo-mass-dependent size evolution.** The size law's dependence on
 redshift is currently the same for all halo masses. Making that exponent depend
 on halo mass is a single extra parameter that targets the massive high-redshift
 galaxies directly, and it has never been tested — the size-law extension that
