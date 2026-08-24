@@ -1322,4 +1322,9 @@ Cross-experiment plan. Mirrors the phase sequence in
   changes below 0.008 dex (or 0.004 in compact fraction) when alternating radii
   are removed. **Decision:** adopt this function as the profile target for a
   separate held-out DiffMAH mapping experiment, with per-object conditioning
-  flags and no in-situ/ex-situ interpretation.
+  flags and no in-situ/ex-situ interpretation. The subsequent standard QA
+  confirms 0.003--0.006 dex scatter in cumulative apertures but finds the
+  expected derivative limitation: the mass beyond 100 kpc has +12.1% median
+  bias and 0.161 dex scatter, and the median absolute annular-density error
+  reaches 0.132 dex near 140 kpc. The halo-mapping experiment must therefore
+  judge differential profiles as well as CoGs.

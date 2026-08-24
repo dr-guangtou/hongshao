@@ -59,6 +59,19 @@ def mixed_cog_log(
     gamma: float,
 ) -> np.ndarray:
     """Four-parameter CoG with component fraction defined within 148 kpc."""
+    compact_mass, extended_mass = mixed_component_cogs(
+        parameters, radius, n_sersic, gamma
+    )
+    return np.log10(np.clip(compact_mass + extended_mass, 1e-300, None))
+
+
+def mixed_component_cogs(
+    parameters: np.ndarray,
+    radius: np.ndarray,
+    n_sersic: float,
+    gamma: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return compact and extended cumulative masses in physical solar masses."""
     log_mass, logit_fraction, log_r_compact, log_ratio_minus_one = parameters
     compact_fraction = expit(logit_fraction)
     r_compact = 10.0**log_r_compact
@@ -67,8 +80,11 @@ def mixed_cog_log(
     extended = moffat_fraction(radius, r_extended, gamma)
     compact /= compact[-1]
     extended /= extended[-1]
-    fraction = compact_fraction * compact + (1.0 - compact_fraction) * extended
-    return log_mass + np.log10(np.clip(fraction, 1e-300, None))
+    total_mass = 10.0**log_mass
+    return (
+        total_mass * compact_fraction * compact,
+        total_mass * (1.0 - compact_fraction) * extended,
+    )
 
 
 def observed_r50(cog_log_values: np.ndarray, radius: np.ndarray = RADII) -> float:

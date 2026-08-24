@@ -954,3 +954,10 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   grid. Visual and implementation review exposed that it did not meet the
   portability requirement, so it was replaced with the exact softplus
   antiderivative before the family comparison was accepted.
+- **A visually excellent cumulative profile can retain a meaningful outer-
+  density error (exp55).** Near 140 kpc, a typical annulus contains only 1.09%
+  of the mass enclosed by its outer edge. A 0.00531 dex median absolute CoG
+  error there becomes a 0.132 dex median absolute density error when adjacent
+  cumulative masses are subtracted. Always judge an analytic CoG in cumulative
+  apertures, differential annuli, and surface density; none of the three is a
+  substitute for the others.

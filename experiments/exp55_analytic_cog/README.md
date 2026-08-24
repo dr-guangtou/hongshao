@@ -62,13 +62,16 @@ It has four galaxy-level parameters:
 - `log_mstar_148`: logarithmic stellar mass enclosed within 148.2 kpc;
 - `compact_fraction_148`: fraction of that enclosed mass assigned to the
   compact component;
-- `log_r_compact`: logarithmic compact-component half-mass radius in kpc;
-- `log_r_extended`: logarithmic extended-component half-mass radius in kpc,
-  constrained to exceed `log_r_compact`.
+- `log_r_compact`: logarithmic half-mass scale in kpc of the formally infinite
+  compact Sérsic family, before aperture renormalization;
+- `log_r_extended`: the analogous logarithmic half-mass scale of the formally
+  infinite extended Moffat family, constrained to exceed `log_r_compact`.
 
-The component normalizations are defined within the measured 148.2-kpc
-aperture, so `log_mstar_148` is an explicit parameter rather than a hidden
-normalization to the true stellar mass. A future halo model must predict it.
+The radius parameters are family scale coordinates; they are not the radii
+enclosing half of each component's truncated mass inside 148.2 kpc. The
+component normalizations and `compact_fraction_148` are defined within the
+measured aperture, so `log_mstar_148` is an explicit parameter rather than a
+hidden normalization to the true stellar mass. A future halo model must predict it.
 The labels “compact” and “extended” describe radial structure only; no
 in-situ/ex-situ interpretation has been established.
 
@@ -223,6 +226,10 @@ shows that the parameters are predictable.
 The implementation lives entirely in this folder. Figures and numerical
 outputs are regenerable and gitignored.
 
+The complete standard QA battery, explanations of each panel, and a detailed
+account of why small cumulative errors produce larger outer-density errors are
+in [`FIGURES.md`](FIGURES.md).
+
 ```bash
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/run.py demo
 EXP55_NMAX=60 PYTHONPATH=. uv run python \
@@ -231,4 +238,5 @@ PYTHONPATH=. uv run python experiments/exp55_analytic_cog/run.py fit
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/mixed.py demo
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/mixed.py run
 PYTHONPATH=. uv run python experiments/exp55_analytic_cog/diagnostics.py
+PYTHONPATH=. uv run python experiments/exp55_analytic_cog/qa_figures.py
 ```
