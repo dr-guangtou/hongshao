@@ -1754,3 +1754,39 @@ Cross-experiment plan. Mirrors the phase sequence in
   calculations across complete draws. The Stage 10--11 all-32-draw comparison
   currently takes about ten minutes and should remain a final robustness step
   until this mechanical optimization is verified to reproduce every metric.
+
+## exp56 — compact-shape closure and radial halo–CoG relation
+
+- [ ] **Stage 0: freeze the references and predeclare the test.** Retain fixed
+  `gamma=1.4` as the simple baseline, the hard halo-mass boundary as the
+  diagnostic ceiling, and the smooth `gamma(log M_peak)` law with width
+  0.20 dex as the continuous candidate. Do not retune the outer-slope
+  endpoints, transition, or width while testing the compact component.
+- [ ] **Stage 1: fold-clean compact Sérsic-index grid.** Compare globally fixed
+  `n = 0.5, 0.75, 1.0` under both fixed `gamma=1.4` and the frozen smooth
+  outer-slope law. Refit the same four galaxy coordinates for every cell.
+  Select on training galaxies only, require a bootstrap-resolved reduction of
+  the 5--30 kpc residual, and preserve cumulative-profile accuracy, density
+  accuracy, R50/R80/R90, parameter conditioning, boundary incidence, and
+  radial-jackknife stability. Do not free `n` per galaxy.
+- [ ] **Stage 2: component and degeneracy diagnosis.** Plot the compact and
+  extended CoGs and density profiles separately. Use profiled scans that fix
+  one coordinate while re-optimizing the other three to determine whether
+  `n<1` removes compact-component leakage at 5--30 kpc or merely transfers
+  mass among compact fraction and the two radii.
+- [ ] **Stage 3: refit the held-out halo–CoG relation.** Only the representation
+  selected inside the training folds proceeds. Refit the conditional mean and
+  stochastic residual distribution from `[DiffMAH(4), c_200c]`; repeat the
+  final-mass-only, mass-conditioned shuffled-MAH, and shuffled-concentration
+  controls and the complete standard QA battery.
+- [ ] **Stage 4: measure radial halo-information content without imposing the
+  expected answer.** Compare nested held-out relations using final mass,
+  recent DiffMAH growth, early assembled fraction, the complete DiffMAH
+  history, and concurrent concentration. Use mass-conditioned shuffles and
+  report incremental CRPS and RMS as functions of radius and in differential
+  annuli. Treat observational motivation as a reason to run the test, not as
+  a constraint on the result.
+- [ ] **Stop conditions.** Stop after the declared Sérsic grid. If `n=0.5`
+  is selected, report a one-sided result rather than extending automatically.
+  Do not add epochs until the redshift-0.4 representation, identifiability,
+  stochastic population geometry, and 5--30 kpc residual are stable.
