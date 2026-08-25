@@ -48,6 +48,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
+from hongshao.profile_emulator import density_from_cog
 from hongshao.plotting import set_style, save_fig
 
 # --- the standard radial bins (edit here to change the standard) --------------
@@ -572,6 +573,8 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
                      bin_by=ms, bin_label=ms_label or "logM$_*$",
                      tag="bins_ms", caveat=True)
+        _density_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
+                        bin_by=bin_by, bin_label=bin_label)
         _cases_figure(model_cogs, data_cogs, R, anchor_z, mr_all, name, figdir)
         if growth:
             _growth_figure(model_cogs, data_cogs, R, anchor_z, growth, name,
@@ -968,6 +971,90 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
     else:
         fig.tight_layout()
     print("wrote", save_fig(fig, figdir / f"qa_{tag}_{name}")[0])
+
+
+def _density_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
+                    bin_by=None, bin_label=None):
+    """Median SURFACE-DENSITY profile on an R^(1/4) axis, by tercile of
+    ``bin_by`` (a model input, normally halo mass).
+
+    WHY R^(1/4). For massive early-type galaxies it is the natural radial
+    coordinate: it expands the inner region far more than a linear axis and far
+    less violently than log R, and a de Vaucouleurs profile (Sersic n = 4) is a
+    STRAIGHT LINE in (R^(1/4), log10 Sigma). Curvature away from the grey guide
+    is therefore read directly as departure from an r^(1/4) law, with no fit.
+
+    WHY IT EARNS A PLACE BESIDE THE CoG FIGURES. A curve of growth is
+    cumulative and dominated by the inner regions, so it hides the outer
+    LOGARITHMIC SLOPE almost completely. Measured on exp54's adopted model, the
+    z = 2 curve of growth is only -0.024 dex low at 148 kpc while the outer
+    density slope is 0.48 dex/dex too shallow -- a large shape error that the
+    cumulative view does not show. Any model whose deposits are summed will have
+    this blind spot.
+
+    The residual panel is in DEX, unlike ``_bins_figure`` which uses per cent.
+    Both are labelled; 0.043 dex = 10 per cent.
+    """
+    nz = len(anchor_z)
+    cols = _zcolors(nz)
+    if bin_by is None:
+        bin_by = np.log10(data_cogs[:, 0, -1])
+        bin_label = bin_label or "logM* (z=0.4)"
+    bin_label = bin_label or "bin quantity"
+    edges = np.quantile(bin_by, [0, 1 / 3, 2 / 3, 1])
+    fig, axes = plt.subplots(2, 3, figsize=(15.5, 7.5), sharex=True,
+                             height_ratios=[2, 1])
+    guide, rmax = None, 0.0
+    for b in range(3):
+        m = (bin_by >= edges[b]) & (bin_by <= edges[b + 1] + 1e-9)
+        ax, rax = axes[0, b], axes[1, b]
+        for k in range(nz):
+            ld, mid = density_from_cog(
+                np.log10(np.clip(data_cogs[m, k], 1.0, None)), R)
+            lm, _ = density_from_cog(
+                np.log10(np.clip(model_cogs[m, k], 1.0, None)), R)
+            med_d, med_m = np.nanmedian(ld, axis=0), np.nanmedian(lm, axis=0)
+            x = mid ** 0.25
+            ax.plot(x, med_d, "-", c=cols[k], lw=1.8,
+                    label=f"z={anchor_z[k]}" if b == 0 else None)
+            ax.plot(x, med_m, "--", c=cols[k], lw=1.4)
+            d = np.nanmedian(lm - ld, axis=0)
+            rmax = max(rmax, np.nanmax(np.abs(d)))
+            rax.plot(x, d, "-", c=cols[k], lw=1.4)
+            if b == 0 and k == 0:
+                ok = np.isfinite(med_d)
+                guide = (np.polyfit(x[ok], med_d[ok], 1), x)
+        if guide is not None:
+            co, gx = guide
+            ax.plot(gx, np.polyval(co, gx), ":", c="0.45", lw=1.2,
+                    label=_tex("de Vaucouleurs (n=4), fit to first epoch")
+                    if b == 0 else None)
+        rax.axhline(0, c="0.6", lw=0.8)
+        ax.set_title(f"{bin_label} {edges[b]:.2f}-{edges[b+1]:.2f}  "
+                     f"(n={m.sum()})")
+        rax.set_xticks([r ** 0.25 for r in (2, 5, 10, 20, 50, 100, 150)])
+        rax.set_xticklabels(["2", "5", "10", "20", "50", "100", "150"])
+        rax.set_xlabel(_tex("R [kpc], on an ") + r"$R^{1/4}$" + _tex(" scale"))
+    lim = float(np.clip(1.25 * rmax, 0.15, 0.9))
+    for b in range(3):
+        axes[1, b].set_ylim(-lim, lim)
+    axes[0, 0].set_ylabel(r"median $\log_{10}\Sigma$ [M$_\odot$ kpc$^{-2}$]")
+    axes[1, 0].set_ylabel(r"median $\log_{10}$(model/truth) [dex]")
+    axes[0, 0].legend(fontsize=8, loc="upper right")
+    fig.suptitle(f"QA [{name}] — surface density on an "
+                 + r"$R^{1/4}$" + f" scale, by {bin_label} tercile "
+                 "(data solid, model dashed)", fontsize=12)
+    fig.text(0.5, 0.005, _tex(
+        "A de Vaucouleurs (n=4) profile is a STRAIGHT LINE here, so curvature "
+        "away from the grey guide is departure from it. Residual in DEX, "
+        "unlike the qa_bins figures which use per cent (0.043 dex = 10 per "
+        "cent). The cumulative view hides the outer slope: a model can be "
+        "within 0.02 dex on the total and still be ~0.5 dex/dex too shallow "
+        "in the outskirts."),
+        ha="center", va="bottom", fontsize=7.0, style="italic", color="0.35")
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
+    print("wrote", save_fig(fig, figdir / f"qa_dens_{name}")[0])
+
 
 
 def _cases_figure(model_cogs, data_cogs, R, anchor_z, mr, name, figdir):

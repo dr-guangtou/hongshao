@@ -1014,3 +1014,229 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   is usually free — the un-normalized prediction is already computed — and it
   is exactly where a model can be most wrong while looking fine, because the
   normalization is applied before anything measures it.
+- **A benchmark and the thing it benchmarks must be scored on THE SAME
+  GALAXIES — one corrupt object overturned an experiment's headline
+  (exp54, 2026-08-23).** `score_A` is `rms[(model - truth)/sigma_A(z)]`, where
+  `sigma_A(z)` is Stage 1's best halo-only regression scatter. Stage 1 measured
+  it on all 2397 galaxies; Stages 3.1/3.2/3.3 measured the model on stratified
+  subsamples of 300/240/1199. **Row 181 fell in the first set and none of the
+  others** (it is an odd row, and those subsamples take every second galaxy).
+  Its measured `M*(<100 kpc)` collapses from 10^11.712 at z=0.4 to a flat
+  ~10^7.96 at all four higher-redshift epochs — a broken cross-match, 2.5 dex
+  below the sample's 0.1st percentile. That single object inflated `sigma_A` by
+  **18/15/12/8% at z = 0.7/1.0/1.5/2.0**, and the model was never charged for
+  it. Correcting it moved `score_A` from **1.128/0.907/0.899/0.929/0.970** to
+  **1.131/1.100/1.059/1.058/1.050**: the adopted model does not beat the
+  halo-only regression at any epoch, where the published claim was that it beat
+  it at four of five. **Three habits.** (1) When a metric is a RATIO of two
+  numbers computed by different scripts, assert that both were computed over
+  the same object set — a one-line `set` comparison, cheap and decisive.
+  (2) Reject physically impossible measurements AT SOURCE, in the feature
+  builder, loudly, so every consumer inherits the rejection; `MAX_BACKWARD_DEX`
+  is now a named constant next to the target it guards. (3) A benchmark
+  degraded by outliers flatters whatever it is compared against, so an
+  unexpectedly GOOD result is as much a reason to audit the denominator as a
+  bad one is to audit the numerator.
+- **Classify which code a fix invalidates from what the code READS, not from a
+  list you write by hand (exp54, 2026-08-23).** After fixing the concentration
+  excess I judged that 21 of 45 factorial cells consumed it — the E3 and S3
+  cells — and re-ran only those. `model.r50_of` contains
+  `scale = halo.r200c if spec.size == "S2" else halo.r200c / halo.c_eff`, and
+  the `else` branch belongs to **S2a**, which I had reasoned about as if it
+  were absent from the factorial. The true count was 33 of 45. The error was
+  caught within three cells because the re-run deliberately included CONTROL
+  cells asserted to be unaffected and required them to reproduce the cached
+  loss exactly: `moffat-E5-S2a` came back at 1.7476 against a cached 1.7385.
+  **The habits**: (1) express "which cells does this touch" as a predicate over
+  the model spec, in code, next to the thing it describes; (2) any partial
+  re-run must include controls that are asserted NOT to move and must refuse to
+  merge if they do — a seeded sample and a seeded multi-start make the
+  assertion exact, and an exact assertion is what makes it useful.
+- **Never wrap an import in a bare `except` (exp54, 2026-08-23).** A
+  `try: import scoreboard ... except Exception: d = None` fallback silently
+  turned off the entire baseline-refit section of a diagnostic and printed a
+  misleading "cache absent" message instead. The real error was
+  `module 'scoreboard' has no attribute 'CACHE'`: three experiments in this
+  repository ship a module named `scoreboard`, and which one wins depends on
+  import order. **Fix both halves**: let the exception surface, and import a
+  same-named sibling module BY FILE PATH via `importlib.util.spec_from_file_location`
+  rather than by name. Check for name collisions with
+  `ls experiments/*/<name>.py` before writing `import <name>`.
+- **`setsid` does not exist on macOS, and a `ps` snapshot taken one second
+  after launch does not prove a job started (exp54, 2026-08-23).**
+  `nohup setsid wrapper.sh &` returned cleanly, `ps | grep -c` reported one
+  match, and nothing was running — the match was the dying launcher. Two
+  separate long jobs were believed to be in flight for half an hour while the
+  log sat unchanged. **The habits**: (1) confirm a background job by watching
+  its LOG ADVANCE past a line it could not already have written, never by a
+  process count; (2) truncate or delete the log before relaunching, so a stale
+  completion marker from the previous run cannot satisfy the wait condition —
+  that is exactly how the second job's `until grep EXIT=` returned instantly
+  against 35-minute-old output; (3) any run measured in hours should
+  checkpoint per unit of work, because the cheapest defence against a job dying
+  for reasons outside the script is not needing it to survive.
+- **An UNBOUNDED metric can be dominated by one object; a BOUNDED one cannot —
+  so check them separately (exp54, 2026-08-23).** The same corrupt galaxy that
+  inflated the amplitude benchmark `SIGMA_A` by 8-18% moved the SHAPE loss by
+  **0.043%**. The asymmetry is structural, not luck: the amplitude residual is
+  `log10(model/truth)`, unbounded, and that galaxy's was 3.76 dex, so its
+  squared contribution swamped 2396 others; the shape residual is `(m-d)/d` on
+  a curve of growth NORMALIZED to 1 at 100 kpc, so it lives near unity and no
+  single galaxy can move a population mean far. **The habit**: when a data
+  defect is found, do not assume it contaminates every metric equally — write
+  down which metrics are unbounded in the direction the defect points, audit
+  those, and MEASURE the leverage on the rest rather than re-deriving them all.
+  It bounds the damage quickly, and here it kept the entire shape half of the
+  experiment intact.
+- **Bound the framework before enriching it — and price the bound's own freedom
+  (exp54, 2026-08-23).** Three candidate limitations (the efficiency law, the
+  deposit basis, the size law) looked identical in the loss. Replacing the
+  model's seven-parameter weight law with per-galaxy non-negative least squares
+  over the same deposits — convex, 5 ms per galaxy, no optimiser — separated
+  them in an afternoon and retired two queued extensions, one of which was
+  already agreed as the next thing to build. **But a ceiling computed with
+  per-object freedom will always look reachable.** What makes it interpretable
+  is the control: fit the same machinery to a DIFFERENT object. Here the
+  71-weight solve fitted to the *wrong* galaxy reached `score_F` 0.672 against
+  the true ceiling's 0.559 and the model's 0.872 — so most of the apparent
+  headroom was flexibility, not information, and quoting the ceiling alone
+  would have licensed exactly the extensions it was built to forestall.
+  **The habit**: every ceiling ships with (1) a permuted-target control, (2) a
+  count of how much of its nominal freedom it actually uses (here a median of 6
+  active weights out of 71), and (3) a rung of the same bound at a freedom
+  level a global law could plausibly reach.
+- **Test a proposed parameter at the BOUND before fitting it (exp54,
+  2026-08-23).** A redshift-dependent deposit shape `c = c0 + c_z ln(1+z)` was
+  the agreed next extension. Scanning it over a grid of GLOBAL basis
+  parameters, with the per-galaxy freedom held fixed so a gain could not come
+  from degrees of freedom, put its optimum at `c_z` = 0 at two different
+  freedom levels — minutes of compute against a day of implementing a
+  per-deposit shape in shared code. **A term that cannot lower the bound cannot
+  lower the fitted loss by the mechanism it was proposed for.** Scan it at more
+  than one freedom level: the widest bound can be insensitive to a basis change
+  that the actual model would still feel.
+- **A metric can be blind in a region and still look converged there (exp54,
+  2026-08-23).** The production loss is a fractional residual on the CUMULATIVE
+  profile. At z = 2 only 6.3% of the stellar mass lies outside 52 kpc, so a
+  sub-per-cent error the loss cannot see is a thirty-per-cent error in that
+  annulus — and a per-epoch-free fit that matched the curve of growth to ~1% at
+  every radius was still 0.2 dex/dex too shallow in the outer density slope.
+  **Before naming a defect, ask whether the objective could have detected it at
+  all**; if not, the fix is the objective, not the model.
+- **The completeness trap recurs in every new view (exp54, 2026-08-23).** "The
+  truth's outer density slope steepens from −2.78 to −3.38 by z = 2 while the
+  model barely moves" was measured on the progenitor-selected sample. On the
+  mh-complete sample it steepens only to −2.95, and the model's error is +0.21
+  dex/dex rather than +0.48 — **more than half of the headline was the changing
+  sample.** The identical correction had already been made for the inner
+  profile a day earlier. **The habit**: once a completeness mask exists, apply
+  it the FIRST time a new diagnostic is plotted, not after it has produced a
+  headline.
+- **A bound must be optimised on the same objects and the same functional it is
+  reported on — three ways to get that wrong appeared in one afternoon (exp54,
+  2026-08-24).** (1) The ceiling's solve used all five epochs while its score
+  used a per-epoch completeness mask, so the reported object was not the
+  optimum of the problem it was compared against. (2) The increment test's
+  non-negative solve was weighted by the increment and its cost reported as a
+  fraction of the later total, which reversed the ordering of the two failure
+  modes it existed to separate. (3) Non-negative least squares minimises a
+  fractional residual on the ABSOLUTE curve of growth, and its result was
+  quoted as if it were the production shape loss — worth a factor of two
+  (0.538 against the exact 0.282). **The habit**: write down the reported
+  quantity first, then optimise exactly that; and when the reported loss is a
+  mean over objects of a per-object term, minimise it per object and the
+  population optimum is exact rather than approximate.
+- **Check whether a constraint actually binds the quantity you are reporting
+  (exp54, 2026-08-24).** "Deposition-only implies enclosed mass never falls" is
+  a true theorem, and it puts almost NO floor under a shape loss that
+  renormalises each epoch at 100 kpc — because any set of shapes can be made
+  monotone by inflating the later epochs. The basis-free monotone bound is
+  0.009 in `score_F`, not the 0.29 an isotonic projection scored; that 0.29 was
+  the projection choosing to match the amplitude. **A reference is not a bound
+  until it is the argmin of the reported loss.**
+- **A control can be an identity (exp54, 2026-08-24).** Giving each galaxy one
+  free amplitude per epoch interval CANNOT change its z=2 normalised profile,
+  because every pre-z=2 deposit sits in one interval — so that rung had to
+  equal the fitted model at z=2, and the equality was read as "no headroom at
+  z=2". **Before quoting a control, ask what it is able to change**; if the
+  answer is "nothing, at the epoch you care about", it is not a control.
+- **When a defect has two candidate mechanisms, split the sample on the
+  mechanism before modelling it (exp54, 2026-08-24).** The z=2 central deficit
+  looked like a uniform 25 per cent failure. Preregistering "did the central
+  mass later FALL?" split it into -37 per cent for the 53 per cent that
+  declined — which no static deposition model can follow — and -11.5 per cent
+  for the rest. A compact deposit channel had been queued to fix the population
+  number; it addresses only the smaller half. **One binary split retired a
+  planned experiment more decisively than any fit would have.**
+- **Never let a smoke path write production filenames (exp54, 2026-08-24).**
+  A `--smoke --figures` run made to test the plotting code silently overwrote
+  the full-sample ladder figure with a 60-galaxy version, and it took an
+  outside reviewer to notice the sample sizes in the panel titles. Smoke
+  outputs get a suffix.
+
+- **A bound built from per-object freedom is not a target for a law that has
+  none (exp54, 2026-08-24).** Stage 3.4's temporal ladder — free deposited mass
+  in K time groups, 14.2% at K=1 falling to 9.7% at K=8 — was read as "most of
+  the reachable improvement sits at a time resolution a shared law can
+  express", and a whole stage was launched on it. Every rung of that ladder is
+  solved PER GALAXY. A shared law has no per-galaxy freedom at all, so the
+  ladder never bounded it. Measured properly, by giving the shared law a FREE
+  curve in redshift, the budget is **0.2 percentage points, not 3.3** — and two
+  parameters already collect all of it. **The tell was in the output the whole
+  time**: the K=1 rung was numerically IDENTICAL to the fitted model, because
+  one free amplitude per galaxy cancels out of a profile renormalised at
+  100 kpc. A rung that equals the thing it is supposed to bound is announcing
+  that it measures a different kind of freedom. **The habit**: before treating
+  a number as a target, ask how many free parameters PER OBJECT produced it,
+  and build the matching bound at the freedom the candidate actually has.
+- **Orthogonalise a new basis against what the model already has, or the
+  identifiability report will be about the wrong thing (exp54, 2026-08-24).**
+  `E4`, a free piecewise-linear curve in `ln(1+z)` whose knot VALUES were the
+  parameters, was the worst of 45 variants with undetermined parameters — and
+  the reason was structural, not statistical: `a0 + interp(x, knots, k)` is
+  exactly degenerate, since adding a constant to `a0` and subtracting it from
+  every knot gives an identical model. Rebuilding the same freedom in a basis
+  made orthogonal to a constant and to `ln(1+z)` removed that degeneracy
+  entirely (all 8-13 parameters "effective" at the 1e-3 threshold). It did not
+  make the terms worth having — the honest verdict was still no — but it meant
+  the report was measuring whether the DATA determine the new coefficients
+  rather than re-discovering an algebraic identity.
+- **Say what the extra freedom is being spent ON, not just what it bought
+  (exp54, 2026-08-24).** "13.80% to 13.62%" is a number; "the correction is
+  within 0.01 dex of the incumbent everywhere below z = 4 and reaches +1.4 dex
+  by z = 15, where 1% of the stellar mass is made" is the explanation, and it
+  predicts the poor identifiability rather than merely accompanying it.
+  Plotting the fitted law against the mass-weighted distribution of the
+  variable it depends on turned a null result into a mechanism.
+- **Check a fast path against the slow one on the QUANTITY, not on the score
+  (exp54, 2026-08-24).** Replacing a per-galaxy Python loop with one stacked
+  array evaluation was worth ~3x and made eight fits plus six bootstrap reports
+  feasible in an afternoon. It was gated on comparing the whole predicted
+  profile array against the old path galaxy by galaxy at several thetas
+  (1.6e-15), not on the two aggregate scores agreeing — a cancellation inside a
+  mean over 2397 galaxies and 24 radii would have passed the weaker check.
+- **A rejection rule written for the diagnostics does not apply itself to the
+  fits (exp54, 2026-08-24).** `MAX_BACKWARD_DEX = 3.0` had existed in
+  `scoreboard.py` and `selection.py` since the day row 181 was identified as a
+  broken cross-match, and `fit.py` carried a comment explaining that the
+  benchmark had been recomputed without it. The model-fitting stages built
+  their samples straight from `population.npz` and never called it. From Stage
+  3.3's per-epoch run onward — the moment the sample went from a 1199-galaxy
+  subsample to all 2397 — that one galaxy was inside every fit, **carrying 18%
+  of the total loss and inflating the amplitude score by 24%**. `fit.py`'s
+  comment that it was "in NONE of the model-fitting subsamples" was true when
+  written and silently expired. **The habit**: when a data-quality rule is
+  written, apply it at the point the data is loaded, not at the point the
+  figure is drawn; and when a sample definition changes, re-check every comment
+  that asserts what is in it.
+- **The corrupt galaxy hid where the sample was smallest (exp54,
+  2026-08-24).** Section 5.3's headline — the model is ~36% worse than a plain
+  regression at total stellar mass on completeness-controlled samples, "the
+  strongest argument against the model" — was one galaxy. The completeness cut
+  shrinks the sample from 2397 to 840, so a single fixed contribution to a mean
+  square grows as a FRACTION as the sample shrinks. That is exactly the
+  signature the note read as physics ("the regression barely notices the
+  restriction; the model degrades sharply"). Corrected, the ratio is 1.03-1.06
+  at z = 0.7-1.5 and **0.94 at z = 2**, where the model beats the benchmark.
+  **The habit**: when a defect grows as a sample shrinks, suspect a fixed
+  contaminant before a physical trend, and check by removing one object.

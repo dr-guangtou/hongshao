@@ -12,7 +12,8 @@ the objective the adopted model was fitted with, unchanged.
 The point of this module is that varying the objective should no longer mean
 editing a loss function by hand. Six axes:
 
-    quantity   cog | density        compare M(<R) or Sigma(R)
+    quantity   cog | density | shells   compare M(<R), Sigma(R), or the
+                                       mass in each shell
     residual   frac | abs | log     (m-d)/d, (m-d)/norm, or log m - log d
     radial     rms | absmean | max  aggregate over radii (max is KS-like)
     weight     uniform | perdex | inner
@@ -43,6 +44,34 @@ entries, so a fit that started failing on some galaxies would see its loss
 silently improve. Anything driving a fit must substitute its sentinel BEFORE
 reducing and must never rely on the drop.
 
+**``shells`` exists because ``density`` cannot see the innermost aperture, at
+all.** Differencing a cumulative profile between grid radii gives R-1 values
+from R radii: the mass inside the FIRST radius is never a difference, so it is
+dropped. Worse, adding mass inside that radius raises every later cumulative
+value by the same constant, which leaves every difference unchanged — so the
+comparison is not merely insensitive there, it is exactly blind. Measured on
+exp54's grid, multiplying ``M*(<2 kpc)`` by five leaves ``quantity="density"``
+unchanged to a relative 1e-13 — floating-point noise from the log10 round-trip
+inside `density_from_cog`, not a response — and that aperture holds 12% of the
+stellar mass at redshift 0.4 and 32% at redshift 2. (The invariance holds for
+any change that leaves a valid increasing profile; beyond that the differencing
+notices only that a shell has gone negative and hit its floor.)
+
+``shells`` is the same idea without the loss: compare
+
+    [ M(<R_0),  M(R_0..R_1),  ...,  M(R_-2..R_-1) ]
+
+which is R values from R radii and is BIJECTIVE with the cumulative profile, so
+nothing is dropped. Like ``density`` it puts each radius on its own footing
+instead of letting the cumulative sum carry the inner regions outward; unlike
+``density`` it keeps the innermost aperture as its own element. Its natural
+partner is ``residual="log"``, which holds a shell containing 1% of the mass to
+the same RELATIVE accuracy as one containing 30%. A shell that is empty or
+non-monotonic floors at 1 Msun exactly as the density path does, so a
+non-monotonic measured profile degrades rather than crashing. The radii
+reported for the weighting are the OUTER edges, which is what the shell is
+labelled by.
+
 **The density comparison differences both sides; it does not evaluate the model
 analytically.** The deposit primitive really is a surface density (Moffat,
 Sigma ~ (1 + (R/rc)^2)^-gamma, whose enclosed-mass form is what the kernel
@@ -67,7 +96,7 @@ import numpy as np
 
 from .profile_emulator import density_from_cog
 
-QUANTITIES = ("cog", "density")
+QUANTITIES = ("cog", "density", "shells")
 RESIDUALS = ("frac", "abs", "log")
 RADIALS = ("rms", "absmean", "max")
 WEIGHTS = ("uniform", "perdex", "inner")
@@ -275,6 +304,10 @@ class Objective:
             m_v, r_used = _to_density(m, r)
             d_v, _ = _to_density(d, r)
             norm = np.max(d_v, axis=-1)                  # peak Sigma
+        elif self.quantity == "shells":
+            m_v, r_used = _to_shells(m, r)
+            d_v, _ = _to_shells(d, r)
+            norm = np.sum(d_v, axis=-1)                  # the galaxy's total
         else:
             m_v, d_v, r_used = m, d, r
             norm = d_v[..., -1]                          # the galaxy's M(<Rmax)
@@ -320,6 +353,21 @@ def _to_density(cum, radii):
     return (10.0 ** log_sigma).reshape(g, e, nr - 1), mid
 
 
+def _to_shells(cum, radii):
+    """(g, e, R) linear cumulative masses -> (g, e, R) linear shell masses.
+
+    Element 0 is the mass inside the first radius; element k is the mass
+    between radii k-1 and k. Bijective with the cumulative profile, which is
+    the whole point: unlike `_to_density` it drops nothing. Shells floor at
+    1 Msun so a non-monotonic measured profile degrades instead of producing a
+    negative mass. The returned grid is the OUTER edge of each shell.
+    """
+    first = cum[..., :1]
+    rest = np.diff(cum, axis=-1)
+    return np.clip(np.concatenate([first, rest], axis=-1), _MASS_FLOOR,
+                   None), np.asarray(radii, float)
+
+
 if __name__ == "__main__":       # self-checks
     rng = np.random.default_rng(0)
     R = np.geomspace(1.0, 148.0, 24)
@@ -354,6 +402,50 @@ if __name__ == "__main__":       # self-checks
     assert (Objective(weight="inner")(outer, truth, R)
             < Objective(weight="uniform")(outer, truth, R))
 
+    # 4b. THE DEFECT `shells` EXISTS FOR, asserted rather than described.
+    #     Multiplying the mass inside the FIRST radius shifts every cumulative
+    #     value by the same constant, so every difference between radii is
+    #     unchanged and `density` cannot see it at all. `shells` must see it,
+    #     and `cog` already does.
+    def _bump_inner(c, factor):
+        a = np.concatenate([c[..., :1], np.diff(c, axis=-1)], axis=-1)
+        a[..., 0] *= factor
+        return np.cumsum(a, axis=-1)
+
+    # `model` above carries independent per-radius noise and is not monotonic,
+    # so this test builds its own model: the same family at a shifted scale
+    # radius, which differs from the truth in SHAPE and is strictly increasing.
+    rc_m = rc * 10.0 ** rng.normal(0.0, 0.05, rc.shape)
+    mono = 1e11 * (1.0 - (1.0 + (R[None, None] / rc_m) ** 2) ** -1.2)
+    assert (np.diff(mono, axis=-1) > 0).all()
+    # the invariance holds while the bumped profile is still a valid, strictly
+    # increasing curve of growth; push it past that and the only thing the
+    # density path notices is that a shell went negative and hit its floor
+    bumped = _bump_inner(mono, 1.2)
+    assert (np.diff(bumped, axis=-1) > 0).all(), (
+        "the bump must leave a valid curve of growth, or this tests the clip")
+    for res in ("frac", "log"):
+        blind = Objective(quantity="density", residual=res)
+        a, b = blind(mono, truth, R), blind(bumped, truth, R)
+        # not identically equal only because `density_from_cog` round-trips
+        # through log10, which perturbs the last bits; the response is ten
+        # orders of magnitude below the response of a comparison that sees it
+        assert abs(b - a) / a < 1e-9, (
+            f"density is expected to be blind to the innermost aperture to "
+            f"within floating-point noise; got a relative change of "
+            f"{abs(b - a) / a:.1e}. If this now fails the docstring is stale.")
+        seeing = Objective(quantity="shells", residual=res)
+        assert seeing(bumped, truth, R) > 1.01 * seeing(mono, truth, R), res
+        assert (Objective(quantity="cog", residual=res)(bumped, truth, R)
+                > Objective(quantity="cog", residual=res)(mono, truth, R))
+
+    # 4c. `shells` is BIJECTIVE with the cumulative profile: the shell masses
+    #     sum back to it exactly. That is why nothing is dropped.
+    sh, r_sh = _to_shells(truth, R)
+    assert np.allclose(np.cumsum(sh, axis=-1), truth, rtol=1e-12)
+    assert sh.shape == truth.shape and np.array_equal(r_sh, R)
+    assert _to_density(truth, R)[0].shape[-1] == truth.shape[-1] - 1
+
     # 5. every weight vector sums to 1 and is finite, on both radius grids
     mid_grid = np.sqrt(R[:-1] * R[1:])
     for grid in (R, mid_grid):
@@ -386,6 +478,9 @@ if __name__ == "__main__":       # self-checks
     # 8. round-trips, naming, and validation
     o = Objective(quantity="density", residual="log")
     assert Objective.from_dict(o.to_dict()) == o
+    sh = Objective(quantity="shells", residual="log")
+    assert Objective.from_dict(sh.to_dict()) == sh
+    assert sh.name == "q=shells|res=log|rad=rms|w=uniform|gal=mean"
     assert o.name == "q=density|res=log|rad=rms|w=uniform|gal=mean"
     assert Objective.from_dict(dict(quantity="cog", residual="abs",
                                     radial="rms", weight="inner",
