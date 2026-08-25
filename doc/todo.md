@@ -1754,3 +1754,39 @@ Cross-experiment plan. Mirrors the phase sequence in
   calculations across complete draws. The Stage 10--11 all-32-draw comparison
   currently takes about ten minutes and should remain a final robustness step
   until this mechanical optimization is verified to reproduce every metric.
+
+### exp54 Stage 3.9 — genuine profile likelihoods (open question B1, 2026-08-25)
+
+- [x] **Size every parameter's grid from a MEASURED property of the loss**
+  (`stage39_profile.py --calibrate`). The grid is geometric, at `±1, 2, 4, 8,
+  16 × d0`, where `d0` is the displacement at which the CONDITIONAL rise
+  reaches 0.10 in loss units — about 0.9 percentage points of profile-shape
+  error — measured by bisection separately in each direction, because the loss
+  is not symmetric (`c` needs `+5.02` to cost 2.0 and only `−0.40` to cost the
+  same). The conditional slice is quadratic to three digits over two decades of
+  rise here, so each grid spans conditional rises from 0.10 to 25.6.
+  **A Hessian-based grid was tried first and rejected**: across finite-
+  difference steps spanning a factor of ten the five largest eigenvalues of the
+  loss Hessian are stable to better than 0.1% while the two smallest move by a
+  factor of 25 and one goes negative. Not a convergence problem —
+  re-optimising all seven from the incumbent reproduces its loss to the last
+  digit — but cancellation, pulling a curvature of order 0.1 out of a matrix
+  whose diagonal is of order 100. The Hessian is stored as a diagnostic.
+- [x] **Measure the conditional slice at the identical grid points**, one loss
+  evaluation each, so the headline comparison is point-by-point and needs no
+  quadratic model of either curve.
+- [ ] **Profile all seven** (`--only <name>`, one process each). Two starts per
+  grid point: the neighbouring point's solution (continuation sweep outward
+  from the centre in both directions) and the incumbent's own six values. A
+  third Nelder-Mead restart was benchmarked and changes nothing at four
+  separate grid points, so two starts is the budget. ~75 s per optimisation on
+  2397 galaxies.
+- [ ] **Report and figure** (`--report`, `stage39_figures.py`). Quote every
+  width as *how far the parameter can move before the best achievable fit costs
+  one percentage point of profile-shape error* (13.79% → 14.79%,
+  `Δloss = 0.114`), never as a confidence interval: the loss is a weighted sum
+  of two normalised scores, not a log-likelihood.
+- [ ] **`log_f0`'s grid reaches its upper bound of 0.0** — a deposit half-mass
+  radius equal to its halo's radius at redshift 0 — and `c`'s reaches its lower
+  bound of 0.2. Where a curve runs into a bound it is a property of the bound
+  (open question C7), and must be reported as one.
