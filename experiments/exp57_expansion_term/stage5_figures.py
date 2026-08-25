@@ -93,6 +93,15 @@ def _fits():
         if "frozen" in lab:                 # a control, not a candidate
             continue
         out[lab] = dict(z)
+    # The 9-start X3 run and the `#bigcore` reproduction of its start 1 are the
+    # SAME optimum, deliberately: one confirms the other. Plotting both would
+    # draw one curve twice and imply two results where there is one. Keep the
+    # shorter label so the panel says `X3`, not `X3 bigcore`.
+    for a in list(out):
+        for b in list(out):
+            if a != b and a in out and b in out and len(b) > len(a):
+                if np.allclose(out[a]["theta"], out[b]["theta"], rtol=1e-6):
+                    del out[b]
     return out
 
 
@@ -105,8 +114,8 @@ def _color(lab, law):
 def _label(lab, law):
     base = LAW_LABEL.get(law, law)
     if law == "X3":
-        base = ("X3  core-only, SMALL core" if "small" in lab
-                else "X3  core-only, large core")
+        base = ("X3  core-only, SMALL core (Rc = 2.6 kpc)" if "small" in lab
+                else "X3  core-only, large core (Rc = 92 kpc)")
     return base
 
 
