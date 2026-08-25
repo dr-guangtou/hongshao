@@ -1412,7 +1412,10 @@ because a component that adds central mass cannot reproduce a central mass that
 falls, and the galaxies whose centres do not fall are already fitted to within
 a quarter of their own scatter.
 
-**3b. What the limit points at instead.** Reproducing these galaxies' centres
+**3b. TESTED — an expansion term. It works, and its radial form is the whole
+question.** *(exp57, 2026-08-26. What follows was written as a proposal; the
+result is recorded in Section 3b.1 immediately after, and the proposal is left
+standing so the reasoning that led to it stays visible.)* Reproducing these galaxies' centres
 requires a mechanism in which stars already deposited move outward — the
 observed "expansion" of the central stellar profiles of massive galaxies, which
 is usually attributed to supermassive black hole evolution and is therefore
@@ -1428,6 +1431,55 @@ contract currently asserts that predicted profiles never decrease with time,
 and that assertion would have to become conditional; and the profile of each
 deposit would start depending on the epoch it is viewed at as well as the epoch
 it was made, which costs several times more per evaluation.
+
+**3b.1 What exp57 found.** Each deposit's radii were allowed to grow after
+deposition, mass conserved exactly, with `A = 0` reproducing this model to
+2e-16. Four laws, 2397 galaxies, the gates fixed in advance and anchored on
+values exp52 measured on the *failing* first model.
+
+**It is the first enrichment in this programme to move the central defect.** The
+profile-shape error goes **13.787% to 13.369%**, against Stage 3.5's entire
+budget of 0.18 percentage points for a completely free shared time law and Stage
+3.8's compact channel, which returned this model's loss to six decimal places.
+The declining galaxies' central-error span closes **0.270 to 0.210 dex**.
+
+**But bounding the expansion FACTOR does not bound the REACH.** The first law
+was built so no deposit could ever grow by more than `1+A`; fitted, that is
+2.47x, and it still delivers **85% of the mass it moves beyond 50 kpc** against
+a 25% limit — worse than the 58.5% of the transport kernel exp52 condemned.
+Three homologous forms fail identically, so it is a property of homologous
+scaling: it multiplies every radius by the same number, and a deposit with a
+power-law tail therefore moves its tail furthest in absolute terms.
+
+**A non-homologous remap fixes it completely.** Replacing "scale every radius by
+`g`" with
+
+$$
+r(R) \;=\; R\left[\,1 - \frac{1 - 1/G}{1 + (R/R_c)^2}\,\right],
+\qquad G = 1 + A\,(1 - t_j/t_k),
+$$
+
+read as the radius the material now at `R` came from, expands the core by `G`
+and leaves everything beyond `R_c` where it was. Fitted `R_c` = **2.61 kpc**;
+displaced mass beyond 50 kpc falls to **2.2%** and beyond 148 kpc to **0.2%**;
+the expansion share of outskirt growth falls to **0.0%**, so all outskirt growth
+is new deposition; and the outskirt structure *improves*, population-summed
+`M[50,148]` going from −0.076 to −0.007 dex. It achieves this by moving **1.4%**
+of the stellar mass. That is what adiabatic expansion is understood to do
+physically — flatten the inner profile, not build a stellar halo.
+
+**Two cautions, and neither is small.** First, **the loss ranks these backwards**:
+the same core-only law has a second, near-homologous optimum at `R_c` = 92 kpc
+with a *better* loss (1.831172 against 1.833344) that the reach gate rejects.
+Ranking by loss would have chosen the long-reach answer in every comparison.
+Second, **reach and the core-density target are in direct tension**: every
+long-reach model matches the measured median core growth and over-corrects the
+58% of galaxies whose centres never declined; the short-reach model protects
+them and cannot move the core growth. Nothing tested resolves both.
+
+**Nothing is adopted.** Detail in
+`experiments/exp57_expansion_term/README.md`; the open questions are C11 and
+C12.
 
 **4. Test a halo-mass-dependent size evolution.** The size law's dependence on
 redshift is currently the same for all halo masses. Making that exponent depend
