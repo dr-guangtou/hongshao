@@ -81,9 +81,10 @@ is measured first so every fitted number has a reference.
 |---|---|---|---|---|---|
 | incumbent | 1.874253 | — | 13.787% | 1.0558 | — |
 | `X1` bounded homologous | 1.840466 | −1.80% | 13.454% | 1.0570 | `A = +1.4657` |
-| `X2` + time shape | 1.839900 | −1.83% | — | — | `A = +1.29, p = +1.90` |
+| `X2` + time shape | 1.839900 | −1.83% | 13.463% | — | `A = +1.29, p = +1.90` |
 | `X0` old power law | 1.840977 | −1.78% | 13.478% | 1.0560 | `alpha = +0.3811` |
-| **`X3` core-only** | **1.833344** | **−2.18%** | — | — | `A = +2.71, Rc = 2.6 kpc` (start 0 of 9) |
+| **`X3` core-only, small core** | **1.833344** | **−2.18%** | **13.369%** | 1.0579 | `A = +2.71, Rc = 2.61 kpc` |
+| `X3` core-only, large core | **1.831172** | −2.30% | 13.436% | 1.0535 | `A = +1.68, Rc = 92 kpc` |
 
 **This is the largest gain any exp54 enrichment has produced** — Stage 3.5's
 entire budget was 0.18 percentage points and a *free* shared time curve reached
@@ -111,7 +112,7 @@ Confirmed independently by G1b, which has no threshold of mine in it: at
 z=0.7→0.4 the null lands 0.364 of added mass beyond 50 kpc against a measured
 **0.366**, and `X1` overshoots to **0.420**.
 
-### What did NOT fail
+### What did NOT fail — these are `X1`'s numbers; see the scoreboard at the top for all six
 
 - **G1 passes comfortably**: expansion supplies 12.9–18.5% of `M*[50,100]`
   growth against exp52's 76.9→96.5% ramp. **The first model's *dominance*
@@ -140,9 +141,20 @@ beyond `Rc` moves. Mass-conserving by construction (a monotone rearrangement),
 `A = 0` reproduces the incumbent to 2e-16. **It does not nest `X1`** — two
 drafts claimed it did and the self-check falsified both (P5).
 
-Start 0 of 9 gives **`A = +2.71`, `Rc = 2.61 kpc`, loss 1.833344** — the fit
-strongly prefers *localized* core expansion over homologous, which is what the
-physical picture says AGN-driven expansion does.
+**It passes G2 decisively**: displaced mass beyond 50 kpc falls from `X1`'s
+85.0% to **2.2%**, and beyond 148 kpc from 52.1% to **0.2%**. Its expansion
+share of outskirt growth falls to **0.0%** and the outskirt structure
+*improves* (population-summed `M[50,148]` from −0.076 to −0.007 dex). It does
+this by moving **1.4%** of the stellar mass.
+
+**But the search found TWO basins** — `Rc = 2.61 kpc` (loss 1.833344, passes
+G2) and a near-homologous `Rc = 92 kpc` (loss **1.831172**, fails G2). **The
+loss prefers the one the gates reject.** Both were reproduced independently and
+both are gated; see the scoreboard.
+
+**And `X3` small-core fails G5(c)** where every long-reach model passes it. The
+attribution test says why: its expansion moves the core-density gap −0.025
+while re-optimising the other seven moves it +0.046, and the compensation wins.
 
 ---
 
