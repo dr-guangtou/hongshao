@@ -150,7 +150,7 @@ def figure(name="exp57_expansion"):
     a_bg.set_zorder(0)
     a.set_zorder(2)
     a.patch.set_visible(False)
-    a_bg.text(0.98, 0.02, _tex("grey: where the stellar mass was deposited"),
+    a_bg.text(0.985, 0.30, _tex("grey: where the stellar mass\nwas deposited"),
               transform=a_bg.transAxes, fontsize=7, color="0.45",
               ha="right", va="bottom")
     for lab, z in fits.items():
@@ -171,7 +171,7 @@ def figure(name="exp57_expansion"):
     a.set_ylabel(_tex("expansion factor g, seen at z = 0.4"))
     a.set_title("(a) the expansion factor — NOT the reach\n"
                 "for X3 it applies only inside Rc; see (b)", fontsize=9.5)
-    a.text(0.03, 0.03,
+    a.text(0.03, 0.05,
            _tex("X3 has the LARGEST g and moves the LEAST mass:\n"
                 "its g applies only within Rc, so the tail stays put"),
            transform=a.transAxes, fontsize=7, color="#CC79A7", va="bottom",
@@ -205,12 +205,17 @@ def figure(name="exp57_expansion"):
     b.axhline(G.G2_MAX_BEYOND_50, color="#D55E00", ls=":", lw=1.4)
     b.axhline(G.G2_MAX_BEYOND_148, color="#D55E00", ls="--", lw=1.4)
     b.axhline(G.EXP52_REACH_50, color="0.4", ls="-", lw=1.0)
-    b.text(0.02, G.EXP52_REACH_50 + 0.01,
+    b.text(0.985, G.EXP52_REACH_50 + 0.012,
            _tex(f"exp52's FAILING model: {100 * G.EXP52_REACH_50:.0f}"
                 f"{_pct()} beyond 50 kpc"),
-           fontsize=7, color="0.35", transform=b.get_yaxis_transform())
-    b.text(0.02, G.G2_MAX_BEYOND_50 + 0.01, _tex("limit, beyond 50 kpc"),
-           fontsize=7, color="#D55E00", transform=b.get_yaxis_transform())
+           fontsize=7, color="0.35", ha="right",
+           transform=b.get_yaxis_transform())
+    b.text(0.985, G.G2_MAX_BEYOND_50 + 0.012, _tex("limit, beyond 50 kpc"),
+           fontsize=7, color="#D55E00", ha="right",
+           transform=b.get_yaxis_transform())
+    b.text(0.985, G.G2_MAX_BEYOND_148 + 0.012, _tex("limit, beyond 148 kpc"),
+           fontsize=7, color="#D55E00", ha="right",
+           transform=b.get_yaxis_transform())
     b.set_ylabel(_tex("fraction of DISPLACED mass delivered there"))
     b.set_title("(b) the reach, gate G2\nworst epoch pair per model",
                 fontsize=9.5)
