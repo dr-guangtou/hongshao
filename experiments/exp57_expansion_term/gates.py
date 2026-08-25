@@ -285,3 +285,34 @@ def verdict(g1, g2, g1b):
                          f"{100 * r['f_beyond_148']:.1f}% beyond 148 kpc "
                          f"(limit {100 * G2_MAX_BEYOND_148:.0f}%)")
     return (not fails), fails
+
+
+def g6_outskirt(pr, theta, data, mask, r_in=50.0, r_out=148.0):
+    """G6 — the outskirt STRUCTURE: how much stellar halo is there?
+
+    G1b asks where a galaxy's newly ADDED mass lands. This asks the
+    complementary question about the standing structure: does the model put the
+    right amount of mass in the 50-148 kpc annulus, at each epoch? It is
+    reported, not gated, because the null defines the reference and no
+    threshold was preregistered for it.
+
+    It matters here for one specific reason. exp54 Stage 3.7 found that closing
+    the central deficit with a shared size law cost **0.104 dex of outskirt
+    mass at redshift 2** — one radial scale could not do both ends. Expansion
+    is a different mechanism aimed at the same defect, so the natural question
+    is whether it pays the same price. This is the measurement that answers it.
+    """
+    i_i = int(np.argmin(np.abs(F.R_GRID - r_in)))
+    i_o = int(np.argmin(np.abs(F.R_GRID - r_out)))
+    mod = pr.predict(theta)
+    out = []
+    for k in range(len(pr.epochs)):
+        m = mod[:, k, i_o] - mod[:, k, i_i]
+        d = data[:, k, i_o] - data[:, k, i_i]
+        use = mask[:, k] & np.isfinite(m) & (m > 0) & (d > 0)
+        err = np.log10(m[use]) - np.log10(d[use])
+        out.append(dict(z=Z[k], median=float(np.median(err)),
+                        n=int(use.sum()),
+                        summed=float(np.log10(np.sum(m[use])
+                                              / np.sum(d[use])))))
+    return out

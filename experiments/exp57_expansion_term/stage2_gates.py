@@ -111,6 +111,18 @@ def report(tag, pr, theta, data, mask, smoke=False):
         print(f"    {r['pair']:<18}{r['model']:>10.3f}{r['data']:>10.3f}"
               f"{r['model'] - r['data']:>13.3f}{r['n']:>8}")
 
+    g6 = G.g6_outskirt(pr, theta, data, mask)
+    print(f"\n  G6 — THE OUTSKIRT STRUCTURE, reported not gated. Does the "
+          f"model put the right amount\n  of mass in the 50-148 kpc annulus? "
+          f"exp54 Stage 3.7 found that closing the central\n  deficit with a "
+          f"shared size law cost 0.104 dex of outskirt mass at redshift 2; "
+          f"this is\n  whether expansion pays the same price.")
+    print(f"    {'epoch':<10}{'median dlog(model/truth)':>28}"
+          f"{'population-summed':>20}{'n':>8}")
+    for r in g6:
+        print(f"    z={r['z']:<8}{r['median']:>28.4f}{r['summed']:>20.4f}"
+              f"{r['n']:>8}")
+
     ok, fails = G.verdict(g1, g2, g1b)
     print(f"\n  VERDICT: {'PASS' if ok else 'FAIL'}")
     for f in fails:
@@ -134,6 +146,8 @@ def report(tag, pr, theta, data, mask, smoke=False):
                  g3_beyond=np.array([r["f_beyond_blind"] for r in g3]),
                  g1b_model=np.array([r["model"] for r in g1b]),
                  g1b_data=np.array([r["data"] for r in g1b]),
+                 g6_median=np.array([r["median"] for r in g6]),
+                 g6_summed=np.array([r["summed"] for r in g6]),
                  reach_edges=np.array(G.REACH_EDGES))
         print(f"\n  wrote stage2_gates_{tag}.npz")
     return ok
