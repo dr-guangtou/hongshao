@@ -18,6 +18,32 @@ Severity: **S1** could change a conclusion · **S2** blocks work or wastes time 
 
 ## Resolved
 
+### P6 — the gate machinery silently used the wrong basis for a new law
+**S1. Found and resolved 2026-08-26, Stage 6.** *Caught by the decomposition's
+own self-check, which is the only reason it is not in the results.*
+
+`gates.deposit_terms` duplicated `ExpandingProblem.predict`'s setup so it could
+keep the deposits separate instead of summing them. When `X3` was added, the
+model gained a second radial form (`cog_core_expanded`) and **the gate copy was
+not updated**: it kept calling the homologous `cog_scaled`. So every gate would
+have described a **different model** than the one fitted.
+
+`check_terms` caught it immediately — summing the separated deposits missed
+`predict` by a **relative 6.3e-1** — and refused to run. That assertion was
+written for exactly this and it earned its keep on its first real test.
+
+**Resolution: the duplication is removed, not patched.** `ExpandingProblem`
+now exposes `setup(theta)` and `basis(s, k, R)`, and both `predict` and
+`deposit_terms` call them. `basis` is the single place a law chooses a radial
+form, so a new law cannot be added to the model and forgotten in the
+diagnostics.
+
+**The irony is worth recording.** The docstring of the duplicated function
+already said "`check_terms` asserts that summing these reproduces `predict`, so
+the duplication cannot drift". The duplication drifted the very next time the
+model changed. The assertion was the thing that worked; the reasoning that
+duplication is safe *because* there is an assertion was wrong.
+
 ### P5 — "X3 nests X1" was claimed twice and is false
 **S2. Found and resolved 2026-08-26, Stage 6 design.** *Caught by the module's
 own self-check, not by inspection.*

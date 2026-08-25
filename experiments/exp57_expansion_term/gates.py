@@ -87,34 +87,24 @@ def deposit_terms(pr, theta, R):
         present  (nE, n, nd) bool whether the deposit exists at that epoch
         B        (nE, n, nd, nR) its unit-mass CoG as seen at that epoch
 
-    This repeats `ExpandingProblem.predict`'s setup rather than calling it,
-    because the whole point is to keep the deposits SEPARATE instead of summing
-    them. `check_terms` asserts that summing these reproduces `predict`, so the
-    duplication cannot drift.
+    Built from `ExpandingProblem.setup` and `.basis` — the SAME code
+    `predict` uses — so a new expansion law cannot be added to the model and
+    forgotten here. An earlier version duplicated that setup instead, and it
+    drifted the moment `X3` was added: this function kept the homologous basis
+    while the model used the core-only one. `check_terms` caught it at a
+    relative 6.3e-1 and refused to run (PROBLEMS.md P6). The duplication is now
+    removed rather than patched.
     """
-    sp = pr.xspec
-    eff, size, shape, xtheta = sp.unpack(theta)
-    d = pr.dep
-    n, nd = d.z.shape
     R = np.asarray(R, float)
-
-    ok = np.isfinite(d.r200c) & (d.r200c > 0)
-    dm = 10.0 ** np.clip(M.log_eps(sp.base, eff, d), -30, 10) * d.dmh
-    r50 = M.r50_of(sp.base, size, d)
-    r_tr = sp.base.trunc_C * d.r200c
-    good = ok & np.isfinite(dm) & (dm >= 0) & np.isfinite(r50) & (r50 > 0)
-    r50s = np.where(good, r50, 1.0).ravel()
-    r_trs = np.where(good, r_tr, 100.0).ravel()
-    td = np.where(np.isfinite(pr.t_dep), pr.t_dep, 1.0).ravel()
-
+    s = pr.setup(theta)
+    n, nd = pr.dep.z.shape
     nE = len(pr.epochs)
     B = np.empty((nE, n, nd, len(R)))
     for k in range(nE):
-        g = X.g_factor(sp.law, xtheta, td, pr.t_view[k])
-        B[k] = X.cog_scaled(sp.base.family, shape, r50s, r_trs, R,
-                            g).T.reshape(n, nd, len(R))
-    return (np.where(good, dm, 0.0), pr.em.transpose(1, 0, 2).astype(bool)
-            if pr.em.ndim == 3 else pr.em, B)
+        B[k] = pr.basis(s, k, R).T.reshape(n, nd, len(R))
+    present = (pr.em.transpose(1, 0, 2).astype(bool) if pr.em.ndim == 3
+               else pr.em)
+    return s["dm"], present, B
 
 
 def check_terms(pr, theta, tol=1e-9):

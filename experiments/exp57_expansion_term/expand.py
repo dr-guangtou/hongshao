@@ -358,37 +358,58 @@ class ExpandingProblem(S35.StackedProblem):
             raise ValueError("no galaxy admits a deposit at every anchor epoch")
         self.t_view = ref[list(self.epochs)]
 
-    def predict(self, theta):
+    def setup(self, theta):
+        """Everything a prediction needs except the radial basis.
+
+        Split out so that `predict` and the gate machinery in `gates.py` build
+        the SAME arrays from the SAME code rather than from two copies that can
+        drift. They did drift once — `gates.deposit_terms` kept the homologous
+        basis when `X3` was added, and the decomposition's own self-check
+        caught it at a relative 6.3e-1 (PROBLEMS.md P6). The fix is to remove
+        the duplication, not to patch the copy.
+        """
         sp = self.xspec
         eff, size, shape, xtheta = sp.unpack(theta)
         d = self.dep
-        n, nd = d.z.shape
-        nE, nR = len(self.epochs), len(self.r_all)
-
         ok = np.isfinite(d.r200c) & (d.r200c > 0)
         dm = 10.0 ** np.clip(M.log_eps(sp.base, eff, d), -30, 10) * d.dmh
         r50 = M.r50_of(sp.base, size, d)
         r_tr = sp.base.trunc_C * d.r200c
         good = (ok & np.isfinite(dm) & (dm >= 0)
                 & np.isfinite(r50) & (r50 > 0))
-        r50s = np.where(good, r50, 1.0).ravel()
-        r_trs = np.where(good, r_tr, 100.0).ravel()
+        return dict(shape=shape, xtheta=xtheta, ok=ok, good=good,
+                    dm=np.where(good, dm, 0.0),
+                    r50s=np.where(good, r50, 1.0).ravel(),
+                    r_trs=np.where(good, r_tr, 100.0).ravel(),
+                    td=np.where(np.isfinite(self.t_dep), self.t_dep,
+                                1.0).ravel())
 
+    def basis(self, s, k, R):
+        """The unit-mass deposit CoGs as seen at epoch `k`, on radii `R`.
+
+        The ONE place the expansion law chooses a radial form, so a new law
+        cannot be added to `predict` and forgotten in the diagnostics.
+        """
+        sp = self.xspec
+        g = g_factor(sp.law, s["xtheta"], s["td"], self.t_view[k])
+        if sp.law == "X3":
+            return cog_core_expanded(sp.base.family, s["shape"], s["r50s"],
+                                     s["r_trs"], R, g, 10.0 ** s["xtheta"][1])
+        return cog_scaled(sp.base.family, s["shape"], s["r50s"], s["r_trs"],
+                          R, g)
+
+    def predict(self, theta):
+        s = self.setup(theta)
+        n, nd = self.dep.z.shape
+        nE, nR = len(self.epochs), len(self.r_all)
         out = np.empty((n, nE, nR))
-        W = np.where(good, dm, 0.0)[:, None, :] * self.em      # (n, nE, nd)
-        td = np.where(np.isfinite(self.t_dep), self.t_dep, 1.0).ravel()
+        W = s["dm"][:, None, :] * self.em                      # (n, nE, nd)
         for k in range(nE):
-            g = g_factor(sp.law, xtheta, td, self.t_view[k])
-            if sp.law == "X3":
-                B = cog_core_expanded(sp.base.family, shape, r50s, r_trs,
-                                      self.r_all, g, 10.0 ** xtheta[1])
-            else:
-                B = cog_scaled(sp.base.family, shape, r50s, r_trs,
-                               self.r_all, g)
-            Bg = np.ascontiguousarray(B.T.reshape(n, nd, nR))
+            Bg = np.ascontiguousarray(
+                self.basis(s, k, self.r_all).T.reshape(n, nd, nR))
             out[:, k, :] = np.matmul(W[:, k, :][:, None, :], Bg)[:, 0, :]
-
-        dead = (ok.sum(1) < 5) | (good.sum(1) < 5) | ~np.isfinite(out).all((1, 2))
+        dead = ((s["ok"].sum(1) < 5) | (s["good"].sum(1) < 5)
+                | ~np.isfinite(out).all((1, 2)))
         out[dead] = np.nan
         return out
 
