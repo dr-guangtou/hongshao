@@ -1,0 +1,353 @@
+"""exp57 — the expansion term: deposits grow after they are laid down.
+
+WHY THIS EXISTS. exp54 established that its own defect is outside its model
+class. With every deposit non-negative and its profile fixed at the moment of
+deposition, `M*(<R,t)` is non-decreasing in `t` at every radius and every
+parameter value — while **42% of these galaxies LOSE a median 14% of their
+central stellar mass** between redshift 2 and 0.4. Four enrichments (Stages
+3.5-3.8) failed against a target the model class forbids.
+
+An expansion term is the smallest change that admits a declining centre: let
+each deposit's radii grow after it is deposited. Mass is conserved, nothing is
+removed, nothing goes negative, no stellar information enters — and old
+deposits can spread outward faster than new ones arrive, so the mass inside a
+fixed small radius can fall.
+
+THE HISTORY THAT CONSTRAINS THE DESIGN, and it is the whole reason this module
+is shaped the way it is. The program's FIRST model was deposition + transport
+(`exp30_transport_kernel`, tech note 2). `exp52_growth_mechanism` diagnosed its
+failure: **the right source with roughly ten times too much reach.** 93% of the
+mass it moved came from inside 5 kpc — correct, that is where AGN-driven
+adiabatic expansion operates — but 58.5% of it was delivered beyond 50 kpc,
+29.4% beyond 148 kpc (outside the measured profile entirely) and 12.0% beyond
+500 kpc, where the normalisation discarded it. By redshift 0.7-0.4, **96.5% of
+the model's outskirt growth was redistribution of stars it already had.**
+
+**So the reach must be bounded BY CONSTRUCTION, not by a fitted exponent whose
+consequence depends on a ratio of cosmic times.** The deferred proposal was
+`g = (t_k/t_j)^alpha` applied to both radii. That is exactly the shape that
+failed: a deposit made at 0.5 Gyr and viewed at 9.4 Gyr is scaled by
+`18.8^alpha` — a factor of 14.5 at the old kernel's fitted 0.91 — and because
+this deposit family has a genuine power-law tail, homologous scaling moves the
+TAIL furthest in absolute terms. A 5% tail at 50 kpc lands at 725 kpc.
+
+THE LAWS. `g` multiplies BOTH the deposit's half-mass radius and its truncation
+radius, so the deposit keeps its shape exactly and its mass exactly (see
+`cog_scaled` for the proof that this is free).
+
+    X1  g = 1 + A (1 - t_j/t_k)                       1 parameter
+    X2  g = 1 + A (1 - t_j/t_k)**p                    2 parameters
+    X0  g = (t_k/t_j)**alpha                          1 parameter, THE CONTROL
+
+`X1` is the primary candidate and is bounded by construction: `(1 - t_j/t_k)`
+lies in `[0, 1)` for every deposit at every epoch, so `g` lies between 1 and
+`1+A` no matter how early the deposit was made. `A` is therefore directly
+interpretable — *the oldest deposits end up `(1+A)` times larger* — and is
+directly gateable. `X2` lets the growth be non-linear in fractional age. `X0`
+is the old transport form, unbounded, included as a declared control so that
+"bounded costs nothing" is measured rather than assumed.
+
+**`A = 0` (and `alpha = 0`) nests the current model exactly, and the bounds are
+deliberately two-sided** — `A` may go negative, which would mean deposits
+CONTRACT. This is a lesson from this project's own record: Stage 3.8's compact
+weight `w0` went to zero, which was its bound, and a null sitting ON a bound is
+weaker evidence than a null sitting at an interior point. Here the null is
+interior, so "the model does not want expansion" is a measurement.
+
+Run the self-check:
+  HONGSHAO_DATA_DIR=... PYTHONPATH=. uv run python -u \\
+  experiments/exp57_expansion_term/expand.py
+"""
+from __future__ import annotations
+
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+
+import numpy as np
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+EXP54 = ROOT / "experiments/exp54_unpinned_amplitude"
+for p in (ROOT, ROOT / "experiments/exp38_deposit_rethink", EXP54, HERE):
+    sys.path.insert(0, str(p))
+
+import fit as F                                          # noqa: E402
+import model as M                                        # noqa: E402
+import stage35_time_law as S35                           # noqa: E402
+
+#: the laws, and how many parameters each adds
+LAWS = {"": 0, "X1": 1, "X2": 2, "X0": 1}
+LAW_NAMES = {"": [], "X1": ["A"], "X2": ["A", "p"], "X0": ["alpha"]}
+#: two-sided, so the nesting point is INTERIOR for every law
+LAW_BOUNDS = {
+    "A": (-0.9, 20.0),        # -0.9 = deposits shrink to a tenth; +20 = x21
+    "p": (0.1, 6.0),          # shape of the growth in fractional age
+    "alpha": (-1.0, 2.0),     # the old transport exponent fitted to 0.91
+}
+
+
+@dataclass(frozen=True)
+class XSpec:
+    """An exp54 `model.Spec` plus an expansion law.
+
+    Presents the same interface the fitting harness uses — `theta_names`,
+    `bounds()`, `n_theta`, `unpack` — so `fit.fit` and every diagnostic that
+    takes a spec keeps working unchanged.
+    """
+    base: M.Spec
+    law: str = ""
+
+    def __post_init__(self):
+        if self.law not in LAWS:
+            raise ValueError(f"law must be one of {sorted(LAWS)}, got "
+                             f"{self.law!r}")
+
+    @property
+    def label(self):
+        return self.base.label + (f"+{self.law}" if self.law else "")
+
+    @property
+    def x_names(self):
+        return list(LAW_NAMES[self.law])
+
+    @property
+    def theta_names(self):
+        return list(self.base.theta_names) + self.x_names
+
+    @property
+    def n_theta(self):
+        return self.base.n_theta + LAWS[self.law]
+
+    @property
+    def family(self):
+        return self.base.family
+
+    @property
+    def trunc_C(self):
+        return self.base.trunc_C
+
+    def bounds(self):
+        return list(self.base.bounds()) + [LAW_BOUNDS[n] for n in self.x_names]
+
+    def unpack(self, theta):
+        """(eff, size, shape, xtheta) — the base's three plus the expansion."""
+        theta = np.asarray(theta, float)
+        if theta.shape != (self.n_theta,):
+            raise ValueError(f"{self.label} wants {self.n_theta} params, got "
+                             f"{theta.shape}")
+        nx = LAWS[self.law]
+        base_t = theta[: self.n_theta - nx] if nx else theta
+        eff, size, shape = self.base.unpack(base_t)
+        return eff, size, shape, theta[self.n_theta - nx:] if nx else np.array([])
+
+    def nest(self, theta_base):
+        """The base model's theta lifted into this spec, expansion switched OFF.
+
+        The identity that makes every comparison honest: at these values `g` is
+        identically 1, so the enriched model reproduces the incumbent exactly
+        and a fit launched from here can never end up worse.
+        """
+        off = {"A": 0.0, "p": 1.0, "alpha": 0.0}
+        return np.concatenate([np.asarray(theta_base, float),
+                               np.array([off[n] for n in self.x_names])])
+
+
+def g_factor(law, xtheta, t_dep, t_view):
+    """The homologous scale factor `g(t_dep, t_view)`, broadcast over both.
+
+    `t_dep` is when a deposit was laid down, `t_view` when the profile is
+    observed, both in Gyr. Returns 1.0 exactly when the law is off, so the
+    caller never has to special-case the nested model.
+
+    A deposit is only ever viewed at or after its own deposition, but padded
+    slots and the epoch mask can present `t_view < t_dep`; the fraction is
+    clipped at 0 so those give `g = 1` and contribute nothing anomalous.
+    """
+    if not law:
+        return np.ones(np.broadcast(t_dep, t_view).shape)
+    frac = np.clip(1.0 - t_dep / np.maximum(t_view, 1e-9), 0.0, 1.0)
+    if law == "X1":
+        return 1.0 + xtheta[0] * frac
+    if law == "X2":
+        return 1.0 + xtheta[0] * frac ** xtheta[1]
+    if law == "X0":
+        return np.maximum(t_view, 1e-9) ** xtheta[0] / \
+            np.maximum(t_dep, 1e-9) ** xtheta[0]
+    raise ValueError(f"unknown law {law!r}")
+
+
+def cog_scaled(family, shape, r50_true, r_trunc, R, g):
+    """Truncated unit-mass CoGs with both radii multiplied by `g`.
+
+    WHY THIS IS FREE, and why it is written out rather than looped over
+    `model.cog_truncated`. That function computes
+
+        u     = solve_u(family, shape, r50_true / r_trunc)
+        r50_0 = r_trunc / u
+        F(R)  = interp(R / r50_0) / interp(u)
+
+    and `u` depends on the two radii ONLY through their ratio. Scaling both by
+    the same `g` leaves the ratio unchanged, so `u` and the normalisation
+    `interp(u)` are unchanged and only `R / (g r50_0)` moves. Two consequences:
+
+      * `solve_u` — the expensive part — is evaluated ONCE for all epochs
+        rather than once per epoch;
+      * `F(r_trunc * g) = 1` still holds exactly, which IS the statement that
+        homologous expansion conserves the deposit's mass. Nothing is created
+        and nothing is lost; the same mass is spread over a larger radius.
+
+    `g` broadcasts against `r50_true`, so a scalar, a per-deposit vector or a
+    per-(deposit, epoch) array all work.
+    """
+    r50_true = np.atleast_1d(np.asarray(r50_true, float))
+    r_trunc = np.atleast_1d(np.asarray(r_trunc, float))
+    u = M.solve_u(family, shape, r50_true / r_trunc)
+    r50_0 = r_trunc / u
+    x, f0 = M._table(family, shape)
+    xx = np.asarray(R)[:, None] / (np.asarray(g, float) * r50_0)[None, :]
+    return np.clip(np.interp(xx, x, f0) / np.interp(u, x, f0)[None, :], 0.0, 1.0)
+
+
+class ExpandingProblem(S35.StackedProblem):
+    """`StackedProblem` in which each deposit's radii grow after deposition.
+
+    Structurally identical to its parent except that the deposit basis now
+    depends on the VIEWING epoch as well as the deposition epoch, so it is
+    built once per epoch instead of once. That is the whole cost of the model
+    class change, and `stage0_cost.py` measures it rather than estimating it.
+
+    With `law = ""` this class must reproduce `StackedProblem` bit-for-bit;
+    `stage1_contract.py` asserts it.
+    """
+
+    def __init__(self, spec, halos, data, mask, **kw):
+        base = spec.base if isinstance(spec, XSpec) else spec
+        super().__init__(base, halos, data, mask, **kw)
+        self.xspec = spec if isinstance(spec, XSpec) else XSpec(base, "")
+        self.spec = self.xspec                    # what fit.fit reads bounds from
+        n = len(halos)
+        t = np.full((n, self.nd), np.nan)
+        for i, h in enumerate(halos):
+            t[i, :len(h.t)] = h.t
+        self.t_dep = t
+        # The anchor epochs' cosmic times. `epoch_mask[k]` is `snap <=
+        # ANCHOR_SNAP[k]` and every anchor IS a snapshot in the tree, so the
+        # last True entry sits exactly at that anchor. Two things are then
+        # CHECKED rather than assumed: that the redshift there is the anchor's
+        # redshift, and that every galaxy gives the same time — because the
+        # whole tabulation rests on the snapshot grid being shared.
+        import halo as H
+        def _t_at(h):
+            out = []
+            for k in range(len(H.ANCHOR_SNAP)):
+                w = np.flatnonzero(h.epoch_mask[k])
+                if not len(w):
+                    return None
+                out.append((float(h.t[w[-1]]), float(h.z[w[-1]])))
+            return out
+        ref = None
+        for h in halos:
+            got = _t_at(h)
+            if got is None:
+                continue
+            zz = np.array([g[1] for g in got])
+            # ANCHOR_Z are ROUNDED LABELS; the snapshots themselves sit at
+            # 0.3999, 0.7001, 0.9973, 1.4955, 2.0020. The tolerance below is
+            # therefore the label's rounding, not a fudge — it is checking that
+            # the right SNAPSHOT was found, and the cosmic times used for the
+            # expansion factor are the snapshot's own, never the label's.
+            if not np.allclose(zz, H.ANCHOR_Z, atol=1e-2):
+                raise ValueError(
+                    f"the last deposit admitted at each anchor is not AT that "
+                    f"anchor: redshifts {zz} against {H.ANCHOR_Z}. The epoch "
+                    f"mask and the anchor list disagree.")
+            tt = np.array([g[0] for g in got])
+            if ref is None:
+                ref = tt
+            elif not np.allclose(tt, ref, rtol=1e-9):
+                raise ValueError(
+                    "the anchor-epoch cosmic times are NOT shared across "
+                    "galaxies, so the expansion factor cannot be tabulated on "
+                    "the snapshot grid. Fix the assumption, not this check.")
+        if ref is None:
+            raise ValueError("no galaxy admits a deposit at every anchor epoch")
+        self.t_view = ref[list(self.epochs)]
+
+    def predict(self, theta):
+        sp = self.xspec
+        eff, size, shape, xtheta = sp.unpack(theta)
+        d = self.dep
+        n, nd = d.z.shape
+        nE, nR = len(self.epochs), len(self.r_all)
+
+        ok = np.isfinite(d.r200c) & (d.r200c > 0)
+        dm = 10.0 ** np.clip(M.log_eps(sp.base, eff, d), -30, 10) * d.dmh
+        r50 = M.r50_of(sp.base, size, d)
+        r_tr = sp.base.trunc_C * d.r200c
+        good = (ok & np.isfinite(dm) & (dm >= 0)
+                & np.isfinite(r50) & (r50 > 0))
+        r50s = np.where(good, r50, 1.0).ravel()
+        r_trs = np.where(good, r_tr, 100.0).ravel()
+
+        out = np.empty((n, nE, nR))
+        W = np.where(good, dm, 0.0)[:, None, :] * self.em      # (n, nE, nd)
+        td = np.where(np.isfinite(self.t_dep), self.t_dep, 1.0).ravel()
+        for k in range(nE):
+            g = g_factor(sp.law, xtheta, td, self.t_view[k])
+            B = cog_scaled(sp.base.family, shape, r50s, r_trs, self.r_all, g)
+            Bg = np.ascontiguousarray(B.T.reshape(n, nd, nR))
+            out[:, k, :] = np.matmul(W[:, k, :][:, None, :], Bg)[:, 0, :]
+
+        dead = (ok.sum(1) < 5) | (good.sum(1) < 5) | ~np.isfinite(out).all((1, 2))
+        out[dead] = np.nan
+        return out
+
+
+# --------------------------------------------------------------------------- #
+if __name__ == "__main__":
+    print("exp57 expand.py — self-check on synthetic inputs\n")
+    rng = np.random.default_rng(0)
+    fam, shp = "gompertz_log", (0.7965,)
+    R = F.R_GRID
+    r50 = rng.uniform(1.0, 40.0, 500)
+    rtr = r50 * rng.uniform(3.0, 60.0, 500)
+
+    # 1. g = 1 must reproduce model.cog_truncated exactly
+    a = M.cog_truncated(fam, shp, r50, rtr, R)
+    b = cog_scaled(fam, shp, r50, rtr, R, 1.0)
+    print(f"  g=1 vs model.cog_truncated      max|diff| = "
+          f"{np.max(np.abs(a - b)):.3e}   (must be 0)")
+    assert np.array_equal(a, b)
+
+    # 2. homogeneity: scaling both radii by g equals evaluating at R/g
+    g = 3.7
+    c = cog_scaled(fam, shp, r50, rtr, R, g)
+    e = M.cog_truncated(fam, shp, g * r50, g * rtr, R)
+    print(f"  cog_scaled(g) vs cog_truncated(g*r50, g*rtr)  max|diff| = "
+          f"{np.max(np.abs(c - e)):.3e}   (must be ~0)")
+    assert np.max(np.abs(c - e)) < 1e-12
+
+    # 3. MASS CONSERVATION: the CoG still reaches 1 at the scaled truncation
+    far = cog_scaled(fam, shp, r50, rtr, np.array([1e9]), g)
+    print(f"  mass conservation, F(inf) - 1   max|diff| = "
+          f"{np.max(np.abs(far - 1.0)):.3e}   (must be ~0)")
+    assert np.max(np.abs(far - 1.0)) < 1e-12
+
+    # 4. the laws switch off exactly at their nesting values
+    td = np.array([0.5, 2.0, 5.0, 8.0])
+    for law, xt in (("X1", [0.0]), ("X2", [0.0, 1.0]), ("X0", [0.0])):
+        gg = g_factor(law, np.array(xt), td, 9.4)
+        print(f"  {law:<3} at its nesting theta: g = {gg}   (must be all 1)")
+        assert np.allclose(gg, 1.0, atol=0, rtol=0)
+
+    # 5. X1's reach is bounded by 1+A for ANY deposit time, which is the
+    #    property the whole design turns on
+    A = 4.0
+    worst = g_factor("X1", np.array([A]), np.array([1e-6]), 9.4).max()
+    print(f"  X1 reach with A={A}: worst g = {worst:.6f}  <= 1+A = {1 + A}")
+    assert worst <= 1.0 + A + 1e-12
+    old = g_factor("X0", np.array([0.91]), np.array([0.5]), 9.4)
+    print(f"  X0 (the OLD transport form) at alpha=0.91, t_dep=0.5 Gyr: "
+          f"g = {float(np.ravel(old)[0]):.2f}  <-- this is the failure mode")
+    print("\nexpand.py self-check OK")
