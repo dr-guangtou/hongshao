@@ -259,6 +259,35 @@ centres never needed shifting, exactly as Stage 1's spread argument predicted.
 error improves from −0.076 to −0.055 at z=0.4. Expansion does not pay Stage
 3.7's price of emptying the outskirts to fill the centre.
 
+### G4 — is expansion just a heavier deposit tail in disguise? Partly.
+
+exp53 measured that the first model's transport **substituted for a heavy
+tail**, and exp54 Stage 3.9 measured that the deposit shape `c` is the only one
+of the seven parameters the other six cannot absorb. So the check is: refit with
+`c` frozen at the incumbent's `+0.7965` and see what happens.
+
+| | loss | vs incumbent | shape error | fitted `A` | fitted `c` |
+|---|---|---|---|---|---|
+| incumbent | 1.874253 | — | 13.787% | — | +0.7965 |
+| `X1`, `c` free | 1.840466 | −1.80% | 13.454% | **+1.4657** | **+0.6964** |
+| `X1`, `c` FROZEN | 1.851403 | −1.22% | 13.582% | **+0.7603** | +0.7965 (held) |
+
+**G4 passes on its preregistered criterion.** `c` moves by **−0.100**, well
+inside Stage 3.9's one-percentage-point width for `c` of −0.25 / +0.51. The
+deposit shape is not being dragged somewhere else to pay for the expansion.
+
+**But the two are partially degenerate, and that must be said.** Freezing `c`
+**halves** the fitted expansion strength (1.4657 → 0.7603) and gives up 40% of
+the shape-error gain. So roughly half of what expansion buys is reachable by
+making the deposit's tail heavier instead — and half is not: even with `c` held
+still, expansion buys 1.22% of loss and 0.205 percentage points of shape error,
+which is still more than Stage 3.5's *entire* budget for a free shared time law
+(0.18 points).
+
+**And the parameters move in a physically coherent direction.** With expansion
+on, `log_f0` goes from −0.843 to −1.015: deposits are born **more compact** and
+grow afterwards. That is the mechanism's own story, not a numerical accident.
+
 ---
 
 ## Stage 6 (2026-08-26) — `X3`, the fix the diagnosis points at
