@@ -1757,23 +1757,36 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ## exp56 — compact-shape closure and radial halo–CoG relation
 
-- [ ] **Stage 0: freeze the references and predeclare the test.** Retain fixed
+- [x] **Stage 0: freeze the references and predeclare the test.** Retain fixed
   `gamma=1.4` as the simple baseline, the hard halo-mass boundary as the
   diagnostic ceiling, and the smooth `gamma(log M_peak)` law with width
   0.20 dex as the continuous candidate. Do not retune the outer-slope
   endpoints, transition, or width while testing the compact component.
-- [ ] **Stage 1: fold-clean compact Sérsic-index grid.** Compare globally fixed
+  **Predeclared in the Exp56 README before writing the driver.**
+- [x] **Stage 1: fold-clean compact Sérsic-index grid.** Compare globally fixed
   `n = 0.5, 0.75, 1.0` under both fixed `gamma=1.4` and the frozen smooth
   outer-slope law. Refit the same four galaxy coordinates for every cell.
   Select on training galaxies only, require a bootstrap-resolved reduction of
   the 5--30 kpc residual, and preserve cumulative-profile accuracy, density
   accuracy, R50/R80/R90, parameter conditioning, boundary incidence, and
   radial-jackknife stability. Do not free `n` per galaxy.
-- [ ] **Stage 2: component and degeneracy diagnosis.** Plot the compact and
-  extended CoGs and density profiles separately. Use profiled scans that fix
-  one coordinate while re-optimizing the other three to determine whether
-  `n<1` removes compact-component leakage at 5--30 kpc or merely transfers
-  mass among compact fraction and the two radii.
+  **Result:** the complete mass-stratified 90-galaxy path passed in 31.11
+  seconds, then the declared full grid fitted 2,539 galaxies in 478.88 seconds.
+  `n=1` is the numerical winner in all five outer training folds under both
+  outer laws. Under the frozen smooth law its median 5--30 kpc CoG RMS is
+  0.00495 dex against the TNG CoG, better than the worse 0.00625 dex for
+  `n=0.75` and 0.00947 dex for `n=0.5`; its density RMS is likewise better at
+  0.02847 dex versus 0.03591 and 0.04812 dex. Lower indices also move R80/R90
+  inward, and `n=0.75` has one large radial-jackknife coordinate excursion.
+  **Decision:** retain `n=1`; a lower compact index does not repair the
+  5--30 kpc residual.
+- [x] **Stage 2: component and degeneracy diagnosis not triggered.** Plot the
+  compact and extended CoGs and density profiles separately. Use profiled scans
+  that fix one coordinate while re-optimizing the other three to determine
+  whether `n<1` removes compact-component leakage at 5--30 kpc or merely
+  transfers mass among compact fraction and the two radii. The component
+  figure was completed, but no lower index survived Stage 1, so the
+  conditional profiled scans were not run.
 - [ ] **Stage 3: refit the held-out halo–CoG relation.** Only the representation
   selected inside the training folds proceeds. Refit the conditional mean and
   stochastic residual distribution from `[DiffMAH(4), c_200c]`; repeat the
@@ -1786,7 +1799,30 @@ Cross-experiment plan. Mirrors the phase sequence in
   report incremental CRPS and RMS as functions of radius and in differential
   annuli. Treat observational motivation as a reason to run the test, not as
   a constraint on the result.
-- [ ] **Stop conditions.** Stop after the declared Sérsic grid. If `n=0.5`
+- [x] **Stop conditions.** Stop after the declared Sérsic grid. If `n=0.5`
   is selected, report a one-sided result rather than extending automatically.
   Do not add epochs until the redshift-0.4 representation, identifiability,
-  stochastic population geometry, and 5--30 kpc residual are stable.
+  stochastic population geometry, and 5--30 kpc residual are stable. The
+  declared grid is closed without extending `n` or launching a joint global
+  `(n, gamma)` fit.
+- [x] **Stage 1b: jointly fit one global compact index and one global Moffat
+  index.** On a predeclared focused 5-by-5 grid, profile out the same four
+  galaxy coordinates, select grid cells on the five outer training folds, and
+  attempt one local quadratic refinement only if the winner is interior and
+  fold-stable. Compare with fixed `(n=1, gamma=1.4)` and the frozen smooth
+  outer law using 5--30 kpc residuals, full CoG and density accuracy,
+  R50/R80/R90, conditioning, boundaries, exact recovery, four-start agreement,
+  radial jackknifes, and direct profile figures. The complete 90-galaxy path
+  must remain below one minute before a full run. **Predeclared in the Exp56
+  README before writing the Stage 1b driver. Result:** the complete demo passed
+  in 39.04 seconds and the 2,539-galaxy grid finished in 1,236.58 seconds. All
+  five training folds and 99.7% of galaxy bootstraps choose the declared
+  upper-bound cell `(n=1.25, gamma=1.4)`, so the conditional continuous
+  refinement is not attempted. The cell improves the paired 5--30 kpc CoG and
+  density errors relative to fixed `(n=1, gamma=1.4)`, but worsens full-range
+  CoG RMS from 0.00440 to 0.00459 dex and worsens local conditioning. Its
+  stellar-mass--R90 slope is 0.2732 versus 0.2909 in TNG and 0.2924 for the
+  frozen smooth law. Exact recovery, multi-start agreement, boundaries, and
+  radial jackknifes pass, so this is a real profile trade rather than a failed
+  optimizer. **Decision:** do not adopt or extend the boundary pair; retain
+  the fixed single-slope baseline and the frozen smooth outer-shape candidate.

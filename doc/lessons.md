@@ -532,6 +532,11 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Workflow
 
+- **Do not use `path` as a zsh shell variable.** In zsh, lowercase `path` is a
+  special array tied to `PATH`; assigning it in a loop replaces the command
+  search path, so later commands such as `git` and `uv` appear to be missing
+  even though the installation is unchanged. Use a task-specific name such as
+  `artifact_file` for shell loop variables.
 - Multi-hour compute jobs launched as harness background tasks were repeatedly
   killed mid-run (whole process group, silent, no OOM); plain `nohup uv run ... >
   log` survived for ~1 h jobs, and the robust pattern for longer chains is
@@ -1482,3 +1487,41 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   The figure now assigns a sequential `cividis` color from the active grid and
   regenerates from saved outputs, so future grid extensions cannot repeat this
   failure.
+- **Shared smoke/full figures must not hard-code the validation scope (exp56
+  Stage 1).** The full-sample component figure initially retained the phrase
+  "demo galaxy" from the 90-galaxy validation because both paths called the
+  same plotting function. Direct image inspection caught the stale label.
+  Titles now describe the selected galaxy without asserting run scope, and the
+  scalar 5--30 kpc comparisons show galaxy-bootstrap intervals rather than
+  bare bars.
+- **Do not import experiment drivers through the generic module name `run`
+  (exp56 Stage 1b).** Importing Exp56's `run.py` under that name made Exp55's
+  `mixed.py` resolve its own `from run import ...` back to the partially loaded
+  Exp56 module, producing a circular import before any fit began. Load a reused
+  driver under an experiment-specific module name so legacy sibling imports
+  retain their intended namespace.
+- **Convert every NumPy container and scalar at JSON boundaries (exp56 Stage
+  1b).** The 90-galaxy numerical path first reached its final writes and then
+  failed on a NumPy configuration array in the manifest and, after that fix,
+  on a NumPy boolean in the result. Manifest parameters now receive ordinary
+  Python lists and the shared result converter handles NumPy booleans as well
+  as arrays, integers, and floats. The validation is rerun from forced fits so
+  a failed final write cannot count as a complete-path timing.
+- **Keep an operational smoke gate separate from scientific candidate
+  acceptance (exp56 Stage 1b).** The first successful 39-second complete path
+  was incorrectly marked failed because its selected pair did not pass the
+  conditioning and radial-jackknife adoption safeguards. Those failures are
+  valid evidence against that candidate, but the smoke gate asks whether every
+  declared computation, exact-recovery check, output, and figure executes
+  correctly below one minute. The gate now requires execution success and
+  exact recovery; the independent adoption flags retain every scientific
+  safeguard without blocking the declared full-sample measurement.
+- **Aggregate binary diagnostic surfaces as fractions, not medians (exp56
+  Stage 1b).** The first joint-shape surface showed 0.000 boundary incidence in
+  every cell because it took the median of each per-galaxy 0/1 boundary flag.
+  The saved candidate comparisons and population summaries already used the
+  individual flags correctly, so selection was unaffected. Direct image review
+  caught the uninformative panel; the surface now plots the mean flag, which is
+  the declared fraction of galaxies near a bound. Its paired bootstrap also
+  uses a mean difference rather than the identically uninformative median of
+  sparse binary differences.
