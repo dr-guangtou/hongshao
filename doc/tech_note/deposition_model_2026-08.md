@@ -1036,6 +1036,64 @@ reproduces curves of growth as well as a three-component decomposition — with
 the caveat that the parallel result constrains a single epoch and this model
 serves five.
 
+### 8.10 The limit is the model class, not its parameterisation
+
+Section 8.9 ended by pointing at a second deposit component with its own radial
+scale. It was built and fitted, and it settles the question — in the other
+direction.
+
+**The test.** Each deposit's profile became a mixture of two blobs at two
+sizes, weighted by *when* the mass was laid down: an extended one at the size
+the model already used, and a compact one — an exponential — at a fraction of
+that radius. The compact fraction was allowed to be constant, or to rise toward
+early times. Setting that fraction to zero reproduces the single-component
+model exactly, which the code asserts at random parameter values.
+
+**The result.** In every fit, the compact fraction went to zero. Fitted under
+the production loss, all three versions returned exactly the incumbent's loss
+to six decimal places and every diagnostic was numerically identical. Fitted
+instead to reduce the central swing directly, they reached 0.089 and 0.094 dex
+— worse than the single-scale size law's 0.061 — and got there by changing the
+size law, not by using the second component. The fit was free to choose any
+mixing weight between zero and one, and chose zero.
+
+**Why, and this is the whole point.** Split these galaxies on whether their
+*measured* mass inside 4.9 kpc actually falls between redshift 2 and today:
+
+| error inside 2 kpc, dex | z = 0.4 | z = 0.7 | z = 1.0 | z = 1.5 | z = 2.0 | swing |
+|---|---|---|---|---|---|---|
+| all | +0.020 | −0.003 | −0.021 | −0.062 | −0.126 | 0.145 |
+| **centre declined (42%)** | +0.068 | +0.007 | −0.042 | −0.127 | −0.202 | **0.270** |
+| **centre did not (58%)** | −0.008 | −0.008 | −0.012 | −0.034 | −0.053 | **0.045** |
+
+The galaxy-to-galaxy scatter is 0.16 to 0.20 dex in both groups. So for the
+majority whose centres do not decline, the systematic trend with redshift is
+about a quarter of the scatter and is nearly a constant offset — the kind the
+efficiency normalisation absorbs. For the others, the simulation's own central
+mass really does fall, by a median of 14% between redshift 2 and today.
+
+**A model that only adds mass cannot follow that.** Written out: the predicted
+mass inside any radius is a sum of non-negative deposits over a set that only
+grows with time, and each deposit's profile is fixed once it is made.
+Therefore the predicted mass inside every radius is non-decreasing in time, at
+every parameter value. Not "happens not to decrease" — *cannot*.
+
+So for 42% of these galaxies the change the data asks for has a sign the model
+cannot produce, and no enrichment of the efficiency law, the objective, the
+size law or the profile family can alter that. Sections 8.8, 8.9 and this one
+describe four experiments that failed against the same defect, and they failed
+because the target lies outside the set of things the model can express.
+
+It also explains Section 8.9's trade. To reduce the swing measured over the
+whole population, the size law had to make every early deposit compact —
+including for the majority whose centres were already right — and that is
+exactly why it emptied the outskirts.
+
+**This is reported as the honest limit of this kind of model.** No attempt was
+made to rescue the numbers by fitting only the galaxies whose centres do not
+decline: that would quote a better score for a narrower claim, and the claim
+worth making is the one about the model class.
+
 ## 9. What we have learned
 
 ### 9.1 About the galaxies and the model
@@ -1067,17 +1125,24 @@ serves five.
 less than changing the efficiency law does. What a deposit looks like
    matters less than how much mass it carries and where it is placed.
 
-6. **Half of the model's worst defect belongs to the assumption, not the fit.**
-   In the majority of these massive ancestors, the simulation's central stellar
-   mass *falls* with time, which a deposition-only model cannot reproduce at
-   all (Sections 8.2 and 8.3).
+6. **The model's worst remaining defect belongs to the assumption, not to the
+   fit — and this is now proved rather than suspected.** In 42% of these
+   massive ancestors the simulation's central stellar mass *falls* with time,
+   by a median of 14% between redshift 2 and today. A model that only adds mass
+   predicts an enclosed mass that never decreases, at every radius and every
+   parameter value, so that change has a sign it cannot produce. Four separate
+   enrichments were built and fitted against this defect and all four failed
+   (Sections 8.8, 8.9, 8.10).
 
 ### 9.2 About what it still cannot do
 
 7. **The central deficit at redshift 2 is two failures added together**
-   (Section 8.3): 37% too light for the 53% whose centres later
-   decline, and 11% for the rest. A compact extra component addresses
-   only the smaller half.
+   (Sections 8.3 and 8.10): the galaxies whose centres later decline carry a
+   0.270 dex swing in the model's central error between redshift 2 and today,
+   against 0.045 dex for the rest. A compact extra component was built to
+   address the smaller half and **earned nothing** — its mixing weight went to
+   zero in every fit, because the half it could have helped is already fitted
+   to within a quarter of its own scatter.
 
 8. **WITHDRAWN 2026-08-25 — it was one corrupt galaxy; see Section 5.3.1.**
    ~~The model degrades on complete, massive samples, about 36% worse than a
@@ -1174,20 +1239,34 @@ median stellar-mass growth right to 0.03 dex, and does not overfit. Its one
 important term — letting the halo-mass dependence change with redshift —
 survives every control applied to it.
 
-**What is not.** It does not beat a plain statistical fit to the same halo
-properties at predicting total stellar mass at any epoch, and on a
-completeness-controlled sample of massive haloes it is about a third worse. It
-predicts a typical galaxy rather than a population. Two extensions that appeared
-to help turned out to be fitting the sample selection.
+**What is not.** It is 3 to 11% worse than a plain statistical fit to the same
+halo properties at predicting total stellar mass — though 6% *better* at
+redshift 2, and restricting to complete, massive haloes improves it rather than
+degrading it (Section 5.3, corrected). It predicts a typical galaxy rather than
+a population: the spread of predicted growth histories is half the
+simulation's. Two extensions that appeared to help turned out to be fitting the
+sample selection.
 
-**What we now know about the limit.** Half of the redshift-2 central deficit
-is a failure mode no deposition-only model can address — the simulation's
-central mass falls with time in the majority of these galaxies. Of the rest,
-most of the apparent headroom is the flexibility of the deposits rather than
-physics a shared law could learn. And one specific route into that headroom is
-now closed by measurement rather than by argument: enriching the efficiency
-law's dependence on time, in any shape at all, is worth 0.2 percentage points
-of a 13.80% profile error (Section 8.8).
+**What we now know about the limit, and it is the main result of this round.**
+The model's remaining central defect is not a defect of its parameterisation.
+Four independent enrichments were built and fitted against it — a richer
+dependence of the efficiency on time, five repaired objectives, a richer
+dependence of the deposit size on epoch, and a second deposit component with
+its own radial scale — and all four failed against the same thing.
+
+They failed because a model that only adds mass predicts an enclosed mass that
+never decreases, at any radius and at any parameter value, while in **42% of
+these galaxies the simulation's own central mass falls** — by a median of 14%
+between redshift 2 and today. For those galaxies the change the data asks for
+has a sign this kind of model cannot produce. For the other 58% the model is
+already right to within a quarter of the galaxy-to-galaxy scatter
+(Section 8.10).
+
+Two of the four also produced their own clean results along the way: a shared
+law's dependence on time is worth 0.2 percentage points of a 13.8% profile
+error however it is shaped (Section 8.8), and with one radial scale per deposit
+the central mass and the outer mass at redshift 2 cannot both be right
+(Section 8.9).
 
 ### 10.2 Next steps, in order
 
@@ -1220,21 +1299,29 @@ the model is 3 to 11% worse than a plain regression and 6% BETTER at redshift 2,
 and the completeness restriction improves it rather than degrading it. **This
 was the strongest remaining argument against the model, and it is gone.**
 
-**3. A compact second component — now the leading candidate, not a
-contingency** (Section 8.9). Three levers have been tested against the centre's
-evolution and none can fix it without breaking something else: the efficiency
-law's time dependence has a 0.2 percentage-point budget in total, the objective
-shifts the central error by a constant and never changes its slope with epoch,
-and the size law can remove 58% of the swing only by emptying the outskirts at
-the same epoch. All three point at the same missing thing — a second radial
-scale. The form to try is an EARLY COMPACT and LATE EXTENDED mixture weighted
-by deposition time, which is not the same object as the redshift-dependent
-deposit shape already rejected — and only
-on the galaxies whose centres do not decline (Section 8.3), following a nested
-sequence: first map the central residual against halo properties available at
-the epoch, with a shuffled control; then try a fixed compact fraction; then let
-it depend on mass and redshift; and let it depend on formation history only if
-that beats its own shuffled control.
+**3. TESTED AND REJECTED — a compact second component** (Section 8.10). Built,
+fitted five ways, and the mixing weight went to zero every time; the production
+loss returned the incumbent's value to six decimal places. It cannot help,
+because a component that adds central mass cannot reproduce a central mass that
+falls, and the galaxies whose centres do not fall are already fitted to within
+a quarter of their own scatter.
+
+**3b. What the limit points at instead.** Reproducing these galaxies' centres
+requires a mechanism in which stars already deposited move outward — the
+observed "expansion" of the central stellar profiles of massive galaxies, which
+is usually attributed to supermassive black hole evolution and is therefore
+only indirectly related to halo assembly. An empirical description would be
+enough: let each deposit expand after it is laid down, with both its half-mass
+radius and its truncation radius growing by the same factor as a function of
+the time elapsed since deposition. Mass is conserved and never removed, nothing
+becomes negative, no stellar information enters, and a zero expansion rate
+reproduces the present model exactly — but the mass inside a fixed small radius
+can then decrease, because old deposits spread outward faster than new ones
+arrive. **This changes the model class**, and two things follow: the Stage 0
+contract currently asserts that predicted profiles never decrease with time,
+and that assertion would have to become conditional; and the profile of each
+deposit would start depending on the epoch it is viewed at as well as the epoch
+it was made, which costs several times more per evaluation.
 
 **4. Test a halo-mass-dependent size evolution.** The size law's dependence on
 redshift is currently the same for all halo masses. Making that exponent depend

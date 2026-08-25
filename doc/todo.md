@@ -1495,14 +1495,36 @@ Cross-experiment plan. Mirrors the phase sequence in
   sample carried 17.8% of the loss. Corrected, the model is 3-11% worse than a
   plain regression and **6% better at redshift 2**, and the completeness
   restriction improves it rather than degrading it.
-- [ ] **A compact second channel — NOW THE LEADING ITEM.** Three levers have
-  been tested against the centre's evolution and none fixes it without breaking
-  something else (Stages 3.5, 3.6, 3.7), and all three point at a missing
-  second radial scale. Try an **early compact and late extended mixture
-  weighted by deposition time** — NOT the redshift-dependent deposit shape
-  already rejected, which is a different object. exp55 independently finds an
-  exponential core plus an extended Moffat reproduces measured profiles as well
-  as a three-component fit, at a single epoch. Original wording follows:
+- [x] **A compact second channel — BUILT, FITTED, AND REJECTED 2026-08-25**
+  (Stage 3.8, `stage38_two_channel.py`). Each deposit became a mixture of an
+  extended blob and a compact exponential at a fraction of its radius, with the
+  mixing weight allowed to be constant or to rise toward early times. **The
+  weight went to zero in all five fits**, both under the production loss (which
+  returned the incumbent's value, 1.874253, to six decimals, with every
+  diagnostic numerically identical) and when asked to minimise the central swing
+  directly. It cannot help: a component that ADDS central mass cannot reproduce
+  a central mass that FALLS, and the galaxies whose centres do not fall are
+  already fitted to 0.045 dex against a per-galaxy scatter of 0.16-0.20 dex.
+- [x] **THE LIMIT IS THE MODEL CLASS.** With every deposit non-negative and its
+  profile fixed once made, `M*(<R,t)` is non-decreasing in `t` at every radius,
+  at every parameter value. In **42%** of these galaxies the measured central
+  mass falls, by a median of **14%** from z=2 to z=0.4. Four enrichments
+  (Stages 3.5, 3.6, 3.7, 3.8) failed against the same defect because it lies
+  outside the reachable set. **User's decision: report this honestly; do NOT
+  refit on the non-declining subset.**
+- [ ] **NEXT, user-proposed: an empirical expansion term.** Observationally the
+  central density of massive galaxies appears to decrease with time — their
+  profiles "expand" near the centre — plausibly tied to black-hole evolution,
+  so the link to halo assembly is secondary at best; an empirical description
+  is all that is wanted. The natural form: let each deposit expand homologously
+  after it is laid down, both radii scaled by `g = (t_k/t_j)^alpha`. Mass is
+  conserved, nothing goes negative, no stellar information enters, `alpha = 0`
+  nests the current model — and `M*(<R)` at fixed small R can then decrease.
+  **Changes the model class**: Stage 0's monotone-in-time assertion becomes
+  conditional, and the deposit basis starts depending on the viewing epoch
+  (measure the cost, do not estimate it). NOT started.
+- [ ] ~~A compact channel, IF it earns it~~ — superseded by the above.
+  Original wording follows:
 - [ ] **A compact channel, IF it earns it**, following the reviewer's nested
   sequence: map the inner residual against epoch-local halo variables with a
   shuffled-secondary null; then a fixed compact fraction; then mass/redshift
