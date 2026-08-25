@@ -149,7 +149,7 @@ class FrozenProblem:
         return self.p.loss(self.lift(x))
 
 
-def run(law, smoke=False, freeze=None):
+def run(law, smoke=False, freeze=None, tag=None, only_starts=None):
     print(f"{RULE}\nexp57 STAGE 3 — fitting the expansion law {law}\n{RULE}\n")
     recs, data, mask, lmh, base, theta, slow = S0.build(smoke)
     l0 = slow.loss(theta)
@@ -160,7 +160,8 @@ def run(law, smoke=False, freeze=None):
 
     sp = X.XSpec(base, law)
     pr = X.ExpandingProblem(sp, recs, data, mask, epochs=(0, 1, 2, 3, 4))
-    label = sp.label + (f"+frozen_{'_'.join(freeze)}" if freeze else "")
+    label = (sp.label + (f"+frozen_{'_'.join(freeze)}" if freeze else "")
+             + (f"#{tag}" if tag else ""))
     frozen = ({k: float(theta[sp.theta_names.index(k)]) for k in freeze}
               if freeze else None)
     if frozen:
@@ -176,6 +177,13 @@ def run(law, smoke=False, freeze=None):
     st = starts_for(sp, theta, n_jitter=(0 if smoke else 1))
     if smoke:
         st = st[:2]
+    if only_starts is not None:
+        # Reproduce a NAMED subset of the multi-start set. The optimiser is
+        # deterministic given a start, so this reproduces exactly what the full
+        # run computes for those starts -- used to gate one basin without
+        # waiting for the other eight.
+        st = [st[k] for k in only_starts]
+        print(f"  reproducing starts {only_starts} only")
     print(f"  {len(st)} starts; expansion values "
           + ", ".join(f"{s[base.n_theta]:+.3f}" for s in st) + "\n", flush=True)
 
@@ -261,4 +269,8 @@ if __name__ == "__main__":
            if "--only" in sys.argv else "X1")
     frz = (sys.argv[sys.argv.index("--freeze") + 1].split(",")
            if "--freeze" in sys.argv else None)
-    run(law, smoke, frz)
+    tag = (sys.argv[sys.argv.index("--tag") + 1]
+           if "--tag" in sys.argv else None)
+    onl = ([int(v) for v in sys.argv[sys.argv.index("--starts-only") + 1].split(",")]
+           if "--starts-only" in sys.argv else None)
+    run(law, smoke, frz, tag, onl)
