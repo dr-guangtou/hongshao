@@ -768,6 +768,34 @@ two not), `stage34_rms_*` (the distribution of per-galaxy error), and
 output; the smoke path writes a `_smoke` suffix so it can never overwrite them
 again.
 
+### RE-DERIVED 2026-08-25 on the cleaned sample
+
+Every number in this Stage 3.4 section was originally computed with the broken
+cross-match at row 181 inside the sample, and with model parameters from a fit
+that also contained it. Both corrected and the whole stage re-run
+(`stage34_objective.py`, `stage34_ceiling.py`, `stage34_basis_scan.py`; pre-fix
+outputs kept as `outputs/stage34_*_PRE_ROW181.npz`).
+
+**Every rung moved by 0.01 to 0.03 percentage points.** At the precision quoted
+here only two cells change: the free-deposit bound 4.5% -> 4.4%, and the
+three-interval rung 10.5% -> 10.4%. The wrong-galaxy control is unchanged at
+5.0%, the fitted model at 14.2%, the ceiling at 8.5%. The decline split is
+unchanged at 443 declining of 839 (52.8%), with the model -37.2% inside 2 kpc
+at z=2 for those and -11.5% for the rest. No ordering, ratio or conclusion
+changes.
+
+**`c_z` stays rejected**, and now on a clean sample: the best non-zero `c_z`
+makes the ceiling WORSE by +0.0017 in mean shape score on all 2397 galaxies and
+by +0.0201 on the 839-galaxy cohort, against +0.001 and +0.02 before.
+
+Worth stating because it was not obvious in advance: row 181's profile is
+essentially all inside the innermost aperture, the shape a deposit basis
+reproduces worst, so it could have inflated the ceiling rather than merely
+perturbing it. It does not, because a ceiling is a MEAN over 839 galaxies. The
+contrast with the amplitude headline it *did* destroy (see the row-181 section
+below) is the difference between a mean over a large sample and a mean over one
+the completeness cut had already shrunk to 840.
+
 ### WITHDRAWN from v1 of this section
 
 1. ~~"Two thirds of the z=2 central deficit is irreducible."~~ It compared two
@@ -915,7 +943,7 @@ within 0.01 at every epoch.
 
 Stage 3.4's temporal ladder was read as "most of the reachable improvement sits
 at a time resolution a shared law can express", because freeing the deposited
-mass over K time groups moves the shape error 14.2% (K=1) -> 10.5% (K=3) ->
+mass over K time groups moves the shape error 14.2% (K=1) -> 10.4% (K=3) ->
 9.7% (K=8). **Every rung of that ladder is solved PER GALAXY**
 (`stage34_ceiling.py`, `run_sample` loops over galaxies calling
 `solve_galaxy`, and every rung inside it is a per-galaxy non-negative least

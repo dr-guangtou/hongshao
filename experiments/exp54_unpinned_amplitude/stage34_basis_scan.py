@@ -217,6 +217,26 @@ def _grid_edge_warning(rec, names, lo, hi):
               f"reported gain is a lower bound on what a wider grid would find.")
 
 
+def incumbent_theta(label):
+    """The incumbent's parameters, preferring the CLEAN-sample fit.
+
+    Stage 3.4 originally read `stage33_perepoch.npz`, which was fitted with the
+    broken cross-match at row 181 still inside the sample. The clean refit lives
+    in `stage35_fits/`. The basis these scripts bound depends on theta only
+    through the size law and the profile shape, and those moved by at most 0.010
+    (in `b`), so this is a correctness fix rather than a large one -- but which
+    file was used must be visible, hence the print.
+    """
+    clean = C.HERE / "outputs" / "stage35_fits" / f"{label}.npz"
+    if clean.exists():
+        print(f"  theta   : {clean.name} (clean-sample refit)")
+        return np.asarray(np.load(clean)["theta"], float)
+    print(f"  theta   : stage33_perepoch.npz -- WARNING, this predates the "
+          f"row-181 fix")
+    return np.asarray(np.load(C.PEREPOCH, allow_pickle=True)
+                      [f"{label}_theta"], float)
+
+
 def main(smoke=False):
     import selection as S
     import stage2_multiepoch as s2
@@ -225,7 +245,11 @@ def main(smoke=False):
     all_rows = np.array([g["row"] for g in s2._W["gals"]])
     cuts = np.load(C.SEL, allow_pickle=True)["cuts"]
     m200 = S.sample_masses(np.load(S.HS_NPZ, allow_pickle=True))
-    complete_all = np.isfinite(m200) & (m200 >= cuts[None, :])
+    # RE-DERIVED 2026-08-25, as for the other Stage 3.4 scripts: this run
+    # predated `selection.sane_history_mask`, so the broken cross-match at row
+    # 181 was inside the sample when `c_z` was rejected.
+    complete_all = (np.isfinite(m200) & (m200 >= cuts[None, :])
+                    & S.sane_history_mask(pop["data"]))
 
     rows = all_rows[::40] if smoke else all_rows
     recs = H.build_records(rows=rows, verbose=not smoke)
@@ -233,8 +257,7 @@ def main(smoke=False):
     stack = Stack(recs, pop["data"][sel], complete_all[sel])
 
     spec = S33.spec_from_label(LABEL)
-    theta = np.asarray(np.load(C.PEREPOCH, allow_pickle=True)
-                       [f"{LABEL}_theta"], float)
+    theta = incumbent_theta(LABEL)
     _, size, shape = spec.unpack(theta)
     log_f0_0, b_0 = float(size[0]), float(size[1])
     c_0 = float(shape[0])

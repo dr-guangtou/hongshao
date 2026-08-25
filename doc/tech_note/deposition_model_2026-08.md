@@ -704,13 +704,32 @@ profile, and as a ratio to the previous generation's 15.8%:
 | anything at all, as long as enclosed mass never falls with time | — | 0.1% | 0.009 |
 | the same, but the total mass must also be right | — | 3.1% | 0.195 |
 | every deposit's mass, fitted **separately at each epoch** | 5 x ~71 | 2.6% | ≤ 0.164 |
-| **every deposit's mass, one set serving all five epochs** | **~71** | **4.5%** | **0.282** |
+| **every deposit's mass, one set serving all five epochs** | **~71** | **4.4%** | **0.281** |
 | *the same, fitted to a DIFFERENT galaxy's measured profile* | ~71 | **5.0%** | **0.319** |
 | the mass in each of 8 broad time intervals | 8 | 9.7% | 0.614 |
 | the mass in each of the 5 intervals between epochs | 5 | 12.1% | 0.762 |
 | **the fitted model: 7 numbers shared by all galaxies** | **0** | **14.2%** | **0.898** |
 
 The corresponding figure is `figures/stage34_ladder_gompertz_log-E2-S2.png`.
+
+**Re-derived 2026-08-25, on the cleaned sample.** Every number in this section
+was originally computed with the broken cross-match at row 181 still inside the
+sample, and with model parameters from a fit that also contained it
+(Section 5.3.1). Both were corrected and the whole stage re-run. **Every rung
+moved by between 0.01 and 0.03 percentage points**, and at the precision quoted
+here only two cells change at all: the free-deposit bound from 4.5% to 4.4%,
+and the three-interval rung of Section 8.5 from 10.5% to 10.4%. No ordering,
+ratio or conclusion changes.
+
+That the effect is this small is itself worth stating, because it was not
+obvious in advance: row 181's measured profile is essentially all inside the
+innermost aperture, which is the shape a deposit basis reproduces worst, so it
+could have inflated a representational ceiling rather than merely perturbing
+it. It does not, because the ceiling is a MEAN over 839 galaxies and one
+object moves a mean by at most its own excess divided by 839. The contrast with
+Section 5.3.1 — where the same galaxy moved a headline by a factor of 1.3 — is
+the difference between a mean over a large sample and a mean over a sample the
+completeness cut had already shrunk.
 
 Four things follow.
 
@@ -722,17 +741,17 @@ this: the fitted size law is already within 0.4% of the best any size
 law could do here.
 
 **2. What costs is that one set of deposit masses must serve all five epochs.**
-Imposing that raises the floor from 2.6% to 4.5% with no change
+Imposing that raises the floor from 2.6% to 4.4% with no change
 to the deposits at all.
 
 **3. But almost none of the remaining gap is information a shared law could
 use.** This is the most important caution in the section. Take one galaxy's
 deposits and fit them directly to a **different** galaxy's measured profile: the
-error is 5.0%, against 4.5% for fitting the right galaxy and
+error is 5.0%, against 4.4% for fitting the right galaxy and
 14.2% for the fitted model. **Using the wrong galaxy's halo costs only
 13%.** The set of deposits is flexible enough to draw almost any massive
 galaxy's profile, so roughly seven eighths of the apparent gap between 14.2%
-and 4.5% is that flexibility, not physics a seven-parameter law
+and 4.4% is that flexibility, not physics a seven-parameter law
 could learn. (This test has no matching halo, but it does have full access to
 the target's stellar profile — it measures how flexible the deposits are, not
 what a predictor could learn.)
@@ -843,7 +862,7 @@ progressively finer description of *when* the stars arrive.
 
 | K, number of free time intervals | 1 | 2 | 3 | 5 | 8 | 12 | 20 | free |
 |---|---|---|---|---|---|---|---|---|
-| shape error, all epochs | 14.2% | 12.9% | 10.5% | 10.2% | 9.7% | 9.5% | 9.0% | 8.5% |
+| shape error, all epochs | 14.2% | 12.9% | 10.4% | 10.2% | 9.7% | 9.4% | 9.0% | 8.5% |
 | shape error at z = 2 | 12.3% | 12.3% | **9.2%** | 8.9% | 9.0% | 9.6% | 9.5% | 9.2% |
 
 (These are computed with the convenient approximate loss the free-weight solve
