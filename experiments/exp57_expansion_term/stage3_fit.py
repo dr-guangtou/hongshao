@@ -86,6 +86,17 @@ def starts_for(sp, theta_base, n_jitter=1, seed=7):
             th = sp.nest(theta_base).copy()
             th[nb], th[nb + 1] = a, p
             out.append(np.clip(th, lo, hi))
+    if sp.law == "X4":
+        # A0, A_f and log_Rc. The conditioning slope gets BOTH signs explicitly:
+        # the diagnostic predicts a NEGATIVE slope (earlier-forming haloes, with
+        # smaller f_form, should expand more), and starting only there would
+        # make the prediction unfalsifiable by the optimiser.
+        for a, af, lrc in ((1.0, -5.0, 0.4), (1.0, +5.0, 0.4),
+                           (2.7, -5.0, 0.42), (2.7, 0.0, 0.42),
+                           (1.7, -5.0, 1.96)):
+            th = sp.nest(theta_base).copy()
+            th[nb], th[nb + 1], th[nb + 2] = a, af, lrc
+            out.append(np.clip(th, lo, hi))
     if sp.law == "X3":
         # The core radius is the parameter the whole law turns on and it spans
         # two and a half decades, so it gets its own starts rather than being

@@ -77,9 +77,9 @@ import model as M                                        # noqa: E402
 import stage35_time_law as S35                           # noqa: E402
 
 #: the laws, and how many parameters each adds
-LAWS = {"": 0, "X1": 1, "X2": 2, "X0": 1, "X3": 2}
+LAWS = {"": 0, "X1": 1, "X2": 2, "X0": 1, "X3": 2, "X4": 3}
 LAW_NAMES = {"": [], "X1": ["A"], "X2": ["A", "p"], "X0": ["alpha"],
-             "X3": ["A", "log_Rc"]}
+             "X3": ["A", "log_Rc"], "X4": ["A", "A_f", "log_Rc"]}
 #: two-sided, so the nesting point is INTERIOR for every law
 LAW_BOUNDS = {
     "A": (-0.9, 20.0),        # -0.9 = deposits shrink to a tenth; +20 = x21
@@ -88,7 +88,22 @@ LAW_BOUNDS = {
     #: X3's core radius, log10 kpc. 0.32 kpc to 316 kpc: small enough to do
     #: nothing, large enough to reproduce X1 exactly in the limit.
     "log_Rc": (-0.5, 2.5),
+    #: X4's slope of the expansion strength on the halo's formation-time
+    #: summary. `f_form` spans roughly +-0.3 about its median, so +-15 covers
+    #: expansion strengths from strongly negative to strongly positive across
+    #: the population. Two-sided, so "formation time does not matter" is an
+    #: INTERIOR point.
+    "A_f": (-15.0, 15.0),
 }
+#: the reference `f_form` X4 measures its slope from. FIXED, not fitted, so
+#: that `A` keeps the same meaning it has in X3 -- the expansion strength of a
+#: typical halo -- and the new parameter is unambiguously a slope.
+F_FORM_REF = 0.6
+#: `G` must stay positive or the radial remap stops being monotone and stops
+#: being a rearrangement of anything. X3's own bounds guarantee it; X4's
+#: conditioning could not, so `G` is floored. The floor is reported when it
+#: binds rather than applied silently.
+G_FLOOR = 0.1
 #: the laws whose expansion is HOMOLOGOUS -- every radius scaled by the same
 #: factor. X3 is not one of them, and that is the entire point of X3.
 HOMOLOGOUS = ("X1", "X2", "X0")
@@ -155,12 +170,13 @@ class XSpec:
         identically 1, so the enriched model reproduces the incumbent exactly
         and a fit launched from here can never end up worse.
         """
-        off = {"A": 0.0, "p": 1.0, "alpha": 0.0, "log_Rc": 1.0}
+        off = {"A": 0.0, "p": 1.0, "alpha": 0.0, "log_Rc": 1.0,
+               "A_f": 0.0}
         return np.concatenate([np.asarray(theta_base, float),
                                np.array([off[n] for n in self.x_names])])
 
 
-def g_factor(law, xtheta, t_dep, t_view):
+def g_factor(law, xtheta, t_dep, t_view, f_form=None):
     """The homologous scale factor `g(t_dep, t_view)`, broadcast over both.
 
     `t_dep` is when a deposit was laid down, `t_view` when the profile is
@@ -183,6 +199,17 @@ def g_factor(law, xtheta, t_dep, t_view):
             np.maximum(t_dep, 1e-9) ** xtheta[0]
     if law == "X3":            # the same bounded time law as X1; the DIFFERENCE
         return 1.0 + xtheta[0] * frac      # is radial, not temporal
+    if law == "X4":
+        # X3 with the expansion STRENGTH conditioned on the halo's own
+        # formation time. Motivated before it was fitted: the galaxies whose
+        # centres decline differ from the rest in formation time
+        # (r = -0.317 with the flag) and NOT in halo mass (r = +0.025), so this
+        # is the one shared conditioning row with something real to condition
+        # on. See `diagnose_decliners.py`.
+        if f_form is None:
+            raise ValueError("X4 needs the halo's f_form per deposit")
+        a = xtheta[0] + xtheta[1] * (np.asarray(f_form, float) - F_FORM_REF)
+        return np.maximum(1.0 + a * frac, G_FLOOR)
     raise ValueError(f"unknown law {law!r}")
 
 
@@ -382,7 +409,9 @@ class ExpandingProblem(S35.StackedProblem):
                     r50s=np.where(good, r50, 1.0).ravel(),
                     r_trs=np.where(good, r_tr, 100.0).ravel(),
                     td=np.where(np.isfinite(self.t_dep), self.t_dep,
-                                1.0).ravel())
+                                1.0).ravel(),
+                    ff=np.where(np.isfinite(d.f_form), d.f_form,
+                                F_FORM_REF).ravel())
 
     def basis(self, s, k, R):
         """The unit-mass deposit CoGs as seen at epoch `k`, on radii `R`.
@@ -391,10 +420,13 @@ class ExpandingProblem(S35.StackedProblem):
         cannot be added to `predict` and forgotten in the diagnostics.
         """
         sp = self.xspec
-        g = g_factor(sp.law, s["xtheta"], s["td"], self.t_view[k])
-        if sp.law == "X3":
+        g = g_factor(sp.law, s["xtheta"], s["td"], self.t_view[k],
+                     f_form=s["ff"])
+        if sp.law in ("X3", "X4"):
+            i_rc = 1 if sp.law == "X3" else 2
             return cog_core_expanded(sp.base.family, s["shape"], s["r50s"],
-                                     s["r_trs"], R, g, 10.0 ** s["xtheta"][1])
+                                     s["r_trs"], R, g,
+                                     10.0 ** s["xtheta"][i_rc])
         return cog_scaled(sp.base.family, s["shape"], s["r50s"], s["r_trs"],
                           R, g)
 
@@ -446,8 +478,10 @@ if __name__ == "__main__":
 
     # 4. the laws switch off exactly at their nesting values
     td = np.array([0.5, 2.0, 5.0, 8.0])
-    for law, xt in (("X1", [0.0]), ("X2", [0.0, 1.0]), ("X0", [0.0])):
-        gg = g_factor(law, np.array(xt), td, 9.4)
+    for law, xt in (("X1", [0.0]), ("X2", [0.0, 1.0]), ("X0", [0.0]),
+                    ("X4", [0.0, 0.0, 1.0])):
+        gg = g_factor(law, np.array(xt), td, 9.4,
+                      f_form=np.array([0.5, 0.6, 0.7, 0.8]))
         print(f"  {law:<3} at its nesting theta: g = {gg}   (must be all 1)")
         assert np.allclose(gg, 1.0, atol=0, rtol=0)
 
@@ -486,6 +520,13 @@ if __name__ == "__main__":
     print(f"  X3 remap at Rc=10 kpc, G=2.5: r(R) for R = 0.01, 1, 10, 100, "
           f"1000 kpc\n    -> " + "  ".join(f"{v:.4g}" for v in rm)
           + "   (R/G near 0, R far out)")
+    ff = np.array([0.4, 0.6, 0.8])
+    g4 = g_factor("X4", np.array([2.0, -5.0, 0.7]), np.array([0.5, 0.5, 0.5]),
+                  9.4, f_form=ff)
+    print(f"  X4 with A=2, A_f=-5: early-forming f_form={ff} -> g = "
+          + "  ".join(f"{v:.3f}" for v in g4)
+          + "\n      (an EARLIER-forming halo, smaller f_form, expands MORE)")
+    assert g4[0] > g4[-1]
     d = np.diff(remap_radius(np.linspace(1e-4, 3000, 20000), 2.5, 10.0))
     print(f"  X3 remap is MONOTONE: min dr/dR = {d.min():.3e}  (must be > 0)")
     assert d.min() > 0
