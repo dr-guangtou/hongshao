@@ -1787,18 +1787,49 @@ Cross-experiment plan. Mirrors the phase sequence in
   transfers mass among compact fraction and the two radii. The component
   figure was completed, but no lower index survived Stage 1, so the
   conditional profiled scans were not run.
-- [ ] **Stage 3: refit the held-out halo–CoG relation.** Only the representation
+- [x] **Stage 3: refit the held-out halo–CoG relation.** Only the representation
   selected inside the training folds proceeds. Refit the conditional mean and
   stochastic residual distribution from `[DiffMAH(4), c_200c]`; repeat the
   final-mass-only, mass-conditioned shuffled-MAH, and shuffled-concentration
-  controls and the complete standard QA battery.
-- [ ] **Stage 4: measure radial halo-information content without imposing the
+  controls and the complete standard QA battery. Carry fixed `gamma=1.4` and
+  the frozen smooth `gamma(log M_peak)` law at `n=1` through identical
+  fold-clean predictors. Select the Stage 4 primary using decoded held-out
+  profiles and generated populations, not coordinate error alone. The exact
+  controls, stochastic calibration, safeguards, and sub-minute 90-galaxy gate
+  are predeclared in the Exp56 README before the Stage 3 driver is written.
+  **Validation:** the complete 90-galaxy path passed in 31.18 seconds with both
+  representations, all controls, eight stochastic draws, direct figures, and
+  both standard-QA batteries. **Result:** the full 2,539-galaxy calculation
+  finished in 321.10 seconds. The smooth law improves density accuracy, the
+  largest halo-mass-bin shape residual, and the stellar-mass--R90 slope, but it
+  fails the frozen R50 and self-consistent size-plane safeguards. Fixed
+  `gamma=1.4` is therefore the Stage 4 primary; the smooth law remains a
+  diagnostic rather than a discarded model.
+- [x] **Stage 4: measure radial halo-information content without imposing the
   expected answer.** Compare nested held-out relations using final mass,
   recent DiffMAH growth, early assembled fraction, the complete DiffMAH
   history, and concurrent concentration. Use mass-conditioned shuffles and
   report incremental CRPS and RMS as functions of radius and in differential
   annuli. Treat observational motivation as a reason to run the test, not as
-  a constraint on the result.
+  a constraint on the result. **Predeclared before writing the driver:** use
+  DiffMAH-derived growth from `z=1` to `z=0.4` and the assembled fraction at
+  `z=2`; compare five nested held-out relations plus four mass-conditioned
+  shuffles with one common linear-plus-mass-quadratic mean, fold-internal
+  stochastic calibration, radial and annular bootstrap tests, and a complete
+  sub-minute 90-galaxy gate. **Validation:** the complete path passed in 21.31
+  seconds; final-relation nominal-68% coverage is 69.21%, all generated CoGs
+  are finite and monotonic, and both Stage 3 adequacy safeguards pass. The
+  full-sample test is in progress. **Result:** the corrected 2,539-galaxy run
+  finished in 250.90 seconds with 68.68% nominal-68% coverage. Recent growth,
+  early assembled fraction, and concentration each beat their preceding model
+  and mass-conditioned shuffle across adjacent radial bins; the complete raw
+  DiffMAH coordinates are worse than the two explicit summaries but better
+  than shuffled histories. However, the common comparison mean is 1.11% worse
+  in profile CRPS and 2.73% worse in median CoG RMS than the Stage 3 selected
+  mean, failing both frozen 1% adequacy gates. **Decision:** record the radial
+  patterns as structured hypotheses, not established physical connections;
+  Stage 4 is formally inconclusive until the comparison is reproduced without
+  sacrificing the selected Stage 3 mean accuracy.
 - [x] **Stop conditions.** Stop after the declared Sérsic grid. If `n=0.5`
   is selected, report a one-sided result rather than extending automatically.
   Do not add epochs until the redshift-0.4 representation, identifiability,

@@ -1525,3 +1525,21 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the declared fraction of galaxies near a bound. Its paired bootstrap also
   uses a mean difference rather than the identically uninformative median of
   sparse binary differences.
+- **A user's global matplotlib configuration is part of a timed figure path
+  (exp56 Stage 3).** External LaTeX made an otherwise complete 90-galaxy path
+  exceed one minute during PDF export. Explicitly selecting built-in MathText
+  retained correct equations and PNG/PDF products while reducing the measured
+  path from more than 74.8 seconds to 31.18 seconds. Timing gates must include
+  figure rendering under the actual runtime configuration.
+- **Compute validation correlations on explicit finite pairs (exp56 Stage 4).**
+  Two of 2,539 raw histories do not reach the `z=2` anchor, so an unmasked
+  Spearman calculation returned `NaN` even though every DiffMAH-derived model
+  feature was finite. Report both the finite-pair count and the correlation;
+  missing raw diagnostic anchors must not masquerade as failed model inputs.
+- **A fair common mean can still be too weak for physical attribution (exp56
+  Stage 4).** The common linear-plus-mass-quadratic family gives clean nested
+  and shuffled comparisons, but its complete relation is 1.11% worse in
+  profile CRPS and 2.73% worse in median CoG RMS than the selected Stage 3
+  sparse mean. Even coherent radial gains must remain hypotheses when the
+  predeclared adequacy reference fails; do not convert a convenient comparison
+  basis into an inner- or outer-assembly claim.

@@ -455,6 +455,288 @@ passes the complete representation test. Retain fixed `(n=1, gamma=1.4)` as
 the single-slope baseline and retain the frozen smooth law as the outer-shape
 candidate; do not extend the global shape grid.
 
+## Stage 3 predeclaration — refit the held-out halo–CoG relation
+
+Stage 3 carries exactly two representations forward, both with the retained
+global compact Sérsic index `n=1`:
+
+1. the deployable fixed outer slope `gamma=1.4`; and
+2. the frozen smooth `gamma(log M_peak)` law with endpoints 1.4 and 1.25,
+   fold-training transition at the two-thirds halo-mass quantile, and width
+   0.20 dex.
+
+The hard outer-slope boundary remains a diagnostic ceiling from Exp55 and the
+joint `(n=1.25, gamma=1.4)` grid point remains a rejected representation. They
+are not refitted as Stage 3 candidates. Neither `n` nor `gamma` is fitted per
+galaxy, and no outer-law coefficient is retuned.
+
+For each of the existing five outer folds, use only the training galaxies to
+fit a conditional model from the four epoch-local DiffMAH coordinates plus
+concurrent `c_200c` to the four fitted analytic-profile coordinates. For the
+smooth representation, use the profile coordinates fitted under that same
+fold's frozen transition for both its training and validation galaxies. This
+keeps the representation and halo relation fold-clean. Refit every conditional
+mean and residual distribution from the Exp56 coordinates; do not reuse the
+Exp55 calibration or predictions.
+
+The mean model is frozen to Exp55's selected sparse degree-two basis. The
+stochastic model resamples complete four-coordinate residual vectors from
+nearby training halos in standardized feature space, preserving measured
+cross-coordinate dependence. Select one residual-inflation factor inside each
+outer training fold using four inner folds and nominal-68% profile coverage.
+No held-out galaxy may contribute to its mean fit, residual library, nearest
+neighbours, or scale selection.
+
+### Stage 3 controls
+
+Fit the following four held-out conditional means separately for both profile
+representations:
+
+- final DiffMAH peak mass only;
+- the complete four-parameter DiffMAH history plus `c_200c`;
+- complete inputs after shuffling the three non-mass DiffMAH coordinates among
+  galaxies of similar final halo mass; and
+- complete inputs after shuffling `c_200c` among galaxies of similar final
+  halo mass.
+
+The deterministic smooth `gamma(log M_peak)` value is appended to the
+conditional inputs for that representation. Because it is fixed by final halo
+mass and the training-fold transition, it does not count as extra measured halo
+information and is not shuffled independently.
+
+### Stage 3 judgment
+
+Judge the complete-input relations on decoded held-out CoGs and stochastic
+draws, not only on the four intermediate coordinates. Report:
+
+- mean profile CRPS, nominal-68% and nominal-90% pointwise coverage;
+- median full-range and 5--30 kpc CoG RMS;
+- median full-range and 5--30 kpc density RMS;
+- signed CoG and density residuals in halo- and stellar-mass bins;
+- cumulative and differential masses in fixed-kpc and size-scaled apertures;
+- R50, R80, R90, the stellar-mass--R90 slope, and generated size distributions;
+- complete-population geometry in the standard fixed-kpc and size-scaled
+  planes; and
+- direct best, typical, and worst held-out galaxies.
+
+The smooth representation becomes the Stage 4 primary only if all of the
+following are true relative to fixed `gamma=1.4`:
+
+- nominal-68% coverage lies within three percentage points of 68%;
+- profile CRPS is no more than 1% worse;
+- full-range CoG RMS, density RMS, and the largest coherent halo-mass-bin shape
+  residual show no bootstrap-resolved degradation;
+- absolute R50, R80, and R90 errors show no bootstrap-resolved degradation;
+- generated R90 and self-consistent size-scaled population distances improve;
+  and
+- no new systematic trend appears in the standard QA figures.
+
+If the smooth law fails any safeguard, Stage 4 uses fixed `gamma=1.4` as its
+primary representation and retains the smooth result only as a diagnostic.
+If neither complete-input relation is stable and calibrated, stop rather than
+interpreting radial feature differences from an unreliable halo–CoG relation.
+
+### Stage 3 small-scale gate
+
+Before the full run, execute both representations, all four conditional-mean
+feature sets, fold-internal stochastic calibration, saved outputs, the direct
+comparison figures, and the standard QA path on the same mass-stratified
+90-galaxy sample. Use eight stochastic draws for this validation and require
+the complete uncached path to finish in less than 60 seconds. Demo artifacts
+use a `stage3_demo_` prefix and cannot overwrite the full Stage 1, Stage 1b, or
+Stage 3 products. The full run uses 32 draws only after this gate passes.
+
+### Stage 3 small-scale validation result
+
+The first complete attempt was stopped at 74.8 seconds because the user's
+global matplotlib configuration routed every PDF through external LaTeX. The
+scientific calculation had completed, but figure export had not. Stage 3 now
+uses matplotlib's built-in MathText for the same equations and retains both
+PNG and PDF outputs. With that mechanical change, the complete uncached path
+passed on exactly 90 mass-stratified galaxies in 31.18 seconds, including both
+representations, all four conditional-mean feature sets, fold-internal
+stochastic calibration, eight draws, saved predictions, three direct figures,
+and both full standard-QA batteries. All fitted means and draws are finite and
+each representation contains five held-out folds. The full run is therefore
+authorized by the predeclared gate; the demo metrics are validation only and
+do not replace the full-sample representation decision.
+
+## Stage 3 result — retain fixed outer slope for the information test
+
+The full held-out calculation completed for 2,539 galaxies with 32 stochastic
+draws in 321.10 seconds. The fixed and smooth representations have calibrated
+nominal-68% profile coverage of 68.75% and 68.85%, respectively, against the
+68% target. Their mean profile CRPS values against the TNG CoGs are 0.06403 and
+0.06375 dex; the paired bootstrap interval for smooth minus fixed is
+[-0.00047, -0.00026, +0.00001] dex at the 16th, 50th, and 84th percentiles.
+
+The smooth law improves the median density RMS against the CoG-derived TNG
+density profile from 0.12788 to 0.12541 dex. It also reduces the largest
+coherent halo-mass-bin CoG shape residual from 5.59% to 3.34%, and its
+stellar-mass--R90 slope is 0.29205 against 0.29095 in TNG, compared with
+0.26569 for fixed `gamma=1.4`. These are meaningful advantages of the smooth
+representation. However, the predeclared adoption rule requires every gate to
+pass. The smooth law has a bootstrap-resolved 0.00033 dex larger median
+absolute R50 error, and its self-consistent size-plane population distance does
+not improve. It therefore fails two safeguards despite improving the outer
+profile. Stage 4 uses fixed `gamma=1.4` as its primary representation and keeps
+the smooth result as a diagnostic. This is a conservative frozen-rule decision,
+not evidence that a constant outer slope is uniformly more accurate.
+
+Direct and standard-QA figures show finite, monotonic decoded profiles and no
+new representation-specific failure. Both relations nevertheless compress
+the population scatter in several aperture and size planes, so Stage 4 must
+measure information content from held-out errors and shuffled controls rather
+than interpret the conditional mean as a deterministic galaxy prediction.
+
+## Stage 4 predeclaration — radial halo-information content
+
+Stage 4 asks what halo information improves the fixed-`n=1`, fixed-`gamma=1.4`
+halo–CoG relation at different radii. It does not assume that recent assembly
+must control the outskirts or that early assembly must control the inner CoG.
+Those are hypotheses tested by the held-out comparisons, not constraints on
+the fitted signs or radial trends.
+
+The two scalar assembly summaries are derived only from each halo's portable
+DiffMAH fit. Evaluate the fitted peak-mass history at the vendored TNG cosmic
+times 3.28448, 5.87803, and 9.38911 Gyr for `z=2`, `z=1`, and `z=0.4`:
+
+- recent growth is `log10 Mpeak(z=0.4) - log10 Mpeak(z=1)`, in dex;
+- early assembled fraction is `Mpeak(z=2) / Mpeak(z=0.4)`; the regression uses
+  its base-10 logarithm and reports the fraction for interpretation.
+
+Do not use the raw TNG history summaries as predictors. Compare them with the
+DiffMAH-derived values only as a data-integrity diagnostic.
+
+### Stage 4 nested relations and controls
+
+Fit these five outer-five-fold relations to the same fixed-slope analytic
+profile coordinates:
+
+1. final DiffMAH peak mass only;
+2. final mass plus recent growth;
+3. final mass plus recent growth and early assembled fraction;
+4. the complete four-coordinate DiffMAH history; and
+5. the complete DiffMAH history plus concurrent `c_200c`.
+
+Use the same conditional model family for every nested relation: an intercept,
+all included features linearly, and one quadratic term in final halo mass. This
+keeps the mass curvature fixed while adding one measured information direction
+at a time. Compare the last relation with the Stage 3 selected sparse mean as
+an adequacy diagnostic; do not change the Stage 3 relation or profile family.
+
+For the last four relations, construct a matched control by shuffling only the
+new information among galaxies in ten final-mass quantile bins: recent growth,
+early assembled fraction, all three non-mass DiffMAH coordinates, or
+concentration, respectively. Refit every control inside each outer training
+fold. A feature is not independently informative unless its real relation
+outperforms both the preceding nested relation and its own mass-conditioned
+shuffle.
+
+Generate complete four-coordinate residual vectors with the same nearest-
+neighbour resampling used in Stage 3. Select residual inflation separately for
+each relation using four inner folds and the nominal-68% profile-coverage
+target. No validation galaxy can enter a mean fit, residual library, neighbour
+search, scale selection, or shuffle fit.
+
+### Stage 4 measurements and judgment
+
+Report held-out point-prediction RMS and stochastic CRPS at every cumulative
+CoG radius, at every CoG-derived density radius, and for every differential
+annulus. Also report medians over 2--10, 10--30, and 30--148 kpc, R50/R80/R90,
+parameter conditioning inherited from the representation, feature
+correlations, calibration, and direct best, typical, and worst galaxies.
+
+For each added information set, bootstrap galaxies 1,000 times and report the
+16th, 50th, and 84th percentiles of the real-minus-preceding and
+real-minus-shuffled median metric differences. Call an improvement resolved
+only when the 84th percentile is below zero in both comparisons. A localized
+radial claim additionally requires at least two adjacent cumulative radii or
+annuli to pass; an isolated bin is reported without interpretation. Report
+null and adverse results as directly as improvements, without assigning an
+inner or outer physical connection in advance.
+
+Before the full run, execute the complete five-relation and four-shuffle path,
+fold-internal stochastic calibration, saved outputs, all radial/annular and
+direct figures, and final-relation standard QA on the same 90 mass-stratified
+galaxies with eight draws. Require less than 60 seconds, finite monotonic CoGs,
+five complete outer folds, and nominal-68% coverage within three percentage
+points of 68%. The full calculation uses 32 draws only after this gate passes.
+The full Stage 4 relation is adequate for interpretation only if its profile
+CRPS and median CoG RMS are each no more than 1% worse than the Stage 3 fixed-
+slope complete relation; otherwise report the measurements as inconclusive.
+
+### Stage 4 small-scale validation result
+
+The complete uncached path passed on exactly 90 mass-stratified galaxies in
+21.31 seconds. It fitted all five nested relations and four matched shuffles,
+calibrated each stochastic residual model within its outer training folds,
+generated eight draws, saved all predictions, produced five direct comparison
+figures, and completed the final relation's standard-QA battery. All means and
+draws are finite and monotonic, all nine relations contain five complete outer
+folds, and the final relation's nominal-68% profile coverage is 69.21% against
+the required 65--71% interval. Its profile CRPS and median CoG RMS are 8.0% and
+11.3% better than the Stage 3 fixed-slope relation on this validation sample,
+so both adequacy safeguards pass. The full Stage 4 run is authorized; no radial
+information claim is taken from this validation-scale result.
+
+## Stage 4 result — structured signals, but the adequacy gate fails
+
+The corrected full calculation completed for 2,539 galaxies with 32 draws in
+250.90 seconds. All nine real and shuffled relations have finite, monotonic
+CoGs and five complete held-out folds. The final complete-DiffMAH-plus-
+concentration relation has nominal-68% coverage of 68.68% against the 68%
+target. Its profile CRPS against the TNG CoGs is 0.06474 dex and its median CoG
+RMS is 0.08644 dex. The Stage 3 selected sparse mean reaches 0.06403 dex and
+0.08415 dex, respectively. Stage 4 is therefore 1.11% worse in CRPS and 2.73%
+worse in median CoG RMS, failing both predeclared 1% adequacy safeguards.
+
+Within the common linear-plus-mass-quadratic family, the radial comparisons are
+highly structured:
+
+- Adding DiffMAH-derived recent growth to final halo mass reduces median
+  per-galaxy CoG RMS by 0.01484, 0.02211, and 0.02795 dex in the 2--10,
+  10--30, and 30--148 kpc regions relative to final mass alone. The 84th
+  percentiles remain below zero against both the preceding model and the
+  mass-conditioned recent-growth shuffle in all three regions. The gain is
+  present throughout the CoG and is largest outside 30 kpc.
+- Adding the DiffMAH-derived early assembled fraction after recent growth
+  reduces median CoG RMS by 0.00299 dex at 2--10 kpc, but only 0.00020 and
+  0.00024 dex at 10--30 and 30--148 kpc. Its CoG-derived density and annular
+  improvements are instead larger outside 10 kpc. All paired regional
+  intervals and the two-adjacent-bin tests pass against both references, but
+  this metric-dependent radial pattern does not establish an inner--early-MAH
+  physical connection.
+- Replacing the two explicit summaries with the four raw DiffMAH coordinates
+  is worse than the summary relation by 0.00629, 0.00475, and 0.00493 dex in
+  median regional CoG RMS. It still strongly beats the version whose non-mass
+  DiffMAH coordinates are shuffled. Thus the full history contains predictive
+  information, but this common low-complexity mean uses the two physical
+  summaries more efficiently.
+- Adding `c_200c` to the complete DiffMAH coordinates reduces median CoG RMS by
+  0.00559, 0.00649, and 0.00841 dex across the same regions. It beats both the
+  preceding relation and shuffled concentration in every reported metric over
+  adjacent bins, confirming that concentration carries additional predictive
+  information within this model family.
+
+The two DiffMAH-derived summaries are faithful but not identical proxies for
+the raw histories. Recent growth correlates with its raw-history measurement at
+Spearman `rho=0.719` for all 2,539 galaxies; early assembled fraction correlates
+at `rho=0.923` for the 2,537 histories that reach `z=2`. The fitted recent and
+early summaries are themselves strongly anticorrelated (`rho=-0.874`), so the
+nested early-fraction result is an increment conditional on a closely related
+recent-growth coordinate.
+
+The standard QA exposes the same limiting issue as Stage 3: population scatter
+is compressed. For example, the fixed-kpc `<30` versus `30--50` kpc plane has
+0.050 dex model scatter against 0.172 dex in TNG, and the stellar-mass--R50
+plane has 0.054 dex model scatter against 0.173 dex in TNG. The test therefore
+delivers useful guidance for the next mean architecture, but the frozen
+adequacy rule makes its radial attribution formally inconclusive. Record the
+signals as hypotheses to retest with the selected Stage 3 mean architecture;
+do not encode an outer--recent or inner--early assignment as established
+physics.
+
 ## Review
 
 - The representation-only test was written here before the driver.
@@ -471,5 +753,12 @@ candidate; do not extend the global shape grid.
   after correcting the boundary-incidence summary. The measured full-run time
   remains 1,236.58 seconds; the cached reanalysis took 45.82 seconds.
 - No held-out halo–CoG relation, null-control fit, or repository-wide test
-  collection was attempted. The repository-wide limitation is the
-  pre-existing missing Exp07 input stated above.
+  collection was attempted during Stages 1 and 1b. Stages 3 and 4 subsequently
+  completed their declared held-out relations and null controls. Repository-
+  wide collection remains blocked by the pre-existing missing Exp07 input
+  stated above.
+- Stage 3 and Stage 4 each passed a complete uncached 90-galaxy path in 31.18
+  and 21.31 seconds before their full runs. Every new PNG and PDF was inspected
+  through direct figures and contact sheets. Stage 4's corrected full rerun
+  differs only in the finite-pair raw-history diagnostic; its fitted relations
+  and decision are deterministic and unchanged.
