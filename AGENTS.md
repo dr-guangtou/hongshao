@@ -96,6 +96,15 @@ clean, portable SHMR library — don't let it grow into an inference framework.
   DiffMAH early-growth coverage issue (exp10) was obvious in the by-mass fit
   figure but invisible in the median RMS. Visual inspection is a first-class
   evaluation step, not an afterthought.
+- **Promising or scientifically interesting models require the full standard QA
+  battery.** Before treating such a model as a result, generate the same broad
+  diagnostics used by the established experiments: aperture, annular, and
+  outskirt masses; curves of growth and residuals binned by halo and stellar
+  mass; density profiles; observational and size planes; cumulative residual
+  distributions; and representative best, typical, and worst individual
+  objects. Add cross-epoch stellar-growth diagnostics for multi-epoch models.
+  Give every QA figure a self-contained caption or nearby summary that states
+  what is plotted, the reference data, and the main interpretation.
 
 ## Repo layout
 

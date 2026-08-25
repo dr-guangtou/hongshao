@@ -1618,3 +1618,139 @@ Cross-experiment plan. Mirrors the phase sequence in
   profile figures, control logic, claim qualifications, and a reproducibility
   map. The source compiles without unresolved references or overflowing text;
   the generated PDF and staged figure copies are gitignored.
+
+## exp55 — analytic CoG representation and identifiability
+
+- [x] Test whether a continuous three-to-five-parameter CoG function can match
+  the low-dimensional PCA representation at redshift 0.4 while retaining
+  parameters stable enough for a later DiffMAH-to-profile map. Compare PCA-3/5,
+  the Exp50 five-coordinate decoder, one-component analytic families, and a
+  deliberately restricted compact-plus-extended Sérsic mixture. Treat
+  reconstruction quality and parameter identifiability as equal gates. Use
+  multiple starts, re-optimized profile scans, residual-Jacobian singular
+  values, synthetic recovery, boundary audits, and direct CoG plus density
+  figures. Do not fit the halo relation until a profile representation passes.
+  **Result:** on all 2,545 usable redshift-0.4 CoGs, a four-parameter compact
+  exponential plus extended Moffat profile reaches 0.00441 dex median
+  cumulative-profile RMS under fold-clean selection of the two global shape
+  indices. Its paired median difference from Exp50's five sampled coordinates
+  is -0.000061 dex, with a bootstrap 16th--84th percentile interval spanning
+  zero, while PCA-3 remains better by 0.000975 dex. The selected analytic
+  family has a median scaled-Jacobian singular-value ratio of `10^-1.70`, only
+  2.55% boundary incidence, exact synthetic recovery, and median parameter
+  changes below 0.008 dex (or 0.004 in compact fraction) when alternating radii
+  are removed. **Decision:** adopt this function as the profile target for a
+  separate held-out DiffMAH mapping experiment, with per-object conditioning
+  flags and no in-situ/ex-situ interpretation. The subsequent standard QA
+  confirms 0.003--0.006 dex scatter in cumulative apertures but finds the
+  expected derivative limitation: the mass beyond 100 kpc has +12.1% median
+  bias and 0.161 dex scatter, and the median absolute annular-density error
+  reaches 0.132 dex near 140 kpc. The halo-mapping experiment must therefore
+  judge differential profiles as well as CoGs.
+- [x] **exp55 halo-mapping stage.** Predict the four selected
+  analytic CoG coordinates from `[DiffMAH(4), c_200c]` on the same five
+  held-out folds as exp50. Require final-mass-only, mass-conditioned shuffled
+  MAH-shape, and shuffled-concentration controls; predict the joint residual
+  distribution; reconstruct full CoGs; compare directly with exp50 on common
+  galaxies; and run the full standard QA battery on both the conditional mean
+  and correlated draws before deciding whether these analytic coordinates are
+  suitable Ultimate-SHMR targets. **Result:** on 2,539 held-out galaxies, the
+  analytic map has 0.08519 dex median cumulative-profile RMS error, effectively
+  tied with the Exp50 sampled-coordinate map, and its mean profile CRPS is
+  0.00094 dex worse. Real MAH shape lowers CRPS by 13.20% relative to its
+  mass-conditioned shuffle, and real concentration lowers it by 4.44% relative
+  to its shuffle. Stellar mass within 148.2 kpc is predictable (held-out
+  R2=0.865), but compact fraction and compact radius are mostly stochastic
+  (R2=0.060 and 0.068). Correlated draws have accurate marginal 68% profile
+  coverage (68.3%) but broaden the tight TNG `<2Re` versus `2--4Re` plane to
+  0.188 dex scatter from the TNG value of 0.072 dex when every generated galaxy
+  is correctly measured at its own `Re`. The initially reported 0.213 dex used
+  the TNG counterpart's true `Re` and is retired. **Decision:** retain the
+  analytic CoG as a viable continuous halo-map target, but revise the residual
+  coordinates and joint stochastic model before adding epochs or freeing the
+  globally fixed component shapes.
+- [x] **exp55 halo-map refinement, Stages 1--4.** Decompose the
+  halo-mass-dependent radial residuals into representation, mapping, and
+  parameter-derivative contributions; compare a predeclared small set of
+  fold-clean analytic mean expansions; rotate the residual coordinates using
+  the analytic profile metric; and test simple stochastic alternatives against
+  both pointwise profile coverage and the standard population planes. Do not
+  add epochs or free the globally fixed profile indices in this work block.
+  **Result:** the halo-to-profile map contributes 0.08494 dex median profile
+  RMS, about 19 times the analytic function's 0.00437 dex representation error.
+  None of three broader polynomial means passed the predeclared combined gate:
+  the complete degree-2 basis lowered profile CRPS by only 0.45% while
+  increasing the worst mass-bin shape residual from 5.45% to 6.49%. A
+  profile-metric rotation separates four residual modes containing 62.5%,
+  24.4%, 10.2%, and 2.9% of residual profile variance, but is not claimed as a
+  mean-model improvement. Replacing raw Gaussian residuals with fold-local
+  nearest-neighbour residuals, inflated by a single scale selected on inner
+  held-out galaxies, lowers profile CRPS from 0.06429 to 0.06368 dex and gives
+  68.4% coverage for the nominal 68% interval. It reduces the generated
+  self-consistent `<2Re` versus `2--4Re` scatter from 0.188 to 0.084 dex,
+  compared with 0.072 dex in TNG. **Decision:** retain the sparse mean and use
+  the nested-calibrated empirical residual generator experimentally. The main
+  unresolved defect is the R90 population relation: its energy distance is
+  3.63 times the TNG split-half sampling floor because its mean mass trend is
+  too shallow, despite realistic scatter.
+- [x] **exp55 outer-envelope diagnosis, Stages 5--9.** Establish stochastic
+  robustness; separate R50/R80/R90 errors at the analytic-representation,
+  held-out mean, and generated-population layers; test whether actual-minus-
+  DiffMAH history residuals explain the failure; compare the existing fixed
+  outer-slope candidates under fold-clean multi-metric gates; audit a small set
+  of added halo features with mass-conditioned shuffles; and test one
+  predeclared mass-dependent boundary. **Result:** the original fixed
+  `gamma=1.25` representation itself changes the TNG mass--R90 slope from
+  0.291 to 0.251 despite only 0.00437 dex median CoG RMS. DiffMAH history misses
+  correlate only -0.030 to +0.045 with the R90 residual and do not beat their
+  shuffled controls. Fixed `gamma=1.4` improves density RMS from 0.06601 to
+  0.06093 dex and the generated R90 energy-distance ratio from 3.40 to 2.20 at
+  negligible CoG and CRPS cost. A fold-local boundary using `gamma=1.4` below
+  the training 2/3 halo-mass quantile and `gamma=1.25` above it passes every
+  declared gate: 68.9% nominal-68% coverage, 0.06377 dex profile CRPS, and R90
+  energy-distance ratio 0.96 relative to the TNG sampling floor. Its complete-
+  population R90 slope is 0.302 versus 0.291 in TNG. **Decision:** retain
+  `gamma=1.4` as the preferred global baseline and the hard boundary as a
+  diagnostic ceiling. The result establishes mass dependence of the required
+  outer slope, not a physical discontinuity.
+- [x] **exp55 smooth outer-slope law.** Replace the successful hard boundary
+  with one low-complexity continuous `gamma(log M_peak)` relation. Select any
+  transition scale and width only inside each outer training fold. Refit the
+  profile representation at the resulting per-halo slopes rather than
+  interpolating final predictions, and repeat identifiability, density, radial-
+  residual, null-control, coverage, and complete-population gates. Compare
+  against both fixed `gamma=1.4` and the two-regime diagnostic. Do not free
+  `gamma` independently for every galaxy, and do not add epochs until this
+  single-epoch coordinate system is stable. **Result:** a logistic law between
+  the tested slopes 1.4 and 1.25 selects the widest tested transition, 0.20 dex,
+  in all five training folds. On 2,539 held-out galaxies it has 0.06391 dex
+  profile CRPS, 69.5% coverage for a nominal 68% interval, and a generated
+  stellar-mass--R90 slope of 0.2895 versus 0.2909 in TNG. Its R90
+  energy-distance ratio is 0.93 relative to the TNG sampling floor, and both
+  fixed-kpc population planes pass. It formally fails replacement because the
+  self-consistent size-scaled ratio is 10.0034% above the hard boundary, barely
+  outside its 10% gate, and the largest mass-bin profile residual is 3.34%
+  versus 2.74%. **Decision:** keep the formal non-selection, but regard the
+  continuous law as a successful feasibility demonstration. At this stage the
+  0.20-dex width was the widest tested value; the separately declared closure
+  test below establishes it as an interior coarse-grid choice, not a
+  high-precision physical scale.
+- [x] **exp55 smooth-law closure.** In a newly declared test, extend the
+  transition-width grid above 0.20 dex and diagnose the smooth model's 3.34%
+  intermediate-radius mass-bin residual. Retain the same outer folds and final
+  gates; do not relax the just-missed size-scaled threshold after seeing it.
+  Stop if the wider law merely moves to a new boundary or if the radial
+  residual does not improve. Only a candidate with an interior width and stable
+  geometry should be considered for multi-epoch testing. **Result:** after
+  adding widths 0.30, 0.50, and 0.80 dex, every fold still chooses 0.20 dex.
+  The median training stellar-mass--R90 slope error decreases from 0.0107 at
+  width 0.10 to 0.0020 at 0.20, then rises to 0.0051, 0.0134, and 0.0196. Thus
+  0.20 dex is an interior, reproducible grid choice. The held-out result is
+  unchanged and still fails the same radial-shape and size-scaled gates.
+  **Decision:** close the width scan; diagnose the 5--30 kpc radial residual
+  before considering an epoch extension.
+- [ ] **exp55 population-QA performance.** Cache the truth measurements and
+  fixed TNG split-half sampling floors, then vectorize repeated energy-distance
+  calculations across complete draws. The Stage 10--11 all-32-draw comparison
+  currently takes about ten minutes and should remain a final robustness step
+  until this mechanical optimization is verified to reproduce every metric.

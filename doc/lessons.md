@@ -1329,3 +1329,156 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   rasterizes only the dense hexbin collections, retains vector axes and labels,
   and can rebuild these diagnostics from the saved held-out predictions. The
   report uses the 300-dpi PNG versions for viewer-independent rendering.
+- **A low cumulative-profile residual does not establish an identifiable
+  analytic coordinate system (exp55).** A five-parameter radial-sigmoid CoG
+  reached 0.00556 dex median cumulative-profile RMS, but 89.6% of galaxies put
+  at least one parameter within 1% of a bound and the median scaled-Jacobian
+  singular-value ratio was only `10^-3.42`. Multiple starts, re-optimized
+  profile scans, synthetic recovery, boundary incidence, and radial jackknifes
+  must be treated as selection criteria rather than after-the-fact diagnostics.
+- **Restricted mixtures can be usable without claiming that their components
+  are physical populations (exp55).** Fixing the component shape indices
+  globally, defining the component fraction within the measured outer
+  aperture, and enforcing ordered radii produced a four-parameter
+  Sérsic-plus-Moffat representation with exact synthetic recovery and typical
+  radial-jackknife changes below 0.008 dex. This does not solve unrestricted
+  multi-Sérsic degeneracy and does not identify the components as in-situ and
+  ex-situ stars; it creates stable phenomenological coordinates that can be
+  tested against halo assembly.
+- **Test analytic CoGs in differential as well as cumulative form (exp55).**
+  The best restricted two-Sérsic model had a respectable 0.00727 dex median CoG
+  RMS but a 0.145 dex annular-density RMS because both components have
+  exponential outer tails. Giving the extended component a Moffat power-law
+  tail reduced the corresponding errors to 0.00437 and 0.0660 dex. Cumulative
+  residuals alone can hide an incorrect density slope.
+- **A numerical integral is not an analytic profile merely because its
+  integrand has a formula (exp55 correction).** The first radial-sigmoid
+  implementation evaluated the cumulative profile on an internal integration
+  grid. Visual and implementation review exposed that it did not meet the
+  portability requirement, so it was replaced with the exact softplus
+  antiderivative before the family comparison was accepted.
+- **A visually excellent cumulative profile can retain a meaningful outer-
+  density error (exp55).** Near 140 kpc, a typical annulus contains only 1.09%
+  of the mass enclosed by its outer edge. A 0.00531 dex median absolute CoG
+  error there becomes a 0.132 dex median absolute density error when adjacent
+  cumulative masses are subtracted. Always judge an analytic CoG in cumulative
+  apertures, differential annuli, and surface density; none of the three is a
+  substitute for the others.
+- **An analytic profile can be identifiable from a known CoG while some of its
+  coordinates remain almost unpredictable from halos (exp55 halo map).** The
+  fixed Sersic-plus-cored-power-law fit has stable per-galaxy parameters, yet
+  held-out DiffMAH plus concentration explains 86.5% of the variance in stellar
+  mass within 148.2 kpc and only 6.0% and 6.8% in compact fraction and compact
+  radius. The reconstructed profile still ties the Exp50 readable map. Judge
+  the halo map through reconstructed observables and residual modes, and do not
+  equate profile-fit identifiability with deterministic halo predictability.
+- **A generated galaxy must be evaluated at its own generated size (exp55
+  correction).** The first stochastic QA used the standard paired diagnostic,
+  which deliberately evaluates model and TNG at the TNG galaxy's true `Re`, and
+  reported 0.213 dex scatter in the `<2Re` versus `2--4Re` plane. That is useful
+  for conditional-mean profile error but invalid for a generated population.
+  Measuring each draw at its own `Re` gives 0.188 dex for the raw Gaussian and
+  0.084 dex after nested residual calibration, versus 0.072 dex in TNG. Keep
+  paired fixed-scale diagnostics and self-consistent population diagnostics as
+  explicitly separate products.
+- **More algebraic flexibility can improve a scalar score while worsening the
+  coherent radial error (exp55 refinement).** A complete degree-2 halo map
+  lowered held-out profile CRPS by 0.45% relative to the sparse degree-2 map,
+  but increased the largest halo-mass-bin median shape residual from 5.45% to
+  6.49%. Candidate mean models must pass both a held-out distribution score and
+  direct mass-binned radial-residual checks; a small average improvement is not
+  evidence that the visible systematic was repaired.
+- **A coordinate rotation organizes residual physics but does not create new
+  predictive information (exp55 refinement).** Rotating the four analytic
+  profile coordinates by their effects on the CoG revealed distinct broad-
+  amplitude, central-transfer, intermediate-versus-outer, and weak-inner modes.
+  Because this transform is invertible, fitting the same linear design in the
+  rotated coordinates cannot be credited as a better conditional mean. Its
+  value is to expose which radial combinations are halo-predictable and which
+  should remain stochastic.
+- **Calibrate an empirical residual generator on inner held-out galaxies, not
+  on the final evaluation fold (exp55 refinement).** Nearest-neighbour
+  resampling recovered the population-plane geometry but covered only 62.7% of
+  profile points with a nominal 68% interval. Rebuilding the residual library
+  from cross-fitted predictions did not fix this, whereas one inflation factor
+  selected independently within each outer training fold gave 68.4% coverage
+  and lower profile CRPS. The selected factors were 1.16 in four folds and 1.08
+  in one, supporting a simple calibration rather than an unrestricted residual
+  density model.
+- **Correct stochastic scatter does not repair an incorrect mean population
+  relation (exp55 refinement).** The calibrated generator reproduces the TNG
+  R90 scatter to within 0.005 dex, yet its R90 distribution remains 3.63 times
+  the TNG split-half energy-distance floor because the predicted mass--R90
+  relation is too shallow and the median radius is high by 0.024 dex. Treat
+  residual width and conditional-mean structure as separate failure modes.
+- **A small integrated-profile error can bias an outer quantile relation
+  systematically (exp55 outer-envelope test).** The individually fitted
+  `gamma=1.25` analytic family has only 0.00437 dex median CoG RMS, yet changes
+  the TNG mass--R90 slope from 0.291 to 0.251 before any halo mapping. Diagnose
+  population sizes at the representation, conditional-mean, and stochastic
+  layers separately; aggregate CoG RMS does not bound errors in derived
+  population relations.
+- **Fix the stochastic ensemble size before calibrating empirical quantiles
+  (exp55 outer-envelope test).** The inner-selected residual inflation changed
+  between 16 and 32 draws because sample 16th and 84th percentiles are discrete.
+  Production comparisons now use 32 draws consistently and report complete-
+  population variation across draws for geometry metrics.
+- **A stochastic generator can improve one population plane while worsening
+  another (exp55 outer-envelope test).** Neighbour-residual draws improve
+  profile CRPS and the self-consistent size-scaled plane relative to raw
+  Gaussian draws, but worsen the R90 energy distance. Retain a standard set of
+  fixed-kpc, size-scaled, and outer-quantile diagnostics for every generator;
+  no single distribution score is a sufficient selection criterion.
+- **Use mass-conditioned nulls before blaming compressed halo histories
+  (exp55 outer-envelope test).** Actual-minus-DiffMAH anchor residuals correlate
+  only -0.030 to +0.045 with R90 errors, and neither they nor the DiffMAH fit
+  RMS improve the held-out profile coherently relative to shuffled controls.
+  For this failure, the evidence points to the analytic outer profile rather
+  than lost MAH diversity.
+- **A global profile hyperparameter may have negligible CoG cost but large
+  population consequences (exp55 outer-envelope test).** Changing the fixed
+  outer Moffat slope from 1.25 to 1.4 worsens median CoG RMS by only 0.000030
+  dex while improving density RMS, boundary incidence, and the generated R90
+  relation. Select such coordinates with fold-clean multi-metric gates, not
+  only the original fitting loss.
+- **A successful hard boundary is evidence for smooth dependence, not for a
+  physical discontinuity (exp55 mass-dependent outer slope).** A fold-local
+  two-regime slope rule brings the generated R90 distribution to the TNG
+  sampling floor and reduces coherent mass-bin residuals, but it leaves visible
+  structure near its arbitrary 2/3-mass split. Use it as a diagnostic ceiling
+  and next test one smooth, low-complexity mass dependence; do not free the
+  slope independently per galaxy.
+- **Visual review must check panel-to-bin routing and numerical axis offsets
+  (exp55 overnight QA).** A first comparison figure overplotted low- and
+  middle-mass residuals because integer panel routing mapped both to one axis,
+  and Matplotlib hid the absolute halo-mass threshold behind an offset. Direct
+  image inspection caught both; the final figure shows only the lowest and
+  highest bins and disables the misleading offset.
+- **Every named mass--size relation must state which mass defines the x-axis
+  (exp55 smooth-slope correction).** An initial Stage 10 selector minimized the
+  R90-slope error against halo mass even though the population failure and
+  standard mass--size QA use stellar mass. The wrong selector chose a 0.05-dex
+  logistic width in every fold; the corrected stellar-mass--R90 selector chose
+  0.20 dex in every fold and materially changed the generated population.
+  Encode the x-variable in function names or call the same audited size-relation
+  helper used by final QA.
+- **Do not reinterpret a candidate selected at the edge of a small grid as a
+  measured optimum (exp55 smooth outer slope).** All five folds choose the
+  initially widest tested logistic transition, 0.20 dex. A separately declared
+  extension to 0.30, 0.50, and 0.80 dex then selects 0.20 dex again in every
+  fold, making it an interior grid choice. The extension closes the numerical
+  direction without turning a coarse grid result into a high-precision physical
+  transition-scale measurement.
+- **Full draw-to-draw geometry is a final robustness product, not an inner-loop
+  metric (exp55 smooth outer slope).** Recomputing all two-dimensional energy
+  distances for 32 complete populations and two models took about ten minutes,
+  longer than fitting all smooth profile cells from cache and refitting the
+  halo map. Cache fixed truth sampling floors and vectorize repeated distances
+  before expanding such comparisons.
+- **Derive diagnostic-figure styling from the declared candidate grid (exp55
+  Stage 11 correction).** Extending the smooth-width grid from three to six
+  values completed and saved all numerical results, but the first figure build
+  failed because its color dictionary still contained three hard-coded entries.
+  The figure now assigns a sequential `cividis` color from the active grid and
+  regenerates from saved outputs, so future grid extensions cannot repeat this
+  failure.
