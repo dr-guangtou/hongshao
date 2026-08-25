@@ -371,13 +371,38 @@ comparison in this table. This program has now recorded that failure mode four
 times (exp38's loss-optimal basin, exp49's opposing gradients, exp52's correct
 profiles with the wrong mechanism, and now this).
 
-### The tension that nothing resolved
+### The tension that nothing resolved — and a correction to how I first stated it
 
-**Every long-reach model passes G5(c) and fails G5(b); the one short-reach model
-does the reverse.** Long reach lowers the core density everywhere, which fixes
-(c) — the model's median core surface-density growth against the measurement —
-but over-corrects the 58% of galaxies whose centres never needed it, breaking
-(b). Short reach protects those galaxies but cannot move (c).
+**First statement, from the six fits alone**: every long-reach model passes
+G5(c) and fails G5(b), and the one short-reach model does the reverse, so
+"reach and the core-density target are in direct tension".
+
+**That was too coarse, and Stage 8 refines it.** Sweeping the core radius `Rc`
+with everything else held fixed, at BOTH fitted anchors, shows the reach gate is
+satisfied over a wide range and the real conflict is between the two halves of
+G5:
+
+| `Rc` | G2 (reach) | G5(c) core gap | G5(b) non-decliners |
+|---|---|---|---|
+| ≲ 3 kpc | **pass** (≈2%) | **fails** (+0.07 to +0.10) | **pass** (0.024–0.038) |
+| 4–40 kpc | **pass** (3–22%) | **pass** (+0.02 to −0.005) | **fails** (0.078–0.094) |
+| ≳ 60 kpc | **fails** (41–99%) | pass | fails |
+
+**So G2 is not the binding constraint once the mechanism is non-homologous** —
+it holds for every `Rc` up to about 40 kpc. The conflict is that the core
+radius which fixes the median core density (4–40 kpc) is larger than the one
+which protects the galaxies that never needed correcting (≲3 kpc). Short reach
+protects them and cannot move (c); intermediate reach moves (c) and over-corrects
+them.
+
+**Stage 8 is a CONDITIONAL scan and says so in its own output.** The other eight
+parameters are held fixed, which is exactly the object exp54 Stage 3.9 showed
+over-states a parameter's determination by 2.3× to 17.6×. It is used here only
+for what a conditional slice can do honestly — show the shape of a trade along
+one axis — never to locate an optimum, and it is drawn at both anchors so
+dependence on where it started is visible rather than hidden. The two anchors
+disagree on *where* the (b)/(c) crossover sits (≈3 kpc against ≈10 kpc) and
+agree on *that* it exists, which is the part being claimed.
 
 The **attribution test** says why, by switching the expansion off at each fit's
 own base parameters:

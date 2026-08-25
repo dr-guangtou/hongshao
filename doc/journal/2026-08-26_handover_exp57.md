@@ -174,6 +174,24 @@ starts 0/4 and 1/2/5 of the confirmation run itself. Logs in
    passes the mechanism gates and it has the best profile-shape error of every
    model tried, but it fails G5(c) and the loss prefers the gate-failing basin.
 
+## Stage 8 — the trade, mapped, and a correction to the first framing
+
+Sweeping the core radius with everything else held fixed, at **both** fitted
+anchors (a conditional scan, labelled as one in its own output):
+
+| `Rc` | G2 reach | G5(c) core gap | G5(b) non-decliners |
+|---|---|---|---|
+| ≲ 3 kpc | **pass** (≈2%) | **fails** | **pass** (0.024–0.038) |
+| 4–40 kpc | **pass** (3–22%) | **pass** | **fails** (0.078–0.094) |
+| ≳ 60 kpc | **fails** (41–99%) | pass | fails |
+
+**The reach gate is NOT the binding constraint once the mechanism is
+non-homologous** — it holds for every `Rc` up to about 40 kpc. The conflict is
+between the two halves of G5: the core radius that fixes the median core
+density is larger than the one that protects the 58% of galaxies which never
+needed correcting. My first framing — "reach and the core-density target are in
+direct tension" — was too coarse and is corrected here.
+
 ## The one extension the evidence points at
 
 `diagnose_decliners.py`, run **before** anything was fitted so the choice could
