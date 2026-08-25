@@ -240,7 +240,19 @@ def main(argv):
     z = np.load(FITDIR / f"{label}.npz", allow_pickle=True)
     sp = X.XSpec(base, str(z["law"]))
     pr = X.ExpandingProblem(sp, recs, data, mask, epochs=(0, 1, 2, 3, 4))
+    # `--start K` gates one particular multi-start optimum instead of the best.
+    # X3's search found TWO basins -- a small core radius and a near-homologous
+    # large one -- and the LOSS prefers the large one while the gates are the
+    # thing that decides. Ranking by the loss is the one move this program has
+    # repeatedly found to be wrong, so both basins are gated and reported.
     th = np.asarray(z["theta"], float)
+    if "--start" in argv:
+        k = int(argv[argv.index("--start") + 1])
+        th = np.asarray(z["start_thetas"], float)[k]
+        label = f"{label}#start{k}"
+        print(f"  gating START {k} specifically, loss "
+              f"{float(np.asarray(z['start_losses'])[k]):.6f}, not the best "
+              f"of the run")
     print(f"  fitted {label}: loss {float(z['loss']):.6f}, "
           + ", ".join(f"{n}={v:+.4f}" for n, v in
                       zip(sp.x_names, th[base.n_theta:])))
