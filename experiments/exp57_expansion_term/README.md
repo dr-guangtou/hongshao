@@ -4,7 +4,7 @@ Branch `exp57-expansion-term`. Plan:
 `doc/plans/2026-08-26-exp57-expansion-term.md`. Problems:
 [`PROBLEMS.md`](PROBLEMS.md).
 
-**Status: IN PROGRESS.** Stages 0 and 1 complete; Stage 3 fits running.
+**Status: IN PROGRESS.** Stages 0, 1, 2 complete; Stage 3 partly in (X1 and X0 fitted and gated, X2 and the G4 control running); Stage 6 (`X3`) launched in response to what Stage 3 found.
 
 ---
 
@@ -162,6 +162,131 @@ median, → 2.4338 at the `A = 0.98` that matches the declining fraction. Whethe
 re-optimising the other seven parameters pays that back is Stage 3's question,
 and the answer must not be read off this scan — exp53 found a frozen slice and
 an honest refit **57 percentage points apart** on exactly this kind of number.
+
+---
+
+## Stage 3 (2026-08-26) — the fits, and THE RESULT SO FAR
+
+### What the expansion term buys
+
+| model | loss | vs incumbent | profile-shape error | `score_A` | fitted |
+|---|---|---|---|---|---|
+| exp54 incumbent | 1.874253 | — | 13.787% | 1.0558 | — |
+| **`X1` bounded** | **1.840466** | **−1.80%** | **13.454%** | 1.0570 | `A = +1.4657` |
+| `X0` power law (the OLD form) | 1.840977 | −1.78% | 13.478% | 1.0560 | `alpha = +0.3811` |
+
+`X1` reproduced `A = 1.4657` from **four independent starts** — including one
+launched from *contraction*, `A = −0.3` — with a start-to-start spread of
+**2.9e-11**. In words: **the oldest deposits end up 2.47 times larger than they
+were laid down.**
+
+**This is the largest gain any exp54 enrichment has produced.** Stage 3.5's
+entire budget for a richer time law was 0.18 percentage points of shape error,
+and a completely *free* shared curve reached only 13.62%; Stage 3.8's compact
+channel returned the incumbent's loss to six decimal places. One expansion
+parameter reaches **13.454%**.
+
+**And the gain is in the SHAPE, not the amplitude.** `score_A` moves 1.0558 to
+1.0570 — very slightly *worse*. So this is not gate G3's amplitude-regulator
+trap: expansion is not being fitted to dispose of exp54's 22% mass over-supply
+past the 100 kpc blind spot.
+
+**Bounding the reach costs nothing in loss.** `X1` (bounded by construction)
+edges out `X0` (the old unbounded power law) on both loss and shape error. The
+declared control did its job: whatever is wrong with `X0`, its extra freedom is
+not buying anything.
+
+### THE FAILURE — and it is the experiment's main finding
+
+**G2 fails, and it fails worse than the model this experiment was designed not
+to repeat.**
+
+| epoch pair | displaced mass beyond 50 kpc | beyond 148 kpc | beyond 500 kpc |
+|---|---|---|---|
+| **preregistered limit** | **25%** | **10%** | — |
+| exp52's failing first model | 58.5% | 29.4% | 12.0% |
+| `X1`, z=2.0 → 1.5 | 43.5% | 22.7% | 8.4% |
+| `X1`, z=1.5 → 1.0 | 57.4% | 31.3% | 13.8% |
+| `X1`, z=1.0 → 0.7 | 70.9% | 41.1% | 19.4% |
+| **`X1`, z=0.7 → 0.4** | **85.0%** | **52.1%** | 25.4% |
+| `X0`, z=0.7 → 0.4 | 72.5% | 42.1% | 18.9% |
+
+**Why, and it is structural rather than a bad parameter value.** `A = 1.4657`
+means no deposit ever grows by more than **2.47×** — the factor really is
+bounded, exactly as designed. But homologous scaling multiplies *every* radius
+by that factor, and this deposit family has a genuine **power-law tail**, so
+material already at 50 kpc lands at 123 kpc however modest 2.47 sounds.
+**Bounding the factor does not bound the reach in kpc.** Both functional forms
+fail, so it belongs to homologous expansion, not to a particular time law.
+
+**Independently confirmed by a number with no threshold of mine in it.** Gate
+G1b computes, with the same operator on model and data, the fraction of a
+galaxy's added mass that lands beyond 50 kpc:
+
+| epoch pair | data | null | `X1` |
+|---|---|---|---|
+| z=1.5 → 1.0 | 0.275 | 0.230 | 0.244 |
+| z=1.0 → 0.7 | 0.320 | 0.297 | 0.325 |
+| **z=0.7 → 0.4** | **0.366** | **0.364** | **0.420** |
+
+The null was essentially perfect at the last epoch pair; `X1` overshoots. The
+gate and the data agree.
+
+### What did NOT fail
+
+**G1 passes comfortably.** The expansion share of `M*[50,100]` growth runs
+**12.9% to 18.5%**, against exp52's 76.9% → 96.5% ramp. New deposition still
+dominates outskirt growth at every epoch, which is what the physical picture
+requires. **The first model's *dominance* failure does not recur** — exp54's
+deposition schedule, measured at the top of this file, is why.
+
+**G5 is split, and two of its three parts pass well:**
+
+| | null | `X1` | requirement |
+|---|---|---|---|
+| (a) central-error span, DECLINING galaxies | 0.270 | **0.169** | close materially — **PASS** |
+| (a′) the same, all galaxies | 0.145 | **0.049** | — |
+| (b) span, NON-declining galaxies | 0.045 | **0.076** | ≤ 0.060 — **FAIL** |
+| (c) core density gap vs measured | +0.0455 | **−0.0019** | shrink — **PASS**, essentially exactly |
+
+(c) is worth stating plainly: the model's median core `dlogSigma` over the long
+baseline now matches the measurement to **0.002 dex**, from 0.046 out. **The
+defect exp54 spent four stages failing to move has moved.** (b) is the price —
+a single global expansion strength shifts every galaxy, including the 58% whose
+centres never needed shifting, exactly as Stage 1's spread argument predicted.
+
+**G6, the outskirt structure, does not degrade.** `M[50,148]` population-summed
+error improves from −0.076 to −0.055 at z=0.4. Expansion does not pay Stage
+3.7's price of emptying the outskirts to fill the centre.
+
+---
+
+## Stage 6 (2026-08-26) — `X3`, the fix the diagnosis points at
+
+If the failure is that homologous scaling cannot bound the reach in **kpc**,
+the fix is a remap that does. `X3` replaces "multiply every radius by `g`" with
+
+```
+r(R) = R [ 1 − (1 − 1/G) / (1 + (R/Rc)^2) ]        G = 1 + A (1 − t_j/t_k)
+```
+
+read as *the radius the material now at `R` came from*. At `R → 0` it gives
+`R/G`: the core expands by `G`, with no hole opened at the centre. At `R ≫ Rc`
+it gives `R`: **the outskirts are untouched**. That is what adiabatic expansion
+is understood to do physically — it flattens the inner stellar profile, it does
+not build a stellar halo at 50–150 kpc — and it is exactly what exp52's
+diagnosis asked for.
+
+It is **mass-conserving by construction**, being a monotone rearrangement of the
+same profile rather than a reweighting, with the normalisation taken at the
+halo-set truncation so `F(r_trunc) = 1` holds exactly. `A = 0` reproduces the
+current model to 2e-16.
+
+**It does not nest `X1`**, and two drafts of its docstring claimed it did before
+the self-check falsified them — see [P5](PROBLEMS.md). `X1` carries a deposit's
+truncation outward with its stars; `X3` holds it at the halo's `3 R200c` and
+rearranges mass inside it. Both conserve mass exactly within their own
+boundary, and they are compared by fitting both.
 
 ---
 
