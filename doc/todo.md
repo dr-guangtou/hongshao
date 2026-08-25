@@ -1559,3 +1559,24 @@ Cross-experiment plan. Mirrors the phase sequence in
   mh-complete `score_A` table is reproducible from one output file.
 - [ ] **A stochastic residual layer.** The mean law cannot generate TNG's
   growth diversity by construction; this is scope, not a defect.
+
+## exp50 — direct DiffMAH-to-CoG conversion
+
+- [x] Test whether a stable, interpretable coordinate vector consisting of
+  total stellar mass, the 2-kpc central fraction, and ordered R20/R50/R80 can
+  replace the PCA CoG coordinates at z=0.4 without measurable predictive loss.
+  **Result:** on 2,539 galaxies, the readable degree-2 map has held-out profile
+  CRPS 0.06327 dex versus 0.06317 dex for the like-for-like PCA-3 emulator. The
+  readable map is worse by 0.00010 dex, less than the PCA score's measured
+  0.00024 dex fold-to-fold standard deviation, so it passes the predeclared
+  parity test. The map remains probabilistic: total stellar mass has held-out
+  R2=0.87, while the four shape coordinates have R2=0.15--0.36, and correlated
+  draws—not the conditional mean—recover the population width. Mass-conditioned
+  shuffle controls confirm distinct information from MAH shape and z=0.4 halo
+  concentration. Residual-only symbolic regression recovers 62% of the dense
+  degree-2 improvement with three stable nonlinear terms. In the 2,366-galaxy
+  overlap sample, five-epoch concentration history improves profile CRPS by
+  2.89% relative to current concentration, while shuffled histories make it
+  0.12% worse. **Decision:** retain the readable conversion as a successful
+  experimental alternative to PCA; test concentration history across epochs
+  before considering library graduation.
