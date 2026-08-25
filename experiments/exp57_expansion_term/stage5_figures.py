@@ -3,13 +3,18 @@
 Six panels, and the figure exists to let a reader check the one claim that
 matters: that this expansion term does NOT repeat the first model's failure.
 
-  (a) THE REACH LAW ITSELF. The scale factor `g` against the deposit's own
-      formation time, as seen at redshift 0.4, for each fitted law. `X1` is
-      bounded by `1+A` by construction; `X0` — the old transport form — runs
-      away toward early times, and the old kernel's fitted exponent is drawn as
-      a dashed line so the failure mode is visible rather than described.
-      The shaded band shows where the stellar mass actually was deposited, so a
-      curve drawn where there is no mass is recognisable as decoration.
+  (a) THE EXPANSION FACTOR, which is NOT the same thing as the reach. `g`
+      against the deposit's own formation time, as seen at redshift 0.4. For
+      the homologous laws `g` multiplies every radius, so it IS the reach; for
+      `X3` it is the CORE expansion only, and everything beyond `Rc` stays
+      where it was. `X3` therefore has the largest `g` on this panel and moves
+      the least mass of any model — panel (b) is where the reach actually
+      lives, and the two panels must be read together or the reader will
+      conclude the opposite of the truth. The old kernel's fitted exponent is
+      drawn dashed so the original failure mode is visible rather than
+      described, and the shaded band shows where the stellar mass was actually
+      deposited, so a curve drawn where there is no mass is recognisable as
+      decoration.
 
   (b) WHERE THE MOVED MASS GOES (gate G2). For each fitted model, the fraction
       of displaced mass delivered beyond 50 and beyond 148 kpc, against the
@@ -69,12 +74,40 @@ LAW_LABEL = {"X1": "X1  homologous, bounded factor",
              "X3": "X3  CORE-ONLY, bounded reach in kpc"}
 
 
+#: characters that are LaTeX control sequences and must not reach a label.
+#: `#` arrives from the multi-start basin tags (`X3#smallcore`).
+def _safe(t):
+    return (str(t).replace("gompertz_log-E2-S2", "").replace("+", "")
+            .replace("#", " ").replace("_", " ").strip())
+
+
 def _fits():
+    """Keyed by LABEL, not by law — `X3#smallcore` and `X3#bigcore` are two
+    different fits of the same law and keying by law silently kept one."""
     out = {}
     for f in sorted(FITDIR.glob("*.npz")):
+        if ".PARTIAL" in f.name:
+            continue
         z = np.load(f, allow_pickle=True)
-        out[str(z["law"])] = dict(z)
+        lab = str(z["label"])
+        if "frozen" in lab:                 # a control, not a candidate
+            continue
+        out[lab] = dict(z)
     return out
+
+
+def _color(lab, law):
+    if law == "X3":
+        return "#CC79A7" if "small" in lab else "#7570B3"
+    return LAW_COLOR.get(law, "#333333")
+
+
+def _label(lab, law):
+    base = LAW_LABEL.get(law, law)
+    if law == "X3":
+        base = ("X3  core-only, SMALL core" if "small" in lab
+                else "X3  core-only, large core")
+    return base
 
 
 def figure(name="exp57_expansion"):
@@ -120,12 +153,15 @@ def figure(name="exp57_expansion"):
     a_bg.text(0.98, 0.02, _tex("grey: where the stellar mass was deposited"),
               transform=a_bg.transAxes, fontsize=7, color="0.45",
               ha="right", va="bottom")
-    for law, z in fits.items():
+    for lab, z in fits.items():
+        law = str(z["law"])
         th = np.asarray(z["theta"], float)
         xt = th[base.n_theta:]
         a.plot(tt, X.g_factor(law, xt, tt, t_view), lw=2.2,
-               color=LAW_COLOR[law], label=_tex(
-                   f"{LAW_LABEL[law]}  ->  {', '.join(f'{n}={v:+.3f}' for n, v in zip(X.LAW_NAMES[law], xt))}"))
+               color=_color(lab, law), label=_tex(
+                   f"{_label(lab, law)}: "
+                   + ", ".join(f"{n}={v:+.2f}" for n, v
+                               in zip(X.LAW_NAMES[law], xt))))
     a.plot(tt, X.g_factor("X0", np.array([0.91]), tt, t_view), ls="--", lw=1.5,
            color="#999999",
            label=_tex(r"the OLD kernel's fitted $q=0.91$"))
@@ -133,28 +169,34 @@ def figure(name="exp57_expansion"):
     a.set_yscale("log")
     a.set_xlabel(_tex("cosmic time the deposit was laid down [Gyr]"))
     a.set_ylabel(_tex("expansion factor g, seen at z = 0.4"))
-    a.set_title("(a) the reach law: how far a deposit is moved",
-                fontsize=9.5)
+    a.set_title("(a) the expansion factor — NOT the reach\n"
+                "for X3 it applies only inside Rc; see (b)", fontsize=9.5)
+    a.text(0.03, 0.03,
+           _tex("X3 has the LARGEST g and moves the LEAST mass:\n"
+                "its g applies only within Rc, so the tail stays put"),
+           transform=a.transAxes, fontsize=7, color="#CC79A7", va="bottom",
+           bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.6))
     a.legend(fontsize=7, loc="upper right")
 
     # ---- (b) G2, where the moved mass goes --------------------------- #
     b = ax[1]
     rows = []
-    for law, z in fits.items():
-        f = OUT / f"stage2_gates_{str(z['label'])}.npz"
+    for lab, z in fits.items():
+        f = OUT / f"stage2_gates_{lab}.npz"
         if f.exists():
             g = np.load(f, allow_pickle=True)
-            rows.append((law, float(np.nanmax(g["g2_b50"])),
+            rows.append((lab, str(z["law"]), float(np.nanmax(g["g2_b50"])),
                          float(np.nanmax(g["g2_b148"]))))
     if rows:
         xx = np.arange(len(rows))
-        b.bar(xx - 0.19, [r[1] for r in rows], 0.36,
-              color=[LAW_COLOR[r[0]] for r in rows])
-        b.bar(xx + 0.19, [r[2] for r in rows], 0.36,
-              color="white", edgecolor=[LAW_COLOR[r[0]] for r in rows],
+        b.bar(xx - 0.19, [r[2] for r in rows], 0.36,
+              color=[_color(r[0], r[1]) for r in rows])
+        b.bar(xx + 0.19, [r[3] for r in rows], 0.36,
+              color="white", edgecolor=[_color(r[0], r[1]) for r in rows],
               hatch="////", lw=1.2)
         b.set_xticks(xx)
-        b.set_xticklabels([r[0] for r in rows], fontsize=10)
+        b.set_xticklabels([_tex(_safe(r[0])) for r in rows], fontsize=7.5,
+                          rotation=20, ha="right")
         from matplotlib.patches import Patch
         b.legend(handles=[Patch(fc="0.35", label=_tex("beyond 50 kpc")),
                           Patch(fc="white", ec="0.35", hatch="////",
@@ -175,17 +217,17 @@ def figure(name="exp57_expansion"):
 
     # ---- (c) G1, the mechanism split --------------------------------- #
     c = ax[2]
-    for law, z in fits.items():
-        f = OUT / f"stage2_gates_{str(z['label'])}.npz"
+    for lab, z in fits.items():
+        f = OUT / f"stage2_gates_{lab}.npz"
         if not f.exists():
             continue
         g = np.load(f, allow_pickle=True)
-        sel = np.array([s == "M[50,100]" for s in g["g1_shell"]])
+        sel = np.array([v == "M[50,100]" for v in g["g1_shell"]])
         pairs = g["g1_pair"][sel][:4]
         share = g["g1_share"][sel][:4]
         zl = [float(str(p).split("-> ")[1]) for p in pairs]
-        c.plot(zl, share, "o-", color=LAW_COLOR[law], lw=2.0,
-               label=_tex(LAW_LABEL[law]))
+        c.plot(zl, share, "o-", color=_color(lab, str(z["law"])), lw=2.0,
+               label=_tex(_label(lab, str(z["law"]))))
     c.plot([1.5, 1.0, 0.7, 0.4], [0.180, 0.384, 0.769, 0.965], "s--",
            color="0.4", lw=1.4, ms=4,
            label=_tex("exp52's first model"))
@@ -202,14 +244,14 @@ def figure(name="exp57_expansion"):
     # ---- (d) G5, the target ------------------------------------------ #
     d = ax[3]
     for tag, col, ls in [("null", LAW_COLOR["null"], "--")] + [
-            (str(z["label"]), LAW_COLOR[law], "-") for law, z in fits.items()]:
+            (lab, _color(lab, str(z["law"])), "-") for lab, z in fits.items()]:
         f = OUT / f"stage4_target_{tag}.npz"
         if not f.exists():
             continue
         t = np.load(f, allow_pickle=True)
         d.plot(Z, t["med_dec"], ls, color=col, lw=2.0, marker="o", ms=4,
-               label=_tex(f"{tag.replace('gompertz_log-E2-S2', '')}"
-                          f" declined, span {float(t['span_dec']):.3f}"))
+               label=_tex(f"{_safe(tag)} declined, "
+                          f"span {float(t['span_dec']):.3f}"))
         d.plot(Z, t["med_not"], ls, color=col, lw=1.2, alpha=0.5, marker="s",
                ms=3)
     d.axhline(0.0, color="0.75", lw=0.8)
@@ -231,13 +273,13 @@ def figure(name="exp57_expansion"):
             label=_tex("median over ALL galaxies [dex]"))
     e2.axhline(float(s1["truth_all_median"]), color="#CC79A7", ls=":", lw=1.4)
     e2.set_ylabel(_tex("median dlog10 M*(<4.92 kpc) [dex]"), color="#CC79A7")
-    for law, z in fits.items():
-        if law == "X1":
+    for lab, z in fits.items():
+        if str(z["law"]) == "X1":
             e.axvline(float(np.asarray(z["theta"])[base.n_theta]),
                       color=LAW_COLOR["X1"], lw=1.6)
             e.text(float(np.asarray(z["theta"])[base.n_theta]), 0.5,
-                   _tex(" fitted A"), fontsize=7.5, color=LAW_COLOR["X1"],
-                   rotation=90, va="center")
+                   _tex(" fitted A (X1)"), fontsize=7.5,
+                   color=LAW_COLOR["X1"], rotation=90, va="center")
     e.set_xlabel(_tex("expansion strength A  (X1)"))
     e.set_ylabel(_tex("fraction declining"), color="#0072B2")
     e.set_title("(e) the capability scan\ndotted: the measured targets",
@@ -247,14 +289,14 @@ def figure(name="exp57_expansion"):
     # ---- (f) G1b, where added mass lands ----------------------------- #
     f_ = ax[5]
     for tag, col, ls in [("null", LAW_COLOR["null"], "--")] + [
-            (str(z["label"]), LAW_COLOR[law], "-") for law, z in fits.items()]:
+            (lab, _color(lab, str(z["law"])), "-") for lab, z in fits.items()]:
         p = OUT / f"stage2_gates_{tag}.npz"
         if not p.exists():
             continue
         g = np.load(p, allow_pickle=True)
         zl = [1.5, 1.0, 0.7, 0.4]
         f_.plot(zl, g["g1b_model"][:4], ls, color=col, lw=2.0, marker="o",
-                ms=4, label=_tex(tag.replace("gompertz_log-E2-S2", "") or "null"))
+                ms=4, label=_tex(_safe(tag) or "null"))
         if tag == "null":
             f_.plot(zl, g["g1b_data"][:4], "-", color="black", lw=2.4,
                     marker="D", ms=4.5, label=_tex("MEASURED"))
@@ -267,9 +309,10 @@ def figure(name="exp57_expansion"):
 
     fig.suptitle(_tex(
         "exp57 — an empirical expansion term on exp54's deposition model, "
-        "2397 galaxies. Each deposit's half-mass AND truncation radius grow by "
-        "g after it is laid down, so mass is\nconserved exactly and the "
-        "enclosed mass can fall. The design question is not whether it fits "
+        "2397 galaxies. Deposits grow after they are laid down, mass conserved "
+        "exactly, so the enclosed mass can now FALL. X0/X1/X2 scale every "
+        "radius\n(homologous); X3 expands only the core and leaves everything "
+        "beyond Rc where it was. The design question is not whether it fits "
         "but whether it repeats the first model's failure: right source, ten "
         "times too much reach."),
         fontsize=8.6, y=1.02)
