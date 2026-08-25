@@ -96,7 +96,51 @@ def starts_for(sp, theta_base, n_jitter=1, seed=7):
     return out
 
 
-def run(law, smoke=False):
+class FrozenProblem:
+    """The problem with one named parameter held fixed — gate G4's machinery.
+
+    exp53 measured that the first model's transport SUBSTITUTED for a heavy
+    deposit tail, and exp54 Stage 3.9 measured that the deposit shape `c` is the
+    only one of the seven parameters the others cannot absorb. Adding an
+    expansion term is the most likely thing to destroy that, because both
+    control how far a deposit's mass reaches. Freezing `c` and refitting says
+    how much of the expansion term's gain is really a change in deposit shape.
+
+    Presents the same interface `fit.fit` needs, exactly as Stage 3.9's
+    `FixedProblem` did, so the same optimiser runs on both.
+    """
+
+    class _Spec:
+        def __init__(self, b):
+            self._b = b
+
+        def bounds(self):
+            return self._b
+
+    def __init__(self, problem, names, frozen):
+        self.p = problem
+        self.j = [names.index(k) for k in frozen]
+        self.v = [float(frozen[k]) for k in frozen]
+        full = list(problem.spec.bounds())
+        self.spec = FrozenProblem._Spec(
+            [b for k, b in enumerate(full) if k not in self.j])
+        self.n_eval = 0
+
+    def lift(self, x):
+        out = np.asarray(x, float)
+        for j, v in sorted(zip(self.j, self.v)):
+            out = np.insert(out, j, v)
+        return out
+
+    def drop(self, x7):
+        return np.delete(np.asarray(x7, float), self.j)
+
+    def loss(self, x):
+        self.n_eval += 1
+        return self.p.loss(self.lift(x))
+
+
+def run(law, smoke=False, freeze=None):
     print(f"{RULE}\nexp57 STAGE 3 — fitting the expansion law {law}\n{RULE}\n")
     recs, data, mask, lmh, base, theta, slow = S0.build(smoke)
     l0 = slow.loss(theta)
@@ -107,7 +151,13 @@ def run(law, smoke=False):
 
     sp = X.XSpec(base, law)
     pr = X.ExpandingProblem(sp, recs, data, mask, epochs=(0, 1, 2, 3, 4))
-    print(f"  fitting  : {sp.label}, {sp.n_theta} parameters "
+    label = sp.label + (f"+frozen_{'_'.join(freeze)}" if freeze else "")
+    frozen = ({k: float(theta[sp.theta_names.index(k)]) for k in freeze}
+              if freeze else None)
+    if frozen:
+        print(f"  GATE G4  : {', '.join(f'{k} FROZEN at {v:+.4f}' for k, v in frozen.items())}")
+    print(f"  fitting  : {label}, "
+          f"{sp.n_theta - (len(freeze) if freeze else 0)} free parameters "
           f"({', '.join(sp.theta_names)})")
     print(f"  bounds   : " + "  ".join(
         f"{n}=({a:g},{b:g})" for n, (a, b) in zip(sp.x_names,
@@ -122,10 +172,18 @@ def run(law, smoke=False):
 
     t0 = time.time()
     best_th, best_l, per_start = None, np.inf, []
+    fp = FrozenProblem(pr, sp.theta_names, frozen) if frozen else None
     for i, p0 in enumerate(st):
         ts = time.time()
-        th, l = F.fit(pr, starts=[p0], maxiter=(400 if smoke else 600 * sp.n_theta),
-                      verbose=False)
+        if fp is None:
+            th, l = F.fit(pr, starts=[p0],
+                          maxiter=(400 if smoke else 600 * sp.n_theta),
+                          verbose=False)
+        else:
+            x, l = F.fit(fp, starts=[fp.drop(p0)],
+                         maxiter=(400 if smoke else 600 * sp.n_theta),
+                         verbose=False)
+            th = fp.lift(x)
         per_start.append((float(l), th.copy()))
         flag = ""
         if l < best_l:
@@ -163,14 +221,15 @@ def run(law, smoke=False):
 
     if not smoke:
         FITDIR.mkdir(parents=True, exist_ok=True)
-        np.savez(FITDIR / f"{sp.label}.npz", label=sp.label, law=law,
+        np.savez(FITDIR / f"{label}.npz", label=label, law=law,
+                 frozen=np.array(sorted(frozen)) if frozen else np.array([]),
                  theta=best_th, loss=best_l, loss_incumbent=l0,
                  theta_incumbent=theta,
                  names=np.array(sp.theta_names), n_starts=len(st),
                  start_losses=np.array([l for l, _ in per_start]),
                  start_thetas=np.array([t for _, t in per_start]),
                  sA=sa, sF=sf, shape_pct=S35.shape_pct(sf))
-        print(f"  wrote {FITDIR.name}/{sp.label}.npz")
+        print(f"  wrote {FITDIR.name}/{label}.npz")
     return best_th, best_l
 
 
@@ -178,4 +237,6 @@ if __name__ == "__main__":
     smoke = "--smoke" in sys.argv
     law = (sys.argv[sys.argv.index("--only") + 1]
            if "--only" in sys.argv else "X1")
-    run(law, smoke)
+    frz = (sys.argv[sys.argv.index("--freeze") + 1].split(",")
+           if "--freeze" in sys.argv else None)
+    run(law, smoke, frz)
