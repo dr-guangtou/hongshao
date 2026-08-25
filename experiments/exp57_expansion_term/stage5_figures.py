@@ -99,9 +99,11 @@ def _fits():
     # shorter label so the panel says `X3`, not `X3 bigcore`.
     for a in list(out):
         for b in list(out):
-            if a != b and a in out and b in out and len(b) > len(a):
-                if np.allclose(out[a]["theta"], out[b]["theta"], rtol=1e-6):
-                    del out[b]
+            if a == b or a not in out or b not in out or len(b) <= len(a):
+                continue
+            ta, tb = out[a]["theta"], out[b]["theta"]
+            if ta.shape == tb.shape and np.allclose(ta, tb, rtol=1e-6):
+                del out[b]
     return out
 
 
