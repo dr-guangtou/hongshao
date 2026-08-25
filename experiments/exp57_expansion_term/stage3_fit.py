@@ -86,6 +86,15 @@ def starts_for(sp, theta_base, n_jitter=1, seed=7):
             th = sp.nest(theta_base).copy()
             th[nb], th[nb + 1] = a, p
             out.append(np.clip(th, lo, hi))
+    if sp.law == "X3":
+        # The core radius is the parameter the whole law turns on and it spans
+        # two and a half decades, so it gets its own starts rather than being
+        # left to Nelder-Mead's 5% simplex from a single value: 2, 10, 50 and
+        # 200 kpc, each with a moderate expansion.
+        for a, lrc in ((1.0, 0.3), (1.0, 1.7), (1.0, 2.3), (3.0, 0.7)):
+            th = sp.nest(theta_base).copy()
+            th[nb], th[nb + 1] = a, lrc
+            out.append(np.clip(th, lo, hi))
     rng = np.random.default_rng(seed)
     for _ in range(n_jitter):
         th = sp.nest(theta_base).copy()

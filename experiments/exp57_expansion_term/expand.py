@@ -77,14 +77,21 @@ import model as M                                        # noqa: E402
 import stage35_time_law as S35                           # noqa: E402
 
 #: the laws, and how many parameters each adds
-LAWS = {"": 0, "X1": 1, "X2": 2, "X0": 1}
-LAW_NAMES = {"": [], "X1": ["A"], "X2": ["A", "p"], "X0": ["alpha"]}
+LAWS = {"": 0, "X1": 1, "X2": 2, "X0": 1, "X3": 2}
+LAW_NAMES = {"": [], "X1": ["A"], "X2": ["A", "p"], "X0": ["alpha"],
+             "X3": ["A", "log_Rc"]}
 #: two-sided, so the nesting point is INTERIOR for every law
 LAW_BOUNDS = {
     "A": (-0.9, 20.0),        # -0.9 = deposits shrink to a tenth; +20 = x21
     "p": (0.1, 6.0),          # shape of the growth in fractional age
     "alpha": (-1.0, 2.0),     # the old transport exponent fitted to 0.91
+    #: X3's core radius, log10 kpc. 0.32 kpc to 316 kpc: small enough to do
+    #: nothing, large enough to reproduce X1 exactly in the limit.
+    "log_Rc": (-0.5, 2.5),
 }
+#: the laws whose expansion is HOMOLOGOUS -- every radius scaled by the same
+#: factor. X3 is not one of them, and that is the entire point of X3.
+HOMOLOGOUS = ("X1", "X2", "X0")
 
 
 @dataclass(frozen=True)
@@ -148,7 +155,7 @@ class XSpec:
         identically 1, so the enriched model reproduces the incumbent exactly
         and a fit launched from here can never end up worse.
         """
-        off = {"A": 0.0, "p": 1.0, "alpha": 0.0}
+        off = {"A": 0.0, "p": 1.0, "alpha": 0.0, "log_Rc": 1.0}
         return np.concatenate([np.asarray(theta_base, float),
                                np.array([off[n] for n in self.x_names])])
 
@@ -174,7 +181,84 @@ def g_factor(law, xtheta, t_dep, t_view):
     if law == "X0":
         return np.maximum(t_view, 1e-9) ** xtheta[0] / \
             np.maximum(t_dep, 1e-9) ** xtheta[0]
+    if law == "X3":            # the same bounded time law as X1; the DIFFERENCE
+        return 1.0 + xtheta[0] * frac      # is radial, not temporal
     raise ValueError(f"unknown law {law!r}")
+
+
+def remap_radius(R, G, Rc):
+    """`r(R)`: the radius a shell came FROM, given that it is now at `R`.
+
+    THE POINT OF THE WHOLE FUNCTION. Homologous expansion multiplies every
+    radius by the same `g`, so a deposit's power-law TAIL moves furthest in
+    absolute terms — a 5% tail at 50 kpc scaled by 2.5 lands at 125 kpc. exp57
+    Stage 3 measured the consequence: with `X1` fitted, 85% of the mass
+    expansion moved was delivered beyond 50 kpc and 52% beyond 148 kpc, against
+    preregistered limits of 25% and 10%. Bounding the FACTOR does not bound the
+    REACH in kpc.
+
+    This map bounds the reach in kpc directly. It expands the core by `G` and
+    leaves everything beyond `Rc` where it was:
+
+        r(R) = R [ 1 - (1 - 1/G) / (1 + (R/Rc)^2) ]
+
+    At `R -> 0` it gives `R/G`, i.e. the material now at radius `R` came from
+    `R/G` — a relative core expansion of `G`, with no hole opened at the
+    centre. At `R >> Rc` it gives `R`: the outskirts are untouched. That is what
+    adiabatic expansion is understood to do physically — it flattens the inner
+    stellar profile, it does not build a stellar halo at 50-150 kpc — and it is
+    what exp52's diagnosis asked for.
+
+    **It is mass-conserving by construction** because it is a monotone
+    rearrangement of the same profile, not a reweighting: the mass inside `r`
+    simply moves to inside `r(r)`. Monotone for every `G > 0`: the derivative at
+    `R = 0` is `1/G > 0` and rises from there.
+
+    **X3 DOES NOT NEST X1, and two drafts of this docstring claimed it did
+    before the self-check settled it.** As `Rc -> infinity` the bracket becomes
+    `1/G` at every radius, so `r(R) = R/G` and the deposit is scaled by `G`
+    everywhere — but with the truncation radius held **fixed**. `X1` instead
+    carries the truncation outward with the deposit and renormalises at
+    `G * r_trunc`. They are two different conventions for what "the deposit's
+    mass" means, and both conserve it exactly within their own boundary.
+
+    The gap between them is the mass lying between `r_trunc / G` and `r_trunc`,
+    and it does NOT become negligible at large truncation, because this deposit
+    family has a genuine **power-law tail**. Measured in the self-check below at
+    `G = 2.5` with a truncation 400 times the half-mass radius — a ratio typical
+    of this model — the two differ by **6.2e-3** in the enclosed fraction. That
+    is small but it is not rounding, and it is a property of the power-law tail
+    rather than of either convention.
+
+    Holding the truncation fixed is the more defensible choice here: the
+    truncation is set by the HALO, at `3 R200c`, and a deposit's stars
+    rearranging internally is no reason for the halo's boundary to move. `X1`
+    and `X3` are therefore compared by FITTING both, not by nesting one in the
+    other.
+    """
+    x2 = (np.asarray(R, float) / Rc) ** 2
+    return np.asarray(R, float) * (1.0 - (1.0 - 1.0 / G) / (1.0 + x2))
+
+
+def cog_core_expanded(family, shape, r50_true, r_trunc, R, G, Rc):
+    """Truncated unit-mass CoGs after the core-only expansion of `remap_radius`.
+
+    The normalisation is taken at the MAPPED truncation radius, so
+    `F(r_trunc) = 1` holds exactly and the deposit's mass is exactly conserved
+    however far the core is pushed. At `G = 1` this reduces to
+    `model.cog_truncated` term by term.
+    """
+    r50_true = np.atleast_1d(np.asarray(r50_true, float))
+    r_trunc = np.atleast_1d(np.asarray(r_trunc, float))
+    G = np.asarray(G, float)
+    u = M.solve_u(family, shape, r50_true / r_trunc)
+    r50_0 = r_trunc / u
+    x, f0 = M._table(family, shape)
+    rr = remap_radius(np.asarray(R, float)[:, None], G[None, :], Rc)
+    rt = remap_radius(r_trunc, G, Rc)
+    num = np.interp(np.clip(rr, 0.0, None) / r50_0[None, :], x, f0)
+    den = np.interp(rt / r50_0, x, f0)[None, :]
+    return np.clip(num / np.maximum(den, 1e-300), 0.0, 1.0)
 
 
 def cog_scaled(family, shape, r50_true, r_trunc, R, g):
@@ -295,7 +379,12 @@ class ExpandingProblem(S35.StackedProblem):
         td = np.where(np.isfinite(self.t_dep), self.t_dep, 1.0).ravel()
         for k in range(nE):
             g = g_factor(sp.law, xtheta, td, self.t_view[k])
-            B = cog_scaled(sp.base.family, shape, r50s, r_trs, self.r_all, g)
+            if sp.law == "X3":
+                B = cog_core_expanded(sp.base.family, shape, r50s, r_trs,
+                                      self.r_all, g, 10.0 ** xtheta[1])
+            else:
+                B = cog_scaled(sp.base.family, shape, r50s, r_trs,
+                               self.r_all, g)
             Bg = np.ascontiguousarray(B.T.reshape(n, nd, nR))
             out[:, k, :] = np.matmul(W[:, k, :][:, None, :], Bg)[:, 0, :]
 
@@ -347,6 +436,39 @@ if __name__ == "__main__":
     worst = g_factor("X1", np.array([A]), np.array([1e-6]), 9.4).max()
     print(f"  X1 reach with A={A}: worst g = {worst:.6f}  <= 1+A = {1 + A}")
     assert worst <= 1.0 + A + 1e-12
+    # 6. X3 nests both the current model (G=1) and homologous expansion (Rc->inf)
+    Gv = np.full(500, 2.5)
+    n1 = cog_core_expanded(fam, shp, r50, rtr, R, np.ones(500), 10.0)
+    print(f"  X3 at G=1 vs model.cog_truncated  max|diff| = "
+          f"{np.max(np.abs(n1 - a)):.3e}   (must be ~0)")
+    assert np.max(np.abs(n1 - a)) < 1e-12
+    # X3 at Rc -> infinity is homologous expansion with the truncation held
+    # FIXED, so it matches X1 only where the truncation is far outside the
+    # evaluated radii -- which is this model's regime (r_trunc = 3 R200c) but
+    # not the synthetic case above, where rtr can fall inside the grid.
+    far_tr = r50 * 400.0                       # r_trunc >> max(R), as in exp54
+    n2 = cog_core_expanded(fam, shp, r50, far_tr, R, Gv, 1e9)
+    n3 = cog_scaled(fam, shp, r50, far_tr, R, Gv)
+    print(f"  X3 at Rc->inf vs X1 (both homologous, truncation 400x R50): "
+          f"max|diff| = {np.max(np.abs(n2 - n3)):.3e}")
+    print(f"      NOT zero, and not meant to be: X3 holds the truncation at "
+          f"the halo's 3 R200c\n      while X1 carries it outward, so they "
+          f"differ by the mass between r_trunc/G\n      and r_trunc — which a "
+          f"POWER-LAW tail never makes negligible. Both conserve\n      mass "
+          f"exactly within their own boundary; they are compared by fitting "
+          f"both.")
+    far3 = cog_core_expanded(fam, shp, r50, rtr, np.array([1e9]), Gv, 10.0)
+    print(f"  X3 mass conservation, F(inf) - 1  max|diff| = "
+          f"{np.max(np.abs(far3 - 1.0)):.3e}   (must be ~0)")
+    assert np.max(np.abs(far3 - 1.0)) < 1e-12
+    rm = remap_radius(np.array([0.01, 1.0, 10.0, 100.0, 1000.0]), 2.5, 10.0)
+    print(f"  X3 remap at Rc=10 kpc, G=2.5: r(R) for R = 0.01, 1, 10, 100, "
+          f"1000 kpc\n    -> " + "  ".join(f"{v:.4g}" for v in rm)
+          + "   (R/G near 0, R far out)")
+    d = np.diff(remap_radius(np.linspace(1e-4, 3000, 20000), 2.5, 10.0))
+    print(f"  X3 remap is MONOTONE: min dr/dR = {d.min():.3e}  (must be > 0)")
+    assert d.min() > 0
+
     old = g_factor("X0", np.array([0.91]), np.array([0.5]), 9.4)
     print(f"  X0 (the OLD transport form) at alpha=0.91, t_dep=0.5 Gyr: "
           f"g = {float(np.ravel(old)[0]):.2f}  <-- this is the failure mode")

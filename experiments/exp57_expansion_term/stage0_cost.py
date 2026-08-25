@@ -121,7 +121,7 @@ def main(smoke=False):
     gate('law=""', X.ExpandingProblem(X.XSpec(base, ""), recs, data, mask,
                                       epochs=(0, 1, 2, 3, 4)), theta)
     results = {}
-    for law in ("X1", "X2", "X0"):
+    for law in ("X1", "X2", "X0", "X3"):
         sp = X.XSpec(base, law)
         pr = X.ExpandingProblem(sp, recs, data, mask, epochs=(0, 1, 2, 3, 4))
         results[law] = gate(f"law={law}", pr, sp.nest(theta))
@@ -144,7 +144,7 @@ def main(smoke=False):
     t_base = timeit(slow, theta)
     print(f"    exp54 StackedProblem            {t_base * 1000:8.1f} ms")
     rows = [("exp54", t_base, 1.0)]
-    for law in ("X1", "X2", "X0"):
+    for law in ("X1", "X2", "X0", "X3"):
         sp = X.XSpec(base, law)
         pr = results[law]
         # time it AWAY from the nesting point, where the arithmetic is real

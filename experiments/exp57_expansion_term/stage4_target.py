@@ -136,7 +136,7 @@ def report(tag, pr, theta, recs, data, mask, base, smoke=False):
     print(f"\n  (a) and (b) — the CENTRAL ERROR, median log10(model/truth) for "
           f"M*(<2 kpc)")
     print(f"      {'group':<26}" + "".join(f"{f'z={z}':>9}" for z in Z)
-          + f"{'span':>9}{'was':>9}")
+          + f"{'span':>9}{'was':>9}{'max|med|':>10}")
     rows = {}
     for name, grp, was in (("all admitted", ok_flag, 0.145),
                            ("centre DECLINED", fell & ok_flag, SPAN_DECLINING),
@@ -145,7 +145,8 @@ def report(tag, pr, theta, recs, data, mask, base, smoke=False):
         med, span = central_span(pred, data, mask, grp)
         rows[name] = (med, span)
         print(f"      {name:<26}" + "".join(f"{v:>9.3f}" for v in med)
-              + f"{span:>9.3f}{was:>9.3f}")
+              + f"{span:>9.3f}{was:>9.3f}"
+              + f"{float(np.nanmax(np.abs(med))):>10.3f}")
 
     span_dec = rows["centre DECLINED"][1]
     span_not = rows["centre did NOT decline"][1]
@@ -157,6 +158,13 @@ def report(tag, pr, theta, recs, data, mask, base, smoke=False):
     print(f"      (b) the non-declining group's : {span_not:.3f} against a "
           f"limit of {SPAN_NOT_LIMIT:.3f}      -> "
           f"{'OK' if b_ok else 'BROKEN'}")
+    print(f"\n      `max|med|` is reported for CONTEXT and was added after "
+          f"(b) was seen to fail; it\n      is NOT the gate and does not "
+          f"replace it. The span penalises a curve that CROSSES\n      zero, "
+          f"so a model whose errors run -0.06 to +0.02 scores a worse span "
+          f"than one\n      running -0.05 to -0.01 while being no further "
+          f"from the truth anywhere. Which of\n      the two matters is a "
+          f"judgement, and (b) as preregistered is the one that counts.")
 
     print(f"\n  (c) — THE MEASURED CORE. exp52 measured the core surface "
           f"density RISING over the long\n      baseline, so an expansion term "
@@ -203,7 +211,12 @@ def report(tag, pr, theta, recs, data, mask, base, smoke=False):
                  med_dec=rows["centre DECLINED"][0],
                  med_not=rows["centre did NOT decline"][0],
                  span_all=rows["all admitted"][1], span_dec=span_dec,
-                 span_not=span_not, core_model=d_mod, core_data=d_dat,
+                 span_not=span_not,
+                 maxabs_all=float(np.nanmax(np.abs(rows["all admitted"][0]))),
+                 maxabs_dec=float(np.nanmax(np.abs(rows["centre DECLINED"][0]))),
+                 maxabs_not=float(np.nanmax(np.abs(
+                     rows["centre did NOT decline"][0]))),
+                 core_model=d_mod, core_data=d_dat,
                  core_model_all=a_mod, core_data_all=a_dat,
                  core_gap=gap, null_core_gap=NULL_CORE_GAP,
                  r_mid=r_mid, n_declining=n_dec,

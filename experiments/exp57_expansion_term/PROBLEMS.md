@@ -18,6 +18,71 @@ Severity: **S1** could change a conclusion · **S2** blocks work or wastes time 
 
 ## Resolved
 
+### P5 — "X3 nests X1" was claimed twice and is false
+**S2. Found and resolved 2026-08-26, Stage 6 design.** *Caught by the module's
+own self-check, not by inspection.*
+
+`remap_radius`'s docstring asserted that as the core radius goes to infinity,
+the core-only expansion `X3` reduces exactly to the homologous `X1`. The
+self-check failed: **6.2e-3** in the enclosed fraction at `G = 2.5` with a
+truncation 400 times the deposit's half-mass radius.
+
+**Cause.** As `Rc -> infinity` the remap does become `r(R) = R/G` at every
+radius — but with the truncation radius held **fixed**, while `X1` carries the
+truncation outward with the deposit and renormalises at `G * r_trunc`. The two
+differ by the mass lying between `r_trunc / G` and `r_trunc`, and that does not
+vanish at large truncation because this deposit family has a genuine
+**power-law tail**. A first correction guessed the gap would be negligible at
+realistic truncation radii; it is not, and the second self-check said so too.
+
+**Resolution.** The claim is withdrawn rather than the test relaxed. `X1` and
+`X3` are two different conventions for what a deposit's mass means — `X1` lets
+the boundary travel with the stars, `X3` holds it at the halo's `3 R200c` and
+rearranges mass inside it — and **both conserve mass exactly within their own
+boundary**. Holding it fixed is the more defensible choice here, since the
+truncation is set by the halo and stars rearranging internally are no reason
+for the halo's boundary to move. The two are therefore compared by **fitting
+both**, which is what the experiment does anyway.
+
+**Lesson**: "this reduces to that in a limit" is a claim, and a cheap numerical
+check will falsify it if it is wrong. Two drafts asserted it before the test
+settled it.
+
+### P4 — the reach is not bounded by bounding the expansion FACTOR
+**S1. Found 2026-08-26, Stage 3. Not a code defect — a design error, and it is
+the experiment's main result so far.**
+
+`X1` was designed so that the expansion factor is bounded by `1 + A` for every
+deposit at every epoch, on the reasoning that exp52's failure was an unbounded
+factor (`g = (t_k/t_j)^alpha` reaching x14.4). Fitted, `A = +1.4657`, so no
+deposit ever grows by more than 2.47x — and **G2 fails anyway**, by more than
+the model exp52 condemned:
+
+| epoch pair | displaced mass beyond 50 kpc | beyond 148 kpc |
+|---|---|---|
+| limit | 25% | 10% |
+| exp52's failing model | 58.5% | 29.4% |
+| `X1`, A = 1.47 | 43.5% to **85.0%** | 22.7% to **52.1%** |
+| `X0`, the old unbounded form, alpha = 0.38 | 39.3% to 72.5% | 19.7% to 42.1% |
+
+**Cause, and it is structural.** Homologous scaling multiplies EVERY radius by
+the same factor, so a deposit's **power-law tail** moves furthest in absolute
+terms: material at 50 kpc scaled by 2.47 lands at 123 kpc regardless of how
+modest 2.47 sounds. **Bounding the factor does not bound the reach in kpc.**
+Both functional forms fail, so this is a property of homologous expansion, not
+of a particular time law.
+
+**Independent confirmation with no threshold of mine in it.** G1b compares the
+model against the data with the same operator: at z=0.7 -> 0.4 the null lands
+0.364 of its added mass beyond 50 kpc against a measured 0.366 — essentially
+perfect — and `X1` overshoots to **0.420**. The gate and the data agree.
+
+**Resolution: `X3`,** a non-homologous remap that bounds the reach in kpc
+directly, `r(R) = R [1 - (1 - 1/G)/(1 + (R/Rc)^2)]`. It expands the core by `G`
+and leaves everything beyond `Rc` where it was, which is what adiabatic
+expansion is understood to do physically and exactly what exp52's diagnosis
+asked for. See P5 for how it relates to `X1`.
+
 ### P3 — the capability target was stated on the wrong population
 **S1. Found and resolved 2026-08-26, Stage 1.** *Would have changed a
 conclusion.*
