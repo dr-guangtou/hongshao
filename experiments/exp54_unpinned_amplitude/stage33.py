@@ -84,6 +84,11 @@ def spec_from_label(label):
             break
     if parts:
         kw["size_time"] = "+".join(parts)
+    for tag in ("+P1", "+P2", "+P3"):
+        if tag in size:
+            head, _, fam2 = size.partition(tag)
+            kw["compact"], kw["compact_family"], size = tag[1:], fam2, head
+            break
     kw["size"] = size
     if "+E3" in eff:
         kw["e3"] = True

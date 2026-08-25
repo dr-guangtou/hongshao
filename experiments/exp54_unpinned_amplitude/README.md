@@ -1291,3 +1291,101 @@ three-component decomposition. Two cautions carried into that next stage:
 
 **Nothing adopted.** `S4` is the only variant the judge prefers to the
 incumbent and it moves the span by 0.004 dex, which is not worth a parameter.
+
+---
+
+## Stage 3.8 (2026-08-25) — a second deposit channel with its own scale (`stage38_two_channel.py`), COMPLETE
+
+**A flat negative, and it confirms the limit by a route that could have refuted
+it.** The fit was free to use the compact channel at any strength and chose
+zero, in all five fits, in both modes.
+
+### What was added
+
+Each deposit's unit profile became a mixture of two blobs at two sizes,
+weighted by WHEN the mass was laid down:
+
+```
+F_j(<R) = (1 - w_j) * F_extended(R ; R50_j)  +  w_j * F_compact(R ; rho * R50_j)
+```
+
+`F_compact` is an exponential (Sersic n = 1, no free shape parameter), `rho < 1`
+is the second radial scale, and `w_j` is the compact fraction — the share of
+that deposit's stars placed in the small blob rather than the big one. `P1`
+holds `w` constant; `P2` and `P3` let it rise toward early times through a
+logistic in `ln(1+z)`. Both channels are truncated at the same boundary and are
+individually unit-mass, so the mixture is unit-mass and Stage 0's
+mass-conservation contract is untouched. `w0 = 0` reproduces the single-channel
+model bit for bit, asserted at random parameters AND random `rho`.
+
+### The result
+
+| | mode | fitted `w0` | `rho` | loss |
+|---|---|---|---|---|
+| `P1expo` | production loss | +0.0002 | 0.197 | **1.874253** |
+| `P2expo` | production loss | +0.0002 | 0.210 | **1.874253** |
+| `P3expo` | production loss | +0.0000 | 0.198 | **1.874253** |
+| `P1expo` | minimise the span | +0.0004 | 0.738 | 1.968106 |
+| `P3expo` | minimise the span | +0.0014 | 0.474 | 1.968716 |
+
+The three loss-mode fits return **exactly the incumbent's loss to six decimal
+places**, and every diagnostic is numerically identical to the incumbent: span
+0.145, non-declining span 0.045, outskirts −0.008, shape error 13.787%. The
+`ident` column reads 0.0e+00 because with `w0 = 0` the size ratio `rho` has no
+effect at all, making the Jacobian exactly singular — which is itself the
+diagnostic.
+
+The two span-mode fits reach 0.089 and 0.094, **worse than Stage 3.7's
+one-scale size law at 0.061**, and reach it by moving `log_f0` (−0.843 →
+−0.533) and `b` (−0.896 → −1.553) — the size law — not by using the channel.
+
+### Why, and this is the point
+
+Splitting on Stage 3.4's preregistered flag — did the galaxy's MEASURED mass
+inside 4.92 kpc fall between redshift 2 and 0.4:
+
+| median error inside 2 kpc | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | span |
+|---|---|---|---|---|---|---|
+| all admitted | +0.020 | −0.003 | −0.021 | −0.062 | −0.126 | 0.145 |
+| **centre DECLINED (42%)** | +0.068 | +0.007 | −0.042 | −0.127 | −0.202 | **0.270** |
+| **centre did NOT decline (58%)** | −0.008 | −0.008 | −0.012 | −0.034 | −0.053 | **0.045** |
+
+Per-galaxy scatter is 0.16–0.20 dex in both groups, so on the non-declining
+majority the systematic trend is about a quarter of the scatter and is nearly a
+uniform offset — absorbable by `a0`. The declining galaxies genuinely lose
+central mass: median −0.066 dex, a **14% loss**, from redshift 2 to 0.4.
+
+A compact channel ADDS central mass. It cannot make a centre decline, and
+adding it to the 58% whose centres are already right would only overfill them.
+So there was nothing for it to win, and it won nothing.
+
+### THE LIMIT, stated as what it is
+
+The model is `M*(<R,t_k) = sum_{t_j <= t_k} dM*_j F_j(<R)` with every
+`dM*_j >= 0` and `F_j` fixed once the deposit is made. Every term is
+non-negative and the sum is over a set that only grows with `t_k`, so
+
+```
+t_k > t_k'   =>   M*(<R, t_k) >= M*(<R, t_k')   for every R
+```
+
+**A deposition-only model cannot produce a declining enclosed mass at any
+radius, at any parameter value.** Not "does not" — cannot. For 42% of these
+galaxies the required change has the unreachable sign, which is why Stages 3.5,
+3.6, 3.7 and 3.8 all failed against the same defect: they were aimed at a
+target outside the reachable set.
+
+It also explains Stage 3.7's trade. To reduce the POPULATION span the size law
+had to compact every early deposit, including for the galaxies whose centres
+were already right, and that is why it emptied the outskirts.
+
+**The user's decision (2026-08-25): report this as the honest limit of the
+model class, and do NOT refit on the non-declining subset.** This is the best
+this kind of model can do under this assumption, and we now know why.
+
+### What it points at
+
+An empirical description in which already-deposited stars move outward — the
+"expansion" of central stellar profiles seen in massive galaxies — would supply
+the missing sign while keeping mass conserved, non-negative, and free of any
+stellar input. Sketched in `doc/journal/` and deliberately NOT started here.

@@ -148,6 +148,46 @@ radius equal to its halo's radius at redshift 0. The reported 0.061 dex span is
 therefore partly a property of that bound. **Owed**: re-run with the bound
 relaxed, or establish that the bound is physically meant.
 
+### C8. THE CENTRAL DEFECT IS MOSTLY OUTSIDE THE MODEL CLASS
+**Measured 2026-08-25, before Stage 3.8's fits, and it largely dissolves that
+stage's premise.** Splitting on Stage 3.4's preregistered flag — did the
+MEASURED mass inside 4.92 kpc fall between redshift 2 and 0.4 —
+
+| central error, median log10(model/truth) | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | span |
+|---|---|---|---|---|---|---|
+| all admitted | +0.020 | −0.003 | −0.021 | −0.062 | −0.126 | 0.145 |
+| centre DECLINED (42%) | +0.068 | +0.007 | −0.042 | −0.127 | −0.202 | **0.270** |
+| centre did NOT decline (58%) | −0.008 | −0.008 | −0.012 | −0.034 | −0.053 | **0.045** |
+
+The per-galaxy scatter is 0.16–0.20 dex in BOTH groups, so on the non-declining
+majority the systematic epoch trend (0.045 dex) is about a quarter of the
+galaxy-to-galaxy scatter, and a near-uniform offset besides — absorbable by the
+efficiency normalisation. The declining galaxies really do lose central mass:
+median −0.066 dex from redshift 2 to 0.4, a 14% loss, 10th–90th percentile
+−0.129 to −0.019.
+
+**A deposition-only model adds mass monotonically and cannot follow a decline
+at any parameter value.** So the 0.145 dex defect that Stages 3.5, 3.6 and 3.7
+all failed to move is not one defect: most of it is a failure mode the model
+class forbids, and the part a compact channel could address is already small.
+
+It also explains Stage 3.7's trade. To reduce the POPULATION swing the size law
+had to make every early deposit compact — including for the galaxies whose
+centres were already right — which is why it emptied the outskirts.
+
+**THE QUESTION FOR THE USER, because it is a model-class decision and not a
+parameterisation one**: does exp54 stay deposition-only, or does it gain a way
+to REMOVE or REDISTRIBUTE central mass? Options, none costed yet:
+  - stay deposition-only, and report the declining galaxies as out of scope;
+  - fit and validate on the non-declining subset, quoting that scope honestly;
+  - add a stripping/redistribution term, which breaks the Contract B guarantee
+    that the model contains no stellar information and no per-object tuning —
+    that guarantee is why the current results are trustworthy.
+
+**Rescoping owed either way**: refit the incumbent on the non-declining galaxies
+ALONE and see what is left. The current 0.045 dex is from a fit dragged by the
+declining half.
+
 ## D. Resolved
 
 ### D1. Is exp48's density-plus-log objective the repair for the outer blindness?

@@ -242,18 +242,51 @@ def precheck(smoke=False):
 # the fits                                                                     #
 # --------------------------------------------------------------------------- #
 def nested_start(spec, th_base, spec_base):
-    """The incumbent lifted into `spec`, new size coefficients at zero.
+    """The incumbent lifted into `spec`, BY PARAMETER NAME.
 
-    The size block starts after the four efficiency parameters, so the zeros go
-    there rather than at the end. As in Stage 3.5, this start guarantees the
-    enriched fit cannot converge worse than the incumbent, which is what makes
-    a negative result reportable instead of an optimiser failure.
+    Every extension in this experiment defaults its own new coefficients to the
+    value that reproduces the parent — zero for the size-law and efficiency
+    axes, `w0 = 0` for the compact channel — so the lift is just
+    `default_theta(spec)` with the shared names overwritten from the parent's
+    fit. That start guarantees the enriched fit cannot converge worse than the
+    incumbent, which is what makes a negative result reportable rather than an
+    optimiser failure.
+
+    **This used to splice by POSITION**, inserting zeros after the size block.
+    That is right for `S4`/`S5`/`S6`, whose parameters sit in the middle of the
+    vector, and silently wrong for the compact channel, whose parameters are
+    appended after the profile shape: the zeros landed on the shape parameter
+    and the parent's shape landed on a compact coefficient. Matching by name
+    cannot make that mistake, and `assert_lift_nests` checks the result.
     """
     th_base = np.asarray(th_base, float)
-    n_eff = len(spec_base.eff_names)
-    n_new = spec.n_theta - spec_base.n_theta
-    return np.concatenate([th_base[:n_eff + 2], np.zeros(n_new),
-                           th_base[n_eff + 2:]])
+    base_names = list(spec_base.theta_names)
+    out = np.asarray(M.default_theta(spec), float).copy()
+    for i, n in enumerate(spec.theta_names):
+        if n in base_names:
+            out[i] = th_base[base_names.index(n)]
+    return out
+
+
+def assert_lift_nests(spec, th_base, spec_base, recs, data, mask, tol=1e-9):
+    """The lifted start must score EXACTLY what the parent scores.
+
+    Cheap, and it is the only thing standing between "the extension did not
+    help" and "the extension was wired in wrong" -- which is a distinction this
+    experiment has already got wrong once.
+    """
+    th = nested_start(spec, th_base, spec_base)
+    a = S35.StackedProblem(spec_base, recs, data, mask,
+                           epochs=(0, 1, 2, 3, 4)).loss(th_base)
+    b = S35.StackedProblem(spec, recs, data, mask,
+                           epochs=(0, 1, 2, 3, 4)).loss(th)
+    if not abs(a - b) < tol:
+        raise SystemExit(
+            f"REFUSING TO RUN: lifting the incumbent into {spec.label} changes "
+            f"its loss, {a:.12f} -> {b:.12f}. The extension does not nest as "
+            f"wired, so nothing fitted from it can be compared with the "
+            f"incumbent.")
+    return th
 
 
 def report_one(label, theta, recs, data, mask, lmh, prod_spec, prod):
@@ -443,7 +476,7 @@ def span_bound(label, n_starts=6, tol=0.05, smoke=False):
 
     from scipy.optimize import minimize
     starts = S35.starts_for(spec, n_starts)
-    starts.append(nested_start(spec, th_inc, base_spec))
+    starts.append(assert_lift_nests(spec, th_inc, base_spec, recs, data, mask))
     fit_p = HERE / "outputs" / "stage37_fits" / f"{label}.npz"
     if fit_p.exists():
         starts.append(np.asarray(np.load(fit_p)["theta"], float))

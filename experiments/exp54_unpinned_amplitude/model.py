@@ -192,6 +192,8 @@ class Spec:
     n_time: int = 2                # E6 | E7: how many extra time coefficients
     size_time: str = ""            # "" | S4 | S5 | S6: the size law's epoch axis
     n_size_time: int = 2           # S5 degrees used, or S6 knots
+    compact: str = ""              # "" | P1 | P2 | P3: a second deposit channel
+    compact_family: str = "expo"   # the compact channel's profile family
     trunc_C: float = 3.0
 
     #: every size axis this model knows; anything else is a typo, and a typo
@@ -201,6 +203,10 @@ class Spec:
     #: round-tripping, so nothing complained.
     SIZES = ("S2", "S2a")
     SIZE_TIMES = ("", "S4", "S5", "S6", "S4+S5", "S4+S6")
+    #: a second deposit channel with its OWN radial scale (Stage 3.8). `w` is
+    #: the compact fraction and `rho` the ratio of its half-mass radius to the
+    #: extended channel's; `w = 0` reproduces the single-channel model exactly.
+    COMPACTS = ("", "P1", "P2", "P3")
 
     def __post_init__(self):
         if self.size not in Spec.SIZES:
@@ -210,6 +216,13 @@ class Spec:
         if self.size_time not in Spec.SIZE_TIMES:
             raise ValueError(f"size_time must be one of {Spec.SIZE_TIMES}, "
                              f"got {self.size_time!r}")
+        if self.compact not in Spec.COMPACTS:
+            raise ValueError(f"compact must be one of {Spec.COMPACTS}, got "
+                             f"{self.compact!r}")
+        if self.compact and self.compact_family == self.family:
+            raise ValueError("the compact channel must be a DIFFERENT family "
+                             "from the extended one, or it is a size change "
+                             "dressed as a second channel")
 
     @property
     def eff_names(self):
@@ -250,9 +263,21 @@ class Spec:
         return n + (["f:logMh", "f:dlogc", "f:fform"] if self.conditioning else [])
 
     @property
+    def compact_names(self):
+        if not self.compact:
+            return []
+        n = ["w0", "log_rho"]
+        if self.compact == "P2":
+            n = ["w0", "w_s", "log_rho"]
+        elif self.compact == "P3":
+            n = ["w0", "w_zt", "w_s", "log_rho"]
+        return n
+
+    @property
     def theta_names(self):
         return (self.eff_names + self.size_names
-                + list(families.shape_names(self.family)))
+                + list(families.shape_names(self.family))
+                + self.compact_names)
 
     @property
     def n_theta(self):
@@ -275,7 +300,10 @@ class Spec:
             s += f"+S5p{self.n_size_time}"
         if "S6" in parts:
             s += f"+S6f{self.n_size_time}"
-        return s + ("+S3" if self.conditioning else "")
+        s = s + ("+S3" if self.conditioning else "")
+        if self.compact:
+            s += f"+{self.compact}{self.compact_family}"
+        return s
 
     def bounds(self):
         b = {"a0": (-6, 2), "a_M": (-3, 3), "a_z": (-3, 3), "a_Mz": (-3, 3),
@@ -287,9 +315,12 @@ class Spec:
              **{f"v{i}": (-3.0, 3.0) for i in range(20)},
              "b_M": (-3.0, 3.0),
              **{f"d{d}": (-3.0, 3.0) for d in range(2, 8)},
-             **{f"u{i}": (-3.0, 3.0) for i in range(20)}}
+             **{f"u{i}": (-3.0, 3.0) for i in range(20)},
+             "w0": (0.0, 1.0), "w_zt": (0.0, 2.5), "w_s": (0.05, 3.0),
+             "log_rho": (-2.0, 0.0)}
         out = [b.get(n, (-8.0, 8.0)) for n in self.eff_names + self.size_names]
-        return out + list(families.shape_bounds(self.family))
+        out = out + list(families.shape_bounds(self.family))
+        return out + [b[n] for n in self.compact_names]
 
     def unpack(self, theta):
         theta = np.asarray(theta, float)
@@ -297,8 +328,10 @@ class Spec:
             raise ValueError(f"{self.label} wants {self.n_theta} params, "
                              f"got {theta.shape}")
         ne, ns = len(self.eff_names), len(self.size_names)
+        nc = len(self.compact_names)
+        shp = theta[ne + ns:len(theta) - nc]
         return theta[:ne], theta[ne:ne + ns], (
-            tuple(theta[ne + ns:]) if len(theta) > ne + ns else None)
+            tuple(shp) if len(shp) else None)
 
 
 #: knot positions for E4, in ln(1+z); spans z ~ 0.2 to ~ 12
@@ -517,6 +550,33 @@ def r50_of(spec, size, halo):
     return 10.0 ** np.clip(lf, -8, 2) * scale
 
 
+def compact_weight(spec, theta, halo):
+    """The compact channel's share of each deposit, `w` in [0, 1].
+
+    `P1` is a constant; `P2` and `P3` are logistics in `x = ln(1+z)` so the
+    share rises toward EARLY times, which is the direction Stage 3.7's defect
+    points (too little central mass early, correct late). `P2` pins the
+    transition at redshift 2 so only the amplitude and width are free.
+
+    Returns zeros when no compact channel is configured, which is what makes
+    the whole extension nest: `w = 0` leaves `forward` evaluating exactly the
+    single-channel model.
+    """
+    if not spec.compact:
+        return np.zeros_like(np.asarray(halo.z, float))
+    c = np.asarray(theta, float)[-len(spec.compact_names):]
+    x = np.log1p(halo.z)
+    if spec.compact == "P1":
+        w0 = c[0]
+        return np.full_like(x, w0)
+    if spec.compact == "P2":
+        w0, ws = c[0], c[1]
+        xt = np.log(3.0)                       # redshift 2, held fixed
+    else:
+        w0, xt, ws = c[0], c[1], c[2]
+    return w0 / (1.0 + np.exp(-(x - xt) / max(ws, 1e-6)))
+
+
 def forward(spec, theta, halo, epochs, R):
     """M*(<R) in Msun at the given epoch indices. HALO INPUT ONLY.
 
@@ -534,6 +594,17 @@ def forward(spec, theta, halo, epochs, R):
     if good.sum() < 5 or not np.isfinite(dm[good]).all():
         return None
     B = cog_truncated(spec.family, shape, r50[good], r_tr[good], R)
+    if spec.compact:
+        # A SECOND CHANNEL WITH ITS OWN SCALE (Stage 3.8). Both channels are
+        # truncated at the same boundary and are individually unit-mass, so the
+        # mixture is unit-mass too and mass conservation is untouched -- the
+        # Stage 0 contract still holds without amendment.
+        w = np.clip(compact_weight(spec, theta, halo)[good], 0.0, 1.0)
+        rho = 10.0 ** np.clip(theta[-1], -8, 0)
+        sh_c = families.shape_defaults(spec.compact_family) or None
+        Bc = cog_truncated(spec.compact_family, sh_c, rho * r50[good],
+                           r_tr[good], R)
+        B = (1.0 - w)[None, :] * B + w[None, :] * Bc
     out = np.empty((len(epochs), len(R)))
     for i, k in enumerate(epochs):
         out[i] = B @ (dm[good] * halo.epoch_mask[k][good])
@@ -555,7 +626,10 @@ def default_theta(spec):
             out += [0.0, 0.0, 0.0]
         if spec.e3:
             out.insert(2 + spec.n_knots, 0.0)
-    return np.array(out + list(families.shape_defaults(spec.family)), float)
+    out = out + list(families.shape_defaults(spec.family))
+    #: w0 = 0 by default, so a freshly built compact spec IS the incumbent
+    cd = {"w0": 0.0, "w_zt": float(np.log(3.0)), "w_s": 0.5, "log_rho": -0.7}
+    return np.array(out + [cd[n] for n in spec.compact_names], float)
 
 
 if __name__ == "__main__":
@@ -693,6 +767,46 @@ if __name__ == "__main__":
           f"terms) and S6\n       (6, 8 knots) reproduce the plain size law "
           f"BIT FOR BIT at zero coefficients:\n       max |dM*(<R)| = "
           f"{worst_s:.1e} Msun")
+
+    # (6e) THE SECOND CHANNEL NESTS. With w0 = 0 the mixture must reproduce
+    #      the single-channel model bit for bit, whatever the compact channel's
+    #      other parameters are -- otherwise "the second channel did not help"
+    #      could never be distinguished from "the second channel is wired up
+    #      wrong". Checked at random thetas AND random rho, which must be
+    #      irrelevant when the weight is zero.
+    sp_1c = Spec(family="gompertz_log", eff="E2", size="S2")
+    base_1c = default_theta(sp_1c)
+    rng8 = np.random.default_rng(23)
+    worst_c = 0.0
+    for _ in range(4):
+        t1 = base_1c + rng8.normal(0, 0.25, base_1c.shape)
+        for cp in ("P1", "P2", "P3"):
+            spc = Spec(family="gompertz_log", eff="E2", size="S2", compact=cp)
+            extra = default_theta(spc)[sp_1c.n_theta:].copy()
+            extra[0] = 0.0                              # w0 = 0
+            extra[-1] = rng8.uniform(-2.0, 0.0)         # rho must not matter
+            tc = np.concatenate([t1, extra])
+            assert spc.n_theta == len(tc)
+            for hh in recs[:4]:
+                a = forward(sp_1c, t1, hh, [0, 2, 4], R)
+                b = forward(spc, tc, hh, [0, 2, 4], R)
+                if a is None or b is None:
+                    assert a is None and b is None, spc.label
+                    continue
+                worst_c = max(worst_c, float(np.max(np.abs(a - b))))
+    assert worst_c == 0.0, f"the compact channel does not nest: {worst_c:.3e}"
+    # and with w0 > 0 it must actually CHANGE the profile, or it is inert
+    spc = Spec(family="gompertz_log", eff="E2", size="S2", compact="P1")
+    t_on = np.concatenate([base_1c, [0.4, -0.7]])
+    a = forward(sp_1c, base_1c, recs[0], [0, 4], R)
+    b = forward(spc, t_on, recs[0], [0, 4], R)
+    moved = float(np.max(np.abs(np.log10(np.clip(b, 1, None))
+                                - np.log10(np.clip(a, 1, None)))))
+    assert moved > 0.02, f"the compact channel barely moves anything: {moved}"
+    print(f"  (6e) the second channel nests EXACTLY at w0 = 0 (max |dM*| = "
+          f"{worst_c:.1e} Msun,\n       even with a random size ratio), and at "
+          f"w0 = 0.4 it moves the profile by\n       up to {moved:.3f} dex — so "
+          f"it is wired in, not inert")
 
     # (6c) the new basis functions really are orthogonal to a constant and to x
     #      over the deposit range, which is what stops them fighting a0 and a_z
