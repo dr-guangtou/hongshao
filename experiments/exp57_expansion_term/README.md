@@ -4,7 +4,7 @@ Branch `exp57-expansion-term`. Plan:
 `doc/plans/2026-08-26-exp57-expansion-term.md`. Problems:
 [`PROBLEMS.md`](PROBLEMS.md).
 
-**Status: IN PROGRESS.** Stage 0 complete.
+**Status: IN PROGRESS.** Stages 0 and 1 complete; Stage 3 fits running.
 
 ---
 
@@ -98,6 +98,70 @@ is evaluated once for all five epochs and only the radius lookup repeats.
 `expand.cog_scaled` carries the proof, and the same identity is why homologous
 expansion conserves each deposit's mass exactly — `F(g·r_trunc) = 1` still
 holds. Verified to 0.0 and 3.3e-16 in `expand.py`'s self-check.
+
+---
+
+## Stage 1 (2026-08-26) — the contract change, and the capability check (`stage1_contract.py`), COMPLETE
+
+### Branch 1 — exp54's monotone-in-time property, measured rather than argued
+
+exp54 Section 8.10 established analytically that with the expansion off,
+`M*(<R,t)` is non-decreasing in `t` at every radius and every parameter value.
+It was never a coded assertion. Checked here over **230,112 galaxy-radius-epoch
+pairs**: the most negative relative change is **0.000e+00** and **zero** pairs
+fall by more than 1e-12. The property is exact.
+
+### Branch 2 — is the required decline REACHABLE, and at what price?
+
+**The target had to be restated first, and getting it wrong would have
+mis-selected the expansion strength by a factor of two — see
+[P3](PROBLEMS.md).** Recomputed on this sample, measured `M*(<4.92 kpc)` from
+redshift 2 to 0.4:
+
+| | measured |
+|---|---|
+| median over **ALL** galaxies | **+0.0368 dex** — the centres GROW on the median |
+| fraction that **decline** | **41.8%** (Stage 3.4 said 42%) |
+| median among the **decliners** | **−0.0661 dex** (Stage 3.4 said −0.066) |
+| 10th to 90th percentile | **−0.099 to +0.438 dex** |
+
+**So the target is a SHAPE, not a shift**: centres that grow by +0.037 dex on
+the median while 42% of them fall. Scanning the expansion strength with
+everything else held at the incumbent:
+
+| `A` | oldest deposit grows | median, ALL | declining fraction | median of decliners | loss |
+|---|---|---|---|---|---|
+| 0.00 | 1.00× | +0.1354 | 0.0% | — | 1.8743 |
+| 0.50 | 1.50× | +0.0670 | 6.5% | −0.0124 | 2.0240 |
+| 0.75 | 1.75× | +0.0375 | 22.2% | −0.0175 | 2.2046 |
+| 1.00 | 2.00× | +0.0097 | 43.3% | −0.0264 | 2.4338 |
+| 1.50 | 2.50× | −0.0402 | 72.9% | −0.0563 | 2.9849 |
+| 2.00 | 3.00× | −0.0829 | 89.1% | −0.0888 | 3.5978 |
+| **DATA** | | **+0.0368** | **41.8%** | **−0.0661** | |
+
+**THE CAPABILITY IS REAL BUT IT DOES NOT COME AS ONE NUMBER.** Reproducing each
+target on its own needs
+
+| target | required `A` |
+|---|---|
+| the median over all galaxies (+0.0368) | **0.76** |
+| the declining fraction (41.8%) | **0.98** |
+| the median among decliners (−0.0661) | **1.65** |
+
+a span of **2.2×**. The reason is measurable and is not about expansion at all:
+the model's 10th-to-90th spread at `A = 0` is **+0.070 to +0.248 dex against
+the data's −0.099 to +0.438 — 0.33× the width**. **Expansion shifts a
+distribution; it cannot widen one**, so that ratio is a ceiling on how well any
+single global `A` can match the population's central evolution. This is exp54
+open question **C4** (the predicted growth distribution is half as wide as the
+simulation's) reappearing as the binding constraint on a different mechanism.
+
+**And the capability is expensive.** Held at the incumbent, the loss rises
+monotonically with `A`: 1.8743 → 2.2046 at the `A = 0.76` that matches the
+median, → 2.4338 at the `A = 0.98` that matches the declining fraction. Whether
+re-optimising the other seven parameters pays that back is Stage 3's question,
+and the answer must not be read off this scan — exp53 found a frozen slice and
+an honest refit **57 percentage points apart** on exactly this kind of number.
 
 ---
 

@@ -18,6 +18,45 @@ Severity: **S1** could change a conclusion · **S2** blocks work or wastes time 
 
 ## Resolved
 
+### P3 — the capability target was stated on the wrong population
+**S1. Found and resolved 2026-08-26, Stage 1.** *Would have changed a
+conclusion.*
+
+`stage1_contract.py` was written to compare the model's **median over all
+galaxies** against exp54 Stage 3.4's **−0.066 dex**. That number is the median
+over the **DECLINING SUBSET ONLY**. The two are not the same population and
+they are not even the same sign: recomputed on this sample, the measured
+`M*(<4.92 kpc)` change from redshift 2 to 0.4 is
+
+| population | median |
+|---|---|
+| ALL galaxies | **+0.0368 dex** — the centres GROW on the median |
+| the declining 41.8% | **−0.0661 dex** |
+
+Left uncorrected, the scan would have chased a −0.066 dex median over the whole
+population, which the data does not do, and would have selected an expansion
+strength roughly twice too large.
+
+**Resolution.** `decline_stats` now returns a **dict**, not a tuple, so a caller
+cannot silently compare a median-over-all against a target defined on a subset;
+all four population statistics are reported side by side with the population
+each describes named in the output; and the constant is renamed
+`TRUTH_DECLINER_DEX`.
+
+**This is the fourth instance in this project of a quantity being compared
+against a bound defined on something else** (`doc/lessons.md` records three:
+Stage 3.7's span, exp52's aperture-vs-annulus, exp53's binning variable). The
+standing rule — *a bound must match what it reports, on the same objects and
+the same quantity* — now has a fourth data point, and the structural guard used
+here (return a named record, never a positional tuple) is the cheapest one
+found so far.
+
+**What it turned into, which is the real Stage 1 result.** Stated correctly,
+the target is not a shift but a SHAPE: a population whose centres grow by
++0.037 dex on the median while 42% of them fall. A single global expansion
+strength moves a distribution without widening it, and the three targets need
+A = 0.76, 0.98 and 1.65 respectively — a factor of 2.2 apart.
+
 ### P1 — the nesting gate was specified as "bit-for-bit" and that was unachievable
 **S2. Found and resolved 2026-08-26, Stage 0.**
 
