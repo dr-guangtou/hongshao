@@ -395,6 +395,22 @@ carrying the term's credit. And it explains the small core's `(c)` failure
 exactly: its expansion moves the gap −0.025 while the refit moves it +0.046, and
 the compensation wins.
 
+### The headline is robust to how it is measured
+
+G2 is computed by summing signed mass changes over a chosen set of shells, so a
+coarse grid could in principle inflate or deflate it. `check_g2_binning.py`
+recomputes it from 5 shells to 60:
+
+| model | as reported (9) | coarse (5) | fine (25) | very fine (60) |
+|---|---|---|---|---|
+| `X1`, beyond 50 kpc | 85.0% | 85.0% | 80.4% | 80.5% |
+| `X1`, beyond 148 kpc | 52.1% | 52.1% | 49.2% | 49.3% |
+| **`X3` small core, beyond 50 kpc** | **2.2%** | 4.9% | 1.8% | 1.7% |
+| **`X3` small core, beyond 148 kpc** | **0.2%** | 0.4% | 0.1% | 0.1% |
+
+`X1` fails the 25% limit on every grid; `X3` passes it on every grid; the factor
+between them is 20 to 40 throughout.
+
 ### What is NOT claimed
 
 - **Nothing is adopted.** `X3` small-core is the only candidate that passes the
