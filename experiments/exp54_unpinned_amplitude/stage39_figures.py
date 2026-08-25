@@ -82,9 +82,15 @@ def figure(name="stage39_profile"):
         raise SystemExit("no profiles on disk — run --only for each parameter")
 
     set_style()
-    fig, axes = plt.subplots(2, 4, figsize=(15.0, 7.4))
+    fig, axes = plt.subplots(2, 4, figsize=(15.0, 7.6))
     flat = axes.ravel()
     surv, labels = [], []
+    #: the profiled curve bottoms out at exactly zero at the incumbent, which a
+    #: logarithmic axis cannot draw. Both curves are therefore plotted from
+    #: their smallest NON-zero rise, and the floor is set from the data rather
+    #: than from a round number, so no panel spends half its height on a
+    #: vertical line at the centre.
+    floor = 1e-4
 
     for ax, nm in zip(flat, names):
         j = names.index(nm)
@@ -97,53 +103,93 @@ def figure(name="stage39_profile"):
         prof = np.asarray(r["loss"], float) - base
         cond = np.asarray(r["cond_loss"], float) - base
         d = grid - theta[j]
+        ok = prof > floor
 
-        ax.plot(d, np.maximum(cond, 1e-6), "--", color=C_COND, lw=1.6,
-                marker="o", ms=3.2,
-                label="conditional (other six fixed)")
-        ax.plot(d, np.maximum(prof, 1e-6), "-", color=C_PROF, lw=2.0,
-                marker="s", ms=3.4,
-                label="profiled (other six re-optimised)")
+        # the interval inside which the best achievable fit costs less than one
+        # percentage point of profile-shape error
+        dm, dp = S39._displacement_for(grid, prof, theta[j], S39.RISE_1PCT)
+        x0 = -dm if np.isfinite(dm) else d.min()
+        x1 = dp if np.isfinite(dp) else d.max()
+        ax.axvspan(x0, x1, color=C_PROF, alpha=0.08, lw=0, zorder=0)
+
+        ax.plot(d[cond > floor], cond[cond > floor], "--", color=C_COND,
+                lw=1.6, marker="o", ms=3.2)
+        ax.plot(d[ok], prof[ok], "-", color=C_PROF, lw=2.0, marker="s", ms=3.6)
         ax.axhline(S39.RISE_1PCT, color=C_RULE, lw=1.0, ls=":")
-        ax.axvline(0.0, color="0.85", lw=0.8, zorder=0)
         ax.set_yscale("log")
-        ax.set_ylim(1e-6, max(2.0, float(np.nanmax(cond)) * 2.0))
+        ax.set_ylim(floor, max(3.0, float(np.nanmax(cond)) * 3.0))
+        ax.set_xlim(d.min() * 1.06, d.max() * 1.06)
 
-        edge = int(np.nanargmax(prof))
-        s = prof[edge] / cond[edge] if cond[edge] > 1e-12 else np.nan
-        surv.append(s)
+        # the ratio is nearly constant along each curve because both are
+        # quadratic, so it is a property of the parameter. Its square root is
+        # the factor by which the conditional slice overstated the WIDTH, which
+        # is the number worth quoting.
+        rat = np.where(cond > 1e-12, prof / np.maximum(cond, 1e-30), np.nan)
+        rat[np.abs(d) < 1e-12] = np.nan
+        infl = 1.0 / np.sqrt(np.nanmean(rat))
+        sv = float(np.nanmean(rat))
+        surv.append(infl)
         labels.append(nm)
 
         at_bound = (abs(grid[0] - lo[j]) < S39.BOUND_TOL
                     or abs(grid[-1] - hi[j]) < S39.BOUND_TOL)
         title = _tex(f"{nm} = {theta[j]:+.4f}")
         if at_bound:
-            title += "   AT BOUND"
+            title += _tex("   (grid reaches its bound)")
         ax.set_title(title + "\n" + MEANING.get(nm, ""), fontsize=9)
-        ax.set_xlabel(_tex(f"displacement from the incumbent"))
+        ax.set_xlabel(_tex("displacement from the incumbent"))
         if ax in (axes[0, 0], axes[1, 0]):
             ax.set_ylabel(_tex("loss rise above 1.874253"))
-        ax.text(0.03, 0.94, _tex(f"{100 * s:.2f}{_pct()} of the conditional "
-                                 f"rise survives"),
-                transform=ax.transAxes, fontsize=7.5, va="top", color=C_PROF)
-        if nm == names[0]:
-            ax.legend(loc="lower right", fontsize=7)
+        one = (_tex(f"{-dm:+.2f} to {dp:+.2f}")
+               if np.isfinite(dm) and np.isfinite(dp)
+               else _tex(f"wider than {d.min():+.2f} to {d.max():+.2f}"))
+        ax.text(0.5, 0.965,
+                _tex(f"the conditional slice overstated this width "
+                     f"{infl:.1f}-fold")
+                + "\n" + _tex(f"({100 * sv:.2f}{_pct()} of its rise survives)  "
+                               f"{one}"),
+                transform=ax.transAxes, fontsize=7.6, va="top", ha="center",
+                color=C_PROF,
+                bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.6))
 
     bx = flat[7]
     order = np.argsort(surv)
     bx.barh(np.arange(len(surv)), np.array(surv)[order], color=C_PROF,
             height=0.62)
+    for k, i in enumerate(order):
+        bx.text(surv[i] + 0.3, k, _tex(f"{surv[i]:.1f}x"), va="center",
+                fontsize=8, color=C_PROF)
     bx.set_yticks(np.arange(len(surv)))
-    bx.set_yticklabels([_tex(labels[i]) for i in order], fontsize=8)
-    bx.set_xscale("log")
-    bx.axvline(1.0, color=C_COND, lw=1.2, ls="--")
-    bx.set_xlabel(_tex("profiled rise / conditional rise, at the grid edge"))
-    bx.set_title("how much of each parameter's apparent\nconstraint is real",
-                 fontsize=9)
-    bx.text(1.0, -0.9, _tex("1.0 = the conditional number was honest"),
-            fontsize=7, color=C_COND, ha="right")
+    bx.set_yticklabels([_tex(labels[i]) for i in order], fontsize=9)
+    bx.set_xlim(0, max(surv) * 1.25)
+    bx.axvline(1.0, color=C_COND, lw=1.4, ls="--")
+    bx.set_xlabel(_tex("factor by which the conditional slice\n"
+                       "overstated the parameter's width"))
+    bx.set_title("THE RESULT: not one of the seven is as\nwell determined as "
+                 "has been reported", fontsize=9)
+    bx.text(0.97, 0.06, _tex("1.0 would mean the conditional\nnumber was "
+                             "honest"),
+            transform=bx.transAxes, fontsize=7.4, color=C_COND, ha="right",
+            va="bottom")
+    bx.grid(axis="x", ls=":", lw=0.6, color="0.85")
     bx.spines["left"].set_visible(False)
     bx.tick_params(axis="y", length=0)
+
+    handles = [
+        plt.Line2D([], [], color=C_COND, ls="--", marker="o", ms=4,
+                   label="conditional slice: this parameter moved, the other "
+                         "six HELD FIXED"),
+        plt.Line2D([], [], color=C_PROF, ls="-", lw=2, marker="s", ms=4,
+                   label="profile likelihood: the same move, the other six "
+                         "RE-OPTIMISED"),
+        plt.Line2D([], [], color=C_RULE, ls=":", label=_tex(
+            f"one percentage point of profile-shape error "
+            f"({S39.SHAPE_INCUMBENT:.2f}{_pct()} to "
+            f"{S39.SHAPE_INCUMBENT + 1:.2f}{_pct()}); shading is the interval "
+            f"inside it")),
+    ]
+    fig.legend(handles=handles, loc="upper center", ncol=3, fontsize=8.5,
+               bbox_to_anchor=(0.5, 0.955))
 
     fig.suptitle(_tex(
         f"exp54 Stage 3.9 — conditional slices against genuine profile "
@@ -152,9 +198,11 @@ def figure(name="stage39_profile"):
         f"re-optimised.\nDotted rule: one percentage point of profile-shape "
         f"error ({S39.SHAPE_INCUMBENT:.2f}{_pct()} to "
         f"{S39.SHAPE_INCUMBENT + 1:.2f}{_pct()}). The loss is not a "
-        f"log-likelihood; nothing here is a confidence interval."),
-        fontsize=8.5, y=1.005)
-    fig.tight_layout()
+        f"log-likelihood; nothing here is a confidence interval. The dashed "
+        f"curve's flat bottom is the grid, not the loss: the innermost points "
+        f"sit at a conditional rise of 0.10 by construction."),
+        fontsize=9.0, y=1.045)
+    fig.tight_layout(rect=(0, 0, 1, 0.955))
     paths = save_fig(fig, FIGDIR / name)
     print("wrote " + ", ".join(str(p) for p in paths))
     plt.close(fig)

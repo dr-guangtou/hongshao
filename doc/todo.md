@@ -1775,18 +1775,33 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Measure the conditional slice at the identical grid points**, one loss
   evaluation each, so the headline comparison is point-by-point and needs no
   quadratic model of either curve.
-- [ ] **Profile all seven** (`--only <name>`, one process each). Two starts per
+- [x] **Profile all seven** (`--only <name>`, one process each). Two starts per
   grid point: the neighbouring point's solution (continuation sweep outward
   from the centre in both directions) and the incumbent's own six values. A
   third Nelder-Mead restart was benchmarked and changes nothing at four
   separate grid points, so two starts is the budget. ~75 s per optimisation on
   2397 galaxies.
-- [ ] **Report and figure** (`--report`, `stage39_figures.py`). Quote every
+- [x] **Report and figure** (`--report`, `stage39_figures.py`). Quote every
   width as *how far the parameter can move before the best achievable fit costs
   one percentage point of profile-shape error* (13.79% → 14.79%,
   `Δloss = 0.114`), never as a confidence interval: the loss is a weighted sum
   of two normalised scores, not a log-likelihood.
-- [ ] **`log_f0`'s grid reaches its upper bound of 0.0** — a deposit half-mass
+- [x] **`log_f0`'s grid reaches its upper bound of 0.0** — a deposit half-mass
   radius equal to its halo's radius at redshift 0 — and `c`'s reaches its lower
   bound of 0.2. Where a curve runs into a bound it is a property of the bound
   (open question C7), and must be reported as one.
+- [x] **THE RESULT.** The conditional slices overstated every parameter's
+  width, by **2.3x (`c`) to 17.6x (`a_Mz`)**; only 0.32% to 19.7% of the
+  conditional loss rise survives re-optimising the other six. All seven centre
+  points reproduced the incumbent's loss to between 0 and 1e-11, so the fit is
+  converged and the zero is right. The ordering is the model's structure: the
+  four efficiency-law parameters are the constant, two slopes and cross term of
+  ONE bilinear surface and absorb each other 12-18x; the size pair 7-8x; `c`
+  alone changes an individual deposit's SHAPE and is absorbed only 2.3x. **No
+  conclusion changes** — nothing rests on a single parameter's value — but
+  every "value +- spread" statement about these seven must now be read as a
+  much wider range. Extra: the galaxy bootstrap was re-measured on the clean
+  sample (0.9%-8.0% against 0.9%-8.1% before, unchanged) and its own optimiser
+  budget was checked and cleared (800 vs 6400 Nelder-Mead iterations return
+  bit-identical parameters on four replicates). Tech note Section 3.5.1;
+  open question B1 closed, C9 and C10 newly raised.

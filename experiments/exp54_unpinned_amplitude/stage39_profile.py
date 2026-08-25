@@ -151,6 +151,14 @@ _PC = "%"
 STEP_RISE = 0.10
 #: the grid: `+-MULTIPLIERS * d0`, plus the incumbent itself
 MULTIPLIERS = (1, 2, 4, 8, 16)
+#: `--extend` adds these multipliers, on ONE side of ONE parameter, and only
+#: where the first pass failed to reach `RISE_1PCT`. The rule is fixed in
+#: advance and the same for every parameter, so extending is not a licence to
+#: keep going until a number comes out the way anyone wants: 24 and 32 times
+#: `d0` raise a quadratic profile by 2.25x and 4x its value at 16, which clears
+#: `RISE_1PCT` for every side that fell short (the worst was 0.056 against
+#: 0.114). A side that STILL does not reach it is reported as not determined.
+EXTEND_MULTIPLIERS = (24, 32)
 #: finite-difference step scales for the Hessian diagnostic, as conditional
 #: rises; three of them, because the point is the step-dependence
 HESS_TARGETS = (1e-4, 1e-3, 1e-2)
@@ -500,6 +508,98 @@ def profile_one(name, smoke=False, verbose=True):
           f"{pr.n_eval} loss evaluations -> {profdir.name}/{name}.npz")
 
 
+def extend_one(name, smoke=False):
+    """Add `EXTEND_MULTIPLIERS * d0` on whichever side fell short of a one
+    percentage point rise, and merge into the existing profile.
+
+    A profile that never reaches the threshold inside its grid gives a LOWER
+    BOUND on the width, which is honest but weaker than the two-sided statement
+    the other parameters get. Extending is therefore worth doing, and the rule
+    for doing it is fixed in `EXTEND_MULTIPLIERS` rather than chosen per
+    parameter after seeing the curve.
+    """
+    gridf, profdir, _ = paths(smoke)
+    f = profdir / f"{name}.npz"
+    if not f.exists():
+        raise SystemExit(f"no profile for {name}: run --only {name} first")
+    old = dict(np.load(f, allow_pickle=True))
+    zg = np.load(gridf, allow_pickle=True)
+    names = [str(v) for v in zg["names"]]
+    j = names.index(name)
+    d0 = np.asarray(zg["d0"], float)[j]                 # (minus, plus)
+
+    print(f"exp54 STAGE 3.9 — EXTENDING the profile for {name}\n")
+    recs, data, mask, lmh, spec, theta, pr = setup(smoke)
+    lo, hi = np.array(spec.bounds()).T
+    base = float(old["base_loss"])
+    grid, loss = np.asarray(old["grid"], float), np.asarray(old["loss"], float)
+    rise = loss - base
+
+    todo = []
+    for s_i, sign in enumerate((-1, +1)):
+        side = (grid - theta[j]) * sign > 0
+        if not side.any():
+            continue
+        if float(np.nanmax(rise[side])) >= RISE_1PCT:
+            print(f"  the {'lower' if sign < 0 else 'upper'} side already "
+                  f"reaches {RISE_1PCT:.4f}; not extended")
+            continue
+        edge = int(np.argmax(np.abs(grid - theta[j]) * side))
+        for m in EXTEND_MULTIPLIERS:
+            v = float(np.clip(theta[j] + sign * m * d0[s_i], lo[j], hi[j]))
+            if np.min(np.abs(grid - v)) < 1e-9:
+                continue
+            todo.append((sign, v, edge))
+        print(f"  the {'lower' if sign < 0 else 'upper'} side stops at "
+              f"{float(np.nanmax(rise[side])):.4f} < {RISE_1PCT:.4f}; adding "
+              + ", ".join(f"{name}={t[1]:+.4f}" for t in todo if t[0] == sign))
+    if not todo:
+        print("  nothing to extend")
+        return
+
+    add = []
+    for sign, v, edge in todo:
+        fp = FixedProblem(pr, j, v)
+        prev = fp.drop(np.asarray(old["theta"], float)[edge])
+        best, best_l, tag = None, np.inf, ""
+        for t, p0 in (("continuation", prev), ("incumbent", fp.drop(theta))):
+            x, l = F.fit(fp, starts=[np.clip(p0, *np.array(fp.spec.bounds()).T)],
+                         maxiter=MAXITER, verbose=False)
+            if l < best_l:
+                best, best_l, tag = x, l, t
+        th7 = fp.lift(best)
+        sA, sF, _ = pr.scores(th7)
+        _, sf = pr.per_epoch(th7)
+        flo, fhi = np.array(fp.spec.bounds()).T
+        at_b = bool(np.any(np.abs(best - flo) < BOUND_TOL)
+                    or np.any(np.abs(best - fhi) < BOUND_TOL))
+        cond = pr.loss(np.insert(np.delete(theta, j), j, v))
+        add.append(dict(grid=v, loss=best_l, cond_loss=cond, theta=th7,
+                        score_A=sA, score_F=sF, shape_pct=S35.shape_pct(sf),
+                        at_bound=at_b, start_used=tag))
+        print(f"    {name}={v:+9.4f}   profiled rise {best_l - base:+10.6f}   "
+              f"conditional {cond - base:+10.4f}   "
+              f"shape {add[-1]['shape_pct']:6.3f}%   score_A {sA:.4f}   "
+              f"[{tag}]" + ("   <-- a FREE parameter is AT its bound"
+                            if at_b else ""), flush=True)
+
+    merged = {k: np.concatenate([np.atleast_1d(old[k]),
+                                 np.array([a[k] for a in add])])
+              for k in ("grid", "loss", "cond_loss", "score_A", "score_F",
+                        "shape_pct", "at_bound", "start_used")}
+    merged["theta"] = np.concatenate([old["theta"],
+                                      np.array([a["theta"] for a in add])])
+    order = np.argsort(merged["grid"])
+    for k in merged:
+        merged[k] = merged[k][order]
+    out = {k: v for k, v in old.items() if k not in merged}
+    out.update(merged)
+    out["extended"] = np.array([a["grid"] for a in add])
+    np.savez(f, **out)
+    print(f"\n  merged {len(add)} points into {f.name} "
+          f"({len(merged['grid'])} total)")
+
+
 # --------------------------------------------------------------------------- #
 # the summary                                                                  #
 # --------------------------------------------------------------------------- #
@@ -631,21 +731,35 @@ def report(smoke=False):
             at_bound=at_bound_any, hit_own_bound=hit_own_bound,
             shape_pct=r["shape_pct"], score_A=r["score_A"])
 
-    print(f"\n  HOW MUCH THE CONDITIONAL SLICE OVERSTATED EACH PARAMETER, at "
-          f"every grid point.\n  Each cell is profiled rise / conditional "
-          f"rise; the row is one parameter, read\n  outward from the "
-          f"incumbent. A row of small numbers is a parameter the other six\n"
-          f"  can absorb almost entirely.")
-    print(f"  {'param':<9}{'displacement ->':>0}")
+    print(f"\n  HOW MUCH THE CONDITIONAL SLICE OVERSTATED EACH PARAMETER. "
+          f"Each number is the profiled\n  rise divided by the conditional "
+          f"rise at the SAME grid point. It is nearly constant\n  along each "
+          f"curve, which is what makes it quotable as one number per "
+          f"parameter: both\n  curves are quadratic, so their ratio is a "
+          f"property of the parameter and not of how\n  far it was pushed. "
+          f"Its square root is the factor by which the conditional slice\n"
+          f"  overstated the parameter's WIDTH.")
+    print(f"  {'param':<9}{'at the lower edge':>26}{'at the upper edge':>26}"
+          f"{'across the whole grid':>24}{'width':>9}")
     for nm in summary:
         s = summary[nm]
         j = names.index(nm)
-        order = np.argsort(np.abs(s["grid"] - theta[j]))
+        d = s["grid"] - theta[j]
+        rat = np.where(s["cond_rise"] > 1e-12,
+                       s["rise"] / np.maximum(s["cond_rise"], 1e-30), np.nan)
         cells = []
-        for i in order[1:]:
-            c = s["cond_rise"][i]
-            cells.append(f"{s['rise'][i] / c:.4f}" if c > 1e-12 else "  --  ")
-        print(f"  {nm:<9}" + " ".join(f"{v:>8}" for v in cells))
+        for side in (-1, +1):
+            m = d * side > 0
+            if not m.any():
+                cells.append("  --  ")
+                continue
+            i = int(np.argmax(np.abs(d) * m))
+            cells.append(f"{d[i]:+.3f}: {rat[i]:.4f}")
+        good = np.isfinite(rat)
+        lo_r, hi_r = np.nanmin(rat[good]), np.nanmax(rat[good])
+        print(f"  {nm:<9}{cells[0]:>26}{cells[1]:>26}"
+              f"{f'{lo_r:.4f} to {hi_r:.4f}':>24}"
+              f"{1 / np.sqrt(np.nanmean(rat[good])):>8.1f}x")
 
     print(f"\n  WHAT THE EDGE OF EACH GRID COSTS PHYSICALLY. The incumbent "
           f"makes a "
@@ -660,6 +774,42 @@ def report(smoke=False):
         print(f"  {nm:<9}{float(s['shape_pct'][k]):>11.3f}{_PC}"
               f"{float(s['score_A'][k]):>10.4f}   "
               f"{nm} = {s['grid'][k]:+.4f}")
+
+    # not under --smoke: the bootstrap file is a PRODUCTION measurement, and
+    # comparing it against a 1/24 sample whose optimum is not the incumbent
+    # produces a number that means nothing
+    ident = HERE / "outputs" / "stage39_ident_clean.npz"
+    if ident.exists() and not smoke:
+        zi = np.load(ident, allow_pickle=True)
+        inames = [str(v) for v in zi["names"]]
+        boot = np.asarray(zi["boot"], float)
+        print(f"\n  AGAINST THE GALAXY BOOTSTRAP, re-measured on this same "
+              f"clean sample (12 draws,\n  `stage39_ident_clean.npz`). The two "
+              f"answer DIFFERENT questions and the gap between\n  them is the "
+              f"point: the bootstrap says how far a parameter MOVES when the "
+              f"2397\n  galaxies are resampled; the profile says how far it "
+              f"can be FORCED before the fit\n  visibly degrades. One "
+              f"percentage point of profile-shape error is a far larger\n"
+              f"  degradation than sampling noise, so the profile width should "
+              f"be the larger number —\n  by how much is what this column "
+              f"says.")
+        print(f"  {'param':<9}{'boot sd':>10}{'prof. width':>13}{'ratio':>8}"
+              f"{'rise at 1 sd':>14}   what one bootstrap sd costs")
+        for r in rows:
+            nm, j = str(r["name"]), int(r["index"])
+            if nm not in inames:
+                continue
+            sd = float(boot[:, inames.index(nm)].std())
+            s = summary[nm]
+            # `_displacement_for` returns both sides as positive magnitudes
+            w = float(np.nanmean([s["d_minus"], s["d_plus"]]))
+            grid, rise = s["grid"], s["rise"]
+            near = np.interp(sd, np.abs(grid - theta[j])[np.argsort(
+                np.abs(grid - theta[j]))], rise[np.argsort(
+                    np.abs(grid - theta[j]))])
+            print(f"  {nm:<9}{sd:>10.4f}{w:>13.4f}{w / sd:>8.1f}"
+                  f"{near:>14.5f}   {100 * near / RISE_1PCT:.2f}{_PC} of one "
+                  f"percentage point")
 
     if not smoke:
         flat = {}
@@ -679,6 +829,8 @@ if __name__ == "__main__":
         calibrate(smoke)
     elif "--only" in sys.argv:
         profile_one(sys.argv[sys.argv.index("--only") + 1], smoke)
+    elif "--extend" in sys.argv:
+        extend_one(sys.argv[sys.argv.index("--extend") + 1], smoke)
     elif "--report" in sys.argv:
         report(smoke)
     else:

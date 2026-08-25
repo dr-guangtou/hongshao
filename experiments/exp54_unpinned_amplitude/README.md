@@ -1417,3 +1417,176 @@ An empirical description in which already-deposited stars move outward — the
 "expansion" of central stellar profiles seen in massive galaxies — would supply
 the missing sign while keeping mass conserved, non-negative, and free of any
 stellar input. Sketched in `doc/journal/` and deliberately NOT started here.
+
+## Stage 3.9 (2026-08-25) — genuine profile likelihoods (`stage39_profile.py`), COMPLETE
+
+Plan: `doc/plans/2026-08-25-exp54-stage39-profile-likelihood.md`.
+Open question **B1, resolved**.
+
+**Every identifiability number this experiment has ever quoted overstated how
+well determined a parameter is, by a factor of 2.3 to 17.6 in width.** The
+model's conclusions do not change — nothing here depends on any single
+parameter's value — but the *precision* claimed for those values does.
+
+### What was wrong, and why it had to be measured rather than argued
+
+`fit.identifiability` and `stage35_time_law.report_identifiability` both move
+one parameter and hold the other six **fixed**. That is a **conditional slice**.
+It answers "how much worse does *this* fit get if I nudge one number". The
+question anyone means is "how much worse does the **best achievable** fit get if
+I insist on this value", and answering it requires re-optimising the other six
+at every value tried. Where parameters compensate one another the two differ,
+and they differ in one direction only: the profiled curve is never steeper than
+the conditional slice. `fit.py`'s own docstring said so and said not to quote
+the slice as evidence on its own. It had never been done.
+
+### The design, fixed before the run
+
+Eleven values per parameter, **geometric**, at `±1, 2, 4, 8, 16 × d0`, where
+`d0` is measured by bisection as the displacement at which the **conditional**
+rise reaches 0.10 in loss units — about 0.9 percentage points of profile-shape
+error — separately in each direction, because the loss is not symmetric (`c`
+must move `+5.02` to cost 2.0 and only `−0.40` to cost the same). The
+conditional slice is quadratic to three digits over two decades of rise, so
+each grid spans conditional rises from 0.10 to **25.6**. The conditional slice
+was then measured at the identical grid points, one loss evaluation each, so
+the headline comparison is point-by-point and needs no quadratic model of
+either curve. Two starts per point: the neighbouring point's solution
+(a continuation sweep outward from the centre) and the incumbent's own six
+values.
+
+**A Hessian-sized grid was tried first and rejected**, and the failure is a
+result in its own right. Across finite-difference steps spanning a factor of
+ten, the five largest eigenvalues of the loss Hessian are stable to better than
+0.1% while the two smallest move by a factor of **25** and one goes
+**negative**. That is not a convergence problem — re-optimising all seven
+parameters from the incumbent reproduces its loss exactly — it is cancellation:
+pulling a curvature of order 0.1 out of a matrix whose diagonal is of order 100.
+A seven-parameter model with two directions too flat to measure by differencing
+is precisely the situation in which conditional slices mislead.
+
+### The gate
+
+The centre grid point pins the parameter at its own incumbent value and
+re-optimises the other six, so it must return the incumbent's loss. **All seven
+returned 1.874253 to between 0 and 10⁻¹¹**, so the incumbent is genuinely
+converged and every rise below is measured against the right zero.
+
+### THE RESULT
+
+`figures/stage39_profile.png`. The ratio of profiled to conditional rise is
+nearly constant along each curve — both are quadratic — so it is a property of
+the parameter, and its square root is the factor by which the conditional slice
+overstated that parameter's **width**:
+
+| parameter | what it sets | conditional rise survives | width overstated by | determined to |
+|---|---|---|---|---|
+| `a_Mz` | how the mass dependence changes with redshift | 0.32% | **17.6x** | −0.41 to +0.77 |
+| `a_z` | how the efficiency changes with redshift | 0.42% | **15.4x** | −0.43 to +0.61 |
+| `a_M` | how it changes with halo mass | 0.50% | **14.2x** | −0.81 to +0.44 |
+| `a0` | mass kept by a `10^13.5 M_sun` halo at `z=0` | 0.69% | **12.1x** | −0.58 to +0.39 |
+| `b` | how the deposit size fraction changes with redshift | 1.45% | **8.3x** | −1.17 to +1.07 |
+| `log_f0` | the deposit size fraction at `z=0` | 1.88% | **7.3x** | −0.46 to +0.58 |
+| `c` | the shape of one deposit's profile | 19.71% | **2.3x** | −0.25 to +0.51 |
+
+"Determined to" means: **how far the parameter can move, in each direction,
+before the best achievable fit costs one percentage point of profile-shape
+error** — 13.79% to 14.79% typical error on the normalised curve of growth
+`M*(<R)/M*(<100 kpc)`, which is `Δloss = 0.114`. **It is not a confidence
+interval.** The loss is a weighted sum of two normalised scores, not a
+log-likelihood, so no threshold on it has any distributional meaning.
+
+Three parameters (`a_M` low, `a_z` high, `a_Mz` high) did not reach that
+threshold inside the first grid and were extended on that side alone, at 24 and
+32 times `d0`, by a rule fixed in `EXTEND_MULTIPLIERS` before the extension ran.
+All three then crossed it.
+
+### Reading the ordering, because it is not arbitrary
+
+The four **efficiency-law** parameters are the worst — the conditional slice
+overstated them 12 to 18-fold — and they are worst in the order of how directly
+they trade against one another. `a0`, `a_M`, `a_z` and `a_Mz` are the constant,
+two slopes and the cross term of one bilinear surface in halo mass and
+redshift, so displacing any one of them can be absorbed almost exactly by the
+other three tilting to compensate. The **size-law** pair `log_f0` and `b` is
+next at 7 to 8-fold: they trade against each other, and partly against the
+efficiency law through the total mass inside 100 kpc. The **deposit shape** `c`
+stands alone at **2.3-fold** — it is the only parameter of the seven that
+changes the shape of an individual deposit rather than how much mass is laid
+down or how far out it goes, so there is comparatively little for the others to
+do about it. **`c` is the one parameter of the seven whose previously quoted
+determination was roughly honest.**
+
+### Where the bounds bite, and where they do not (open question C7)
+
+- `log_f0`'s grid **reaches its upper bound of 0.0** — a deposit half-mass
+  radius equal to its halo's radius at redshift 0. But the one-percentage-point
+  crossing is at `+0.58`, i.e. `log_f0 = −0.26`, which is **inside** the bound.
+  So the reported width for `log_f0` is a property of the model, not of the
+  bound.
+- `c`'s grid reaches its lower bound of 0.2, and its crossing at `−0.25` is
+  likewise inside it.
+- One free parameter did hit a bound: at `b = −3.07`, far outside `b`'s
+  determined range, the re-optimised `log_f0` goes to exactly 0.0. That single
+  point is a property of the bound and is flagged as such; it does not touch any
+  quoted number.
+
+### Against the galaxy bootstrap, re-measured on the clean sample
+
+The stored bootstrap in `outputs/stage35_ident_PRE_ROW181/` was computed with
+the broken cross-match still inside the sample, so it could not be quoted beside
+these numbers. It was re-run with the same function, the same 12 draws and the
+same budget on the clean sample (`outputs/stage39_ident_clean.npz`): spreads
+0.9% to 8.0% of each parameter's own value, against 0.9% to 8.1% before, so
+that conclusion is unchanged.
+
+**The bootstrap and the profile answer different questions and the gap between
+them is informative.** The bootstrap says how far a parameter *moves* when the
+2397 galaxies are resampled; the profile says how far it can be *forced* before
+the fit visibly degrades. One bootstrap standard deviation costs between
+**0.24% and 1.62%** of one percentage point of profile-shape error — that is,
+resampling the galaxies moves the parameters by an amount the loss barely
+notices. The profile widths are **20 to 37 times** the bootstrap spreads. Both
+numbers are needed and neither replaces the other.
+
+**And the bootstrap's own budget was checked, because a flat valley is exactly
+where a limited optimiser would fake a small spread.** Four replicates were
+refitted from the same start with an eight-fold budget, 800 against 6400
+Nelder-Mead iterations: the parameters came back **bit-identical** on all four,
+and the wall clock was unchanged, so Nelder-Mead had converged well inside 800.
+The bootstrap spread is a measurement.
+
+### What this does and does not change
+
+**It does not change any conclusion.** No headline in this experiment rests on
+the value of a single parameter: the profile-shape error of 13.787%, the
+representational ceiling, the monotonicity limit of Section 8.10 and the four
+negative enrichments are all statements about what the model class can and
+cannot reach, not about where one coefficient sits.
+
+**It does change what may be said about the parameters themselves.** Any
+sentence of the form "the redshift slope is `+0.51 ± 0.02`" — which the
+conditional slice and the bootstrap together invited — must now be read as: the
+sample pins it near `+0.51`, and the fit does not visibly degrade anywhere
+between `+0.07` and `+1.12`. `fit.py`'s standing rule, that a parameter which
+fails these checks may stay in the model but its value is never quoted as a
+measurement, now applies to all seven and not to none of them.
+
+### Reproducing
+
+```
+export HONGSHAO_DATA_DIR=/Users/shuang/Desktop/tng300_mah_mprof
+PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage39_profile.py --calibrate
+for p in a0 a_M a_z a_Mz log_f0 b c; do
+  PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage39_profile.py --only $p &
+done; wait
+for p in a_M a_z a_Mz; do
+  PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage39_profile.py --extend $p &
+done; wait
+PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage39_profile.py --report
+PYTHONPATH=. uv run python -u experiments/exp54_unpinned_amplitude/stage39_figures.py
+```
+
+About 30 minutes per parameter with seven processes on ten cores (0.111 s per
+loss evaluation, ~13000 evaluations per parameter). Set `OMP_NUM_THREADS=1`:
+the evaluator is not limited by linear algebra, so threads only contend.
