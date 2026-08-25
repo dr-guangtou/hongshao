@@ -197,6 +197,18 @@ def run(law, smoke=False, freeze=None):
         flag = ""
         if l < best_l:
             best_th, best_l, flag = th, l, "   <- best so far"
+        # checkpoint after EVERY start, not only at the end. A nine-start fit
+        # of this model is five hours, and a kill or a crash four hours in
+        # should not lose four hours of converged optima.
+        if not smoke:
+            FITDIR.mkdir(parents=True, exist_ok=True)
+            np.savez(FITDIR / f"{label}.PARTIAL.npz", label=label, law=law,
+                     frozen=np.array(sorted(frozen)) if frozen else np.array([]),
+                     theta=best_th, loss=best_l, loss_incumbent=l0,
+                     theta_incumbent=theta,
+                     names=np.array(sp.theta_names), n_starts=i + 1,
+                     start_losses=np.array([v for v, _ in per_start]),
+                     start_thetas=np.array([t for _, t in per_start]))
         print(f"    start {i} (expansion {p0[base.n_theta]:+.3f}): loss "
               f"{l:.6f}, {', '.join(f'{n}={v:+.4f}' for n, v in zip(sp.x_names, th[base.n_theta:]))}"
               f"  [{(time.time() - ts) / 60:.1f} min]{flag}", flush=True)
@@ -230,6 +242,7 @@ def run(law, smoke=False, freeze=None):
 
     if not smoke:
         FITDIR.mkdir(parents=True, exist_ok=True)
+        (FITDIR / f"{label}.PARTIAL.npz").unlink(missing_ok=True)
         np.savez(FITDIR / f"{label}.npz", label=label, law=law,
                  frozen=np.array(sorted(frozen)) if frozen else np.array([]),
                  theta=best_th, loss=best_l, loss_incumbent=l0,
