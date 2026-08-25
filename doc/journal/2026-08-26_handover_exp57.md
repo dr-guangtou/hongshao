@@ -9,12 +9,27 @@
 
 ## The one-line result
 
-**An expansion term is the first thing in this program to move exp54's central
-defect — and the first three versions of it fail the reach gate, for a reason
-that is structural rather than a bad parameter value.** A fourth version,
-designed in response, is fitting.
+**An expansion term is the first thing in this programme to move exp54's central
+defect — and its RADIAL FORM decides everything.** Three homologous versions
+improve the fit and fail the reach gate worse than the model this experiment was
+designed not to repeat. A fourth, non-homologous, passes it decisively while
+achieving the best profile-shape error of any model tried. **Nothing is
+adopted**: it still fails one target gate, and the loss prefers a different
+basin that the gates reject.
 
----
+## The scoreboard, ordered by the gates and never by the loss
+
+| model | loss | shape error | G2 >50 kpc | G2 >148 | G5(a) | G5(b) | G5(c) | verdict |
+|---|---|---|---|---|---|---|---|---|
+| incumbent | 1.874253 | 13.787% | — | — | 0.270 | 0.045 | +0.0455 | reference |
+| **`X3` SMALL core, Rc = 2.61 kpc** | 1.833344 | **13.369%** | **2.2%** | **0.2%** | 0.210 | **0.039** | +0.0668 | **G2 PASS**, G5 ab**C** |
+| `X0` old power law | 1.840977 | 13.478% | 72.5% | 42.1% | 0.151 | 0.079 | +0.0121 | G2 FAIL |
+| `X1` + `c` frozen (control) | 1.851403 | 13.582% | 81.3% | 44.9% | 0.190 | 0.052 | −0.0196 | G2 FAIL, G5 all pass |
+| `X1` bounded homologous | 1.840466 | 13.454% | 85.0% | 52.1% | 0.169 | 0.076 | −0.0019 | G2 FAIL |
+| `X2` + time shape | 1.839900 | 13.463% | 76.1% | 45.0% | 0.156 | 0.079 | +0.0037 | G2 FAIL |
+| `X3` large core, Rc = 92 kpc | **1.831172** | 13.436% | 53.4% | 8.2% | 0.158 | 0.086 | −0.0049 | G2 FAIL |
+
+Limits: G2 ≤ 25% and ≤ 10%; G5(b) ≤ 0.060. Lower case = that part of G5 passes.
 
 ## What was asked and why
 
@@ -133,36 +148,31 @@ physical picture says AGN-driven expansion does.
 
 ## What is running
 
-`stage3_fit.py --only X3` (9 starts, ~25–35 min each, so ~4–5 h total) and
-`--only X2` (7 starts). Logs in
+`stage3_fit.py --only X3`, a 9-start confirmation run. **It is confirmation, not
+evidence the conclusion needs**: both basins were reproduced independently by
+`--tag smallcore --starts-only 0` and `--tag bigcore --starts-only 1`, and by
+starts 0/4 and 1/2/5 of the confirmation run itself. Logs in
 `/Users/shuang/.claude/jobs/eb8b15e6/tmp/logs57/`.
 
-## What is owed when they land
+## What is owed
 
-1. `stage2_gates.py --fit gompertz_log-E2-S2+X3` and `stage4_target.py --fit
-   ...` — **the question is whether `X3` passes G2.** If it does, the
-   experiment has a positive result; if it does not, homologous or not, the
-   reach problem is deeper than the radial law.
-2. Same for `X2`.
-3. Rebuild `stage5_figures.py` with all four laws.
-4. Update the README's verdict section, `doc/lessons.md`, `doc/todo.md`,
-   `doc/open_questions.md`, and the technical note.
+1. When the confirmation run lands, re-run `stage7_summary.py` and confirm the
+   two basins are what the 9 starts find. Nothing else depends on it.
+2. **The decision is the user's**: `X3` small-core is the only candidate that
+   passes the mechanism gates and it has the best profile-shape error of every
+   model tried, but it fails G5(c) and the loss prefers the gate-failing basin.
 
-## If `X3` passes G2 but G5(b) still fails
+## The one extension the evidence points at
 
-A diagnostic already run (`diagnose_decliners.py`) says what a shared law could
-condition on, and it was measured **before** fitting anything so the choice is
-not made after seeing which helps:
-
-| property, median | declining (1003) | not (1394) | r with the flag |
-|---|---|---|---|
-| log10 halo mass at z=0.4 | 13.294 | 13.282 | **+0.025** |
-| `t_half(t)/t` at z=0.4 | 0.548 | 0.617 | **−0.317** |
-
-**Halo mass cannot separate them; formation time partly can** — the centres
-that fall are the ones built early. `f_form` is already carried per deposit, so
-conditioning on it costs one shared parameter and no stellar information. The
-ceiling is that `r = −0.317`, about a tenth of the flag's variance.
+`diagnose_decliners.py`, run **before** anything was fitted so the choice could
+not be made after seeing which helped: the galaxies whose centres decline differ
+from the rest **in formation time and not in mass** — median `t_half/t` 0.548
+against 0.617, `r = −0.317` with the flag, against `r = +0.025` for halo mass.
+**The centres that fall are the ones that were built early.** A
+formation-time-conditioned expansion strength is therefore the one shared
+extension (one parameter, no stellar information, `f_form` already carried per
+deposit) with something real to condition on, and its ceiling is that
+`r = −0.317`. Open questions **C11** and **C12**.
 
 ## Standing constraints for whoever continues
 
