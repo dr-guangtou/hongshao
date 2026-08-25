@@ -176,8 +176,12 @@ class Problem:
 def fit(problem, starts=None, maxiter=4000, verbose=True):
     """Multi-start Nelder-Mead. Multi-start is MANDATORY here (exp53)."""
     spec = problem.spec
-    base = M.default_theta(spec)
     if starts is None:
+        # `default_theta` needs a full `model.Spec`; a caller that supplies its
+        # own starts may pass any object that can report `bounds()` -- which is
+        # how Stage 3.9 profiles a subset of the parameters through this same
+        # optimiser instead of a second, differently-behaved one.
+        base = M.default_theta(spec)
         rng = np.random.default_rng(0)
         starts = [base]
         for _ in range(3):

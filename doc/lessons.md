@@ -1482,3 +1482,41 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   The figure now assigns a sequential `cividis` color from the active grid and
   regenerates from saved outputs, so future grid extensions cannot repeat this
   failure.
+- **A conditional slice is not evidence that a parameter is determined, and the
+  gap is not small (exp54 Stage 3.9).** Displacing one parameter with the other
+  six held fixed overstated every one of seven parameters' widths, by 2.3x to
+  17.6x, and only 0.32% to 19.7% of the conditional loss rise survived
+  re-optimising the rest. The size of the overstatement is predictable from the
+  model's structure rather than from the fit: the four parameters that are the
+  constant, two slopes and cross term of one bilinear surface absorb each other
+  12-18x, while the one parameter that changes an individual deposit's radial
+  SHAPE is absorbed only 2.3x. Before quoting a parameter's precision, ask what
+  else in the model could undo a change to it.
+- **A finite-difference Hessian cannot deliver the small curvatures of a
+  correlated model, and its failure looks like a bug (exp54 Stage 3.9).**
+  Across step sizes spanning a factor of ten, the five largest eigenvalues were
+  stable to better than 0.1% while the two smallest moved 25x and one went
+  negative. It was cancellation — extracting a curvature of order 0.1 from a
+  matrix whose diagonal is of order 100 — not non-convergence, which was ruled
+  out separately by re-optimising all seven parameters from the incumbent and
+  recovering its loss exactly. Rule out non-convergence before trusting a
+  negative eigenvalue, and prefer profiling directly to predicting the profile.
+- **Size a scan from a measured property of the object, not from a round number
+  (exp54 Stage 3.9).** Each profile grid was laid at multiples of the
+  displacement at which the CONDITIONAL rise reaches a fixed value, measured by
+  bisection in each direction separately. That made every parameter's grid span
+  the same range of conditional damage regardless of its units, made the
+  asymmetry of the loss visible (one parameter needed +5.02 to cost what -0.40
+  cost), and made "how much survives" comparable across parameters.
+- **Declare the rule for extending a scan BEFORE seeing which side needs it
+  (exp54 Stage 3.9).** Three parameters failed to reach the reporting threshold
+  on one side. The extension used multipliers fixed in a module constant and
+  applied only to sides that fell short, so extending could not become a licence
+  to keep going until a number came out a preferred way.
+- **Check whether a spread you are about to quote is the optimiser's budget
+  (exp54 Stage 3.9).** The galaxy bootstrap refits each replicate from the
+  incumbent with a limited iteration cap, and a flat valley is exactly where a
+  limited optimiser would fake a small spread. Four replicates refitted with an
+  eight-fold budget returned bit-identical parameters in the same wall clock, so
+  the spread is a measurement. The check cost twenty minutes and protects every
+  number quoted next to it.

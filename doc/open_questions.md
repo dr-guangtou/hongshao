@@ -97,10 +97,30 @@ was tested independently in Stage 3.8 and also rejected, for a different reason
 ## B. Live, methodological
 
 ### B1. The identifiability claim is still not a profile likelihood
-The per-parameter curves reported everywhere are CONDITIONAL slices — the other
-parameters are held fixed. A genuine profile would re-optimise the rest at each
-grid point. Stated in `fit.py`'s docstring and in the note, but never done.
-Owed for the seven adopted parameters.
+**Status: RESOLVED 2026-08-25 (Stage 3.9). The conditional slices overstated
+EVERY parameter, by 2.3x to 17.6x in width. No conclusion changes; what may be
+said about the parameter values does.**
+
+Each of the seven was fixed on a geometric grid of eleven values and the other
+six re-optimised at every point, two starts each. The centre point of every grid
+returned the incumbent's loss of 1.874253 to between 0 and 1e-11, so the fit is
+converged and every rise is measured against the right zero.
+
+| | `a_Mz` | `a_z` | `a_M` | `a0` | `b` | `log_f0` | `c` |
+|---|---|---|---|---|---|---|---|
+| conditional rise that survives | 0.32% | 0.42% | 0.50% | 0.69% | 1.45% | 1.88% | 19.7% |
+| width overstated by | 17.6x | 15.4x | 14.2x | 12.1x | 8.3x | 7.3x | **2.3x** |
+| moves this far before the best fit costs 1 percentage point of shape error | −0.41/+0.77 | −0.43/+0.61 | −0.81/+0.44 | −0.58/+0.39 | −1.17/+1.07 | −0.46/+0.58 | −0.25/+0.51 |
+
+The ordering is the model's own structure: the four efficiency-law parameters
+are the constant, two slopes and cross term of ONE bilinear surface, so any one
+of them is absorbed by the other three tilting; the size pair trades against
+itself and partly against the efficiency law; `c` alone changes the shape of an
+individual deposit, and is the only one of the seven whose previously quoted
+determination was roughly honest. **These are not confidence intervals** — the
+loss is not a log-likelihood.
+
+**Newly raised by this, and NOT pursued** — see C9 and C10 below.
 
 ### B2. The deposit truncation radius has never been scanned
 `C = 3` halo radii is a convention. Owed: refit at `C = 1, 2, 3, 5` reporting
@@ -168,11 +188,46 @@ interpretable and their parameters are undetermined (smallest singular value
 basis weighted by the deposited mass, so the freedom is spent where the data
 is? That would make the bound tighter and the shape readable.
 
+### C9. A finite-difference Hessian cannot resolve this model's flat directions
+**Raised 2026-08-25 (Stage 3.9), unresolved and possibly not worth resolving.**
+Sizing the profile grids from the Gauss-Newton prediction `1/(H^-1)_jj` was
+tried first and failed: across finite-difference steps spanning a factor of ten,
+the five largest eigenvalues of the loss Hessian are stable to better than 0.1%
+while the two smallest move by a factor of 25 and one goes NEGATIVE. Not
+non-convergence — re-optimising all seven from the incumbent reproduces its loss
+exactly — but cancellation, pulling a curvature of order 0.1 out of a matrix
+whose diagonal is of order 100. **Question**: is there a cheap way to get the
+small curvatures (a Gauss-Newton `J^T J` from the residual Jacobian is positive
+semi-definite by construction and might work), or should any future
+identifiability claim simply be profiled directly, as Stage 3.9 did? The
+profile cost 30 minutes per parameter, so the answer may be that the cheap
+route is not needed.
+
+### C10. `c` is the only parameter the model does not absorb — is that a lever?
+**Raised 2026-08-25 (Stage 3.9), untested.** Six of the seven parameters are
+absorbed 7 to 18-fold by the others; the deposit shape `c` is absorbed only
+2.3-fold, because it is the only one that changes the shape of an individual
+deposit rather than how much mass is deposited or how far out it reaches. C1
+asks whether the model has ANY freedom that moves the outskirts independently of
+the centre, and Stage 3.6 suggested it does not. **Question**: does that
+2.3-fold number identify the deposit's radial shape as the one direction with
+genuine independent purchase, and therefore as where an extra shape parameter
+(C1) should be added? This is a suggestion from a degeneracy structure, not
+evidence; it would have to be tested by fitting a two-parameter deposit family.
+
 ### C7. The span solution sits at a parameter bound
 `log_f0` reached −0.0002 against a bound of 0.0, i.e. a deposit half-mass
 radius equal to its halo's radius at redshift 0. The reported 0.061 dex span is
 therefore partly a property of that bound. **Owed**: re-run with the bound
 relaxed, or establish that the bound is physically meant.
+
+**Partly answered 2026-08-25 (Stage 3.9), for the PRODUCTION fit but not for
+Stage 3.7's span solution.** Profiling `log_f0` runs its grid all the way to
+that bound, but the point at which the best achievable fit costs one percentage
+point of profile-shape error is `log_f0 = −0.26`, comfortably INSIDE it. So for
+the incumbent the bound is not binding and the reported width is a property of
+the model. Stage 3.7's span solution is a different fit under a different
+objective and is still owed the test.
 
 ### C8. THE CENTRAL DEFECT IS MOSTLY OUTSIDE THE MODEL CLASS
 **Measured 2026-08-25, before Stage 3.8's fits, and it largely dissolves that

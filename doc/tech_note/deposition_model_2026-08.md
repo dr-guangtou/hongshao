@@ -236,16 +236,103 @@ also reports:
   combination of parameters barely changes the prediction;
 - a **one-parameter conditional slice** for each parameter: the loss as that
   parameter is displaced with all others **held fixed**. This is *not* a profile
-  likelihood. A genuine profile would re-optimise the other parameters at every
-  point, and where parameters compensate one another the conditional slice can
-  rise steeply along a direction the profiled curve leaves nearly flat. **The
-  re-optimised version has not been run** and is on the to-do list; until it is,
-  the conditional slices should not be quoted as evidence that a parameter is
-  determined;
+  likelihood. A genuine profile re-optimises the other parameters at every
+  point, and where parameters compensate one another the conditional slice
+  rises steeply along a direction the profiled curve leaves nearly flat;
 - how stable the parameters are when galaxies are resampled.
 
 **A parameter that fails these checks may stay in the model, but its value is
 never quoted as a measurement.**
+
+#### 3.5.1 The conditional slices have now been checked against genuine profiles, and they overstated every parameter
+
+*Added 2026-08-25. This section previously said the profiled version "has not
+been run". It has now been run for all seven parameters of the adopted model,
+and the correction it forces is recorded here rather than by quietly editing the
+sentence away.*
+
+Each of the seven parameters was fixed on a grid of eleven values and **the
+other six re-optimised at every value**, from two starts — the neighbouring grid
+point's solution and the incumbent's own six values. The centre point of each
+grid, which pins a parameter at its own fitted value, returned the incumbent's
+loss of 1.874253 to between 0 and 10⁻¹¹ in all seven cases, so the fit is
+genuinely converged and every rise below is measured against the right zero.
+
+The ratio of the profiled rise to the conditional rise is nearly constant along
+each curve, because both are quadratic; its square root is the factor by which
+the conditional slice overstated that parameter's width:
+
+| parameter | conditional rise that survives | width overstated by |
+|---|---|---|
+| `a_Mz` | 0.32% | **17.6x** |
+| `a_z` | 0.42% | **15.4x** |
+| `a_M` | 0.50% | **14.2x** |
+| `a0` | 0.69% | **12.1x** |
+| `b` | 1.45% | **8.3x** |
+| `log_f0` | 1.88% | **7.3x** |
+| `c` | 19.71% | **2.3x** |
+
+The ordering is not arbitrary. The four efficiency-law parameters are the
+constant, the two slopes and the cross term of a single bilinear surface in halo
+mass and redshift, so displacing any one of them is absorbed almost exactly by
+the other three tilting to compensate. The two size-law parameters trade against
+each other and, through the total mass inside 100 kpc, partly against the
+efficiency law. The deposit shape `c` changes the shape of an individual
+deposit rather than how much mass is laid down or how far out it reaches, so
+there is little the others can do about it — **`c` is the only one of the seven
+whose previously quoted determination was roughly honest**.
+
+Quoted in the currency the rest of this note uses, each parameter can move this
+far in each direction before the **best achievable** fit costs one percentage
+point of profile-shape error (13.79% to 14.79% on the normalised curve of
+growth, `Δloss = 0.114`):
+
+| `a0` | `a_M` | `a_z` | `a_Mz` | `log_f0` | `b` | `c` |
+|---|---|---|---|---|---|---|
+| −0.58 / +0.39 | −0.81 / +0.44 | −0.43 / +0.61 | −0.41 / +0.77 | −0.46 / +0.58 | −1.17 / +1.07 | −0.25 / +0.51 |
+
+**These are not confidence intervals.** The loss is a weighted sum of two
+normalised scores, not a log-likelihood, so no threshold on it has any
+distributional meaning. They say how far a value can be forced before the fit
+visibly degrades, and nothing else.
+
+Two of the seven grids reach a hard parameter bound — `log_f0` its upper bound
+of 0, a deposit half-mass radius equal to its halo's radius at redshift 0, and
+`c` its lower bound of 0.2 — but in both cases the one-percentage-point
+crossing lies **inside** the bound, so neither reported width is a property of
+the bound. One free parameter does reach a bound: at `b = −3.07`, far outside
+`b`'s determined range, the re-optimised `log_f0` goes to exactly 0.
+
+**None of this experiment's conclusions changes.** No result rests on the value
+of a single parameter — the 13.787% profile-shape error, the representational
+ceiling of Section 8, the monotonicity limit of Section 8.10 and the four
+negative enrichments are all statements about what the model class can and
+cannot reach. What changes is what may be said about the parameters themselves,
+and the rule above now binds on all seven rather than on none.
+
+**A methodological point worth carrying forward.** Sizing the grids from the
+Gauss-Newton prediction `1/(H⁻¹)_jj` was tried first and does not work here:
+across finite-difference steps spanning a factor of ten, the five largest
+eigenvalues of the loss Hessian are stable to better than 0.1% while the two
+smallest move by a factor of 25 and one goes negative. That is cancellation, not
+non-convergence — pulling a curvature of order 0.1 out of a matrix whose
+diagonal is of order 100. A model with directions too flat to measure by
+differencing is exactly the model whose conditional slices cannot be trusted.
+
+The galaxy bootstrap was re-run on the clean sample alongside, since the stored
+one predates the row-181 fix: spreads of 0.9% to 8.0% of each parameter's own
+value, against 0.9% to 8.1% before. The bootstrap and the profile answer
+different questions — how far a parameter *moves* when the galaxies are
+resampled, against how far it can be *forced* before the fit degrades — and the
+profile widths are 20 to 37 times the bootstrap spreads, because one percentage
+point of shape error is a far larger degradation than sampling noise. One
+bootstrap standard deviation costs between 0.24% and 1.62% of that percentage
+point. The bootstrap's own optimiser budget was checked and is not the limit:
+four replicates refitted with an eight-fold budget returned bit-identical
+parameters.
+
+Detail in `experiments/exp54_unpinned_amplitude/README.md`, Stage 3.9, and the
+figure is `figures/stage39_profile.png`.
 
 ### 3.6 Why models are ranked by a panel and not by the loss
 
@@ -1351,9 +1438,10 @@ redshift *exponent*.
 
 ### 10.3 Owed to the record
 
-- **Genuine profile likelihoods for the seven parameters** — fix one, re-optimise
-  the other six, repeat across a grid. Until this is done, the identifiability
-  claim in Section 3.5 is incomplete.
+- ~~**Genuine profile likelihoods for the seven parameters**~~ — **DONE
+  2026-08-25, Section 3.5.1.** The conditional slices overstated every
+  parameter's width, by 2.3x (`c`) to 17.6x (`a_Mz`). No conclusion changes;
+  what may be said about the parameter values does.
 - **A sensitivity test on the deposit cut-off radius** at one, two, three and
   five halo radii, reporting how the total mass and the fitted efficiency move.
 - **Sensitivity of the Section 6 conclusions** to the 60% threshold, the
