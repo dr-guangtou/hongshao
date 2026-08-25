@@ -4,7 +4,7 @@ Branch `exp57-expansion-term`. Plan:
 `doc/plans/2026-08-26-exp57-expansion-term.md`. Problems:
 [`PROBLEMS.md`](PROBLEMS.md).
 
-**Status: COMPLETE except for a confirmation run.** Stages 0–7 done and gated. The 9-start `X3` fit is still running purely to confirm its two basins; both are already fitted, reproduced and gated independently.
+**Status: COMPLETE.** Stages 0–8 done and gated, including the 9-start `X3` confirmation run.
 
 ---
 
@@ -366,7 +366,11 @@ baseline: a tiny redistribution placed exactly where the defect is.
 **4. The loss ranks these almost exactly backwards.** `X3`'s multi-start search
 found **two basins** — a core radius of 2.6 kpc and a near-homologous one at
 92 kpc — and the loss prefers the near-homologous one, **1.831172 against
-1.833344**. Ranking by loss would have chosen the long-reach answer in every
+1.833344**. The completed 9-start run reproduces both: starts 0, 4 and 7 land in
+the small core, starts 1, 2, 5, 6 and 8 in the large one, and start 3 rails at
+the `log_Rc` bound with a worse loss. Start-to-start spread **2.2e-2**, against
+1e-11 for the single-basin laws — **a single start would have reported whichever
+basin it happened to fall into.** Ranking by loss would have chosen the long-reach answer in every
 comparison in this table. This program has now recorded that failure mode four
 times (exp38's loss-optimal basin, exp49's opposing gradients, exp52's correct
 profiles with the wrong mechanism, and now this).
@@ -444,9 +448,10 @@ between them is 20 to 40 throughout.
 - **G5(b)'s failure for the homologous laws is not fixable by a global
   strength.** Stage 1 measured why: the model's spread is 0.33× the data's, and
   expansion shifts a distribution without widening it.
-- **The `X3` result rests on two independently reproduced basins**, not on a
-  completed 9-start search — that run is still going and is confirmation, not
-  evidence the conclusion needs.
+- **G5(b) fails for every model except `X3` small-core** (0.039, better than the
+  null's 0.045) and the `c`-frozen control (0.052). Stage 1 measured why a single
+  global strength cannot fix it: the model's spread is 0.33× the data's, and
+  expansion shifts a distribution without widening it.
 
 ### What the evidence points at next
 

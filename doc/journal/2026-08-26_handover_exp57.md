@@ -158,19 +158,17 @@ while re-optimising the other seven moves it +0.046, and the compensation wins.
 
 ---
 
-## What is running
+## Nothing is running
 
-`stage3_fit.py --only X3`, a 9-start confirmation run. **It is confirmation, not
-evidence the conclusion needs**: both basins were reproduced independently by
-`--tag smallcore --starts-only 0` and `--tag bigcore --starts-only 1`, and by
-starts 0/4 and 1/2/5 of the confirmation run itself. Logs in
-`/Users/shuang/.claude/jobs/eb8b15e6/tmp/logs57/`.
+The 9-start `X3` confirmation completed and reproduces both basins: starts 0, 4,
+7 → small core (1.833344); starts 1, 2, 5, 6, 8 → large core (1.831172); start 3
+rails at the `log_Rc` bound with a worse loss. Start-to-start spread **2.2e-2**
+against 1e-11 for the single-basin laws — **a single start would have reported
+whichever basin it fell into.**
 
 ## What is owed
 
-1. When the confirmation run lands, re-run `stage7_summary.py` and confirm the
-   two basins are what the 9 starts find. Nothing else depends on it.
-2. **The decision is the user's**: `X3` small-core is the only candidate that
+**The decision is the user's**: `X3` small-core is the only candidate that
    passes the mechanism gates and it has the best profile-shape error of every
    model tried, but it fails G5(c) and the loss prefers the gate-failing basin.
 
