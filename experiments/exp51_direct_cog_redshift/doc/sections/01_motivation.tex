@@ -1,0 +1,73 @@
+\section{Scientific motivation}
+\label{sec:motivation}
+
+The classical stellar--halo mass relation compresses a galaxy and its halo to
+one number each,
+\begin{equation}
+  P(M_\star\mid M_{\rm h},z).
+\end{equation}
+That relation is foundational, but it omits two forms of structure that are
+especially relevant for massive central galaxies. First, a halo has an assembly
+history rather than only a present mass. Second, a galaxy has a radial stellar
+mass distribution rather than only a total mass. The motivating object in
+HongShao is therefore a profile-level, assembly-resolved extension,
+\begin{equation}
+  P\!\left[M_\star(<R,z)\given \Mpeak(t),\,\ctwo(t),\,z\right].
+  \label{eq:ultimate_shmr}
+\end{equation}
+This is a conditional distribution: halos with identical measured inputs need
+not host identical galaxies. The residual distribution is part of the result,
+not a nuisance to be driven to zero.
+
+This framing is motivated by the two-stage growth of massive galaxies. Early
+dissipative growth preferentially builds dense central stellar structure,
+whereas later mergers and stripping can add extended ex-situ envelopes. Halo
+growth is not expected to encode every baryonic event, orientation, or merger
+orbit, but it may encode the statistically predictable component of this
+evolution. The broader galaxy--halo literature supports treating both mass and
+assembly as possible predictors rather than assuming a scalar relation is
+sufficient \citep{Wechsler2018}.
+
+Earlier HongShao experiments established a clear statistical connection by
+predicting principal-component coefficients of the curve of growth. PCA is a
+powerful compression \citep{Jolliffe2002}, but an individual component is a
+sample-defined weighted combination of radii. It does not immediately answer a
+question such as ``does an earlier halo transition predict a larger central
+mass fraction?'' The deposition-and-migration model attacks this interpretive
+problem from the opposite direction, explicitly accumulating and moving mass,
+but necessarily introduces assumptions about deposition kernels, efficiencies,
+and radial migration.
+
+Experiments 50 and 51 study a third route. They retain a statistical map but
+replace opaque galaxy-side PCA coefficients with directly readable profile
+coordinates. The central question is
+\begin{equation}
+  P\!\left(\vect{\theta}_{\cog}\given
+  \vect{\theta}_{\rm MAH},\ctwo,z\right),
+  \label{eq:central_question}
+\end{equation}
+where every element of $\vect{\theta}_{\cog}$ is a stellar mass, mass fraction,
+or enclosed-mass radius. ``Physical'' is used here in a phenomenological sense:
+the intermediate variables have physical meanings, but the fitted conversion
+is not derived from conservation laws and is not claimed to be causal.
+
+\subsection{Questions addressed by the two experiments}
+
+\ExpFifty{} asks whether this readable conversion can match the established PCA
+reference at one epoch, $z=0.4$. It separately tests whether halo assembly shape
+and halo concentration carry information beyond final halo mass, whether the
+model must be generative, and whether symbolic regression can expose a compact
+nonlinear relation.
+
+\ExpFiftyOne{} asks whether the result survives from $z=0.4$ to $z=2$. It also
+separates two uses that are scientifically distinct: reconstructing the
+progenitor history of a population selected at $z=0.4$, and painting galaxies
+onto a halo catalog selected at the prediction epoch. The latter must not use
+halo growth that has not yet occurred. Finally, \ExpFiftyOne{} tests whether a
+simple temporal residual model yields coherent stochastic galaxy histories.
+
+Throughout this report, every numerical comparison states the measured
+quantity, its reference, and whether lower or higher values are preferable.
+The intent is to make the logical chain auditable rather than to present only a
+scoreboard.
+

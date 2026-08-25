@@ -1,0 +1,125 @@
+\section{Notation and parameter dictionary}
+\label{app:notation}
+
+\begin{longtable}{@{}p{0.24\textwidth}p{0.23\textwidth}p{0.45\textwidth}@{}}
+  \caption{Symbols used throughout the report.}\label{tab:notation}\\
+  \toprule
+  Symbol & Units or domain & Definition \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Symbol & Units or domain & Definition \\
+  \midrule
+  \endhead
+  $t$, $z$ & Gyr, dimensionless & Cosmic time and redshift \\
+  $\Mpeak(t)$ & $\Msun$ & Maximum halo mass attained up to time $t$ \\
+  $M_p$ & $\Msun$ & \diffmah{} normalization at its fitting endpoint \\
+  $t_c$ & Gyr & \diffmah{} transition time \\
+  $\alpha_{\rm early}$ & dimensionless & Early logarithmic halo growth index \\
+  $\alpha_{\rm late}$ & dimensionless & Late logarithmic halo growth index \\
+  $\ctwo$ & dimensionless & $\Rtwo/r_s$ halo concentration \\
+  $M_\star(<R)$ & $\Msun$ & Projected stellar mass enclosed within radius $R$ \\
+  $M_{\star,\rm tot}$ & $\Msun$ & Stellar mass within the outer CoG radius, about 148.2 kpc \\
+  $F_\star(R)$ & $[0,1]$ & Normalized stellar CoG \\
+  $f_2$ & $[0,1]$ & Fraction of total stellar mass inside 2 kpc \\
+  $R_p$ & kpc & Radius enclosing fraction $p$ of total stellar mass \\
+  $R_{q,\rm out}$ & kpc & Radius enclosing fraction $q$ of the mass outside 2 kpc \\
+  $\vect{\theta}_{\rm MAH}$ & four-vector & \diffmah{} halo-history coordinates \\
+  $\vect{\theta}_{\cog}$ & five-vector & Readable transformed CoG coordinates \\
+  $\vect{\Sigma}(\vect{x})$ & target$^2$ & Halo-dependent coordinate residual covariance \\
+  $\rho$ & $[-1,1]$ & AR(1)-in-epoch residual correlation coefficient \\
+  CRPS & dex & Proper score of the decoded predictive profile; lower is better \\
+  \bottomrule
+\end{longtable}
+
+\section{Exact degree-2 feature basis}
+\label{app:basis}
+
+For the five-feature vector ordered as
+\begin{equation}
+  (\logten M_p,u_c,\alpha_{\rm early},\alpha_{\rm late},\ctwo),
+\end{equation}
+the implementation first standardizes every feature using the training fold.
+It then uses an intercept, all five linear terms, and exactly these seven
+quadratic terms:
+\begin{enumerate}
+  \item $(\logten M_p)^2$;
+  \item $u_c\alpha_{\rm late}$;
+  \item $\alpha_{\rm early}^2$;
+  \item $\alpha_{\rm late}\ctwo$;
+  \item $\alpha_{\rm late}^2$;
+  \item $(\logten M_p)\alpha_{\rm early}$;
+  \item $(\logten M_p)\alpha_{\rm late}$.
+\end{enumerate}
+Every symbol in this list denotes its standardized version inside the fitted
+design matrix. The same basis is used for every target coordinate, while each
+target receives its own regression coefficients.
+
+\section{Derived aperture targets}
+\label{app:apertures}
+
+The direct profile evaluation includes the cumulative mass inside 10 kpc and
+three annular masses:
+\begin{align}
+  M_{0-10} &= M_\star(<10\kpc),\\
+  M_{10-30} &= M_\star(<30\kpc)-M_\star(<10\kpc),\\
+  M_{30-50} &= M_\star(<50\kpc)-M_\star(<30\kpc),\\
+  M_{50-100} &= M_\star(<100\kpc)-M_\star(<50\kpc).
+\end{align}
+RMS values are calculated after taking $\logten(M/\Msun)$ for each positive
+cumulative or annular mass.
+
+\section{Reproducibility map}
+\label{app:reproducibility}
+
+The committed experiment scripts and their responsibilities are:
+\begin{description}[style=nextline,leftmargin=12mm]
+  \item[\texttt{experiments/exp50\_direct\_cog\_map/model.py}]
+  \ExpFifty{} coordinate compression, ordering transforms, monotone decoder,
+  and empirical CRPS.
+  \item[\texttt{experiments/exp50\_direct\_cog\_map/run.py}]
+  Single-epoch folds, PCA reference, controls, metrics, and primary figures.
+  \item[\texttt{experiments/exp50\_direct\_cog\_map/symbolic.py}]
+  Nested residual symbolic regression.
+  \item[\texttt{experiments/exp50\_direct\_cog\_map/concentration\_history.py}]
+  Five-epoch concentration-history extension.
+  \item[\texttt{experiments/exp51\_direct\_cog\_redshift/model.py}]
+  Central-censored outer-mass coordinates and decoder.
+  \item[\texttt{experiments/exp51\_direct\_cog\_redshift/run.py}]
+  Five-epoch descendant-conditioned comparison, coefficient closure, controls,
+  and temporal coherence.
+  \item[\texttt{experiments/exp51\_direct\_cog\_redshift/concentration.py}]
+  Concurrent and historical concentration tests.
+  \item[\texttt{experiments/exp51\_direct\_cog\_redshift/epoch\_local.py}]
+  Truncated-history \diffmah{} fitting and portable prediction tests.
+  \item[\texttt{experiments/exp51\_direct\_cog\_redshift/symbolic\_z2.py}]
+  Corrected nested residual symbolic search at $z=2$.
+\end{description}
+
+All experiment figures and numerical outputs are regenerable and gitignored.
+Their manifests record the code commit, dirty-state flag, and key run
+parameters. The LaTeX source of this report is committed; its copied figure
+assets and compiled PDF are kept under the report's gitignored directories.
+
+\section{Report-specific mathematical audit checklist}
+\label{app:audit}
+
+Before accepting the compiled report, the following identities and conventions
+must agree with the implementation:
+\begin{enumerate}
+  \item logarithms are base 10 unless an exponential or logistic function is
+  written explicitly;
+  \item $u_c=\logten(t_c/\gyr)$ and $k=3.5$;
+  \item the \diffmah{} mass normalization is located at the stated endpoint;
+  \item the CoG gap coordinates are $\logten(\Delta\logten R)$;
+  \item \ExpFiftyOne{} outer quantile levels are $f_2+(1-f_2)q$;
+  \item the degree-2 mean contains exactly seven appended terms;
+  \item the variance, not the standard deviation, is the exponential linear
+  model in \cref{eq:heteroscedastic};
+  \item covariance is assembled as $\operatorname{diag}(\sigma)\vect{C}
+  \operatorname{diag}(\sigma)$;
+  \item all quoted prediction scores are held out, while representation floors
+  are explicitly labeled in sample;
+  \item positive CRPS differences in the parity tables favor PCA because lower
+  CRPS is better.
+\end{enumerate}

@@ -1,0 +1,163 @@
+\section{Experiment 51: design across redshift}
+\label{sec:exp51_methods}
+
+\ExpFiftyOne{} extends the direct conversion to five epochs and asks whether it
+can be made portable. Its tests are ordered from mechanical representation
+checks to increasingly strong predictive claims. The main sample contains 2395
+galaxies; the epoch-local and concentration analyses use the 2365-galaxy common
+sample. All model comparisons use five held-out galaxy folds and 32 stochastic
+draws unless stated otherwise.
+
+\subsection{Why the CoG coordinates changed}
+
+A small development subset did not contain the most compact valid object in the
+full five-epoch sample. During the full-sample representation preflight, one
+$z=2$ galaxy was found to contain 81.1 per cent of its measured stellar mass
+inside 2 kpc. Its ordinary $R_{20}$ and $R_{50}$ are both below the first radial
+grid point. Assigning $R_{20}=R_{50}=2\kpc$ would violate strict ordering;
+discarding the object would remove exactly the type of compact galaxy the model
+must retain.
+
+The outer-mass definition in \cref{eq:outer_level,eq:exp51_coordinates} solves
+this measurement problem without adding a parametric inner profile. The first
+coordinate still fixes the 2-kpc fraction, while the other three radii describe
+the resolved distribution of the remaining mass. The representation is
+revalidated independently at every epoch before fitting any halo relation.
+
+\subsection{Independent single-epoch ceilings}
+
+At each redshift, the readable linear and degree-2 models are fitted
+independently and compared with a three-component PCA model on identical folds.
+The readable representation passes an epoch if
+\begin{equation}
+  \mathrm{CRPS}_{\rm readable}(z)-\mathrm{CRPS}_{\rm PCA}(z)
+  \leq s_{\rm fold,PCA}(z).
+  \label{eq:exp51_parity_gate}
+\end{equation}
+This stage answers whether a direct map is feasible at each snapshot. It does
+not yet assert that one relation evolves smoothly with redshift.
+
+At $z=2$, additional controls compare final descendant mass alone, concurrent
+halo mass alone, complete descendant \diffmah{}, shuffled descendant MAH shape,
+and complete descendant \diffmah{} plus concentration. These controls reveal
+whether a superficially rich final-descendant feature vector is actually more
+informative than the halo mass at the correct epoch.
+
+\subsection{Descendant-conditioned and epoch-local maps}
+\label{sec:two_scopes}
+
+The two prediction scopes are shown in \cref{fig:information_boundary}. For a
+population selected at $z=0.4$, the descendant-conditioned relation is
+\begin{equation}
+  P\!\left[\vect{\theta}_{\cog}(z)\given
+  \vect{\theta}_{\rm MAH}^{\,z=0.4},\ctwo(z=0.4)\right].
+  \label{eq:descendant_map}
+\end{equation}
+The complete history is a property of the selected descendant, even when the
+target is its earlier progenitor. This model is useful for reconstructing
+histories of a low-redshift-selected sample.
+
+For an independently selected catalog at redshift $z$, the portable relation is
+\begin{equation}
+  P\!\left[\vect{\theta}_{\cog}(z)\given
+  \vect{\theta}_{\rm MAH}^{\,\leq t_z;t_z},\ctwo(z)\right],
+  \label{eq:local_map}
+\end{equation}
+where \diffmah{} is fitted only to $t\leq t_z$ and anchored at $t_z$. The
+notation $\leq t_z;t_z$ states both the data boundary and the fit endpoint.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      font=\small,
+      epoch/.style={circle,draw,minimum size=7mm,inner sep=0pt},
+      box/.style={draw,rounded corners,align=center,minimum height=11mm,minimum width=34mm},
+      arrow/.style={-{Latex[length=2.2mm]},thick}
+    ]
+    \node[font=\bfseries,hsblue] at (0,2.2) {Descendant-conditioned};
+    \draw[thick,hsblue] (-3,1.2) -- (3,1.2);
+    \foreach \x/\z in {-2.5/2.0,-1.25/1.5,0/1.0,1.25/0.7,2.5/0.4}{
+      \node[epoch,fill=white] (d\x) at (\x,1.2) {};
+      \node[below=2mm] at (\x,1.2) {$z=\z$};
+    }
+    \draw[very thick,hsblue,-{Latex[length=2.5mm]}] (-2.5,1.2) -- (2.5,1.2);
+    \node[box,draw=hsblue,below=13mm] (dfit) at (0,1.2) {one complete-history fit\\anchored at $z=0.4$};
+    \draw[arrow,hsblue] (2.5,1.2) -- (dfit.north east);
+
+    \node[font=\bfseries,hsgreen] at (0,-2.0) {Epoch-local};
+    \draw[thick,hsgreen] (-3,-3.0) -- (3,-3.0);
+    \foreach \x/\z in {-2.5/2.0,-1.25/1.5,0/1.0,1.25/0.7,2.5/0.4}{
+      \node[epoch,fill=white] at (\x,-3.0) {};
+      \node[below=2mm] at (\x,-3.0) {$z=\z$};
+      \draw[very thick,hsgreen,-{Latex[length=1.8mm]}] (-3,-2.72) -- (\x,-2.72);
+    }
+    \node[align=center,font=\footnotesize,text=hsgray] at (0,-4.05)
+      {each prediction uses a new fit truncated and anchored at that epoch};
+  \end{tikzpicture}
+  \caption{Information boundary in \ExpFiftyOne{}. The descendant-conditioned
+  model may use later growth because the population is selected by its final
+  descendants. The epoch-local model is restricted to information available by
+  each prediction epoch and is the portable form of the conversion.}
+  \label{fig:information_boundary}
+\end{figure}
+
+The official halo history is truncated at every epoch and fitted for every
+galaxy with $t\geq1\gyr$. This produces $2365\times5=11825$ epoch-local
+\diffmah{} fits. A current-halo-mass-only baseline and mass-conditioned MAH-shape
+and concentration shuffles are repeated at each snapshot.
+
+\subsection{Held-epoch coefficient closure}
+
+Smooth-looking coefficient curves are not sufficient evidence for a
+continuous-redshift model. For each interior epoch, that epoch is omitted, the
+descendant-conditioned relation is fitted at the other four snapshots, and its
+coefficients are interpolated quadratically to the missing redshift. The
+interpolated prediction is compared with both a direct fit and the nearest
+available snapshot. The predeclared criterion is
+\begin{equation}
+  \frac{\mathrm{CRPS}_{\rm interp}(z)}
+       {\mathrm{CRPS}_{\rm direct}(z)}-1 < 0.05.
+  \label{eq:closure_gate}
+\end{equation}
+Because the descendant features are identical at all target epochs, one
+training-fold feature standardization is meaningful across this test. The same
+procedure cannot yet be transferred mechanically to the epoch-local features,
+whose distributions and physical anchors evolve with redshift.
+
+\subsection{Concentration at the correct epoch}
+
+With descendant \diffmah{} held fixed, three concentration descriptions are
+compared: $\ctwo(z=0.4)$, concurrent $\ctwo(z)$, and all earlier concentration
+measurements available by $z$. Concurrent and historical concentration values
+are separately shuffled within concurrent halo-mass bins. This identifies
+information in the halo--galaxy pairing rather than improvement caused solely
+by extra columns or their marginal distributions.
+
+\subsection{Temporal residual coherence}
+\label{sec:ar1}
+
+Independent snapshot draws would produce discontinuous individual histories,
+while reusing one residual vector at all epochs would make histories too
+persistent. The out-of-fold coordinate residuals are standardized and their
+cross-epoch correlation is summarized by
+\begin{equation}
+  \operatorname{Corr}(\epsilon_{a,i},\epsilon_{a,j})
+  \approx \rho^{|i-j|},
+  \label{eq:ar1}
+\end{equation}
+where $a$ indexes a profile coordinate and $i,j$ index the ordered snapshots.
+The fitted scalar $\rho$ is used to draw an AR(1)-in-epoch latent sequence, while
+the within-epoch coordinate covariance retains the model in
+\cref{eq:covariance}. Coherence is judged using the Spearman rank correlation
+of total mass, $R_{50}$, and $f_2$ between snapshots. This tests galaxy histories
+directly; no collection of single-epoch scores can replace it.
+
+\subsection{Symbolic transfer at \texorpdfstring{$z=2$}{z=2}}
+
+The final stage repeats the nested-fold residual symbolic search using only the
+epoch-local $z=2$ inputs. Four models are compared: linear, the three stable
+$z=0.4$ terms, a new $z=2$ symbolic search, and the dense degree-2 relation.
+The purpose is not to maximize the symbolic search budget. It is to test whether
+the low-complexity nonlinear structure discovered at $z=0.4$ transfers to a
+different epoch and input definition.
+

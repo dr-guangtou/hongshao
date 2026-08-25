@@ -1580,3 +1580,41 @@ Cross-experiment plan. Mirrors the phase sequence in
   0.12% worse. **Decision:** retain the readable conversion as a successful
   experimental alternative to PCA; test concentration history across epochs
   before considering library graduation.
+
+## exp51 — redshift evolution of the readable CoG conversion
+
+- [x] Repeat the direct DiffMAH-to-CoG mapping at z=0.7, 1.0, 1.5, and 2.0 on
+  the same progenitor sample and held-out folds. Separate descendant-conditioned
+  prediction, which may use the final halo's complete DiffMAH fit, from
+  epoch-local prediction using only information available by that epoch.
+  Measure representation stability, parity with PCA, coefficient interpolation
+  across redshift, cross-epoch residual coherence, and the incremental value of
+  concentration measured at the correct epoch. Require direct profile figures
+  and mass-conditioned shuffled controls before interpreting an assembly
+  signal. **Result:** on 2,395 galaxies, the five readable profile coordinates
+  pass the matched PCA parity test at every snapshot from z=0.4 to z=2; their
+  profile CRPS is worse by only 0.00018--0.00070 dex, below the PCA score's
+  measured fold-to-fold variation. Interpolating descendant-conditioned model
+  coefficients worsens held-epoch CRPS by only 0.43--1.23%, within the 5% gate.
+  More importantly, fitting DiffMAH only to halo history available at each
+  prediction epoch and adding concurrent concentration lowers profile CRPS by
+  20.79--25.41% relative to current halo mass alone. At z=1.5 and z=2, this
+  portable model is 8.28% and 8.17% better than using the final descendant's
+  complete DiffMAH parameters. Concurrent concentration improves on z=0.4
+  concentration by 2.23--4.66% at z>0.4, and mass-conditioned shuffles remove
+  the gain. Correlated stochastic draws substantially repair the conditional
+  mean's excessive cross-epoch size-rank persistence, though the z=0.4-to-2
+  correlation is slightly too weak. A nested z=2 symbolic search improves the
+  linear map by only 1.00%, versus 5.01% for dense degree-2 terms, so no compact
+  redshift-independent equation is adopted. **Decision:** retain the readable
+  degree-2 conversion as the working direct-map candidate. Before library
+  graduation, test held-epoch coefficient closure for the epoch-local inputs
+  under one common physical scaling convention and refine the temporal
+  residual model.
+  **Documentation:** a 35-page mathematical and methodological report covering
+  Exp50 and Exp51 is maintained in
+  `experiments/exp51_direct_cog_redshift/doc/`. It includes exact coordinate
+  definitions, the inverse monotone decoder, the probabilistic model, direct
+  profile figures, control logic, claim qualifications, and a reproducibility
+  map. The source compiles without unresolved references or overflowing text;
+  the generated PDF and staged figure copies are gitignored.

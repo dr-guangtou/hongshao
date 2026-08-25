@@ -1,0 +1,266 @@
+\section{Experiment 51: results}
+\label{sec:exp51_results}
+
+\subsection{The high-redshift-safe coordinates remain accurate}
+
+\Cref{tab:representation_redshift} shows the median RMS between each measured
+CoG and its reconstruction from five coordinates. The readable error remains
+between $0.00367$ and $0.00415\dex$ across all five snapshots. PCA is better by
+$0.00018$--$0.00059\dex$, but both representations remain far below the
+halo-to-profile prediction error. The central-censored coordinates therefore
+solve the unresolved-radius problem without materially degrading compression.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Median full-CoG reconstruction RMS in dex. Lower is better. These
+  are representation floors, not held-out halo predictions.}
+  \label{tab:representation_redshift}
+  \begin{tabular}{@{}lrrrrr@{}}
+    \toprule
+    Representation & $z=0.4$ & $z=0.7$ & $z=1.0$ & $z=1.5$ & $z=2.0$ \\
+    \midrule
+    Readable outer-mass coordinates & 0.00369 & 0.00367 & 0.00392 & 0.00415 & 0.00408 \\
+    PCA, three components & 0.00334 & 0.00339 & 0.00374 & 0.00385 & 0.00349 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{The readable map remains competitive with PCA}
+
+\Cref{tab:parity_redshift} gives the held-out profile CRPS. At every epoch the
+readable degree-2 model is slightly worse than PCA, by $0.00018$--$0.00070\dex$.
+Each difference is smaller than the measured PCA fold-to-fold standard
+deviation at that epoch, $0.00117$--$0.00333\dex$. The readable map therefore
+passes the predefined parity gate at all five snapshots.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Five-fold held-out descendant-conditioned profile CRPS in dex.
+  Lower is better. $\Delta$ is readable minus PCA, so positive values favor
+  PCA.}
+  \label{tab:parity_redshift}
+  \begin{tabular}{@{}lrrrrr@{}}
+    \toprule
+    Quantity & $z=0.4$ & $z=0.7$ & $z=1.0$ & $z=1.5$ & $z=2.0$ \\
+    \midrule
+    Readable degree-2 & 0.06253 & 0.06651 & 0.07236 & 0.08067 & 0.09354 \\
+    PCA degree-2 & 0.06223 & 0.06618 & 0.07167 & 0.08050 & 0.09294 \\
+    $\Delta$ & 0.00030 & 0.00033 & 0.00070 & 0.00018 & 0.00060 \\
+    PCA fold standard deviation & 0.00181 & 0.00169 & 0.00117 & 0.00261 & 0.00333 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Nonlinearity becomes increasingly important toward high redshift. Relative to
+the readable linear model, the degree-2 mean lowers profile CRPS by 3.42 per
+cent at $z=0.4$, 8.33 per cent at $z=0.7$, 16.40 per cent at $z=1$, 21.63 per
+cent at $z=1.5$, and 21.47 per cent at $z=2$. The stable profile coordinates do
+not imply a redshift-independent linear halo relation.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_redshift_summary.pdf}
+  \caption{Summary of the descendant-conditioned five-epoch experiment.
+  Panel A tests only the CoG representation; panel B compares held-out
+  probabilistic prediction; panel C illustrates coefficient evolution; panel D
+  tests interpolation after removing an entire epoch.}
+  \label{fig:exp51_summary}
+\end{figure}
+
+\subsection{Concurrent halo mass is a stronger high-redshift baseline}
+
+At $z=2$, the final-descendant-mass-only model has a median
+conditional-mean profile RMS of $0.18255\dex$. Concurrent $z=2$ halo mass alone lowers this to
+$0.12501\dex$, an improvement of $0.05754\dex$. Complete descendant \diffmah{}
+without concentration gives $0.13315\dex$, worse than concurrent mass alone by
+$0.00814\dex$. Shuffling descendant MAH shape gives $0.18400\dex$, close to the
+final-descendant-mass baseline. Adding $z=0.4$ concentration to descendant
+\diffmah{} lowers the error to $0.13028\dex$ but does not overtake concurrent
+mass. These controls warn that ``more history'' is not automatically a better
+feature description when its normalization belongs to the wrong epoch.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_z2_predictions.pdf}
+  \caption{Descendant-conditioned $z=2$ predictions in three concurrent
+  halo-mass bins. Top panels compare median CoGs; bottom panels show the median
+  fractional conditional-mean residual and its 16th--84th percentile range.
+  Median trends can be accurate while individual residuals remain broad.}
+  \label{fig:exp51_z2_descendant}
+\end{figure}
+
+\subsection{Descendant-conditioned coefficients pass held-epoch closure}
+
+At $z=0.7$, $1.0$, and $1.5$, direct-fit CRPS is $0.06651$, $0.07236$, and
+$0.08067\dex$. Interpolating coefficients without fitting the held epoch gives
+$0.06733$, $0.07267$, and $0.08160\dex$, which is worse by only 1.23, 0.43, and
+1.15 per cent. All pass the 5 per cent gate in \cref{eq:closure_gate}. Copying
+the nearest available epoch gives $0.07530$, $0.08198$, and $0.10665\dex$, which
+is substantially worse than interpolation.
+
+This result establishes a continuous-redshift route for the
+descendant-conditioned feature definition. It does not establish closure for
+epoch-local inputs, because their normalizations and distributions change with
+the fitting endpoint.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_coefficient_evolution.pdf}
+  \caption{Evolution of the fitted standardized linear coefficients for all
+  five readable profile coordinates. The figure is descriptive; the actual
+  evidence for redshift continuity is the held-epoch predictive test, not the
+  visual smoothness of these lines.}
+  \label{fig:exp51_coefficients}
+\end{figure}
+
+\subsection{Epoch-local \diffmah{} is feasible and stronger at high redshift}
+
+All 2365 galaxies receive valid \diffmah{} fits at all five truncation epochs.
+The 11825 fits take 37.86 seconds in the measured run. Median mass-history
+reconstruction RMS decreases from $0.0707\dex$ for fits ending at $z=0.4$ to
+$0.0505\dex$ for fits ending at $z=2$. This decrease partly reflects the shorter
+high-redshift fitted interval and must not be interpreted as stronger parameter
+identification.
+
+\Cref{tab:local_crps} compares the models using profile CRPS. Adding local
+\diffmah{} and concurrent concentration lowers CRPS by 20.79--25.41 per cent
+relative to concurrent halo mass alone. At $z=1.5$ and $z=2$, the local model
+has CRPS $0.07197$ and $0.08363\dex$, compared with $0.07847$ and
+$0.09107\dex$ for complete descendant \diffmah{} with the same concurrent
+concentration. The epoch-local model is better by 8.28 and 8.17 per cent. The
+high-redshift predictive signal therefore does not depend on access to later
+halo growth.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Held-out profile CRPS in dex for the epoch-local analysis. Lower is
+  better. The local model uses only history available by the listed epoch.}
+  \label{tab:local_crps}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}lrrrrr@{}}
+    \toprule
+    Model & $z=0.4$ & $z=0.7$ & $z=1.0$ & $z=1.5$ & $z=2.0$ \\
+    \midrule
+    Concurrent halo mass only & 0.08434 & 0.08266 & 0.08788 & 0.09649 & 0.11084 \\
+    Local \diffmah{} & 0.07091 & 0.07186 & 0.07500 & 0.07928 & 0.09174 \\
+    Local \diffmah{} + concurrent $c$ & 0.06443 & 0.06548 & 0.06726 & 0.07197 & 0.08363 \\
+    Local MAH shape shuffled & 0.06806 & 0.07013 & 0.07381 & 0.08141 & 0.09881 \\
+    Local concentration shuffled & 0.06798 & 0.06930 & 0.07148 & 0.07577 & 0.08670 \\
+    Descendant \diffmah{} + concurrent $c$ & 0.06310 & 0.06430 & 0.06887 & 0.07847 & 0.09107 \\
+    \bottomrule
+  \end{tabular}}
+\end{table}
+
+The real pairing between a galaxy and its MAH shape becomes more valuable with
+redshift. Relative to concurrent mass alone, real local \diffmah{} plus
+concentration improves CRPS by 23.60 percentage points at $z=0.4$ and 24.55
+points at $z=2$. When MAH shape is shuffled at fixed concurrent mass, the
+improvements are only 19.29 and 10.85 points. The additional value of the real
+pairing is therefore 4.31 percentage points at $z=0.4$ and 13.69 points at
+$z=2$. The analogous real-versus-shuffled concentration contribution is 4.21
+and 2.77 percentage points at those epochs.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_epoch_local.pdf}
+  \caption{Epoch-local \diffmah{} analysis. Panel A reports the truncated-history
+  fit error; panel B compares portable, descendant-conditioned, and control
+  profile CRPS; panel C expresses the same comparisons as improvement relative
+  to concurrent halo mass.}
+  \label{fig:exp51_local}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_epoch_local_z2_predictions.pdf}
+  \caption{Direct profile validation of the portable $z=2$ model in three
+  concurrent halo-mass bins. Median conditional-mean biases are generally a few
+  per cent, while the broad residual bands show the much larger individual
+  scatter represented by the stochastic model.}
+  \label{fig:exp51_local_z2}
+\end{figure}
+
+\subsection{Concentration should be measured at the prediction epoch}
+
+Holding descendant \diffmah{} fixed, replacing $z=0.4$ concentration with
+concurrent concentration improves profile CRPS by 3.33 per cent at $z=0.7$,
+4.66 per cent at $z=1$, 2.93 per cent at $z=1.5$, and 2.23 per cent at $z=2$.
+Mass-conditioned shuffled concurrent concentrations are 0.10--2.30 per cent
+worse than the $z=0.4$-concentration reference. The signal is therefore in the
+correct halo--galaxy pairing and epoch label, not merely in adding one variable.
+
+In a linear model, adding all concentration measurements available by the
+prediction epoch improves on concurrent concentration by 3.40 per cent at
+$z=0.4$ and 2.06 per cent at $z=0.7$, but by at most 0.17 per cent at $z\geq1$.
+An extended concentration history is useful mainly when a substantial earlier
+history is available.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_concentration_redshift.pdf}
+  \caption{Concentration tests across redshift. Real concurrent concentration
+  is compared with $z=0.4$ concentration and mass-conditioned shuffles. The
+  final panel asks whether still earlier concentration values improve a linear
+  model after concurrent concentration is known.}
+  \label{fig:exp51_concentration}
+\end{figure}
+
+\subsection{The temporal residual model repairs over-coherent means}
+
+The standardized held-out coordinate residuals yield $\rho=0.660$ in the AR(1)
+approximation of \cref{eq:ar1}. For half-mass radius, the measured Spearman rank
+correlation between $z=0.4$ and $z=2$ is 0.330. The conditional means have
+correlation 0.591 and are therefore too persistent. The average correlation
+among coherent stochastic draws is 0.228, which removes most of the excess but
+undershoots the TNG value by 0.102.
+
+For adjacent epoch pairs, TNG half-mass-radius correlations are 0.816, 0.819,
+0.727, and 0.706. The coherent-draw averages are 0.787, 0.779, 0.712, and 0.630,
+respectively. The single-$\rho$ model is a useful first approximation, but its
+last adjacent pair and full-baseline persistence are too weak.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_cross_epoch_coherence.pdf}
+  \caption{Cross-epoch residual and half-mass-radius rank correlations. The
+  conditional mean is too coherent because regression suppresses individual
+  scatter. AR(1)-coupled draws are much closer to TNG but slightly decorrelate
+  the longest baseline too strongly.}
+  \label{fig:exp51_coherence}
+\end{figure}
+
+\subsection{The symbolic corrections do not define a universal relation}
+
+At $z=2$, the epoch-local linear model has profile CRPS $0.08804\dex$. The fixed
+$z=0.4$ terms reach $0.08758\dex$, a 0.52 per cent improvement. A new nested
+$z=2$ symbolic search reaches $0.08717\dex$, a 1.00 per cent improvement. The
+dense degree-2 model reaches $0.08363\dex$, a 5.01 per cent improvement over
+linear. Thus the new symbolic terms recover only about 20 per cent of the
+available nonlinear gain.
+
+No term recurs in four of five folds for total mass, $f_2$, or the outer radial
+gap. A squared mass term recurs for $R_{20,\rm out}$; four coupled terms involving
+mass, transition time, and growth index recur for the middle gap. This
+target-specific structure is too complicated and too weak in decoded profile
+performance to present as a compact redshift-independent law.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/exp51_symbolic_z2.pdf}
+  \caption{Epoch-local symbolic residual test at $z=2$. The dense degree-2
+  relation retains a clear predictive advantage over both transferred
+  $z=0.4$ terms and a new stability-filtered symbolic search.}
+  \label{fig:exp51_symbolic}
+\end{figure}
+
+\subsection{What \ExpFiftyOne{} established}
+
+A readable, probabilistic conversion is viable at each tested snapshot and can
+be made portable by refitting the halo assembly clock at the prediction epoch.
+The high-redshift result is not an artifact of future halo information.
+Descendant-conditioned coefficients pass an explicit redshift-interpolation
+test, but continuous-redshift closure has not yet been demonstrated for the
+epoch-local features. A simple temporal stochastic model is necessary and
+approximately successful. No compact universal symbolic equation is supported.
+
+\FloatBarrier

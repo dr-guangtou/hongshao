@@ -1,0 +1,268 @@
+\section{Mathematical framework}
+\label{sec:math}
+
+The direct conversion consists of three separate mathematical layers:
+\begin{enumerate}
+  \item compress a halo mass history into \diffmah{} parameters;
+  \item compress a stellar CoG into five readable, ordered coordinates;
+  \item learn a conditional probability distribution between those vectors.
+\end{enumerate}
+Keeping these layers separate is essential. A low profile-reconstruction error
+does not imply that halo properties can predict the coordinates, and a good
+conditional mean does not imply that the model reproduces the galaxy population.
+
+\subsection{The adopted \diffmah{} parameterization}
+\label{sec:diffmah}
+
+\diffmah{} describes halo growth as a rolling power law in cosmic time
+\citep{Hearin2021}. Let $u=\logten(t/\gyr)$ and define the logistic function
+$S(a)=(1+e^{-a})^{-1}$. The time-dependent logarithmic growth index is
+\begin{equation}
+  \alpha(u)=\alpha_{\rm early}+
+  \left(\alpha_{\rm late}-\alpha_{\rm early}\right)
+  S\!\left[k(u-u_c)\right],
+  \qquad k=3.5,
+  \label{eq:diffmah_alpha}
+\end{equation}
+and the implemented mass history is
+\begin{equation}
+  \logten \Mpeak(t)=\logten M_p+\alpha(u)(u-u_0).
+  \label{eq:diffmah_mass}
+\end{equation}
+Here $u_0=\logten(t_0/\gyr)$ is the fitting endpoint. The model passes through
+$\logten M_p$ at $t=t_0$. The four fitted halo coordinates are
+\begin{equation}
+  \vect{\theta}_{\rm MAH}=
+  \left(\logten M_p,\,u_c,\,\alpha_{\rm early},\,\alpha_{\rm late}\right).
+  \label{eq:mah_vector}
+\end{equation}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Halo-side parameters used by the direct conversion. ``Early'' and
+  ``late'' refer to the asymptotic logarithmic growth indices, not stellar
+  formation rates.}
+  \label{tab:halo_parameters}
+  \begin{tabularx}{\textwidth}{@{}l l X@{}}
+    \toprule
+    Symbol & Code name & Meaning \\
+    \midrule
+    $\logten M_p$ & \texttt{logmp} & Peak-mass normalization in $\logten(\Msun)$ at the chosen endpoint $t_0$ \\
+    $u_c=\logten(t_c/\gyr)$ & \texttt{logtc} & Cosmic time around which the growth index transitions \\
+    $\alpha_{\rm early}$ & \texttt{early} & Fast-regime logarithmic growth index \\
+    $\alpha_{\rm late}$ & \texttt{late} & Slow-regime logarithmic growth index \\
+    $\ctwo$ & \texttt{c200c} & Halo concentration at a stated epoch \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+The four numbers depend on the time range and endpoint used in the fit. In the
+descendant-conditioned model, $t_0=t(z=0.4)$ and the complete history through
+that time is fitted. In the epoch-local model, $t_0=t(z)$ and only history up to
+the prediction epoch is fitted. Thus an epoch-local $\logten M_p$ is close to
+the concurrent peak mass, while the descendant-conditioned normalization is a
+final-descendant quantity.
+
+\subsection{Readable CoG coordinates in \ExpFifty{}}
+\label{sec:exp50_coordinates}
+
+Define the central fraction
+\begin{equation}
+  f_2\equiv F_\star(2\kpc)
+  =\frac{M_\star(<2\kpc)}{M_{\star,\rm tot}},
+  \label{eq:f2}
+\end{equation}
+and ordinary enclosed-mass radii by
+\begin{equation}
+  F_\star(R_p)=p,\qquad p\in\{0.2,0.5,0.8\}.
+  \label{eq:ordinary_quantiles}
+\end{equation}
+To guarantee $R_{20}<R_{50}<R_{80}$ for every mean prediction and stochastic
+draw, \ExpFifty{} models positive gaps in logarithmic radius. With
+$r_p=\logten(R_p/\kpc)$, its coordinate vector is
+\begin{equation}
+  \vect{\theta}_{\cog}^{(50)}=
+  \begin{pmatrix}
+    \logten(M_{\star,\rm tot}/\Msun)\\
+    \operatorname{logit}(f_2)\\
+    r_{20}\\
+    \logten(r_{50}-r_{20})\\
+    \logten(r_{80}-r_{50})
+  \end{pmatrix}.
+  \label{eq:exp50_coordinates}
+\end{equation}
+The final two coordinates are logarithms of separations in $\logten R$; they
+are not logarithms of $R_{50}-R_{20}$ in linear kiloparsecs. Decoding exponentiates
+the gaps and cumulatively adds them to $r_{20}$.
+
+\subsection{Central-censored CoG coordinates in \ExpFiftyOne{}}
+\label{sec:exp51_coordinates}
+
+At high redshift, a valid compact galaxy can already have $f_2>0.5$. Its
+ordinary $R_{20}$ and $R_{50}$ then lie below the innermost measured aperture
+and cannot be inferred from the CoG grid. \ExpFiftyOne{} retains $f_2$ as an
+explicit coordinate and defines quantiles only for the mass outside 2 kpc. For
+$q\in\{0.2,0.5,0.8\}$, define the corresponding fraction of total mass
+\begin{equation}
+  p_q^{\rm out}=f_2+(1-f_2)q,
+  \label{eq:outer_level}
+\end{equation}
+and the outer-mass radius by
+\begin{equation}
+  F_\star(R_{q,\rm out})=p_q^{\rm out}.
+  \label{eq:outer_quantiles}
+\end{equation}
+The coordinate vector is then
+\begin{equation}
+  \vect{\theta}_{\cog}^{(51)}=
+  \begin{pmatrix}
+    \logten(M_{\star,\rm tot}/\Msun)\\
+    \operatorname{logit}(f_2)\\
+    r_{20,\rm out}\\
+    \logten(r_{50,\rm out}-r_{20,\rm out})\\
+    \logten(r_{80,\rm out}-r_{50,\rm out})
+  \end{pmatrix}.
+  \label{eq:exp51_coordinates}
+\end{equation}
+Unlike assigning a boundary value to an unresolved ordinary radius, this
+definition is measured for every retained profile and preserves the compact
+galaxy as scientific information.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.98\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      node distance=8mm and 11mm,
+      box/.style={draw,rounded corners,align=center,minimum height=13mm,minimum width=34mm,fill=white},
+      arrow/.style={-{Latex[length=2.3mm]},thick},
+      note/.style={align=center,font=\footnotesize,text=hsgray}
+    ]
+    \node[box,draw=hsblue,very thick] (mah) {$\Mpeak(t)$\\main-branch history};
+    \node[box,draw=hsblue,very thick,right=of mah] (dmah) {$\vect{\theta}_{\rm MAH}$\\four \diffmah{} parameters};
+    \node[box,draw=hsgreen,very thick,right=of dmah] (map) {$P(\vect{\theta}_{\cog}\mid\vect{x})$\\mean + covariance};
+    \node[box,draw=hsorange,very thick,right=of map] (coords) {$\vect{\theta}_{\cog}$\\five readable coordinates};
+    \node[box,draw=hsorange,very thick,right=of coords] (cog) {$M_\star(<R)$\\monotone CoG};
+    \draw[arrow] (mah) -- (dmah);
+    \draw[arrow] (dmah) -- (map);
+    \draw[arrow] (map) -- (coords);
+    \draw[arrow] (coords) -- (cog);
+    \node[note,below=4mm of dmah] {history compression};
+    \node[note,below=4mm of map] {probabilistic regression};
+    \node[note,below=4mm of coords] {profile compression};
+    \node[box,draw=hspurple,dashed,below=17mm of map] (conc) {$\ctwo(z)$\\secondary halo state};
+    \draw[arrow,dashed] (conc) -- (map);
+  \end{tikzpicture}
+  }
+  \caption{The direct conversion has three independently testable layers. A
+  failure in profile compression, halo-to-coordinate prediction, or stochastic
+  calibration should not be attributed to either of the other layers.}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{Monotone profile decoder}
+
+For a predicted coordinate vector, the decoder constructs knots
+$(\logten R_i,F_i)$ from the 2-kpc anchor, the three quantile radii, and the
+outer boundary $(148.2\kpc,1)$. It uses a shape-preserving piecewise cubic
+Hermite interpolator \citep{Fritsch1984}, clips the result to $0<F\leq1$, and
+enforces cumulative monotonicity. The reconstructed profile is
+\begin{equation}
+  \logten\!\left[\frac{M_\star(<R)}{\Msun}\right]
+  =\logten\!\left(\frac{M_{\star,\rm tot}}{\Msun}\right)
+  +\logten F_\star(R).
+  \label{eq:decoder}
+\end{equation}
+This decoder does not assume a Sersic, Moffat, or other global analytic profile
+family. It assumes only the information in the five coordinates plus smooth,
+monotone interpolation between their knots.
+
+\subsection{Conditional mean and residual distribution}
+\label{sec:emulator_math}
+
+Let the halo feature vector be
+\begin{equation}
+  \vect{x}=(\logten M_p,u_c,\alpha_{\rm early},\alpha_{\rm late},\ctwo),
+\end{equation}
+and standardize each feature within the training sample,
+\begin{equation}
+  x_{s,j}=\frac{x_j-\overline{x}_j}{s_{x,j}}.
+  \label{eq:standardization}
+\end{equation}
+The linear conditional mean uses
+\begin{equation}
+  \vect{\phi}_{\rm lin}(\vect{x}_s)=(1,x_{s,1},\ldots,x_{s,5}).
+\end{equation}
+The degree-2 model appends the seven terms selected in the earlier emulator
+experiments,
+\begin{align}
+  \vect{\phi}_{2} = \big(&\vect{\phi}_{\rm lin},
+  x_{\log M_p}^2,
+  x_{u_c}x_{\alpha_{\rm late}},
+  x_{\alpha_{\rm early}}^2,
+  x_{\alpha_{\rm late}}x_{c},
+  x_{\alpha_{\rm late}}^2,\nonumber\\
+  &x_{\log M_p}x_{\alpha_{\rm early}},
+  x_{\log M_p}x_{\alpha_{\rm late}}\big).
+  \label{eq:poly2_basis}
+\end{align}
+For target coordinate $a$, the mean is
+\begin{equation}
+  \mu_a(\vect{x})=\vect{\beta}_a^{\mathsf T}\vect{\phi}(\vect{x}_s).
+  \label{eq:mean_model}
+\end{equation}
+
+Scatter is allowed to vary from halo to halo. Its marginal variance is
+\begin{equation}
+  \sigma_a^2(\vect{x})=
+  \exp\!\left[\vect{\gamma}_a^{\mathsf T}(1,\vect{x}_s)\right],
+  \label{eq:heteroscedastic}
+\end{equation}
+with an $L_2$ penalty on the non-intercept variance slopes. A fixed residual
+correlation matrix $\vect{C}$ couples the five coordinates, giving
+\begin{equation}
+  \vect{\Sigma}(\vect{x})=
+  \operatorname{diag}[\vect{\sigma}(\vect{x})]\,
+  \vect{C}\,
+  \operatorname{diag}[\vect{\sigma}(\vect{x})].
+  \label{eq:covariance}
+\end{equation}
+The working predictive model is therefore
+\begin{equation}
+  \vect{\theta}_{\cog}\mid\vect{x}
+  \sim \mathcal{N}\!\left[\vect{\mu}(\vect{x}),\vect{\Sigma}(\vect{x})\right],
+  \label{eq:conditional_gaussian}
+\end{equation}
+followed by the nonlinear monotone decoder in \cref{eq:decoder}. Gaussianity
+applies in transformed coordinate space, not directly to stellar mass at each
+radius.
+
+\subsection{Prediction and evaluation statistics}
+\label{sec:metrics}
+
+All predictive comparisons are out of fold. For galaxy $i$ with $K=24$ CoG
+radii, the conditional-mean profile error is summarized by
+\begin{equation}
+  \mathrm{RMS}_i=\left[\frac{1}{K}\sum_{k=1}^{K}
+  \left(\widehat{m}_{ik}-m_{ik}\right)^2\right]^{1/2},
+  \label{eq:profile_rms}
+\end{equation}
+where $m_{ik}=\logten[M_{\star,i}(<R_k)/\Msun]$. The report quotes the median
+of $\mathrm{RMS}_i$ unless otherwise stated.
+
+Probabilistic sharpness and calibration are measured with empirical CRPS
+\citep{Gneiting2007}. For truth $y$ and $D$ draws $Y_d$,
+\begin{equation}
+  \widehat{\mathrm{CRPS}}(y)=
+  \frac{1}{D}\sum_{d=1}^{D}|Y_d-y|
+  -\frac{1}{2D^2}\sum_{d=1}^{D}\sum_{d'=1}^{D}|Y_d-Y_{d'}|.
+  \label{eq:crps}
+\end{equation}
+The profile CRPS is averaged over galaxies and radii. Lower CRPS is better; it
+rewards a distribution that is both concentrated and statistically calibrated.
+
+Population comparisons use energy distance \citep{Szekely2013}. Because a
+finite TNG sample compared with a resampled copy of itself has nonzero energy
+distance, results are divided by this finite-sample floor. A ratio near unity
+means the model population is statistically as close to TNG as two finite
+realizations of the TNG population are to each other.

@@ -1,0 +1,121 @@
+\section{Experiment 50: design at \texorpdfstring{$z=0.4$}{z=0.4}}
+\label{sec:exp50_methods}
+
+\ExpFifty{} is the controlled single-epoch test. It asks whether replacing PCA
+profile coordinates with the readable vector in \cref{eq:exp50_coordinates}
+changes either the compression accuracy or the held-out halo-to-profile
+prediction. The sample contains 2539 galaxies, and every comparison uses the
+same five galaxy folds and 32 stochastic draws per halo.
+
+\subsection{Why the tests are separated}
+
+\Cref{tab:exp50_tests} lists the motivation of each test. The ordering is
+deliberate. The profile representation is validated before a halo relation is
+fitted; the conditional mean is validated before stochastic population
+properties are interpreted; and assembly claims require mass-conditioned null
+controls.
+
+\begin{longtable}{@{}p{0.20\textwidth}p{0.29\textwidth}p{0.43\textwidth}@{}}
+  \caption{Logic of the \ExpFifty{} tests.}\label{tab:exp50_tests}\\
+  \toprule
+  Test & Motivation & What would constitute failure? \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Test & Motivation & What would constitute failure? \\
+  \midrule
+  \endhead
+  CoG compression & Establish whether five readable numbers preserve the
+  measured profile independently of any halo model. & Reconstruction error
+  comparable to the halo-prediction error, or a systematic central/outer bias.\\
+  Central $f_2$ anchor & Quantile radii describe where broad fractions of mass
+  lie but need not preserve the innermost aperture. & Accurate outer profile
+  with a biased 2-kpc mass.\\
+  Add $R_{90}$ & Test whether a more accurate coordinate system is also more
+  predictable from the selected halo variables. & Improved reconstruction but
+  unchanged or worse held-out prediction.\\
+  PCA parity & Determine whether interpretability costs measurable predictive
+  performance. & Readable-map CRPS difference larger than the empirical
+  fold-to-fold variation of the PCA score.\\
+  Final-mass-only control & Establish the baseline scalar SHMR information. &
+  No improvement after adding assembly variables.\\
+  MAH-shuffle control & Test whether the galaxy is using its own halo's MAH
+  shape, rather than extra marginal flexibility. & Shuffling MAH shape within
+  narrow final-mass bins leaves the score unchanged.\\
+  Concentration shuffle & Test whether $\ctwo$ adds information beyond
+  \diffmah{}. & Real and mass-conditioned shuffled concentration perform alike.\\
+  Correlated draws & Test whether the conditional distribution reproduces the
+  population, not only paired conditional means. & Draws do not improve the
+  mass--size and central--outer population planes.\\
+  Symbolic residual search & Ask whether a few stable nonlinear terms recover
+  the gain of a dense quadratic relation. & Fold-specific expressions or a
+  negligible end-to-end profile improvement.\\
+  Concentration history & Test whether earlier $\ctwo$ measurements add
+  information beyond current $\ctwo$. & Real histories do not outperform a
+  mass-conditioned shuffled-history control.\\
+  \bottomrule
+\end{longtable}
+
+\subsection{Compression candidates}
+
+Three representations are compared on the measured profiles themselves:
+\begin{enumerate}
+  \item the adopted five-coordinate vector with $R_{20},R_{50},R_{80}$;
+  \item a six-coordinate extension that also contains $R_{90}$;
+  \item total stellar mass plus three PCA shape components.
+\end{enumerate}
+For PCA, total mass is separated from the shape
+$\logten M_\star(<R)-\logten M_{\star,\rm tot}$ before computing the basis. The
+in-sample reconstruction comparison is a compression floor, not a predictive
+score. In the held-out comparison, the PCA mean shape, basis, halo regression,
+and residual distribution are all fitted using only the training fold.
+
+\subsection{Mean models and parity gate}
+
+The linear and seven-term degree-2 means are those in
+\cref{eq:mean_model,eq:poly2_basis}. The readable representation is declared
+competitive if
+\begin{equation}
+  \mathrm{CRPS}_{\rm readable}-\mathrm{CRPS}_{\rm PCA}
+  \leq s_{\rm fold,PCA},
+  \label{eq:exp50_gate}
+\end{equation}
+where $s_{\rm fold,PCA}$ is the standard deviation of the five PCA fold scores.
+This is a practical parity criterion, not a formal equivalence test. It asks
+whether the difference between coordinate systems is smaller than the measured
+partition sensitivity of the reference score.
+
+\subsection{Assembly and concentration controls}
+
+The main feature sets are
+\begin{align}
+  \vect{x}_{M} &= (\logten M_p),\\
+  \vect{x}_{\rm MAH} &= (\logten M_p,u_c,\alpha_{\rm early},\alpha_{\rm late}),\\
+  \vect{x}_{\rm full} &= (\vect{x}_{\rm MAH},\ctwo).
+\end{align}
+For the MAH null, $(u_c,\alpha_{\rm early},\alpha_{\rm late})$ are permuted
+together among halos in ten narrow $\logten M_p$ bins. The mass distribution
+and covariance among the shuffled MAH-shape variables are preserved, but their
+pairing with the correct galaxy is destroyed. Concentration is tested with an
+analogous within-mass-bin permutation. Consequently, a real-versus-shuffled
+difference measures predictive information in the object-level pairing at
+approximately fixed final mass; it does not by itself prove a causal effect.
+
+\subsection{Symbolic regression protocol}
+
+Symbolic regression is applied to residuals of the full linear model, rather
+than replacing the linear relation. This ensures that a failed search cannot
+erase a well-measured first-order dependence. PySR searches a restricted set of
+algebraic corrections \citep{Cranmer2023}. The search is repeated independently
+inside each training fold, and a candidate term is retained only if it appears
+in at least four of five folds. The final judgment is the held-out profile CRPS
+after decoding, not the symbolic training loss or the visual simplicity of an
+expression.
+
+\subsection{Concentration-history extension}
+
+The gated extension uses the 2366-galaxy overlap with $\ctwo$ measured at
+$z=(0.4,0.7,1.0,1.5,2.0)$. It compares current concentration, the complete
+five-epoch concentration vector, and histories shuffled within final-mass bins.
+The same folds and profile target are retained.
+
