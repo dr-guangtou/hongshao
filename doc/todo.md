@@ -1805,3 +1805,31 @@ Cross-experiment plan. Mirrors the phase sequence in
   budget was checked and cleared (800 vs 6400 Nelder-Mead iterations return
   bit-identical parameters on four replicates). Tech note Section 3.5.1;
   open question B1 closed, C9 and C10 newly raised.
+
+### exp57 — an empirical expansion term (2026-08-26)
+
+- [x] **Stage 0 — cost and nesting.** Every law reproduces exp54's incumbent
+  (1.874253) with an exact NaN pattern, 1.74e-15 relative profiles (7.8 ulp),
+  loss difference 2.2e-16. Cost 4.3x (homologous) and 5.0x (core-only) against
+  exp54's 112 ms.
+- [x] **Stage 1 — the contract, and the capability.** exp54's monotone-in-time
+  property measured over 230,112 galaxy-radius-epoch pairs: exactly zero fall.
+  Declining centres ARE reachable, but not as one number — the overall median
+  needs `A = 0.76`, the declining fraction 0.98, the decliner median 1.65,
+  because the model's spread is 0.33x the data's.
+- [x] **Stage 2 — the gates, at the null first.**
+- [x] **Stage 3 — fit X0, X1, X2.** All improve the loss ~1.8% and the shape
+  error to 13.45-13.48%, the largest gain any exp54 enrichment has produced.
+  **All fail G2**: 72-85% of displaced mass beyond 50 kpc against a 25% limit.
+  Bounding the expansion FACTOR does not bound the REACH.
+- [x] **Stage 6 — X3, a non-homologous core-only remap.** PASSES G2 at
+  2.2% / 0.2%, best shape error of all (13.369%), moving only 1.4% of the mass.
+- [x] **Stage 7 — the scoreboard and the attribution test.** The expansion does
+  the work in every case and the refit partially undoes it.
+- [ ] **NOT ADOPTED, and the user's call.** X3 small-core passes the mechanism
+  gates but fails G5(c), and the LOSS prefers a different, gate-failing basin.
+- [ ] **The obvious next test, and its ceiling is already measured**: condition
+  the expansion strength on formation time, the only thing that separates the
+  declining centres from the rest (`r = -0.317`, against `r = +0.025` for halo
+  mass). One shared parameter, no stellar information, `f_form` already carried
+  per deposit. See open questions C11 and C12.

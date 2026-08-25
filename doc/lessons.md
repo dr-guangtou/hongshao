@@ -1520,3 +1520,49 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   eight-fold budget returned bit-identical parameters in the same wall clock, so
   the spread is a measurement. The check cost twenty minutes and protects every
   number quoted next to it.
+- **Bounding a dimensionless FACTOR does not bound a physical REACH (exp57).**
+  The expansion law `X1` was designed so no deposit could ever grow by more than
+  `1+A`, on the reasoning that the first transport model failed because its
+  factor was unbounded. Fitted, the factor was 2.47 — and 85% of the mass it
+  moved still landed beyond 50 kpc, worse than the model it was designed not to
+  repeat. Homologous scaling multiplies every radius by the same number, and a
+  deposit with a power-law tail has most of its outer mass at large radius, so
+  the tail moves furthest in absolute terms. **If a gate is stated in kpc, the
+  mechanism has to be bounded in kpc.** A non-homologous remap that expands the
+  core and leaves everything beyond a fitted `Rc` untouched cut the same number
+  from 85% to 2.2%.
+- **The loss can rank two basins of the SAME model backwards (exp57).** A
+  multi-start search over the core-only expansion found a core radius of 2.6 kpc
+  and a near-homologous one at 92 kpc. The loss preferred the near-homologous
+  basin by 0.12%, and that is the one the mechanism gates reject. Multi-start is
+  not only insurance against a bad optimum; it is how a second, physically
+  different solution becomes visible at all. Gate every basin, not only the
+  winner.
+- **An assertion does not make duplication safe (exp57).** A diagnostic
+  duplicated the model's setup so it could keep deposits separate, and its
+  docstring argued the duplication could not drift "because `check_terms`
+  asserts that summing these reproduces `predict`". It drifted the very next
+  time the model changed — a new radial law was added to the model and not to
+  the copy — and the assertion caught it at a relative 6.3e-1. The assertion
+  worked; the reasoning that justified the duplication did not. Remove the
+  duplication.
+- **Write down which POPULATION a target describes, in the constant's name
+  (exp57).** exp54's "-0.066 dex" is the median over the DECLINING SUBSET; the
+  median over all galaxies is +0.037, the opposite sign. Comparing a model
+  median over everyone against it would have selected an expansion strength
+  twice too large. The structural guard that worked was returning a named
+  record instead of a positional tuple, so a caller cannot pick the wrong field
+  silently. This is the fourth instance of this class of error in this project.
+- **A gate written as a guard can turn out to be a target, and the null is what
+  tells you (exp57).** G5(c) was written to stop expansion from lowering central
+  density everywhere, on the assumption that the model already matched the
+  measured core growth. Run at the null it was already 0.046 dex out, in the
+  direction expansion helps. Running every gate on the un-enriched model first
+  costs nothing and is what distinguishes "this enrichment broke something" from
+  "this was already broken".
+- **Separate what the new term did from what refitting around it did (exp57).**
+  Switching the expansion off at each fit's OWN fitted base parameters, rather
+  than at the incumbent's, splits a change into the mechanism's contribution and
+  the compensation the other parameters supplied. Here it showed the expansion
+  doing all the work in every case, and explained one gate failure exactly: the
+  term moved the core gap -0.025 while the refit moved it +0.046.

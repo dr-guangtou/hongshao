@@ -188,6 +188,31 @@ interpretable and their parameters are undetermined (smallest singular value
 basis weighted by the deposited mass, so the freedom is spent where the data
 is? That would make the bound tighter and the shape readable.
 
+### C11. Reach and the core-density target are in direct tension
+**Raised 2026-08-26 (exp57), unresolved.** Every long-reach expansion law passes
+G5(c) — the model's median core surface-density growth against the measurement —
+and fails G5(b), opening the central-error span of the 58% of galaxies whose
+centres never declined. The one short-reach law does the reverse. Long reach
+lowers the core density everywhere, which fixes (c) and over-corrects the
+galaxies that were already right; short reach protects them and cannot move (c).
+**Question**: is this a genuine physical tension, or an artefact of applying one
+global expansion strength to a population with 0.33x the observed spread (C4)?
+`diagnose_decliners.py` says the two groups differ in FORMATION TIME
+(`r = -0.317` with `t_half/t`) and not in halo mass (`r = +0.025`), so a
+formation-time-conditioned strength is the one shared extension with something
+to condition on.
+
+### C12. The loss prefers the long-reach basin, and the gates reject it
+**Raised 2026-08-26 (exp57).** The core-only expansion has two optima — a core
+radius of 2.6 kpc and a near-homologous 92 kpc — and the loss prefers the second
+by 0.12% while the mechanism gates pass only the first. This is the fourth time
+this program has found the loss and the physics tests pointing opposite ways.
+**Question**: is there a modification to the objective that would make it see
+the reach at all? Stage 3.6 already established the production loss is 175,000x
+less sensitive at 132-148 kpc than at 2 kpc, and repairing that made the
+outskirts worse. The honest alternative is to keep ranking by the gates and stop
+expecting the loss to agree.
+
 ### C9. A finite-difference Hessian cannot resolve this model's flat directions
 **Raised 2026-08-25 (Stage 3.9), unresolved and possibly not worth resolving.**
 Sizing the profile grids from the Gauss-Newton prediction `1/(H^-1)_jj` was
