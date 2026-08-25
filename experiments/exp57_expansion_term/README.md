@@ -4,7 +4,7 @@ Branch `exp57-expansion-term`. Plan:
 `doc/plans/2026-08-26-exp57-expansion-term.md`. Problems:
 [`PROBLEMS.md`](PROBLEMS.md).
 
-**Status: IN PROGRESS.** Stages 0, 1, 2 complete; Stage 3 partly in (X1 and X0 fitted and gated, X2 and the G4 control running); Stage 6 (`X3`) launched in response to what Stage 3 found.
+**Status: COMPLETE except for a confirmation run.** Stages 0–7 done and gated. The 9-start `X3` fit is still running purely to confirm its two basins; both are already fitted, reproduced and gated independently.
 
 ---
 
@@ -316,6 +316,107 @@ the self-check falsified them — see [P5](PROBLEMS.md). `X1` carries a deposit'
 truncation outward with its stars; `X3` holds it at the halo's `3 R200c` and
 rearranges mass inside it. Both conserve mass exactly within their own
 boundary, and they are compared by fitting both.
+
+---
+
+## THE VERDICT (2026-08-26)
+
+### The scoreboard, ordered by the gates and never by the loss
+
+| model | loss | shape error | G2 >50 kpc | G2 >148 | G5(a) declining | G5(b) not | G5(c) core gap | verdict |
+|---|---|---|---|---|---|---|---|---|
+| incumbent, expansion off | 1.874253 | 13.787% | — | — | 0.270 | 0.045 | +0.0455 | the reference |
+| **`X3` core-only, SMALL core** | 1.833344 | **13.369%** | **2.2%** | **0.2%** | 0.210 | **0.039** | +0.0668 | **G2 PASS**, G5 ab**C** |
+| `X0` homologous power law | 1.840977 | 13.478% | 72.5% | 42.1% | 0.151 | 0.079 | +0.0121 | G2 FAIL, G5 a**B**c |
+| `X1` + `c` frozen (control) | 1.851403 | 13.582% | 81.3% | 44.9% | 0.190 | 0.052 | −0.0196 | G2 FAIL, **G5 all pass** |
+| `X1` homologous, bounded | 1.840466 | 13.454% | 85.0% | 52.1% | 0.169 | 0.076 | −0.0019 | G2 FAIL, G5 a**B**c |
+| `X2` homologous + time shape | 1.839900 | 13.463% | 76.1% | 45.0% | 0.156 | 0.079 | +0.0037 | G2 FAIL, G5 a**B**c |
+| `X3` core-only, large core | **1.831172** | 13.436% | 53.4% | 8.2% | 0.158 | 0.086 | −0.0049 | G2 FAIL, G5 a**B**c |
+
+Limits: G2 ≤ 25% and ≤ 10%; G5(b) ≤ 0.060. Lower case = that part of G5 passes.
+
+### The four things this experiment establishes
+
+**1. An expansion term works, and it is the first thing in this program to move
+exp54's central defect.** The profile-shape error goes **13.787% → 13.369%**,
+against a Stage 3.5 budget of 0.18 percentage points for a *free* shared time
+law and a Stage 3.8 compact channel that returned the incumbent's loss to six
+decimal places. The declining galaxies' central-error span closes **0.270 →
+0.210**, and for the homologous variants as far as **0.151**.
+
+**2. Bounding the expansion FACTOR does not bound the REACH — and that is a
+property of homologous scaling, not of a bad parameter value.** `X1` was
+designed so no deposit can ever grow by more than `1+A`; fitted, that is 2.47×,
+and it still delivers **85% of the mass it moves beyond 50 kpc** — worse than
+the exp52 model this experiment exists not to repeat (58.5%). `X0`, `X2` and
+the large-core `X3` all fail the same way. Homologous scaling multiplies every
+radius by the same factor, and this deposit family has a genuine **power-law
+tail**, so material already at 50 kpc lands at 123 kpc however modest the
+factor sounds.
+
+**3. A non-homologous remap fixes it completely.** `X3` with a fitted core
+radius of **2.61 kpc** delivers **0.6–2.2%** of displaced mass beyond 50 kpc and
+**0.0–0.2%** beyond 148 kpc, against limits of 25% and 10%. Its expansion share
+of outskirt growth falls to **0.0%** — all outskirt growth is new deposition,
+which is what the physical picture requires — and the outskirt structure
+*improves*, population-summed `M[50,148]` going from −0.076 to **−0.007** dex.
+It does this by moving only **1.4%** of the stellar mass over the long
+baseline: a tiny redistribution placed exactly where the defect is.
+
+**4. The loss ranks these almost exactly backwards.** `X3`'s multi-start search
+found **two basins** — a core radius of 2.6 kpc and a near-homologous one at
+92 kpc — and the loss prefers the near-homologous one, **1.831172 against
+1.833344**. Ranking by loss would have chosen the long-reach answer in every
+comparison in this table. This program has now recorded that failure mode four
+times (exp38's loss-optimal basin, exp49's opposing gradients, exp52's correct
+profiles with the wrong mechanism, and now this).
+
+### The tension that nothing resolved
+
+**Every long-reach model passes G5(c) and fails G5(b); the one short-reach model
+does the reverse.** Long reach lowers the core density everywhere, which fixes
+(c) — the model's median core surface-density growth against the measurement —
+but over-corrects the 58% of galaxies whose centres never needed it, breaking
+(b). Short reach protects those galaxies but cannot move (c).
+
+The **attribution test** says why, by switching the expansion off at each fit's
+own base parameters:
+
+| model | core gap (fitted) | the expansion alone | the refit alone |
+|---|---|---|---|
+| `X0` | +0.0121 | −0.0921 | +0.0588 |
+| `X1` | −0.0019 | −0.1561 | +0.1087 |
+| `X3` large core | −0.0049 | −0.1677 | +0.1174 |
+| `X3` **small core** | +0.0668 | **−0.0248** | **+0.0461** |
+
+**In every case the expansion does the work and re-optimising the other seven
+parameters partially undoes it**, so none of these is a reparameterisation
+carrying the term's credit. And it explains the small core's `(c)` failure
+exactly: its expansion moves the gap −0.025 while the refit moves it +0.046, and
+the compensation wins.
+
+### What is NOT claimed
+
+- **Nothing is adopted.** `X3` small-core is the only candidate that passes the
+  mechanism gates, but it fails G5(c), the loss prefers a different basin, and
+  adoption is the user's call.
+- **G5(b)'s failure for the homologous laws is not fixable by a global
+  strength.** Stage 1 measured why: the model's spread is 0.33× the data's, and
+  expansion shifts a distribution without widening it.
+- **The `X3` result rests on two independently reproduced basins**, not on a
+  completed 9-start search — that run is still going and is confirmation, not
+  evidence the conclusion needs.
+
+### What the evidence points at next
+
+`diagnose_decliners.py`, run **before** any of this was fitted so the choice
+could not be made after seeing which helped: the galaxies whose centres decline
+differ from the rest **in formation time and not in mass** — median `t_half/t`
+0.548 against 0.617 (`r = −0.317` with the flag) while halo mass gives
+`r = +0.025`. **The centres that fall are the ones that were built early.** A
+formation-time-conditioned expansion strength is therefore the one shared
+extension with something real to condition on, and its ceiling is that
+`r = −0.317`.
 
 ---
 
