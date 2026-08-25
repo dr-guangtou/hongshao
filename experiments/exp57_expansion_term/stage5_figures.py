@@ -54,7 +54,6 @@ for p in (ROOT, ROOT / "experiments/exp38_deposit_rethink", EXP54, HERE):
 import expand as X                                       # noqa: E402
 import gates as G                                        # noqa: E402
 import stage0_cost as S0                                 # noqa: E402
-import stage33 as S33                                    # noqa: E402
 from hongshao.plotting import save_fig, set_style        # noqa: E402
 from hongshao.qa import _pct, _tex                       # noqa: E402
 
@@ -63,9 +62,11 @@ OUT = HERE / "outputs"
 FITDIR = OUT / "stage3_fits"
 Z = (0.4, 0.7, 1.0, 1.5, 2.0)
 LAW_COLOR = {"null": "#666666", "X1": "#0072B2", "X2": "#009E73",
-             "X0": "#D55E00"}
-LAW_LABEL = {"X1": "X1  bounded", "X2": "X2  bounded, shaped",
-             "X0": "X0  power law (the OLD form)"}
+             "X0": "#D55E00", "X3": "#CC79A7"}
+LAW_LABEL = {"X1": "X1  homologous, bounded factor",
+             "X2": "X2  homologous, shaped in time",
+             "X0": "X0  homologous power law (the OLD form)",
+             "X3": "X3  CORE-ONLY, bounded reach in kpc"}
 
 
 def _fits():
@@ -102,10 +103,23 @@ def figure(name="exp57_expansion"):
     w = (dm * pr.em[:, 0, :]).ravel()
     tdw = pr.t_dep.ravel()
     good = np.isfinite(tdw) & np.isfinite(w) & (w > 0)
-    hist, edges = np.histogram(tdw[good], bins=40, weights=w[good])
+    # the deposited-mass distribution goes on its OWN axis, behind everything,
+    # so a reader never mistakes its height for an expansion factor. Coarse
+    # bins because the snapshot grid makes a fine histogram spiky in a way that
+    # is a property of the grid, not of the galaxies.
+    hist, edges = np.histogram(tdw[good], bins=18, weights=w[good])
     hist = hist / hist.max()
-    a.fill_between(0.5 * (edges[1:] + edges[:-1]), 1.0, 1.0 + 12.0 * hist,
-                   color="0.88", zorder=0, lw=0)
+    a_bg = a.twinx()
+    a_bg.fill_between(0.5 * (edges[1:] + edges[:-1]), 0.0, hist,
+                      color="0.90", zorder=0, lw=0)
+    a_bg.set_ylim(0, 3.2)
+    a_bg.set_yticks([])
+    a_bg.set_zorder(0)
+    a.set_zorder(2)
+    a.patch.set_visible(False)
+    a_bg.text(0.98, 0.02, _tex("grey: where the stellar mass was deposited"),
+              transform=a_bg.transAxes, fontsize=7, color="0.45",
+              ha="right", va="bottom")
     for law, z in fits.items():
         th = np.asarray(z["theta"], float)
         xt = th[base.n_theta:]
@@ -119,16 +133,12 @@ def figure(name="exp57_expansion"):
     a.set_yscale("log")
     a.set_xlabel(_tex("cosmic time the deposit was laid down [Gyr]"))
     a.set_ylabel(_tex("expansion factor g, seen at z = 0.4"))
-    a.set_title("(a) the reach law\nshaded: where the stellar mass is",
+    a.set_title("(a) the reach law: how far a deposit is moved",
                 fontsize=9.5)
     a.legend(fontsize=7, loc="upper right")
 
     # ---- (b) G2, where the moved mass goes --------------------------- #
     b = ax[1]
-    labels, v50, v148 = [], [], []
-    for law in fits:
-        g = np.load(OUT / f"stage2_gates_{S33.spec_from_label('gompertz_log-E2-S2').label}+{law}.npz",
-                    allow_pickle=True) if False else None
     rows = []
     for law, z in fits.items():
         f = OUT / f"stage2_gates_{str(z['label'])}.npz"
@@ -139,12 +149,17 @@ def figure(name="exp57_expansion"):
     if rows:
         xx = np.arange(len(rows))
         b.bar(xx - 0.19, [r[1] for r in rows], 0.36,
-              color=[LAW_COLOR[r[0]] for r in rows], label=_tex("beyond 50 kpc"))
-        b.bar(xx + 0.19, [r[2] for r in rows], 0.36, alpha=0.55,
-              color=[LAW_COLOR[r[0]] for r in rows],
-              label=_tex("beyond 148 kpc"))
+              color=[LAW_COLOR[r[0]] for r in rows])
+        b.bar(xx + 0.19, [r[2] for r in rows], 0.36,
+              color="white", edgecolor=[LAW_COLOR[r[0]] for r in rows],
+              hatch="////", lw=1.2)
         b.set_xticks(xx)
-        b.set_xticklabels([r[0] for r in rows])
+        b.set_xticklabels([r[0] for r in rows], fontsize=10)
+        from matplotlib.patches import Patch
+        b.legend(handles=[Patch(fc="0.35", label=_tex("beyond 50 kpc")),
+                          Patch(fc="white", ec="0.35", hatch="////",
+                                label=_tex("beyond 148 kpc"))],
+                 fontsize=7.5, loc="upper left")
     b.axhline(G.G2_MAX_BEYOND_50, color="#D55E00", ls=":", lw=1.4)
     b.axhline(G.G2_MAX_BEYOND_148, color="#D55E00", ls="--", lw=1.4)
     b.axhline(G.EXP52_REACH_50, color="0.4", ls="-", lw=1.0)
@@ -157,7 +172,6 @@ def figure(name="exp57_expansion"):
     b.set_ylabel(_tex("fraction of DISPLACED mass delivered there"))
     b.set_title("(b) the reach, gate G2\nworst epoch pair per model",
                 fontsize=9.5)
-    b.legend(fontsize=7.5)
 
     # ---- (c) G1, the mechanism split --------------------------------- #
     c = ax[2]
@@ -177,13 +191,13 @@ def figure(name="exp57_expansion"):
            label=_tex("exp52's first model"))
     c.axvline(G.G1_Z_LIMIT, color="#D55E00", ls=":", lw=1.4)
     c.axhline(0.5, color="0.75", lw=0.8)
-    c.text(G.G1_Z_LIMIT, 0.97, _tex(" z = 1.2: accretion should take over"),
-           fontsize=7, color="#D55E00", va="top")
+    c.text(G.G1_Z_LIMIT, 0.02, _tex(" z = 1.2: accretion should take over"),
+           fontsize=7, color="#D55E00", va="bottom")
     c.invert_xaxis()
     c.set_xlabel(_tex("redshift of the later epoch"))
     c.set_ylabel(_tex("share of M*[50,100] growth that is MOVED mass"))
     c.set_title("(c) the mechanism split, gate G1", fontsize=9.5)
-    c.legend(fontsize=7.5, loc="upper left")
+    c.legend(fontsize=7.5, loc="upper right")
 
     # ---- (d) G5, the target ------------------------------------------ #
     d = ax[3]
