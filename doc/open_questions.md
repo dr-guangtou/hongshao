@@ -51,20 +51,46 @@ removed, or is the effect entirely gone? The 1.06/1.03/1.04 above is close
 enough to 1 that it may be noise.
 
 ### A3. Stage 3.4's ceiling was computed on the contaminated sample
-**Status: open, not yet re-run.**
-The 4.5% bound, the 5.0% wrong-galaxy control, the K-interval ladder and the
-central-decline split all used the sample that contained row 181. The shape
-scores move very little when it is removed (13.803% -> 13.792% at fixed
-parameters), so the ordering is unlikely to change, but the numbers are quoted
-to three significant figures in the note and have not been re-derived.
+**Status: RESOLVED 2026-08-25 — re-run, and the conclusions hold.**
+All three Stage 3.4 scripts had two contaminations, not one: the sample was
+built without `sane_history_mask`, AND the model parameters were read from the
+Stage 3.3 fit, which also contained row 181. Both fixed; the whole stage re-run
+on branch `exp54-recheck-contaminated-bounds`; pre-fix outputs kept as
+`outputs/stage34_*_PRE_ROW181.npz`.
+
+**Every rung moved by 0.01 to 0.03 percentage points.** At the precision the
+note quotes, only two cells change: the free-deposit bound 4.46% -> 4.44%
+(quoted 4.5% -> 4.4%) and the three-interval rung 10.46% -> 10.44% (10.5% ->
+10.4%). The wrong-galaxy control is unchanged at 5.04%, the fitted model at
+14.18%, the ceiling at 8.47%. The decline split is unchanged: 443 declining of
+839, model -37.2% inside 2 kpc at z=2 for those against -11.5% for the rest.
+
+**Why it is this small, and why that is not a contradiction of A2.** A ceiling
+is a MEAN over 839 galaxies, so one object moves it by at most its own excess
+over 839. The amplitude headline it destroyed (A2) was a mean over a sample the
+completeness cut had already shrunk, where the same fixed contribution was a
+much larger fraction. Same galaxy, opposite consequence, for a reason that is
+arithmetic and worth remembering.
+
+**A sequencing bug worth recording**: the basis scan was launched in parallel
+with the ceiling it validates against, so it compared to the stale ceiling file
+and its own gate stopped it (max difference 1.4e-3 against a 1e-9 tolerance).
+Re-run after the ceiling finished, the gate passes at exactly 0.00e+00. The
+gate was right; the sequencing was mine.
 
 ### A4. `c_z` was rejected on the contaminated sample
-**Status: open.**
-"A redshift-dependent deposit shape stays rejected" was concluded with row 181
-inside the sample and under the production objective. Stage 3.7's plan flags
-this: a redshift-dependent SHAPE is not the same object as an early/late
-mixture of two families, and the rejection of the first does not reject the
-second.
+**Status: RESOLVED 2026-08-25 — the rejection holds on the clean sample.**
+Re-scanned with `sane_history_mask` applied and the clean-sample parameters:
+the best non-zero `c_z` makes the ceiling **WORSE** by **+0.0017** in mean
+shape score on all 2397 galaxies and by **+0.0201** on the 839-galaxy cohort,
+against +0.001 and +0.02 before. The optimum sits at `c_z = 0` on an interior
+minimum in both samples.
+
+**Still true and still worth not conflating**: a redshift-dependent deposit
+SHAPE is a different object from an early/late mixture of two FAMILIES at two
+sizes, and rejecting the first does not reject the second. That second object
+was tested independently in Stage 3.8 and also rejected, for a different reason
+(C8).
 
 ---
 

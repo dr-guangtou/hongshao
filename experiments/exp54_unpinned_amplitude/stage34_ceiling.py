@@ -758,7 +758,14 @@ def main(smoke=False, figures=False):
         raise SystemExit("run selection.py first — the cuts come from there")
     cuts = np.load(SEL, allow_pickle=True)["cuts"]
     m200 = S.sample_masses(np.load(S.HS_NPZ, allow_pickle=True))
-    complete_all = np.isfinite(m200) & (m200 >= cuts[None, :])
+    # RE-DERIVED 2026-08-25. The original run of this stage predated
+    # `selection.sane_history_mask`, so row 181 -- a broken cross-match whose
+    # measured M*(<100 kpc) falls 3.76 dex to a flat ~10^8 -- was inside the
+    # sample. Its profile is essentially all inside the innermost aperture,
+    # which is exactly the shape a deposit basis fits worst, so it does not
+    # merely add noise to a ceiling: it inflates it.
+    complete_all = (np.isfinite(m200) & (m200 >= cuts[None, :])
+                    & S.sane_history_mask(pop["data"]))
 
     rows = all_rows[::40] if smoke else all_rows
     recs = H.build_records(rows=rows, verbose=not smoke)
@@ -766,12 +773,24 @@ def main(smoke=False, figures=False):
     data = pop["data"][sel]
     mask = complete_all[sel]
 
-    thetas = {}
+    # Prefer the CLEAN-sample refit where one exists. `stage33_perepoch.npz`
+    # was fitted with the broken cross-match at row 181 still in the sample;
+    # `stage35_fits/` is the refit after `selection.sane_history_mask`. The
+    # basis bounded here depends on theta only through the size law and the
+    # profile shape, which moved by at most 0.010 (in `b`), so this is a
+    # correctness fix rather than a large one -- but the source is printed.
+    thetas, theta_src = {}, {}
     pe = np.load(PEREPOCH, allow_pickle=True)
     s33 = np.load(STAGE33, allow_pickle=True)
     for label, src in BASES:
-        thetas[label] = np.asarray(
-            (pe if src == "perepoch" else s33)[f"{label}_theta"], float)
+        clean = HERE / "outputs" / "stage35_fits" / f"{label}.npz"
+        if clean.exists():
+            thetas[label] = np.asarray(np.load(clean)["theta"], float)
+            theta_src[label] = "clean refit"
+        else:
+            thetas[label] = np.asarray(
+                (pe if src == "perepoch" else s33)[f"{label}_theta"], float)
+            theta_src[label] = f"{src} -- PREDATES the row-181 fix"
 
     print(f"exp54 STAGE 3.4 — THE PROFILE-SHAPE REPRESENTATIONAL CEILING (v2)")
     print(f"  galaxies: {len(recs)}   mh-complete per epoch: "
@@ -781,7 +800,7 @@ def main(smoke=False, figures=False):
           f"absolute completeness ~0.47. It is a threshold, not completeness 1.")
     print(f"  SIGMA_A : " + " ".join(f"{v:.4f}" for v in F.SIGMA_A))
     print(f"  bases   : " + ",  ".join(
-        f"{lb} ({src}: " + " ".join(
+        f"{lb} ({theta_src[lb]}: " + " ".join(
             f"{n}={v:+.3f}" for n, v in
             zip(S33.spec_from_label(lb).theta_names[-3:], thetas[lb][-3:]))
         + ")" for lb, src in BASES) + "\n")

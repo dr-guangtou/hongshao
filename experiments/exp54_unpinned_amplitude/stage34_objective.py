@@ -297,6 +297,28 @@ def monotone_bound(d, use, kind="both", w_ep=None, n_start=3, seed=0):
     return unpack(best), best_v, moved
 
 
+
+def incumbent_theta(label):
+    """The incumbent's parameters, preferring the CLEAN-sample fit.
+
+    Stage 3.4 originally read `stage33_perepoch.npz`, which was fitted with the
+    broken cross-match at row 181 still inside the sample. The clean refit lives
+    in `stage35_fits/`. The basis these scripts bound depends on theta only
+    through the size law and the profile shape, and those moved by at most 0.010
+    (in `b`), so this is a correctness fix rather than a large one -- but which
+    file was used must be visible, hence the print.
+    """
+    import numpy as _np
+    clean = C.HERE / "outputs" / "stage35_fits" / f"{label}.npz"
+    if clean.exists():
+        print(f"  theta   : {clean.name} (clean-sample refit)")
+        return _np.asarray(_np.load(clean)["theta"], float)
+    print(f"  theta   : stage33_perepoch.npz -- WARNING, this predates the "
+          f"row-181 fix")
+    return _np.asarray(_np.load(C.PEREPOCH, allow_pickle=True)
+                       [f"{label}_theta"], float)
+
+
 # --------------------------------------------------------------------------- #
 def main(smoke=False):
     import selection as S
@@ -306,7 +328,14 @@ def main(smoke=False):
     all_rows = np.array([g["row"] for g in s2._W["gals"]])
     cuts = np.load(C.SEL, allow_pickle=True)["cuts"]
     m200 = S.sample_masses(np.load(S.HS_NPZ, allow_pickle=True))
-    complete_all = np.isfinite(m200) & (m200 >= cuts[None, :])
+    # RE-DERIVED 2026-08-25. The original run of this stage predated
+    # `selection.sane_history_mask`, so row 181 -- a broken cross-match whose
+    # measured M*(<100 kpc) falls 3.76 dex to a flat ~10^8 -- was inside the
+    # sample. Its profile is essentially all inside the innermost aperture,
+    # which is exactly the shape a deposit basis fits worst, so it does not
+    # merely add noise to a ceiling: it inflates it.
+    complete_all = (np.isfinite(m200) & (m200 >= cuts[None, :])
+                    & S.sane_history_mask(pop["data"]))
 
     rows = all_rows[::40] if smoke else all_rows
     recs = H.build_records(rows=rows, verbose=False)
@@ -323,8 +352,7 @@ def main(smoke=False):
     use = np.ones((n, ne), bool)
 
     spec = S33.spec_from_label(LABEL)
-    theta = np.asarray(np.load(C.PEREPOCH, allow_pickle=True)
-                       [f"{LABEL}_theta"], float)
+    theta = incumbent_theta(LABEL)
 
     print(f"exp54 STAGE 3.4 — IS THE CEILING A PROPERTY OF THE MODEL OR OF "
           f"THE LOSS?")
