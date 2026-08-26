@@ -1891,3 +1891,31 @@ Cross-experiment plan. Mirrors the phase sequence in
   DISQUALIFIED (declining span never leaves 0.23-0.28 against a 0.20 rule);
   the Stage 4 fit is not run. THE PLAN IS COMPLETE. Nothing adopted — the
   user decides on X3 pinned-size small-core.
+
+### exp60 / exp61 — the stochastic layer and the epoch baselines (2026-08-26/27)
+
+- [x] **exp61 — single-epoch + z<=1.0 baselines.** The retreat is a REPORTING
+  decision: the shared model is already at its class ceiling at z<=1.0
+  (single-epoch gains 1.8-4.5%; the z<=1.0 refit gains 1.9% in scope while
+  costing z=2 seven points of score_A). z=2 is a FORM problem: freed of the
+  other epochs the same seven parameters reach score_A 0.835 (+15.9% of
+  loss), every efficiency parameter drifting monotonically. m·x^2 curvature
+  parked as an open question.
+- [x] **exp60 Stage 0 — targets frozen** (41.8% declining, decliner median
+  -0.066, quartile gradient 64.3% -> 24.4%; amplitude sigma 0.117-0.142 with
+  0.67-0.80 nearest-epoch correlation).
+- [x] **exp60 Stage 1 — the core component's anatomy.** DESIGN DISCOVERY: the
+  layer's remap needs Rc ~ 20 kpc (the shared-mechanism's gate-optimal 2 kpc
+  moves almost nothing at the 4.92 kpc target aperture — coverage 9.8% vs
+  85.3%); the per-galaxy draw is free of the shared-A trade that forced
+  2 kpc, and reach is re-gated at Stage 3. Empirical A_i: median +0.98,
+  decliners +2.24 vs non-decliners +0.23; per-f_form-quartile medians
+  1.27 -> 0.68 with the growth tail 4.2% -> 31.5% — the mixture-tilt
+  targets. Ceiling: 18.4% of galaxies (the fast-central-growth/compaction
+  tail) need contraction beyond the A = -0.9 bound; 583 galaxies' response
+  curves wiggle beyond the 0.005 dex tolerance and are excluded from the
+  anatomy (not from the layer).
+- [ ] **exp60 Stage 2 — the size/shape anatomy on the incumbent** (exp41
+  protocol, subsample first).
+- [ ] **exp60 Stage 3 — compose the three components, held-out gates S1-S5,
+  standard battery with draws. Adoption: the user.**
