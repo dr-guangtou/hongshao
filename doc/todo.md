@@ -1834,6 +1834,23 @@ Cross-experiment plan. Mirrors the phase sequence in
   galaxy-by-galaxy density and size error distributions. It also found that a
   constant fixed `gamma` must not be standardized as a regression predictor;
   the readable fixed-slope recipe now keeps `gamma=1.4` only in the decoder.
+- [x] **Stage 3c: structured sparsification of the fixed-slope halo–CoG
+  mean.** Keep the four intercepts and 20 linear coefficients, apply a nested
+  sparse-group penalty only to the 28 nonlinear coefficients, debias the
+  selected support, and compare with the saved 52-coefficient Stage 3 mean on
+  the unchanged five outer folds. Require at most 32 active coefficients and
+  preserve the full CoG, 5--30 kpc CoG and density, R50/R80/R90, CRPS,
+  coverage, mass-bin residual, controls, numerical safeguards, and standard
+  QA. The complete 90-galaxy candidate-selection and QA path must pass in less
+  than one minute before the full run. **Validation:** the complete path passed
+  in 31.17 seconds, including exact zero-penalty closure and exact recovery of
+  a synthetic 31-coefficient support. **Result:** the full 2,539-galaxy run
+  finished in 193.66 seconds and retained 44/51/45/41/45 coefficients across
+  the five outer folds. Median full-CoG and density RMS change by only +0.25%
+  and +0.09%, but the 5--30 kpc CoG and R50/R80/R90 degradations are
+  bootstrap-resolved and the worst mass-bin residual increase exceeds its
+  safeguard. **Decision:** reject entry-wise sparsification as a meaningful
+  simplification; test a shared low-rank halo-response architecture next.
 - [x] **Stage 4: measure radial halo-information content without imposing the
   expected answer.** Compare nested held-out relations using final mass,
   recent DiffMAH growth, early assembled fraction, the complete DiffMAH

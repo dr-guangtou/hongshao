@@ -1565,6 +1565,16 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   favor normalization at the expense of local radial structure. Judge an
   end-to-end objective by the complete scientific QA battery, not by the loss
   it was constructed to minimize.
+- **Sparse coefficients do not imply a low-dimensional scientific relation
+  when signal is distributed across outputs (exp56 Stage 3c).** Nested
+  sparse-group selection retained 41--51 of the 52 fixed-slope mean
+  coefficients. The small reduction preserved aggregate CoG, density, and
+  CRPS accuracy but caused bootstrap-resolved degradations in the 5--30 kpc
+  CoG and all three size errors. Because the nonlinear supports are moderately
+  stable across outer folds, more aggressive entry-wise thresholding would
+  discard repeatable weak signal rather than isolate noise. Seek fewer shared
+  halo-response directions across the four analytic outputs instead of
+  deleting individual polynomial coefficients from the same architecture.
 - **Never standardize a constant model prescription as though it were a
   predictor (exp56 Stage 3b coefficient audit).** The fixed-slope relation had
   appended `gamma=1.4` to the halo features for symmetry with the smooth model.

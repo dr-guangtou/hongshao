@@ -807,6 +807,121 @@ non-identifiable even though their decoded predictions are stable. The exact
 held-out matrices are preserved for audit, but the displayed full-sample
 fixed-slope recipe removes that meaningless constant column.
 
+## Stage 3c predeclaration — structured sparsification of the halo–CoG mean
+
+Stage 3c asks whether the fixed-`gamma=1.4` Stage 3 conditional mean can be
+made substantially shorter without losing its held-out CoG, density, size, or
+population accuracy. It changes neither the five halo inputs nor the four
+analytic CoG coordinates. The reference has 52 identifiable mean
+coefficients: four intercepts, 20 linear coefficients, and 28 coefficients for
+the seven established nonlinear basis terms across four outputs.
+
+Keep every intercept and linear halo term unpenalized. Apply a sparse-group
+penalty only to the `4 x 7` nonlinear coefficient block. The group part may
+remove one nonlinear basis term from all four output equations; the
+elementwise part may retain it only for the output coordinates that need it.
+Because every main effect remains present, an interaction can never survive
+without both parent variables in the model. After choosing a nonzero support,
+refit that support by ordinary least squares so the reported coefficients are
+not shrinkage-biased.
+
+Use the fixed mixing grid `alpha = 0.25, 0.50, 0.75, 1.00`. For each mixing
+value, define the penalty scale from the largest nonlinear gradient after
+fitting the linear core, and test the fixed fractions
+`1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 0`. Standardize halo inputs and each
+target coordinate using only the current training sample. A zero-penalty fit
+must reproduce the identifiable 52-coefficient Stage 3 mean.
+
+All sparsity selection is nested inside each of the unchanged five outer
+folds. Split each outer-training sample into four deterministic inner folds.
+For every penalty candidate, assemble complete inner-held-out analytic
+coordinates, decode them to the original CoGs, and measure the same profile
+quantities used for final QA. Compare candidates with the unpenalized
+52-coefficient mean on those same inner-held-out galaxies. A candidate enters
+the simplicity set only if its median full-CoG RMS is within 1% of the inner
+reference, its full and 5--30 kpc density RMS values are no more than 0.001 dex
+worse, and its 5--30 kpc CoG and absolute R50/R80/R90 errors are each no more
+than 0.001 dex worse. Choose the candidate with the fewest median active
+coefficients across inner folds; break ties by full-CoG RMS, then stronger
+group sparsity, then stronger total penalty. Freeze that choice before the
+outer test fold is evaluated.
+
+Refit the established nested-calibrated nearest-neighbour residual generator
+around the selected sparse mean inside every outer fold. Repeat the Stage 3
+final-mass-only, mass-conditioned shuffled-MAH, and shuffled-concentration
+controls using the selected architecture. Judge the untouched outer-fold
+predictions against the saved Stage 3 fixed-`gamma=1.4` reference using paired
+1,000-galaxy bootstraps of full and 5--30 kpc CoG and density RMS,
+R50/R80/R90, profile CRPS and coverage, the largest coherent halo-mass-bin
+shape residual, boundaries, radial-jackknife stability, synthetic recovery,
+population planes, and the complete standard QA battery.
+
+Adopt the sparse mean only if it uses at most 32 active mean coefficients in
+every outer fold, keeps CRPS and median full-CoG RMS within 1% of Stage 3,
+changes full or 5--30 kpc density RMS by no more than +0.001 dex, produces no
+bootstrap-resolved degradation in 5--30 kpc CoG or R50/R80/R90, worsens the
+largest halo-mass-bin residual by less than 0.5 percentage point, and passes
+all numerical and stochastic safeguards. A 33--39 coefficient model that
+passes accuracy safeguards is partial progress but does not replace Stage 3;
+40 or more coefficients is not a meaningful simplification.
+
+Before the full calculation, run the complete candidate grid, nested
+selection, residual calibration, controls, summaries, saved outputs, the
+complexity--accuracy frontier, fold-support heat map, direct profile figures,
+and standard QA on the same mass-stratified 90-galaxy sample with eight draws.
+The complete path must finish in less than 60 seconds. Full Stage 3c output may
+be generated only after this saved gate passes.
+
+## Stage 3c result — coefficient pruning is not the needed simplification
+
+The complete candidate-selection and QA path passed on exactly 90
+mass-stratified galaxies in 31.17 seconds, including the full penalty grid,
+four inner folds inside each of five outer held-out folds, nested stochastic
+calibration, eight draws, controls, saved predictions, direct profile figures,
+and standard QA. The zero-penalty solution reproduces the original
+52-coefficient mean exactly. A synthetic relation with 31 active coefficients
+recovers its complete nonlinear support and predictions to a maximum absolute
+error of `2.0e-15`. The full calculation was therefore authorized and finished
+for 2,539 galaxies with 32 draws in 193.66 seconds.
+
+On the full sample, inner validation retains 44, 51, 45, 41, and 45 active
+mean coefficients in the five outer fits. The median is 45 coefficients, only
+seven fewer than the 52-coefficient reference; all five fits exceed the
+predeclared adoption limit of 32, and even the smallest exceeds the
+40-coefficient threshold for a meaningful simplification. The selected
+nonlinear supports are moderately stable, with median pairwise Jaccard overlap
+of 0.756, so this is not primarily random fold-to-fold selection. Instead,
+most of the established nonlinear terms contribute small amounts of held-out
+profile accuracy in several output equations.
+
+The small amount of pruning leaves the aggregate accuracy nearly unchanged.
+Median full-CoG RMS is 0.08435 dex against 0.08415 dex for the 52-coefficient
+Stage 3 reference, a 0.25% increase; median full density RMS is 0.12800 dex
+against 0.12788 dex, a 0.09% increase. Profile CRPS is 0.06373 dex against
+0.06403 dex for Stage 3, and nominal-68% profile coverage is 68.60%. All
+predicted mean coordinates remain inside the validated analytic-profile
+bounds, and alternating even/odd radial subsets remain within 1% of the
+reference errors.
+
+Nevertheless, the paired galaxy bootstrap resolves small degradations in the
+quantities protected by the predeclared rule. The median per-galaxy 5--30 kpc
+CoG RMS rises from 0.04587 to 0.04605 dex. Median absolute R50, R80, and R90
+errors rise by 0.00012, 0.00007, and 0.00022 dex, respectively. The largest
+coherent halo-mass-bin shape residual rises by a bootstrap median of 0.399
+percentage point, with a 16th--84th percentile interval of 0.046--0.709
+percentage point; its upper interval also exceeds the allowed 0.5 percentage
+point. The complete relation still strongly outperforms final-mass-only and
+mass-conditioned shuffled-MAH controls, so the negative result does not erase
+the assembly information established by Stage 3.
+
+**Decision:** do not replace the Stage 3 halo–CoG relation with this sparse
+support. Coefficient-wise sparsification answers the question cleanly but does
+not expose a substantially lower-dimensional recipe: the useful nonlinear
+signal is distributed across many small coefficients. The next attempt should
+change the architecture so outputs share a small number of latent halo-response
+directions, rather than asking an otherwise unchanged 52-coefficient
+polynomial to delete individual entries.
+
 ## Stage 4 predeclaration — radial halo-information content
 
 Stage 4 asks what halo information improves the fixed-`n=1`, fixed-`gamma=1.4`
