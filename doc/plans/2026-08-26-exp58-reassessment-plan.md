@@ -152,3 +152,21 @@ Stage 0 half a day; Stage 1 three fits × ~30 min plus gates; Stage 2 ~2 h;
 Stage 3 ~3 h; Stage 4 ~2 h if triggered. The whole plan is under two working
 days of compute, all on the standard evaluators (112 ms and 484 ms per
 evaluation, measured in exp57 Stage 0).
+
+---
+
+## Addendum (2026-08-26, same day): Stage 1's own gate closed Stage 1
+
+Stage 0's discipline was applied to Stage 1 itself before any fit: a
+coefficient sweep by direct model evaluation (exp59 `stage0_leverage.py`)
+measured what each conditioning variable could do to the B2 splits. Every
+candidate — `F1`, the `E3` retest, plus three extensions added under the same
+pre-declared rules (specific accretion rate, the f_form x redshift
+interaction, a stalled-halo hinge) — moves the z=2 and z=0.4 decliner splits
+in lockstep, so no coefficient closes one without inflating the other far past
+the no-harm guard. **Stage 1 is closed as a measured negative at the cost of
+fifteen evaluations; the pre-registered signs were never fitted because the
+gate disqualified the family first.** Stage 2 proceeds unchanged and is now
+the active stage; Stage 3's "best Stage-1 law" ingredient is void; Stage 4's
+trigger condition is unchanged. See `experiments/exp59_conditioned_efficiency/
+README.md` for the full table and the two S1 catches its PROBLEMS.md records.

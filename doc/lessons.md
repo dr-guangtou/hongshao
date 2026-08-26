@@ -1574,3 +1574,28 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   bug and is a string bug. Diagnose it by measuring every text artist's window
   extent and printing the leftmost and rightmost — the offender is obvious and
   it takes one throwaway script. Use plain words ("beyond 500") in tick labels.
+- **A magnitude is not a target: transcribe signed quantities signed (exp59).**
+  The leverage script's first draft copied the z=2 decliner split as +0.122
+  from a table of magnitudes; the signed value is -0.122. The flipped sign
+  reversed the required coefficient and declared two disqualified candidates
+  "worth a fit". Caught by printing the sweep's null row first and checking it
+  against the source measurement — a habit worth keeping: any sweep or scan
+  must reproduce its own zero point before the rest of it is read. Fifth
+  instance of a bound/target mismatched to what it reports.
+- **Pre-register a sign on the law's OWN variable, not on a correlated summary
+  of it (exp59).** The plan pre-registered `e_f < 0` from the correlation of
+  the z=2 residual with the galaxy's formation time AT THE EPOCH; the law
+  applies to the PER-DEPOSIT `f_form_j`, which is dominated by assembly bursts
+  and orders the groups differently within each time window. The direction
+  self-check written for the epoch-level intuition failed on its first run,
+  which is the cheapest possible place to learn this.
+- **Measure a candidate's gate leverage by evaluation before spending a fit on
+  it (exp59).** The loss cannot see gate B2 (the z=2 bias costs ~0.6% of the
+  loss), so fitting first would have optimised past the gate and reported a
+  misleading "improvement". Sweeping the conditioning coefficient with the
+  base parameters held and reading the gate quantities directly disqualified
+  all five candidates in fifteen evaluations — five ~30-minute fits saved,
+  and the negative is cleaner: it is a property of the variables, not of an
+  optimiser run. A conditional slice is fine for DISQUALIFYING (a lockstep
+  differential cannot be unlocked by refitting parameters blind to the
+  groups); a passing sweep would still need the fit and the gates.

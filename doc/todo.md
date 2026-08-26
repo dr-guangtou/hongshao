@@ -1862,3 +1862,21 @@ Cross-experiment plan. Mirrors the phase sequence in
   retest), pre-registered signs `e_f < 0`, `a_c > 0`; Stage 2 the owed
   `X3`-with-size-law-pinned refit; Stage 3 the combination with `Rc` frozen;
   Stage 4 conditioned expansion only if a decliner residual survives.
+
+### exp59 — conditioned efficiency (2026-08-26)
+
+- [x] **`conditioned.py`** — per-deposit conditioning of `log_eps` through a
+  single `cond_le` hook; nesting EXACT (values, NaNs, loss; no tolerance).
+- [x] **Stage 0b — the leverage sweep, gates before fits.** ALL FIVE
+  candidates (f_form, dlogc, specific accretion rate, f_form x redshift,
+  stalled-halo hinge) DISQUALIFIED before any fit: every one moves the z=2
+  and z=0.4 decliner splits in lockstep, so closing z=2 (-0.122 dex) inflates
+  z=0.4 (+0.082) to +0.17..+0.27. The decliner amplitude crossing is
+  unreachable by per-deposit efficiency conditioning — the amplitude-level
+  twin of the r = -0.317 decline-flag ceiling. Two S1 catches recorded in
+  PROBLEMS.md before any fit was spent.
+- [ ] **Stage 2 (running) — the owed X3 small-core refit with the size law
+  pinned** (`stage3_fit.py --only X3 --freeze log_f0,b --tag pinned_size`),
+  gates on every basin after. Decision numbers: shape error vs 13.45%, and
+  the M[50,148] outskirt drift vs a +0.02 dex allowance (the unpinned refit
+  drifted +0.075).
