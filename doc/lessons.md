@@ -1566,3 +1566,11 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the compensation the other parameters supplied. Here it showed the expansion
   doing all the work in every case, and explained one gate failure exactly: the
   term moved the core gap -0.025 while the refit moved it +0.046.
+- **Never hand `qa._tex` a string that is already in math mode (exp57).** `_tex`
+  replaces a bare `>` with `$>$` to survive usetex, so `f"$>${x}"` becomes
+  `$$>$$500`. Under usetex that renders as a 3400-pixel-wide broken box, and
+  because `savefig.bbox` is `"tight"` it expanded a 13x9-inch figure to 35x25
+  with the entire plot crammed into one corner. The symptom looks like a layout
+  bug and is a string bug. Diagnose it by measuring every text artist's window
+  extent and printing the leftmost and rightmost — the offender is obvious and
+  it takes one throwaway script. Use plain words ("beyond 500") in tick labels.
