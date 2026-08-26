@@ -1575,6 +1575,22 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   discard repeatable weak signal rather than isolate noise. Seek fewer shared
   halo-response directions across the four analytic outputs instead of
   deleting individual polynomial coefficients from the same architecture.
+- **Explained coordinate variance is not observable importance (exp56 Stage
+  3d).** Two shared halo-response directions capture 96.84% of the fitted
+  analytic-coordinate response and form a stable subspace across held-out
+  folds, yet their decoded full-CoG RMS is 2.32% worse than the unrestricted
+  relation and their 5--30 kpc CoG and R50/R80/R90 errors are
+  bootstrap-resolvedly worse. Small coordinate-response directions can carry
+  disproportionate information about profile derivatives and enclosed-mass
+  radii. Select or weight latent directions using the final observables rather
+  than total coordinate variance alone.
+- **Average CoGs in halo-mass bins are necessary but not sufficient visual QA
+  (exp56 Stage 3d).** Rank 2 and unrestricted rank 4 are nearly
+  indistinguishable in the average halo-bin CoGs, while the stellar-mass planes
+  show that rank 2 further compresses the already narrow model scatter and the
+  paired individual-galaxy tests resolve worse CoG and size recovery. Always
+  inspect both average profiles and population planes before judging a
+  direction from either view alone.
 - **Never standardize a constant model prescription as though it were a
   predictor (exp56 Stage 3b coefficient audit).** The fixed-slope relation had
   appended `gamma=1.4` to the halo features for symmetry with the smooth model.

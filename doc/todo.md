@@ -1851,6 +1851,25 @@ Cross-experiment plan. Mirrors the phase sequence in
   bootstrap-resolved and the worst mass-bin residual increase exceeds its
   safeguard. **Decision:** reject entry-wise sparsification as a meaningful
   simplification; test a shared low-rank halo-response architecture next.
+- [x] **Stage 3d: test shared low-rank halo-response directions.** Keep the
+  fixed `n=1`, fixed `gamma=1.4` profile representation and the complete
+  12-column non-constant halo basis. Compare rank-1, rank-2, rank-3, and
+  unrestricted rank-4 multivariate means on the unchanged outer folds, with
+  rank 2 as the primary 32-effective-coefficient candidate. Require numerical
+  rank-4 closure, synthetic recovery, stable rank-2 output subspaces, nested
+  residual calibration, matched null controls, the complete scientific QA
+  battery, direct galaxies, average CoGs in halo-mass bins, and stellar-mass
+  planes. Pass the complete 90-galaxy path in less than one minute before the
+  full run. **Validation:** the complete path passed in 20.08 seconds, and
+  rank 4 closes to the saved Stage 3 profiles within `1.3e-13` dex. **Result:**
+  the full 2,539-galaxy run finished in 557.49 seconds. Rank 2 uses 32 effective
+  coefficients, captures 96.84% of fitted-response variance, and has a stable
+  2.28-degree maximum fold-to-fold subspace angle, but worsens median full-CoG
+  RMS from 0.08415 to 0.08610 dex. Its 5--30 kpc CoG and R50/R80/R90 errors are
+  bootstrap-resolvedly worse, and the stellar-mass planes are visibly more
+  compressed. Rank 1 is clearly inadequate; rank 3 uses 43 coefficients and
+  still fails protected radial and size metrics. **Decision:** reject global
+  low-rank truncation as the Stage 3 replacement.
 - [x] **Stage 4: measure radial halo-information content without imposing the
   expected answer.** Compare nested held-out relations using final mass,
   recent DiffMAH growth, early assembled fraction, the complete DiffMAH

@@ -922,6 +922,145 @@ change the architecture so outputs share a small number of latent halo-response
 directions, rather than asking an otherwise unchanged 52-coefficient
 polynomial to delete individual entries.
 
+## Stage 3d predeclaration — shared low-rank halo responses
+
+Stage 3d tests whether the four analytic CoG coordinates respond to the full
+halo basis through a smaller number of common directions. It keeps the fixed
+`n=1`, fixed `gamma=1.4` representation, the five halo inputs, the five linear
+and seven nonlinear halo terms, the analytic-coordinate fitting objective,
+and the unchanged five outer held-out folds. It does not remove individual
+halo terms or refit the profile family.
+
+Center the 12 non-constant halo-basis columns and standardize each of the four
+analytic targets to zero mean and unit variance using only the current training
+sample. This prevents the arbitrary numerical units of a coordinate from
+determining the retained rank. Fit the unrestricted multivariate least-squares
+coefficient matrix, then retain its best rank-`k` fitted-response subspace. The
+relation is
+
+```text
+theta_CoG = intercept + output_loadings @ shared_halo_scores
+shared_halo_scores = halo_loadings.T @ halo_basis
+```
+
+The four intercepts remain free. With 12 halo-basis columns and four outputs,
+the identifiable mean complexity is `4 + k * (12 + 4 - k)`: 19 coefficients
+for rank 1, 32 for rank 2, 43 for rank 3, and the original 52 for unrestricted
+rank 4. The rank-4 prediction must reproduce the Stage 3 coordinate-space mean
+to numerical precision. Rank 2 is the predeclared primary candidate because it
+meets the 32-coefficient target; ranks 1 and 3 bracket whether one direction is
+sufficient or three are necessary. No rank is selected from the outer test
+galaxies.
+
+Fit complete held-out predictions and separately calibrated stochastic draws
+for ranks 1--4. For the primary rank-2 relation, repeat the final-mass-only,
+mass-conditioned shuffled-MAH, and shuffled-concentration controls. Compare
+rank 2 with the saved Stage 3 fixed-`gamma=1.4` relation using the same full and
+5--30 kpc CoG and density errors, R50/R80/R90, profile CRPS and coverage,
+largest coherent halo-mass-bin residual, analytic boundaries, alternating
+radial subsets, population planes, direct galaxies, and standard QA used in
+Stage 3c. The residual calibration and every control fit remain inside the
+outer training folds.
+
+The low-rank calculation adds two structural diagnostics. First, measure the
+fraction of fitted-response variance carried by each shared direction. Second,
+compare the rank-2 output subspaces between outer folds using principal angles;
+this judges the common two-dimensional response without assigning physical
+meaning to an arbitrary rotation of its axes. Require the largest pairwise
+principal angle to remain below 20 degrees for the subspace-stability gate.
+Visualize the halo-basis weights and the decoded CoG and density change caused
+by each shared direction. Any
+association with halo mass, recent growth, early assembled fraction, or
+concentration is an interpretation to test after fitting, not a sign or radial
+pattern imposed on the relation.
+
+Adopt rank 2 only if it keeps profile CRPS and median full-CoG RMS within 1% of
+Stage 3, changes full or 5--30 kpc density RMS by no more than +0.001 dex,
+produces no bootstrap-resolved degradation in the 5--30 kpc CoG or absolute
+R50/R80/R90 errors, worsens the largest halo-mass-bin shape residual by less
+than 0.5 percentage point, retains calibrated coverage and valid boundaries,
+and has a stable two-dimensional output subspace. Rank 1 is adopted only if it
+passes the same safeguards. If rank 2 fails but rank 3 passes, conclude that at
+least three shared halo-response directions are needed and do not call the
+43-coefficient model a meaningful simplification.
+
+Before the full run, execute ranks 1--4, the rank-2 controls and stochastic
+calibration, saved outputs, synthetic and rank-4 closure checks, direct profile
+figures, the average CoG in halo-mass bins, the stellar-mass planes, and the
+complete rank-2 standard QA on the same mass-stratified 90-galaxy sample with
+eight draws. The complete path must finish in less than 60 seconds. Full
+outputs may be generated only after this operational gate passes.
+
+## Stage 3d result — two dominant directions are real but insufficient
+
+The complete path passed on exactly 90 mass-stratified galaxies in 20.08
+seconds. It fitted ranks 1--4 on five outer held-out folds, calibrated each
+stochastic relation inside its training folds, fitted the rank-2 null controls,
+saved predictions, and generated direct galaxies, average CoGs in halo-mass
+bins, stellar-mass planes, latent-direction diagnostics, and the full rank-2
+standard QA. The full 2,539-galaxy calculation with 32 draws then finished in
+557.49 seconds. Rank 4 reproduces the saved Stage 3 fixed-slope profiles to a
+maximum absolute difference of `1.3e-13` dex.
+
+The unrestricted fitted response has a strong low-dimensional hierarchy. Its
+first direction carries a median 83.94% of the fitted-response variance across
+outer folds, and the first two together carry 96.84%. The rank-2 output
+subspace is also highly stable: the largest principal angle between any pair
+of outer-fold subspaces is 2.28 degrees, well below the predeclared 20-degree
+limit. Thus the two dominant common response directions are measured features
+of the relation rather than unstable decompositions.
+
+They are nevertheless insufficient for the scientific observables. The
+32-effective-coefficient rank-2 relation has median full-CoG RMS of 0.08610
+dex against 0.08415 dex for the unrestricted Stage 3 relation, a 2.32%
+degradation that fails the 1% safeguard. Median 5--30 kpc CoG RMS rises from
+0.04587 to 0.04650 dex. Median absolute R50, R80, and R90 errors rise from
+0.08898/0.07060/0.05439 dex to 0.08943/0.07065/0.05535 dex. All four protected
+differences are bootstrap-resolved. Full and 5--30 kpc density RMS remain
+within the allowed +0.001 dex changes, profile CRPS remains essentially
+unchanged at 0.06405 dex against 0.06403 dex for Stage 3, nominal-68% coverage
+is 68.81%, and all mean coordinates remain inside the analytic-profile bounds.
+The largest coherent halo-mass-bin shape residual is 6.45% for rank 2 against
+5.59% for Stage 3; the bootstrap rank-2-minus-Stage-3 change is 0.366
+percentage point with a 16th--84th percentile interval of -0.028--0.830, whose
+upper endpoint exceeds the allowed 0.5 percentage point.
+
+Rank 1, with 19 effective coefficients, is clearly inadequate: its median
+full-CoG RMS is 0.08945 dex and every protected CoG, density, and size error is
+bootstrap-resolvedly worse than Stage 3. Rank 3 reaches 0.08497 dex median
+full-CoG RMS, within 1% of Stage 3, but uses 43 effective coefficients and still
+has resolved degradations in the 5--30 kpc CoG, R80, and R90 errors. It also
+fails the mass-bin residual safeguard. Therefore neither neighboring rank
+changes the rank-2 decision.
+
+The visual QA is essential to the interpretation. Average CoGs in three
+halo-mass bins make rank 2 and unrestricted rank 4 nearly indistinguishable,
+showing that two directions preserve the coarse conditional mean. The
+stellar-mass planes expose the lost structural diversity. In the
+`Mstar(<30 kpc)` versus `Mstar(30--50 kpc)` plane, TNG has 0.172 dex scatter,
+Stage 3 has 0.067 dex, and rank 2 narrows further to 0.057 dex. In the
+`Mstar(<30 kpc)` versus `Mstar(50--100 kpc)` plane, TNG has 0.206 dex scatter,
+Stage 3 has 0.076 dex, and rank 2 has 0.064 dex. The model direction therefore
+looks successful in average profiles while becoming worse for individual and
+population-level structure.
+
+The complete rank-2 relation continues to outperform the final-mass-only,
+mass-conditioned shuffled-MAH, and shuffled-concentration controls in median
+profile RMS, so this failure does not remove the established assembly
+information. It shows instead that the third and fourth response directions,
+although carrying only 3.16% of fitted-response variance together, contain
+repeatable information needed for accurate individual sizes and radial
+structure. The fitted latent weights and radial responses are retained as
+diagnostics; they are not labeled as an inner--early-MAH or outer--recent-growth
+physical connection.
+
+**Decision:** do not replace Stage 3 with rank 1, 2, or 3. A global low-rank
+constraint is too blunt because variance explained in analytic-coordinate
+space is not proportional to importance for decoded CoGs, sizes, or
+stellar-mass planes. Any further simplification should protect the small
+observable-sensitive response directions rather than rank them only by total
+coordinate variance.
+
 ## Stage 4 predeclaration — radial halo-information content
 
 Stage 4 asks what halo information improves the fixed-`n=1`, fixed-`gamma=1.4`
@@ -1095,3 +1234,8 @@ physics.
   through direct figures and contact sheets. Stage 4's corrected full rerun
   differs only in the finite-pair raw-history diagnostic; its fitted relations
   and decision are deterministic and unchanged.
+- Stage 3c and Stage 3d passed their complete 90-galaxy paths in 31.17 and
+  20.08 seconds before full runs. Stage 3d explicitly inspected both average
+  CoGs in halo-mass bins and the stellar-mass planes; their different messages
+  are part of the final low-rank decision rather than an after-the-fact figure
+  note.
