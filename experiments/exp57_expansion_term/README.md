@@ -4,7 +4,7 @@ Branch `exp57-expansion-term`. Plan:
 `doc/plans/2026-08-26-exp57-expansion-term.md`. Problems:
 [`PROBLEMS.md`](PROBLEMS.md).
 
-**Status: COMPLETE.** Stages 0–8 done and gated, including the 9-start `X3` confirmation run.
+**Status: COMPLETE.** Stages 0–9 done and gated.
 
 ---
 
@@ -463,6 +463,46 @@ differ from the rest **in formation time and not in mass** — median `t_half/t`
 formation-time-conditioned expansion strength is therefore the one shared
 extension with something real to condition on, and its ceiling is that
 `r = −0.317`.
+
+---
+
+## Stage 9 (2026-08-26) — `X4`, the formation-conditioned expansion. REJECTED.
+
+The one extension the pre-registered diagnostic pointed at: let the expansion
+strength depend on the halo's formation time, `A -> A0 + A_f (f_form - 0.6)`,
+because the galaxies whose centres decline differ from the rest in formation
+time (`r = -0.317`) and not in halo mass (`r = +0.025`).
+
+**It has the best loss and the best profile-shape error of anything tried —
+1.814236 and 13.259% — and it is rejected, for two independent reasons.**
+
+**1. The conditioning slope is not identified.** Ten starts land in three
+different places, with three different signs:
+
+| `A_f` | starts | loss |
+|---|---|---|
+| **−15.0000**, at its lower bound | 0, 4, 5, 6 | 1.8304 |
+| **≈ 0** (−0.026 to +0.007) | 1, 2, 3, 7, 9 | 1.8311–1.8333 |
+| **+9.73** | 8 — *the winner* | **1.8142** |
+
+A parameter that rails at a bound in four starts, vanishes in five and takes a
+large positive value in one is not a measurement. exp54 Stage 3.5 rejected a
+richer time law on exactly this ground.
+
+**2. The winning sign is the OPPOSITE of the prediction.** The diagnostic says
+the centres that fall belong to haloes that formed EARLY (smaller `f_form`), so
+they should expand more, which needs `A_f < 0`. The best-loss solution has
+`A_f = +9.73` — later-forming haloes expanding more. The starts that *did*
+follow the prediction railed at the bound and scored worse. **The prediction was
+made before the fit and the fit did not confirm it.**
+
+**And it fails the gates anyway**: `Rc` = 95 kpc, so it is near-homologous, and
+G2 fails at 48.6% beyond 50 kpc. G5(b) is the worst of any model at 0.101.
+
+So the extra parameter buys 0.9% of loss, is undetermined, contradicts its own
+motivation and fails the reach gate. Nothing about the formation-time hypothesis
+is *disproved* — the diagnostic's `r = -0.317` is real — but this
+parameterisation of it does not work.
 
 ---
 

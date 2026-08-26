@@ -158,27 +158,17 @@ while re-optimising the other seven moves it +0.046, and the compensation wins.
 
 ---
 
-## What is running: `X4`, a bonus stage
+## `X4`, the formation-conditioned expansion — RAN, and REJECTED
 
-`stage3_fit.py --only X4`, 10 starts, ~5 h from 05:56 on 2026-08-26. **exp57 is
-complete without it** — everything above is fitted, gated, documented and
-committed. `X4` is `X3` with the expansion strength conditioned on the halo's
-formation time,
-
-    G = 1 + [A0 + A_f (f_form − 0.6)] (1 − t_j/t_k)
-
-which is the one extension the pre-registered diagnostic points at (see below).
-`A0 = A_f = 0` nests exactly, both bounds are two-sided, and the starts place
-`A_f` at **both signs** so the diagnostic's predicted negative slope is
-falsifiable by the optimiser rather than assumed. When it lands: gate it with
-`stage2_gates.py --fit gompertz_log-E2-S2+X4` and `stage4_target.py --fit ...`,
-then re-run `stage7_summary.py` and `stage5_figures.py`.
-
-**What it is aimed at**: `X3` small-core passes G2 and G5(a) and G5(b) and fails
-G5(c). Giving early-forming haloes — the ones whose centres decline — more
-expansion than the rest should move the population's median core density (c)
-without disturbing the galaxies that never needed it (b). The ceiling is the
-`r = −0.317` below.
+Best loss (1.814236) and best shape error (13.259%) of anything tried, and
+rejected for two independent reasons. **The conditioning slope is not
+identified**: ten starts give `A_f` = −15.0000 (railed, four starts), ≈ 0 (five
+starts) and +9.73 (one start, the winner). **And the winning sign contradicts
+the prediction** — the diagnostic says early-forming haloes should expand more
+(`A_f < 0`) and the best-loss solution says the opposite. It also fails G2
+(48.6% beyond 50 kpc, `Rc` = 95 kpc so it is near-homologous) and has the worst
+G5(b) of any model. The formation-time hypothesis is not disproved; this
+parameterisation of it does not work.
 
 ## The 9-start `X3` confirmation
 
