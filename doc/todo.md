@@ -1880,3 +1880,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   gates on every basin after. Decision numbers: shape error vs 13.45%, and
   the M[50,148] outskirt drift vs a +0.02 dex allowance (the unpinned refit
   drifted +0.075).
+- [x] **Stage 2 — the owed X3 pinned-size refit.** (Killed externally at 4 of
+  9 starts; completed via checkpoint + deterministic --starts-only rerun,
+  merged with assertions.) 64% of the central gain kept (13.787% -> 13.520%),
+  the outskirt drift GONE (M[50,148] -0.062 vs incumbent -0.076), reach
+  0.5-1.5% vs a 25% limit, non-declining span 0.018 (best ever), and the loss
+  and gates AGREE on the small core for the first time. Missed: the 13.45%
+  pre-registered shape criterion by 0.07 points; G5(c) unchanged.
+- [x] **Stage 4a — leverage sweep for the conditioned expansion strength.**
+  DISQUALIFIED (declining span never leaves 0.23-0.28 against a 0.20 rule);
+  the Stage 4 fit is not run. THE PLAN IS COMPLETE. Nothing adopted — the
+  user decides on X3 pinned-size small-core.

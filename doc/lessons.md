@@ -1599,3 +1599,13 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   optimiser run. A conditional slice is fine for DISQUALIFYING (a lockstep
   differential cannot be unlocked by refitting parameters blind to the
   groups); a passing sweep would still need the fit and the gates.
+- **A per-start checkpoint plus a deterministic start list makes an
+  interrupted multi-start fit recoverable without rerunning it (exp59
+  Stage 2).** The 9-start refit was killed externally at start 4; the
+  .PARTIAL.npz written after every start held 0-3, and `--starts-only 4-8`
+  under a separate tag reproduced exactly the missing starts because the
+  start list is seeded and deterministic. The merge asserted same names,
+  same frozen values, same incumbent theta and loss, and re-evaluated the
+  best optimum before writing the canonical file. Long background fits
+  belong in the primary session's shell, not a subagent's — the subagent's
+  background process did not survive its host's lifecycle.
