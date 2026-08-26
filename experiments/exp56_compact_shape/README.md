@@ -705,6 +705,18 @@ grow by 0.00247, 0.00593, and 0.00444 dex, again with all three intervals above
 zero. The standard annular-mass, density, size, and best/worst-galaxy figures
 show the same trade rather than a hidden numerical failure.
 
+The visually cleaner median QA curves do not contradict those per-galaxy
+metrics. Under fixed `gamma=1.4`, 668 of 2,539 held-out galaxies (26.3%) have a
+lower full-CoG RMS under direct training but a higher full-density RMS than
+under coordinate training. The illustrative galaxy selected nearest the
+median of that trade improves from 0.0910 to 0.0875 dex in full-CoG RMS while
+worsening from 0.1286 to 0.1403 dex in density RMS. Its amplitude-pinned CoG
+and finite-annulus density residuals are shown in
+`exp56_stage3b_model_recipes`: population medians can cancel positive and
+negative individual residuals, while a density derivative amplifies changes
+between adjacent cumulative masses. Thus an average CoG-by-bin panel can look
+better even when individual radial structure and sizes become less accurate.
+
 The frozen smooth outer law reaches a similar conclusion. Its median full-CoG
 RMS changes from 0.08427 dex for coordinate regression to 0.08410 dex for
 direct fitting, but that small difference is not bootstrap-resolved. Its
