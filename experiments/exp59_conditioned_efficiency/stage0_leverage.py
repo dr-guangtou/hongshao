@@ -131,13 +131,14 @@ def main(smoke=False):
     print(f"  RULE B: |adjusted z=2 median| <= {B1_LIM} with both splits "
           f"within today's size + {GUARD}\n")
 
-    verdicts = {}
+    verdicts, curves = {}, {}
     for var in CANDS:
         pr = SweepProblem(var, base, recs, data, mask)
         print(f"  {var}: v_j = {DESCR[var]}")
         print(f"    {'coef':>6} {'z=2 split':>11} {'z=0.4 split':>12} "
               f"{'adj z=2 median':>15}   qualifies")
         best = None
+        curves[var] = []
         for e in GRID:
             th = pr.cspec.nest(theta).copy()
             th[-1] = e
@@ -145,6 +146,7 @@ def main(smoke=False):
             finite = np.isfinite(pred).all(axis=2) & (pred[:, :, i100] > 0)
             use = np.asarray(mask, bool) & finite & (data[:, :, i100] > 0)
             s2, s0, med_adj = measure(pred, data, use, fell, ok, i100)
+            curves[var].append((e, s2, s0, med_adj[4]))
             qa_ = abs(s2) <= B2_LIM and abs(s0) <= abs(SPLIT_Z04) + GUARD
             qb = (abs(med_adj[4]) <= B1_LIM
                   and abs(s2) <= abs(SPLIT_Z2) + GUARD
@@ -169,7 +171,10 @@ def main(smoke=False):
         np.savez_compressed(HERE / "outputs" / "stage0_leverage.npz",
                             cands=np.array(CANDS),
                             qualified=np.array([bool(verdicts[v])
-                                                for v in CANDS]))
+                                                for v in CANDS]),
+                            descr=np.array([DESCR[v] for v in CANDS]),
+                            **{f"curve_{v}": np.array(curves[v])
+                               for v in CANDS})
 
 
 if __name__ == "__main__":

@@ -91,3 +91,13 @@ r = +0.025). A passing sweep would still have required the fit and the gates.
   candidate science statement being that the stellar mass a galaxy holds at
   z=2 in excess of the halo-conditioned expectation is the same memory that
   makes its centre decline, and the halo record alone cannot carry it.
+
+## The figure
+
+**`figures/exp59_leverage.png`** — the whole Stage 0b result in one panel:
+each candidate's trajectory in the plane of the two gate quantities (the
+decliner-minus-rest amplitude split at z=2 against the same split at z=0.4)
+as its coefficient sweeps −4 to +4. The green box is where a candidate must
+land (B2 and the B2b guard); every trajectory runs diagonally past it, and
+the stalled-halo switch never leaves the incumbent's dot. Regenerate with
+`stage0_figure.py` (reads `outputs/stage0_leverage.npz`).
