@@ -154,6 +154,11 @@ def main():
 
     np.savez(OUT / "stage7_summary.npz",
              tags=np.array([r["tag"] for r in rows]),
+             # the attribution rows are a SUBSET of `tags` (only fits with a
+             # target file), so they carry their own labels; inferring them
+             # from `tags` by position silently mismatched once
+             attr_tags=np.array([s["tag"] for s in saved]),
+             null_core_gap=float(null_t["core_gap"]),
              loss=np.array([r["loss"] for r in rows]),
              shape=np.array([r["shape"] for r in rows]),
              **{f"attr_{k}": np.array([s[k] for s in saved])

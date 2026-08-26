@@ -492,6 +492,19 @@ model does not want expansion" would be a measurement.
 
 ---
 
+## The figures
+
+- **`figures/exp57_expansion.png`** — the VERDICT, six panels: the expansion
+  factor (which is not the reach), the reach gate G2, the mechanism split G1,
+  the target gate G5, Stage 1's capability scan, and G1b, the panel with no
+  threshold of mine in it.
+- **`figures/exp57_mechanism.png`** — the MECHANISM, four panels: where the
+  moved mass comes from and goes to shell by shell (the panel that makes the
+  whole result visible — both laws drain the same 0–5 kpc shell, and one puts
+  it 5–30 kpc away while the other spreads it past 500 kpc); the `Rc` trade
+  curve; exp54's deposition schedule against the old transport kernel's; and
+  the attribution test.
+
 ## Reproducing
 
 ```
@@ -499,4 +512,6 @@ export HONGSHAO_DATA_DIR=/Users/shuang/Desktop/tng300_mah_mprof
 export OMP_NUM_THREADS=1
 PYTHONPATH=. uv run python -u experiments/exp57_expansion_term/expand.py
 PYTHONPATH=. uv run python -u experiments/exp57_expansion_term/stage0_cost.py
+PYTHONPATH=. uv run python -u experiments/exp57_expansion_term/stage5_figures.py
+PYTHONPATH=. uv run python -u experiments/exp57_expansion_term/stage9_figures.py
 ```
