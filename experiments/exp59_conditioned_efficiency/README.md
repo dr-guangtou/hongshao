@@ -101,3 +101,68 @@ as its coefficient sweeps −4 to +4. The green box is where a candidate must
 land (B2 and the B2b guard); every trajectory runs diagonally past it, and
 the stalled-halo switch never leaves the incumbent's dot. Regenerate with
 `stage0_figure.py` (reads `outputs/stage0_leverage.npz`).
+
+---
+
+## Stage 2 — the owed `X3` refit with the size law pinned. DONE, and it changes the adoption case.
+
+The fit exp57 left owed: `X3` refitted with the size-law parameters frozen at
+the incumbent's, so the central gain cannot be paid for with outskirt drift.
+Nine starts (the run was killed externally after four — no crash, no
+traceback; the per-start checkpoint plus a deterministic `--starts-only 4-8`
+reproduction under a separate tag completed it, merged by `stage2_merge.py`
+with consistency assertions). Logs and gates in `outputs/stage2_*`.
+
+| | incumbent | `X3` unpinned (exp57) | **`X3` pinned size (this)** |
+|---|---|---|---|
+| loss | 1.874253 | 1.833344 | **1.846860** |
+| profile-shape error | 13.787% | 13.369% | **13.520%** |
+| fitted `A`, `Rc` | — | +1.40, 2.61 kpc | **+1.50, 1.98 kpc** |
+| G2 reach beyond 50 / 148 kpc (limits 25 / 10%) | — | 2.2% / 0.2% | **0.5–1.5% / ≤0.1%** |
+| G5(a) declining central span (0.270 at the null) | 0.270 | 0.210 | **0.239** |
+| G5(b) non-declining span (limit 0.060) | 0.045 | 0.039 | **0.018 — best of anything ever tried** |
+| G5(c) core-density gap (null +0.0455) | +0.0455 | +0.0668 | +0.0749 — FAIL |
+| G6 outskirt `M[50,148]` population error | −0.076 | **+0.075 (the drift)** | **−0.062 — the drift is GONE, and it improves on the incumbent** |
+
+Three findings:
+
+1. **The outskirt drift was entirely the size-law refit, now proven by
+   removal**: pinned, the annulus error improves on the incumbent instead of
+   drifting 0.15 dex the other way. exp57's attribution test predicted this;
+   the refit confirms it.
+2. **The basin pathology does not survive pinning.** Six of nine starts land
+   in the small core at the best loss; the large-core direction either loses
+   (1.8616) or rails at the `log_Rc` bound. For the first time in this
+   programme, **the loss and the gates agree** on which solution is right —
+   exp57's P-E conflict was a symptom of the size-law freedom.
+3. **The price of pinning is 36% of the central gain**: shape error 13.520%
+   against the unpinned 13.369%, and the pre-registered Stage 2 criterion
+   (≤ 13.45%) is therefore MISSED by 0.07 points — reported as the miss it
+   is. The amplitude gates (B1/B2) sit at the null's values, as Stage 0b
+   predicted for any core-only rearrangement; B3 fails on z=1.0 (+2.3% →
+   +4.5%) while its z=0.4 entry trips the gate's letter (moves more than
+   1 point) by IMPROVING in absolute size (−2.2% → +1.6%) — stated, not
+   relitigated.
+
+## Stage 4a — the leverage sweep for the formation-conditioned expansion. DISQUALIFIED; the plan is complete.
+
+The plan's Stage 4 trigger (a decliner-specific central residual after the
+expansion stage) is met: declining span 0.239 against non-declining 0.018.
+`stage4_leverage.py` swept the `X4` conditioning slope `A_f` from −10 to +10
+with `A0` and `Rc` held at the Stage 2 optimum, against a rule declared before
+the numbers (declining span ≤ 0.20 with non-declining ≤ 0.060). **No grid
+point qualifies**: the declining span never leaves 0.23–0.28. The
+pre-registered sign does show its predicted effect — at `A_f` = −10 the
+decliners' z=2 central error improves −0.205 → −0.131 — but as a SHIFT of
+their whole error curve, not the bend the span needs, so their span worsens
+while it happens. The deposit-weighted formation-state contrast between the
+groups (~0.03) is simply too weak to carry a differential mechanism, at the
+centre exactly as at the amplitude (Stage 0b). The Stage 4 fit is not run.
+
+**Every stage of the approved plan is now executed or measurably closed.
+Nothing is adopted — that decision is the user's.** The candidate on the
+table is `X3` pinned-size small-core: every mechanism gate passed, both exp57
+objections (drift, basin conflict) resolved, at the cost of 0.15 points of
+shape error against the unpinned version and with G5(c) — the median core
+over-growth — still standing, now measured to be beyond the reach of every
+shared mechanism this programme has tested.
