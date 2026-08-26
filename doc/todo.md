@@ -1833,3 +1833,32 @@ Cross-experiment plan. Mirrors the phase sequence in
   declining centres from the rest (`r = -0.317`, against `r = +0.025` for halo
   mass). One shared parameter, no stellar information, `f_form` already carried
   per deposit. See open questions C11 and C12.
+
+### exp58 — the reassessment (2026-08-26, measurements only, no fits)
+
+- [x] **P-A — the transport comparison, like for like at last.** The old
+  `1ch-mof` kernel through `hongshao.qa.evaluate` with its amplitude PREDICTED
+  (the halo-only regression), on exp57's sample (2396 common). Tier 3 at z=0.4:
+  0.268 vs the incumbent's 0.276 — a 3% gap, not 42%; in pure shape (all
+  pinned at the measured `M*(<103)`) `X3` small-core is best at 4 of 5 epochs.
+  "Systematically behind" is retired.
+- [x] **P-B — z=2 characterised.** An amplitude error (−0.046 dex median, flat
+  in radius beyond 10 kpc) plus a core shape deficit (−0.084 dex at 2 kpc,
+  shared with z=1.5). Carried by the centre-decliners (−0.109 vs +0.013 dex,
+  r|Mh = −0.45) and high concentration excess (−0.38) — measured on the masked
+  fit sample. The loss scores z=2 as its BEST epoch (SIGMA_A there is 0.161).
+- [x] **P-C — the amplitude ceiling ladder.** A time-only enrichment is
+  worthless (±0.008 of tier 3); halo-conditioning is real (shuffled control
+  flat) but recovers ~a fifth of the z=2 amplitude error; fit-sample-trained
+  corrections OVERSHOOT the full QA population; with a perfect amplitude the
+  z=2 core is still −9.4% at `M*(<10)` — the expansion term's job.
+- [x] **P-D — the monotonicity compromise, per group.** Decliners' two-epoch
+  central error sum: 0.194 dex against an arithmetic floor of 0.062; the model
+  gives both groups the same central growth (+0.083 / +0.104) where the data
+  splits them (−0.062 / +0.100).
+- [ ] **The plan** (`doc/plans/2026-08-26-exp58-reassessment-plan.md`), for the
+  user to approve: Stage 0 bias-sighted gates (B1/B2/B3, frozen thresholds);
+  Stage 1 condition the EFFICIENCY law on `f_form` (new) and `dlogc` (E3
+  retest), pre-registered signs `e_f < 0`, `a_c > 0`; Stage 2 the owed
+  `X3`-with-size-law-pinned refit; Stage 3 the combination with `Rc` frozen;
+  Stage 4 conditioned expansion only if a decliner residual survives.
