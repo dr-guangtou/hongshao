@@ -1591,6 +1591,15 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   paired individual-galaxy tests resolve worse CoG and size recovery. Always
   inspect both average profiles and population planes before judging a
   direction from either view alone.
+- **A stable whole-term complexity knee can still remove observable-sensitive
+  information (exp56 Stage 3e).** Exhaustive nested selection of seven
+  nonlinear columns inside the accepted rank-2 relation repeatedly stops at
+  24--26 effective coefficients. Its average halo-mass-bin CoGs remain almost
+  unchanged, but held-out full-CoG and size errors become bootstrap-resolvedly
+  worse and the stellar aperture/annular planes narrow further. Treat the
+  24--26 count as evidence for where this polynomial architecture becomes
+  brittle, not as permission to force a simpler recipe past the complete QA
+  battery.
 - **Never standardize a constant model prescription as though it were a
   predictor (exp56 Stage 3b coefficient audit).** The fixed-slope relation had
   appended `gamma=1.4` to the halo features for symmetry with the smooth model.

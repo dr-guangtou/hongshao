@@ -1870,6 +1870,27 @@ Cross-experiment plan. Mirrors the phase sequence in
   compressed. Rank 1 is clearly inadequate; rank 3 uses 43 coefficients and
   still fails protected radial and size metrics. **Decision:** reject global
   low-rank truncation as the Stage 3 replacement.
+- [x] **Stage 3e: sparsify the nonlinear halo basis inside rank 2.** Treat the
+  saved complete-basis rank-2 relation as the primary reference because its
+  average halo-mass-bin CoGs are visually valid, then exhaustively compare all
+  128 subsets of the seven nonlinear basis terms inside four inner folds of
+  every outer training fold. Keep all five linear terms and both shared latent
+  directions. Select the smallest support inside a frozen decoded-profile
+  accuracy envelope, targeting at most three nonlinear terms and therefore at
+  most 24 effective coefficients. Judge the selected relation against complete
+  rank 2 with paired held-out CoG, density, size, CRPS, coverage, boundaries,
+  radial subsets, controls, and the complete standard QA set; explicitly
+  inspect average CoGs in halo-mass bins and stellar-mass planes. Require the
+  complete 90-galaxy path to finish in less than one minute before a full run.
+  **Predeclared in the Exp56 README before writing the driver. Validation:**
+  the complete path passed in 19.21 seconds. **Result:** the full 2,539-galaxy
+  nested test finished in 217.95 seconds and selected 22/26/26/26/24 effective
+  coefficients. Sparse rank 2 worsens median full-CoG RMS from 0.08610 to
+  0.08728 dex, has bootstrap-resolved degradations in the 5--30 kpc CoG and
+  R50/R80/R90, and further compresses the fixed-aperture stellar-mass planes.
+  **Decision:** retain complete rank 2 as the practical compression; the
+  24--26 coefficient knee is informative but is not an accuracy-preserving
+  replacement.
 - [x] **Stage 4: measure radial halo-information content without imposing the
   expected answer.** Compare nested held-out relations using final mass,
   recent DiffMAH growth, early assembled fraction, the complete DiffMAH

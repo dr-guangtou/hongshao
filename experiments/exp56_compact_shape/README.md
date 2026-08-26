@@ -1,12 +1,14 @@
 # exp56 — Compact-shape closure and radial halo–CoG relation
 
-Status: COMPLETE THROUGH STAGE 4 AND THE STAGE 3B DIRECT-COG FOLLOW-UP. Neither
-the lower-index Stage 1 test nor the joint-global shape test changes the
+Status: COMPLETE THROUGH STAGE 4 AND THE STAGE 3B--3E FOLLOW-UPS. Neither the
+lower-index Stage 1 test nor the joint-global shape test changes the
 representation. Stage 3b confirms that changing the shared fitting target from
-analytic coordinates to the decoded CoG does not repair the held-out profile:
-it slightly improves the full cumulative curve while worsening the 5--30 kpc,
-density, and size safeguards. The coordinate-regression Stage 3 relation
-therefore remains the current baseline.
+analytic coordinates to the decoded CoG does not repair the held-out profile.
+Stages 3c--3e show that entry-wise sparsity, global low rank, and whole-term
+sparsity inside rank 2 do not preserve every held-out radial and size
+safeguard. The original coordinate-regression Stage 3 relation remains the
+accuracy baseline; complete rank 2 remains a useful practical compression for
+visual and architectural comparison.
 
 ## Question
 
@@ -1061,6 +1063,133 @@ stellar-mass planes. Any further simplification should protect the small
 observable-sensitive response directions rather than rank them only by total
 coordinate variance.
 
+## Stage 3e predeclaration — sparse nonlinear basis inside rank 2
+
+Stage 3e accepts the Stage 3d rank-2 relation as a practically valid visual
+compression, while asking whether its 32 effective coefficients can be
+reduced further without changing its held-out predictions. The primary
+reference is the saved complete-basis rank-2 relation, not the unrestricted
+rank-4 Stage 3 relation. The latter remains secondary context for the absolute
+accuracy that rank 2 already trades away.
+
+Keep the fixed `n=1`, fixed `gamma=1.4` analytic representation, the same five
+halo inputs, analytic-coordinate target, five outer folds, rank of two,
+nearest-neighbour residual model, controls, and training-only normalization.
+The five linear halo terms are mandatory. Exhaustively compare all `2^7=128`
+subsets of the seven established nonlinear terms. A nonlinear term is retained
+or removed as one complete halo-basis column shared by both latent directions;
+individual output coefficients are never selected. This makes the selection
+invariant to a rotation of the two latent axes.
+
+For a support with `m` nonlinear terms, the identifiable mean complexity is
+
+```text
+4 + 2 * [(5 + m) + 4 - 2] = 18 + 2m coefficients.
+```
+
+The linear-only relation therefore uses 18 effective coefficients, one
+nonlinear term uses 20, two use 22, three use 24, and the complete seven-term
+rank-2 reference uses 32.
+
+### Nested selection and acceptance rule
+
+Select the nonlinear support separately inside every outer training fold using
+four deterministic inner folds. For each of the 128 supports, fit the rank-2
+relation on the inner training galaxies, decode its predictions for the inner
+validation galaxies, and compare those predictions with the complete-basis
+rank-2 predictions on the same galaxies. A support enters the accuracy
+envelope only if its median full-CoG RMS is within 1% of complete rank 2, its
+median 5--30 kpc amplitude-pinned CoG RMS is no more than 0.001 dex worse, its
+full and 5--30 kpc density RMS values are each no more than 0.001 dex worse,
+and its median absolute R50, R80, and R90 errors are each no more than
+0.001 dex worse. Choose the eligible support with the fewest effective
+coefficients; break ties by full-CoG RMS and then 5--30 kpc CoG RMS. Freeze
+that support before evaluating the outer test galaxies.
+
+The candidate is an interpretable compression only if every outer fold selects
+at most three nonlinear terms, corresponding to at most 24 effective
+coefficients. On the untouched outer galaxies, require profile CRPS and median
+full-CoG RMS within 1% of complete rank 2; no more than +0.001 dex change in
+full or 5--30 kpc density RMS; no bootstrap-resolved degradation in the
+5--30 kpc CoG or absolute R50/R80/R90 errors; less than 0.5 percentage point
+degradation in the largest halo-mass-bin residual; calibrated coverage;
+in-bound analytic means; stable alternating-radius checks; and continued
+separation from final-mass-only, mass-conditioned shuffled-MAH, and shuffled-
+concentration controls.
+
+Generate the complete standard QA battery for the selected sparse-rank-2
+relation. The visual decision must explicitly include average CoGs and pinned
+residuals in halo-mass bins, the stellar aperture and annular mass planes,
+stellar-mass--size planes, density profiles, population geometry, and direct
+best, typical, and worst galaxies. A scalar acceptance gate cannot overrule a
+visible new defect in these figures.
+
+Before the full run, execute all 128 inner-held-out supports, outer predictions,
+nested stochastic calibration, controls, saved products, direct comparison
+figures, and the complete standard QA set on the same 90 mass-stratified
+galaxies with eight draws. The uncached path must finish in less than 60
+seconds. Demo artifacts remain separate from the full-sample products.
+
+## Stage 3e result — whole-term sparsity stops near 24--26 coefficients
+
+The complete 90-galaxy path passed in 19.21 seconds, below the required
+60-second limit. It evaluated all 128 supports inside four inner folds of each
+outer training fold, calibrated stochastic draws, fitted all controls, saved
+the predictions, and produced the complete standard QA set. The full nested
+calculation then finished for 2,539 galaxies in 217.95 seconds.
+
+The selected relations use 22, 26, 26, 26, and 24 effective coefficients in
+the five outer folds. Thus three of five folds exceed the declared
+24-coefficient target. Squared peak mass is retained in all five folds and the
+`log t_c`--late interaction in four; each other nonlinear term appears in only
+one or two folds. This is a substantial and more interpretable reduction from
+the complete rank-2 relation's 32 coefficients, but the remaining four-term
+supports are selected repeatedly by independent training samples.
+
+The reduction does not preserve all held-out observables. Median per-galaxy
+full-CoG RMS against TNG rises from 0.08610 dex for complete rank 2 to
+0.08728 dex for sparse rank 2, a 1.37% degradation and therefore outside the
+1% accuracy envelope. On matched galaxies, the median sparse-minus-complete
+change is +0.00064 dex, with a bootstrap 16th--84th percentile interval of
++0.00041 to +0.00082 dex. The median 5--30 kpc CoG RMS values look nearly
+unchanged at 0.04657 versus 0.04650 dex, but the paired median degradation is
++0.00057 dex with a fully positive +0.00045 to +0.00070 dex bootstrap
+interval. The average halo-mass-bin CoGs likewise overlap closely, while the
+largest coherent bin residual worsens by a bootstrap median 0.80 percentage
+point and has a +1.48 percentage point upper interval, exceeding the allowed
+0.5 percentage point.
+
+The local-density trade is mixed. The sample median full density RMS is
+0.12781 dex for sparse rank 2 versus 0.12801 dex for complete rank 2, while
+the 5--30 kpc density RMS is 0.10204 versus 0.10119 dex; both scalar changes
+remain inside the +0.001 dex envelope. However, matched galaxies have a small
+positive full-density median change of +0.00029 dex. The absolute R50, R80,
+and R90 errors rise from 0.08943/0.07065/0.05535 dex to
+0.09058/0.07163/0.05601 dex, and their paired bootstrap intervals are all
+strictly positive. Profile CRPS is unchanged within noise at 0.06401 dex for
+sparse rank 2 versus 0.06405 dex for complete rank 2; nominal-68% coverage is
+69.19%, and the selected sparse relation continues to beat final-mass-only and both
+mass-conditioned shuffle controls.
+
+The visual QA confirms why average CoGs alone would be too permissive. Sparse
+and complete rank 2 are nearly indistinguishable in the halo-mass-bin averages,
+but the sparse relation further narrows the already compressed fixed-aperture
+stellar-mass planes: scatter in the `<30` versus `30--50` kpc plane is
+0.051 dex for sparse rank 2, 0.057 dex for complete rank 2, and 0.172 dex in
+TNG. The corresponding `<30` versus `50--100` kpc scatters are 0.057, 0.064,
+and 0.206 dex. The standard mass--size, density, annular-mass, distribution,
+and individual-galaxy panels show no numerical pathology, but they do show the
+same loss of individual population width and several larger object-level
+profile excursions.
+
+**Decision:** retain complete rank 2 as the practical compressed reference and
+do not adopt the nested sparse-rank-2 relation. Whole-term selection finds a
+real complexity knee around 24--26 coefficients, but forcing the halo–CoG
+relation below 32 coefficients removes small repeatable responses that matter
+for individual CoG shape and sizes. The next simplification should therefore
+change the scientific coordinates or predictor architecture, rather than
+delete more terms from this same polynomial rank-2 basis.
+
 ## Stage 4 predeclaration — radial halo-information content
 
 Stage 4 asks what halo information improves the fixed-`n=1`, fixed-`gamma=1.4`
@@ -1239,3 +1368,9 @@ physics.
   CoGs in halo-mass bins and the stellar-mass planes; their different messages
   are part of the final low-rank decision rather than an after-the-fact figure
   note.
+- Stage 3e passed its complete 90-galaxy path in 19.21 seconds before the full
+  2,539-galaxy run. Its 30 PNG products and 30 PDF companions include the
+  support frontier, direct complete-rank-2 comparisons, and the full standard
+  QA battery. Average halo-bin CoGs, stellar-mass planes, density, sizes,
+  distributions, annular masses, and individual galaxies were inspected before
+  recording the negative adoption decision.
