@@ -1,8 +1,12 @@
 # exp56 — Compact-shape closure and radial halo–CoG relation
 
-Status: COMPLETE THROUGH STAGE 1B. Neither the lower-index Stage 1 test nor the
-joint-global shape test changes the representation. No held-out halo–CoG
-relation has been refitted.
+Status: COMPLETE THROUGH STAGE 4 AND THE STAGE 3B DIRECT-COG FOLLOW-UP. Neither
+the lower-index Stage 1 test nor the joint-global shape test changes the
+representation. Stage 3b confirms that changing the shared fitting target from
+analytic coordinates to the decoded CoG does not repair the held-out profile:
+it slightly improves the full cumulative curve while worsening the 5--30 kpc,
+density, and size safeguards. The coordinate-regression Stage 3 relation
+therefore remains the current baseline.
 
 ## Question
 
@@ -588,6 +592,142 @@ new representation-specific failure. Both relations nevertheless compress
 the population scatter in several aperture and size planes, so Stage 4 must
 measure information content from held-out errors and shuffled controls rather
 than interpret the conditional mean as a deterministic galaxy prediction.
+
+## Stage 3b predeclaration — fit the shared relation in decoded CoG space
+
+The completed Stage 3 is a two-step parameter bridge: fit four analytic-profile
+coordinates to every TNG CoG, then fit each coordinate from halo properties.
+Its five-fold evaluation is held out, but the fitted mean minimizes coordinate
+errors rather than the decoded CoG errors used for scientific judgment. An
+uneven or curved parameter geometry can therefore penalize harmless coordinate
+motion while underweighting a smaller coordinate error that matters strongly
+for the profile. Stage 3b tests that target mismatch directly.
+
+Keep all of the following frozen relative to Stage 3:
+
+- the same 2,539 galaxies and deterministic five outer folds;
+- globally fixed compact Sersic index `n=1`;
+- both the fixed `gamma=1.4` representation and the frozen smooth
+  `gamma(log M_peak)` law, without retuning its endpoints, transition rule, or
+  0.20-dex width;
+- the four epoch-local DiffMAH coordinates plus concurrent `c_200c`;
+- the selected sparse degree-two halo basis from Exp55; and
+- the final-mass-only, mass-conditioned shuffled-MAH, and
+  mass-conditioned shuffled-concentration controls.
+
+For each outer fold, initialize the shared halo-to-coordinate coefficients at
+the Stage 3 training-only least-squares solution. Then refit those same
+coefficients by minimizing the unweighted residual in `log10 M*(<R)` over the
+24 measured radii and outer-training galaxies after decoding the predicted
+coordinates through the analytic profile. The directly fitted relation has no
+coordinate-error term in its scientific objective and no access to the outer
+validation CoGs. Refit every control with the same decoded-CoG objective.
+
+The optimizer must pass three mechanical checks before scientific use:
+
+1. its vectorized decoder agrees with the established one-galaxy decoder to a
+   maximum absolute difference below `1e-10` dex;
+2. its chained coefficient Jacobian agrees with an independent finite-
+   difference Jacobian to relative error below `1e-5`; and
+3. a synthetic shared relation is recovered to a maximum decoded-profile
+   error below `1e-6` dex. Coefficient equality is not required because weak
+   parameter directions are the reason to judge recovery in profile space.
+
+Retain analytic stochastic draws by resampling complete four-coordinate
+training residuals near each test halo, but rebuild the residual library around
+the directly fitted mean. Select the residual-inflation factor through the same
+four inner folds and nominal-68% profile-coverage rule as Stage 3; every inner
+mean must also use the decoded-CoG objective. This tests the mean-target change
+without silently borrowing the old mean's residual calibration.
+
+Judge Stage 3b against the saved Stage 3 coordinate-regression baseline
+separately for fixed and smooth outer slopes. The primary quantities are the
+decoded held-out full-range and amplitude-pinned 5--30 kpc CoG RMS, profile
+CRPS, the largest coherent halo-mass-bin shape residual, and the direct best,
+typical, and worst profile curves. Also require no bootstrap-resolved
+degradation in density RMS or absolute R50/R80/R90 error, no predicted mean
+coordinate outside the established analytic-profile bounds, calibrated 68%
+and 90% coverage, stable results when alternating fitting radii are removed,
+and no new failure in the complete standard QA battery. Report coordinate
+errors only as diagnostics; they cannot veto a better decoded CoG.
+
+Adopt direct decoded-CoG fitting for later halo-information tests only if it
+improves the coherent mass-bin shape residual while preserving the other
+safeguards. If it lowers an aggregate RMS but leaves or worsens the visible
+mass-bin residual, record it as another objective trade rather than a repair.
+Do not interpret any radial assembly connection from Stage 4 until this test
+establishes an adequate mean relation.
+
+Before a full run, execute both representations, all four conditional means,
+nested stochastic calibration, saved outputs, direct comparison figures, and
+both standard-QA batteries on the existing mass-stratified 90-galaxy sample
+with eight draws. The complete uncached path must finish in less than 60
+seconds. Demo artifacts use a `stage3b_demo_` prefix and cannot overwrite any
+completed Stage 1--4 product.
+
+## Stage 3b result — target mismatch is real, but the direct loss is not a repair
+
+The complete 90-galaxy path finished in 35.57 seconds, below the required
+60-second limit. It included both representations, all four conditional means,
+four-fold inner calibration, eight stochastic draws, an alternating-radius
+refit, saved outputs, direct profile figures, and both standard-QA batteries.
+The vectorized decoder agrees with the established decoder to
+`1.78e-15` dex, the chained coefficient Jacobian agrees with finite differences
+to relative error `7.17e-10`, and a synthetic shared relation is recovered to
+`9.88e-12` dex in the decoded profile. The full five-fold calculation then
+finished in 403.37 seconds for all 2,539 galaxies.
+
+The direct optimization lowers its training CoG loss in every outer fold and
+keeps every predicted mean coordinate inside the established analytic bounds.
+It also demonstrates the suspected internal degeneracy: for fixed
+`gamma=1.4`, held-out coordinate `R^2` is 0.864 for total stellar mass but
+-0.280, -0.237, and -0.005 for compact fraction, compact radius, and extended
+radius. Those negative coordinate scores do not by themselves reject the
+model, because Stage 3b was deliberately judged after decoding. They show that
+the optimizer can move substantially in weak analytic-coordinate directions
+while leaving the cumulative profile nearly unchanged.
+
+For fixed `gamma=1.4`, direct fitting changes the median per-galaxy full-CoG
+RMS against TNG from 0.08415 dex for coordinate regression to 0.08396 dex. The
+paired direct-minus-coordinate median improvement is 0.00020 dex, with the
+16th--84th percentile bootstrap interval entirely below zero. Profile CRPS
+also changes from 0.06403 to 0.06360 dex, and nominal 68% coverage is 68.96%
+against the 68% target. The largest amplitude-pinned halo-mass-bin residual
+falls from 5.59% to 4.44%, but its paired improvement is not resolved: the
+16th, 50th, and 84th percentiles are -2.24, -1.19, and +0.38 percentage points.
+
+Those small cumulative-profile gains are purchased by worse local structure.
+Relative to coordinate regression, the paired median 5--30 kpc CoG RMS grows
+by 0.00109 dex, full density RMS grows by 0.00282 dex, and 5--30 kpc density
+RMS grows by 0.00289 dex; every corresponding bootstrap interval is above
+zero. The median absolute errors in `log10 R50`, `log10 R80`, and `log10 R90`
+grow by 0.00247, 0.00593, and 0.00444 dex, again with all three intervals above
+zero. The standard annular-mass, density, size, and best/worst-galaxy figures
+show the same trade rather than a hidden numerical failure.
+
+The frozen smooth outer law reaches a similar conclusion. Its median full-CoG
+RMS changes from 0.08427 dex for coordinate regression to 0.08410 dex for
+direct fitting, but that small difference is not bootstrap-resolved. Its
+largest halo-mass-bin residual worsens from 3.34% to 4.01%. Relative to its
+coordinate baseline, the median 5--30 kpc CoG RMS grows by 0.00165 dex, full
+density RMS by 0.00271 dex, 5--30 kpc density RMS by 0.00399 dex, and the
+absolute R50/R80/R90 errors by 0.00222/0.00505/0.00228 dex; all of these
+degradations are bootstrap-resolved. Both representations remain radially
+stable: alternating fitting radii change their median decoded profile by only
+0.00145 dex, below their roughly 0.004 dex representation floors.
+
+**Decision:** do not adopt this direct decoded-CoG mean for subsequent
+halo-information tests. The experiment confirms that the analytic coordinates
+are only an intermediate bridge and that coordinate-space loss is not uniquely
+privileged. It also shows that an unweighted loss on 24 cumulative masses is
+not a sufficient end-to-end objective: correlated cumulative points allow a
+small improvement in the average CoG while trading away differential density,
+intermediate-radius shape, and sizes. The existing Stage 3 coordinate relation
+remains the baseline, and the Stage 4 radial-information result remains
+formally inconclusive under its already recorded adequacy failure. A future
+test would need a separately predeclared profile-aware objective that balances
+cumulative CoG, differential or annular structure, the 5--30 kpc region, and
+sizes; it must not be tuned retrospectively within Stage 3b.
 
 ## Stage 4 predeclaration — radial halo-information content
 

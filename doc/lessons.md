@@ -1543,3 +1543,25 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   sparse mean. Even coherent radial gains must remain hypotheses when the
   predeclared adequacy reference fails; do not convert a convenient comparison
   basis into an inner- or outer-assembly claim.
+- **Constrain end-to-end halo-relation steps in the established analytic
+  domain (exp56 Stage 3b).** The first direct decoded-CoG demo used an
+  unconstrained trust-region solve for shared coefficients. Its first inner
+  fit explored predicted Moffat coordinates far outside the profile bounds,
+  making the outer cumulative fraction numerically undefined before any
+  scientific result was produced. The replacement uses a Gauss-Newton step
+  with backtracking that accepts only lower decoded-CoG loss and
+  training-galaxy coordinates inside the already validated analytic bounds.
+  A stable one-galaxy profile fit does not make an unconstrained global
+  coefficient step safe; enforce the representation's domain at the shared
+  relation boundary rather than clipping invalid profiles after decoding.
+- **An end-to-end observable loss still has to encode every observable that
+  matters (exp56 Stage 3b).** Replacing four-coordinate least squares with an
+  unweighted loss on 24 decoded cumulative masses slightly improves the median
+  full-CoG RMS while driving the shape-coordinate `R^2` below zero, which is
+  acceptable evidence that the optimizer uses analytic degeneracies. However,
+  the same fit bootstrap-resolvedly worsens the 5--30 kpc CoG, differential
+  density, and R50/R80/R90 errors. Cumulative samples are strongly correlated
+  and repeatedly contain the enclosed inner mass, so minimizing them alone can
+  favor normalization at the expense of local radial structure. Judge an
+  end-to-end objective by the complete scientific QA battery, not by the loss
+  it was constructed to minimize.

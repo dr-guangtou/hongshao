@@ -1805,6 +1805,29 @@ Cross-experiment plan. Mirrors the phase sequence in
   fails the frozen R50 and self-consistent size-plane safeguards. Fixed
   `gamma=1.4` is therefore the Stage 4 primary; the smooth law remains a
   diagnostic rather than a discarded model.
+- [x] **Stage 3b: replace coordinate-space mean fitting with direct decoded-CoG
+  fitting.** The held-out split and the intermediate analytic representation
+  are separate choices: retain the exact Stage 3 folds, representations,
+  sparse halo basis, controls, and nested stochastic calibration, but refit the
+  shared coefficients against the 24-point decoded log-CoG residual on each
+  training fold. Compare with the saved coordinate-regression baseline using
+  held-out CoG and density accuracy, the coherent halo-mass-bin shape
+  residual, R50/R80/R90, boundaries, a radial jackknife, stochastic coverage,
+  null controls, complete-population geometry, and direct per-galaxy curves.
+  Require the complete 90-galaxy path to finish in less than one minute before
+  a full run. **Predeclared in the Exp56 README before writing the driver.**
+  **Validation:** the complete uncached 90-galaxy path passed in 35.57 seconds;
+  decoder, coefficient-Jacobian, and synthetic shared-relation checks all pass.
+  **Result:** on 2,539 galaxies, direct fitting gives fixed `gamma=1.4` a small
+  bootstrap-resolved 0.00020 dex improvement in median full-CoG RMS, but
+  worsens the median 5--30 kpc CoG RMS by 0.00109 dex, full density RMS by
+  0.00282 dex, 5--30 kpc density RMS by 0.00289 dex, and absolute R50/R80/R90
+  errors by 0.00247/0.00593/0.00444 dex; all degradations are bootstrap-
+  resolved. The smooth-law direct fit has the same trade and worsens its
+  largest halo-mass-bin residual from 3.34% to 4.01%. **Decision:** reject the
+  unweighted cumulative-CoG objective as a replacement for Stage 3. It confirms
+  that weak analytic-coordinate directions matter, but does not repair the
+  scientifically important profile residuals.
 - [x] **Stage 4: measure radial halo-information content without imposing the
   expected answer.** Compare nested held-out relations using final mass,
   recent DiffMAH growth, early assembled fraction, the complete DiffMAH

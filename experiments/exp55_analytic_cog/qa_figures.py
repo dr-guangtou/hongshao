@@ -116,6 +116,7 @@ def density_by_halo_mass_figure(
     figdir: Path = QA_FIGDIR,
     model_name: str = MODEL_NAME,
     model_label: str = "analytic CoG",
+    experiment_label: str = "exp55",
 ) -> None:
     """Exp54-style surface-density QA split by a model input."""
     edges = np.quantile(log_halo_mass, [0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0])
@@ -184,7 +185,7 @@ def density_by_halo_mass_figure(
             fontsize=11,
         )
     fig.suptitle(
-        "exp55 — surface-density QA by halo-mass tercile; "
+        f"{experiment_label} — surface-density QA by halo-mass tercile; "
         f"TNG solid, {model_label} dashed"
     )
     fig.text(
@@ -210,6 +211,7 @@ def single_epoch_planes_figure(
     figdir: Path = QA_FIGDIR,
     model_name: str = MODEL_NAME,
     model_label: str = "analytic CoG",
+    experiment_label: str = "exp55",
 ) -> None:
     """Replace the multi-epoch QA layout with a readable one-row z=0.4 view."""
     axis_labels = {
@@ -265,7 +267,7 @@ def single_epoch_planes_figure(
             fontsize=11,
         )
     fig.suptitle(
-        "exp55 — standard observational planes at z=0.4; "
+        f"{experiment_label} — standard observational planes at z=0.4; "
         f"TNG filled, {model_label} open"
     )
     fig.tight_layout()
@@ -286,6 +288,7 @@ def single_epoch_size_figure(
     figdir: Path = QA_FIGDIR,
     model_name: str = MODEL_NAME,
     model_label: str = "analytic CoG",
+    experiment_label: str = "exp55",
 ) -> None:
     """Replace the generic one-column multi-epoch size layout."""
     model = 10.0**model_log
@@ -373,7 +376,7 @@ def single_epoch_size_figure(
             fontweight="bold",
             fontsize=11,
         )
-    fig.suptitle("exp55 — standard mass–size QA at z=0.4")
+    fig.suptitle(f"{experiment_label} — standard mass–size QA at z=0.4")
     fig.tight_layout()
     save_fig(fig, figdir / f"qa_size_{model_name}")
     plt.close(fig)
