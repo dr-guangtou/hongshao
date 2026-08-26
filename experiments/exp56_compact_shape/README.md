@@ -741,6 +741,72 @@ test would need a separately predeclared profile-aware objective that balances
 cumulative CoG, differential or annular structure, the 5--30 kpc region, and
 sizes; it must not be tuned retrospectively within Stage 3b.
 
+### Stage 3b audit — exact paired errors and fitted relation coefficients
+
+The statement that individual density and size recovery becomes worse is a
+paired held-out result, not a judgment from the appearance of an average CoG.
+For galaxy `g` and adjacent measured radii `R_j,R_{j+1}`, the finite-annulus
+surface density is
+
+```text
+Sigma_g,j = [M_g(<R_{j+1}) - M_g(<R_j)]
+            / [pi (R_{j+1}^2 - R_j^2)].
+```
+
+The per-galaxy density error is the RMS of
+`log10 Sigma_model - log10 Sigma_TNG` over either all annuli or the annuli with
+geometric-midpoint radii from 5 to 30 kpc. The size errors are
+`|log10 Rq_model - log10 Rq_TNG|` for `q=50,80,90`. For every metric, the audit
+subtracts the Stage 3 coordinate-regression error from the Stage 3b direct-CoG
+error for the same galaxy, then bootstraps the 2,539 matched galaxies 1,000
+times. A positive 16th--84th percentile interval therefore means that the
+median degradation is resolved under galaxy resampling.
+
+| Representation and metric | Stage 3 median error (dex) | Stage 3b median error (dex) | Paired median change, bootstrap 16th--84th (dex) | Galaxies worse |
+|---|---:|---:|---:|---:|
+| Fixed `gamma=1.4`, full density RMS | 0.12788 | 0.13186 | +0.00281 [+0.00236,+0.00320] | 57.5% |
+| Fixed `gamma=1.4`, 5--30 kpc density RMS | 0.10028 | 0.10624 | +0.00289 [+0.00244,+0.00326] | 56.4% |
+| Fixed `gamma=1.4`, absolute R50/R80/R90 | 0.08898/0.07060/0.05439 | 0.09011/0.07540/0.05898 | +0.00247/+0.00593/+0.00444; all intervals above zero | 53.3%/56.7%/55.7% |
+| Smooth law, full density RMS | 0.12541 | 0.13050 | +0.00271 [+0.00233,+0.00298] | 56.9% |
+| Smooth law, 5--30 kpc density RMS | 0.09762 | 0.10462 | +0.00399 [+0.00358,+0.00448] | 57.7% |
+| Smooth law, absolute R50/R80/R90 | 0.08837/0.06682/0.05064 | 0.09059/0.07254/0.05436 | +0.00222/+0.00505/+0.00228; all intervals above zero | 52.8%/55.7%/53.4% |
+
+The fraction worse is only 53--58% because the outcome is heterogeneous:
+many galaxies improve and many worsen. The conclusion concerns the positive
+population median and its resampling uncertainty, not a claim that every
+galaxy becomes worse. The full paired distributions are shown in
+`exp56_stage3b_paired_error_evidence`.
+
+The actual fitted mean relation is also exported. With standardized halo
+features `z_j=(x_j-mu_j)/s_j`, it is
+
+```text
+theta_hat_k = sum_p B_kp phi_p(z),
+CoG_hat = Decode(theta_hat, gamma),
+```
+
+where `x=(logMpeak,logtc,early,late,c200c)` for fixed `gamma=1.4`, and the
+frozen deterministic `gamma(logMpeak)` is appended for the smooth family. The
+basis contains the intercept, every linear feature, and the seven predeclared
+products `logMpeak^2`, `logtc*late`, `early^2`, `late*c200c`, `late^2`,
+`logMpeak*early`, and `logMpeak*late`. The four outputs are the raw analytic
+coordinates `logMstar_148`, `logit(f_compact)`, `logR_compact`, and
+`ln(R_extended/R_compact-1)`.
+
+The readable coefficient figure shows one identifiable full-sample refit and
+the feature means and standard deviations required to evaluate it. This refit
+is a model recipe, not a held-out score. The QA predictions used five separate
+relations, each trained on four fifths of the sample; all five exact matrices
+are saved in `heldout_fold_coefficients.csv`, while
+`full_sample_coefficients.csv` and `full_sample_feature_scaling.csv` contain
+the deployment-style refits. For the fixed-slope recipe, constant `gamma=1.4`
+is used only in the decoder and is not treated as a regression predictor.
+Appending it as a standardized predictor gives a numerical standard deviation
+of only about `6e-14`, making its coefficient and the intercept individually
+non-identifiable even though their decoded predictions are stable. The exact
+held-out matrices are preserved for audit, but the displayed full-sample
+fixed-slope recipe removes that meaningless constant column.
+
 ## Stage 4 predeclaration — radial halo-information content
 
 Stage 4 asks what halo information improves the fixed-`n=1`, fixed-`gamma=1.4`

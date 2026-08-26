@@ -1565,3 +1565,13 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   favor normalization at the expense of local radial structure. Judge an
   end-to-end objective by the complete scientific QA battery, not by the loss
   it was constructed to minimize.
+- **Never standardize a constant model prescription as though it were a
+  predictor (exp56 Stage 3b coefficient audit).** The fixed-slope relation had
+  appended `gamma=1.4` to the halo features for symmetry with the smooth model.
+  Floating-point reduction returned a nominal standard deviation of about
+  `6e-14`, so least squares split the intercept between an artificial
+  standardized-gamma column and the real intercept. Decoded predictions stayed
+  stable, but the two printed coefficients were not individually meaningful.
+  For an identifiable model recipe, keep a fixed shape value in the decoder and
+  exclude it from the regression design; preserve the exact fold fits
+  separately when auditing an already completed held-out calculation.

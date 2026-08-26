@@ -1827,7 +1827,13 @@ Cross-experiment plan. Mirrors the phase sequence in
   largest halo-mass-bin residual from 3.34% to 4.01%. **Decision:** reject the
   unweighted cumulative-CoG objective as a replacement for Stage 3. It confirms
   that weak analytic-coordinate directions matter, but does not repair the
-  scientifically important profile residuals.
+  scientifically important profile residuals. **Coefficient/error audit:** a
+  separate reproducible diagnostic passed the complete 90-galaxy path in 0.78
+  seconds and exported the exact five fold coefficient matrices, an
+  identifiable full-sample recipe, feature normalization, and the matched
+  galaxy-by-galaxy density and size error distributions. It also found that a
+  constant fixed `gamma` must not be standardized as a regression predictor;
+  the readable fixed-slope recipe now keeps `gamma=1.4` only in the decoder.
 - [x] **Stage 4: measure radial halo-information content without imposing the
   expected answer.** Compare nested held-out relations using final mass,
   recent DiffMAH growth, early assembled fraction, the complete DiffMAH
