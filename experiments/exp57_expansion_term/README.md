@@ -532,6 +532,36 @@ model does not want expansion" would be a measurement.
 
 ---
 
+## The standard QA battery (`stage10_qa.py`, `figures/qa/`)
+
+`hongshao.qa.evaluate` — the battery every promoted model in this programme has
+been shown on — run for three models on the same 2397 galaxies: the
+**incumbent** (the reference), **`X3` small-core** (the candidate that passes
+the mechanism gates) and **`X4`** (the best raw loss, rejected). 24 figures
+each, both binnings.
+
+**The battery is nearly blind to what exp57 changed, and that is worth
+knowing.** The two headline tiers are identical to three or four decimals
+across all three models:
+
+| tier 3, max\|rel\| beyond 5 kpc | z=0.4 | z=2.0 |
+|---|---|---|
+| incumbent | 0.2765 | 0.3233 |
+| `X3` small-core | 0.2765 | 0.3178 |
+
+The improvement appears in **one** place — the inner-aperture bias table:
+
+| `M*(<10 kpc)` median bias | z=1.5 | z=2.0 |
+|---|---|---|
+| incumbent | −5.6% | **−12.5%** |
+| `X3` small-core | −3.7% | **−8.9%** |
+| `X4` | −3.3% | −11.6% |
+
+A max over radii is dominated by its worst radius and a scatter is an amplitude
+statistic, so neither can see a few per cent of the mass being rearranged inside
+10 kpc. **The standard battery alone would have reported this experiment as a
+null**, which is why exp57 has gates of its own.
+
 ## The figures
 
 - **`figures/exp57_expansion.png`** — the VERDICT, six panels: the expansion
