@@ -1600,6 +1600,22 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   24--26 count as evidence for where this polynomial architecture becomes
   brittle, not as permission to force a simpler recipe past the complete QA
   battery.
+- **One independent nonlinear direction can match aggregate CoG accuracy
+  without becoming a stable halo–CoG relation (exp56 Stage 3f).** A rank-2
+  linear core plus a rank-1 correction using all seven nonlinear terms reaches
+  0.08609 dex median full-CoG RMS, essentially the 0.08610 dex of complete rank
+  2, with 28 rather than 32 effective coefficients. Yet sparse nested supports
+  pass the protected inner envelope in only one of five folds, the fitted
+  correction direction rotates by up to 71.6 degrees, and held-out 5--30 kpc
+  CoG and size errors remain worse. Matching one cumulative-profile scalar does
+  not establish a reusable low-dimensional response; require fold-stable
+  directions and observable-specific safeguards.
+- **A promising population-plane result on 90 galaxies must survive the full
+  sample (exp56 Stage 3f).** The demo correction appeared to broaden two
+  fixed-aperture stellar-mass planes, but the 2,539-galaxy test made both planes
+  narrower than complete rank 2. Treat small-sample population geometry as a
+  pipeline check and early visual clue, not a scientific decision, even when
+  its aggregate profile metrics look plausible.
 - **Never standardize a constant model prescription as though it were a
   predictor (exp56 Stage 3b coefficient audit).** The fixed-slope relation had
   appended `gamma=1.4` to the halo features for symmetry with the smooth model.

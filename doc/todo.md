@@ -1891,6 +1891,28 @@ Cross-experiment plan. Mirrors the phase sequence in
   **Decision:** retain complete rank 2 as the practical compression; the
   24--26 coefficient knee is informative but is not an accuracy-preserving
   replacement.
+- [x] **Stage 3f: give nonlinear curvature one independent response
+  direction.** Fit a rank-2 linear core on all five halo inputs plus a rank-1
+  correction on nonlinear columns residualized against the linear basis.
+  Exhaustively select one to three of the seven established nonlinear terms
+  inside four inner folds, giving 22--24 effective target-relation
+  coefficients. Compare with complete rank 2 using the unchanged held-out
+  CoG, density, size, CRPS, coverage, boundary, radial-subset, control, and
+  visual safeguards. Include the full standard QA set, average halo-bin CoGs,
+  stellar-mass planes, and the fitted correction's radial response. Require the
+  complete 90-galaxy path to finish in less than one minute before a full run.
+  **Predeclared in the Exp56 README before writing the driver. Validation:**
+  the complete path passed in 19.68 seconds, including all 63 nested supports,
+  both diagnostic ceilings, controls, and the standard QA set. **Result:** the
+  full 2,539-galaxy test finished in 188.42 seconds. Only one of five outer
+  folds had any 22--24-coefficient candidate inside the protected inner
+  accuracy envelope, and the nonlinear output direction changed by as much as
+  71.6 degrees between folds. The selected held-out relation has 0.08684 dex
+  median full-CoG RMS versus 0.08610 dex for complete rank 2, with
+  bootstrap-resolved degradations in the full and 5--30 kpc CoG and all three
+  size errors; its stellar-mass planes are also more compressed. **Decision:**
+  reject the independent rank-1 nonlinear correction and retain complete rank
+  2 as the practical compressed reference.
 - [x] **Stage 4: measure radial halo-information content without imposing the
   expected answer.** Compare nested held-out relations using final mass,
   recent DiffMAH growth, early assembled fraction, the complete DiffMAH

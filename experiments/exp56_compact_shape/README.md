@@ -1,14 +1,15 @@
 # exp56 — Compact-shape closure and radial halo–CoG relation
 
-Status: COMPLETE THROUGH STAGE 4 AND THE STAGE 3B--3E FOLLOW-UPS. Neither the
+Status: COMPLETE THROUGH STAGE 4 AND THE STAGE 3B--3F FOLLOW-UPS. Neither the
 lower-index Stage 1 test nor the joint-global shape test changes the
 representation. Stage 3b confirms that changing the shared fitting target from
 analytic coordinates to the decoded CoG does not repair the held-out profile.
-Stages 3c--3e show that entry-wise sparsity, global low rank, and whole-term
-sparsity inside rank 2 do not preserve every held-out radial and size
-safeguard. The original coordinate-regression Stage 3 relation remains the
-accuracy baseline; complete rank 2 remains a useful practical compression for
-visual and architectural comparison.
+Stages 3c--3f show that entry-wise sparsity, global low rank, whole-term
+sparsity inside rank 2, and a separate rank-1 nonlinear correction do not
+preserve every held-out radial and size safeguard. The original
+coordinate-regression Stage 3 relation remains the accuracy baseline;
+complete rank 2 remains a useful practical compression for visual and
+architectural comparison.
 
 ## Question
 
@@ -1190,6 +1191,155 @@ for individual CoG shape and sizes. The next simplification should therefore
 change the scientific coordinates or predictor architecture, rather than
 delete more terms from this same polynomial rank-2 basis.
 
+## Stage 3f predeclaration — rank-2 linear core plus rank-1 nonlinear correction
+
+Stage 3f tests whether the failure of Stage 3e came from forcing every retained
+nonlinear halo response to lie inside the same two output directions as the
+dominant linear response. Keep fixed `n=1`, fixed `gamma=1.4`, the same five
+halo inputs, four analytic CoG coordinates, seven established nonlinear terms,
+five outer folds, stochastic residual model, controls, and training-only
+normalization. Do not change the analytic profile family or impose a radial
+assembly interpretation.
+
+For each training sample, standardize the five halo inputs and the four
+analytic targets. Regress each candidate nonlinear basis column on an
+intercept plus the five linear halo columns and retain its residual. This makes
+the nonlinear block orthogonal to the linear block in that training sample, so
+the correction represents incremental curvature rather than a disguised
+linear response. Fit the relation
+
+```text
+theta_standardized = linear_rank2(x_linear)
+                   + nonlinear_rank1(z_residualized).
+```
+
+The linear block retains two shared output directions. The nonlinear block has
+one independent shared output direction, allowing small curvature to affect a
+third combination of analytic coordinates that can matter strongly for
+density or enclosed-mass radii. Component labels remain phenomenological.
+
+With `m` nonlinear terms, the identifiable target-relation complexity is
+
+```text
+4 + 2 * (5 + 4 - 2) + 1 * (m + 4 - 1) = 21 + m coefficients.
+```
+
+The candidate models therefore use 22, 23, or 24 effective coefficients for
+one, two, or three nonlinear terms. The feature means, scales, and
+linear-residualization projection are training transformations rather than
+target-relation coefficients, just as in the existing standardized models.
+
+### Candidate selection and numerical checks
+
+Exhaustively test all 63 supports containing one, two, or three of the seven
+nonlinear terms. Select the support separately within every outer training fold
+using four deterministic inner folds. Compare each decoded inner-held-out
+candidate with a separately fitted complete-basis rank-2 reference on the same
+inner split. A support enters the accuracy envelope only if it keeps median
+full-CoG RMS within 1%, increases the 5--30 kpc CoG RMS by no more than
+0.001 dex, increases full or 5--30 kpc density RMS by no more than 0.001 dex,
+and increases median absolute R50/R80/R90 errors by no more than 0.001 dex.
+Choose the eligible support with the fewest nonlinear terms, then the lowest
+full-CoG and 5--30 kpc CoG RMS. If no support enters the envelope, fit the
+candidate with the lowest full-CoG RMS for diagnostic outer predictions and
+automatically reject the architecture.
+
+Also fit the 18-coefficient linear rank-2 core and the 28-coefficient version
+using all seven nonlinear terms as diagnostic ceilings; neither participates
+in candidate selection. Before scientific use, require exact closure of the
+linear core to the established linear rank-2 implementation, training-block
+orthogonality below `1e-10`, and recovery of a synthetic rank-2-plus-rank-1
+relation to maximum coordinate error below `1e-10`. Report the angle between
+the selected nonlinear output directions across folds; require a maximum
+pairwise angle below 30 degrees for a stable interpretable correction.
+
+### Held-out judgment and visual gate
+
+The primary outer reference is the saved 32-coefficient complete-basis rank-2
+relation; unrestricted Stage 3 remains secondary accuracy context. Adopt the
+new architecture only if all folds select an inner-envelope support and the
+full held-out result keeps profile CRPS and median full-CoG RMS within 1% of
+complete rank 2; changes full or 5--30 kpc density RMS by no more than
++0.001 dex; produces no bootstrap-resolved degradation in the 5--30 kpc CoG
+or absolute R50/R80/R90 errors; worsens the largest halo-mass-bin residual by
+less than 0.5 percentage point; remains in analytic bounds; preserves
+alternating-radius stability and calibrated coverage; and continues to beat
+final-mass-only, mass-conditioned shuffled-MAH, and shuffled-concentration
+controls.
+
+Generate the complete standard QA battery. Explicitly inspect average CoGs and
+pinned residuals in halo-mass bins, stellar aperture and annular mass planes,
+mass--size planes, density profiles, mass distributions, direct individual
+galaxies, the selected nonlinear supports, and the decoded radial response of
+the independent correction direction. The observational motivation for an
+outer connection with halo mass or recent assembly remains a reason to inspect
+the fitted result, not a sign or radial pattern imposed on it. Do not label an
+inner--early-MAH connection as established physics.
+
+Before a full run, execute all 63 nested candidates, both diagnostic ceilings,
+stochastic calibration, controls, saved products, direct comparison figures,
+and the complete standard QA set on the same 90 mass-stratified galaxies with
+eight draws. The uncached path must finish in less than 60 seconds. Demo
+artifacts remain separate from full-sample products.
+
+## Stage 3f result — the independent nonlinear direction is not stable
+
+The complete 90-galaxy path finished in 19.68 seconds, below the required
+one-minute limit. All 63 supports were unique, their effective coefficient
+counts were exactly 22--24, the linear core agreed with the established
+linear-rank-2 implementation to `9.2e-16`, the largest training cross-product
+between linear and residualized nonlinear blocks was `3.4e-16`, and synthetic
+coordinate recovery was accurate to `1.8e-14`. The full 2,539-galaxy held-out
+run then finished in 188.42 seconds.
+
+Only one of the five outer training folds contained any nonlinear support that
+passed every inner-held-out CoG, density, and size safeguard. The diagnostic
+fallbacks selected 24, 23, 24, 22, and 24 effective coefficients across the
+five folds, with different nonlinear supports in every fold. More decisively,
+the maximum angle between the independently fitted nonlinear output directions
+was 71.6 degrees, against the predeclared stability limit of 30 degrees. The
+purported third halo-response direction therefore has no stable interpretation
+across training samples.
+
+On the full held-out sample, the selected correction has 0.08684 dex median
+full-CoG RMS, compared with 0.08610 dex for complete rank 2. Its median
+5--30 kpc CoG RMS is 0.04719 dex, compared with 0.04650 dex for complete rank
+2. The paired candidate-minus-reference bootstrap intervals are
+`[+0.00027, +0.00060, +0.00101]` dex for the full CoG and
+`[+0.00038, +0.00060, +0.00079]` dex for the 5--30 kpc CoG, so both losses are
+resolved rather than sampling noise. The median absolute R50, R80, and R90
+errors increase from 0.08943, 0.07065, and 0.05535 dex for complete rank 2 to
+0.09208, 0.07113, and 0.05640 dex; all three paired bootstrap intervals are
+strictly positive. Profile CRPS changes from 0.06405 dex for complete rank 2
+to 0.06441 dex for the correction model, an unresolved difference, and the
+correction model still beats final-mass-only and both mass-conditioned shuffle
+controls.
+
+Using all seven nonlinear terms with one correction direction raises the
+complexity to 28 coefficients and nearly matches complete rank 2 in median
+full-CoG RMS: 0.08609 versus 0.08610 dex. However, its 5--30 kpc CoG RMS is
+0.04676 dex and its R50/R90 errors are 0.09164/0.05602 dex, all worse than the
+complete-rank-2 reference. One extra direction can recover the aggregate
+cumulative-profile score, but it does not preserve the local radial and size
+information carried by the complete relation.
+
+The figures give the same answer. Average CoGs in halo-mass bins remain nearly
+indistinguishable by eye, but the selected correction further compresses the
+fixed-aperture population geometry. Scatter in the `<30` versus `30--50` kpc
+stellar-mass plane is 0.049 dex for the correction, 0.057 dex for complete rank
+2, and 0.172 dex in TNG. The corresponding `<30` versus `50--100` kpc scatters
+are 0.055, 0.064, and 0.206 dex. Individual-galaxy panels show that small
+average changes hide much larger improvements and degradations in different
+objects, while the correction-response figure exposes inconsistent radial
+directions among folds.
+
+**Decision:** reject the rank-2-linear-plus-rank-1-nonlinear architecture and
+retain complete rank 2 as the practical compressed reference. Separating the
+nonlinear block does not reveal one stable missing response direction; the
+next simplification must align the shared relation with protected observables
+or change the scientific coordinates, rather than continue rearranging the
+same latent polynomial response.
+
 ## Stage 4 predeclaration — radial halo-information content
 
 Stage 4 asks what halo information improves the fixed-`n=1`, fixed-`gamma=1.4`
@@ -1374,3 +1524,9 @@ physics.
   QA battery. Average halo-bin CoGs, stellar-mass planes, density, sizes,
   distributions, annular masses, and individual galaxies were inspected before
   recording the negative adoption decision.
+- Stage 3f passed its complete 90-galaxy path in 19.68 seconds before the full
+  2,539-galaxy run. Its 32 PNG products and 32 PDF companions include direct
+  complete-rank-2 comparisons, the independent correction response, and the
+  full standard QA battery. Average halo-bin CoGs, stellar-mass planes,
+  density, sizes, distributions, annular masses, and individual galaxies were
+  inspected before rejecting the unstable correction architecture.
