@@ -2303,9 +2303,20 @@ Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); 
   rule; the trend rule, +0.31 dex, alone would not have fired). 1c: c200c
   |rho| <= 0.09 -> NOT offered (D2 resolved); late/f_form/logtc/t50/early
   pass 0.1 but are functions of the curve already integrated. README written.
-- [ ] Stage 2 — the two-channel (in-situ cuspy / ex-situ cored) mean, fitted at
-  z=0.4 only; z=0.7-2.0 PREDICTED by truncating the integral, both samples,
+- [x] Stage 2 — the two-channel mean (compact Sersic n~0.75 / extended cored), fitted
+  at z=0.4 only; z=0.7-2.0 PREDICTED by truncating the integral, both samples,
   decliners split.
+
+  Review (2026-08-28): seven starts -> one optimum (2.76396, null 3.1665). z=0.4:
+  inner-slope median 1.018 (data 1.015; baseline 0.858), M(<10) -1.9%, tier 3
+  0.268; width and top-tercile centre still fail. Predictions: non-decliners'
+  central error flat across five epochs (span 0.016 dex) — the one-epoch-fitted
+  claim holds for the describable 58%; but the extended channel arrives too
+  early (M(50-100) +16-28% on the fit mask at z>=0.7) and the model's
+  compact-share/assembly correlations have the WRONG sign against Stage 1.
+- [ ] Stage 2b — the accretion-to-deposition delay tau_d: not identifiable at
+  z=0.4 (railed at 0 / worse basin); fixed at 0.3 Hubble times from physics,
+  other twelve refitted (running). Kept iff the predicted epochs improve.
 - [ ] Stage 3 — noise inside the process (lumpy ex-situ accretion, correlated
   efficiency history, per-galaxy size offsets), leverage sweep first, energy score
   on held-out population statistics, tier 2e scored on draws (closes C16).

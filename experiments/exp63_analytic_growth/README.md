@@ -212,3 +212,131 @@ not added as extra inputs — the test is whether the forward model *reproduces*
 correlations (a Stage 2 report line), not whether they are fitted. The scatter of
 the extended share at fixed halo mass (16–84 per cent range 0.12–0.53 in the lowest
 tercile) is the diversity the stochastic layer must carry (Stage 3).
+
+## Stage 2 — the two-channel mean, fitted at z=0.4 only, predicted at z=0.7–2.0 (2026-08-28)
+
+`model2.py` is Stage 1's finding as a forward model on the exact engine: the
+incumbent's efficiency law, and a deposit split into a **compact channel** (a
+Sérsic deposit of index $n_c$ at $s_c=f_c(1+z)^{b_c}R_{200c}$) and an **extended
+channel** (the incumbent's `gompertz_log` deposit with shape $c_e$ at
+$s_e=f_e(1+z)^{b_e}R_{200c}$), the compact share of each deposit a logistic in the
+halo mass at the deposit's own time, $w_c=\sigma((m_{1/2}-\log M)/d)$. Twelve
+parameters; `nested_theta` reproduces the exact-engine incumbent bit for bit
+(asserted). `stage2_fit.py` fits at $z=0.4$ only, on the 2397 sane + mh-complete
+galaxies, the objective of decision D4: $L=\text{score}_A^2+\text{score}_F^2+\text{score}_S^2$
+with the first two exactly exp54's and the third the shells/log objective on the
+amplitude-pinned profiles, normalised by its value for the nested incumbent
+(0.1318 dex) so every term is 1 at the null (null loss 3.1665). L-BFGS-B from
+seven starts (the nested incumbent, Stage 1's default, four seeded jitters, the
+default at $n_c=2$).
+
+### The fit
+
+**All seven starts converge to the same loss, 2.76396** (−12.7 per cent against
+the null), the nested one to 2.76403; the start at $n_c=2$ also returns to
+$n_c=0.75$. No parameter at a bound. The solution:
+
+| | $a_0$ | $a_M$ | $a_z$ | $a_{Mz}$ | $m_{1/2}$ | $d$ | $\log f_c$ | $b_c$ | $\log f_e$ | $b_e$ | $n_c$ | $c_e$ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| incumbent (nested) | −2.553 | −0.562 | +0.505 | +0.318 | — | — | — | — | −0.843 | −0.896 | — | 0.796 |
+| Stage 2 | −2.889 | −0.938 | +0.934 | +0.755 | 12.93 | 0.81 | −1.372 | −0.377 | −0.832 | +0.230 | 0.751 | 1.308 |
+
+In words: compact deposits at $0.043\,R_{200c}$ (0.015 was the prior expectation,
+0.04 the Stage 1 starting value), slightly more compact toward high redshift, with
+an exponential-like profile ($n_c=0.75$ — the data reject cuspy deposits, as Stage 1
+found); extended deposits at $0.15\,R_{200c}$ with a steeper cored profile than the
+incumbent's ($c_e$ 1.31 against 0.80); the compact share falls through one half at
+$M_h=10^{12.9}$ over 0.8 dex, giving a compact share of the $z=0.4$ stellar mass of
+0.56 (16–84 per cent 0.47–0.61), 0.7 for the lightest haloes and 0.3 for the
+heaviest — the halo-mass trend Stage 1 required (0.65 → 0.43 at $s<15$ kpc), with no
+scatter at fixed mass (a mean model; `figures/exp63_stage2_channels.png`).
+
+### The gates at z=0.4 (`figures/exp63_stage2_gates.png`)
+
+| gate | baseline (incumbent, exact engine) | Stage 2 | verdict |
+|---|---|---|---|
+| G2a inner slope 2–4.9 kpc: median (data 1.015) / 16–84 width (data 0.42) | 0.858 / 0.20 | **1.018** / 0.15 | median PASS, width FAIL |
+| G2b worst tercile median residual, raw or pinned | 19.3 % | 14.0 % | FAIL (top tercile, 2–3 kpc) |
+| G2c plane slope M(30–50)\|M(<30) (truth 1.42) | 1.26 | 1.59 | FAIL (over-steep) |
+| G2d mass conservation | 3e-16 | 4e-16 | PASS |
+| G2e sizes physical | pass | pass | PASS |
+| G2f identifiable | m_half railed | none railed; share 0.33 at 10^13.5 | PASS |
+
+$M_*(<10\,{\rm kpc})$ at $z=0.4$: −1.9 per cent (baseline +3.6); $M_*(<100)$: −1.1 (+0.4);
+tier 3: 0.2679 (0.2800). The median inner slope is now the data's; its width is not
+— a mean model has one slope per halo history, and the data's spread (0.42) is what
+Stage 3's process must supply. The remaining shape failure is in the top halo-mass
+tercile, where the model is 11–14 per cent low at 2–3 kpc (`figures/exp63_stage2_residuals.png`):
+those haloes get the smallest compact share (0.3) from the mass-only split, and the
+data want more. The plane slope overshoots (1.59 vs 1.42) because the mean's
+outskirts are now a steep function of inner mass with no scatter about it
+(model scatter 0.047 dex against the truth's 0.170; `figures/qa/qa_planes_exp63_stage2_stage2.png`).
+
+### Result 2 — the predictions (never fitted; both samples; `figures/exp63_stage2_predictions.png`)
+
+Median relative bias, per cent, all 2397 / mh-complete fit mask:
+
+| quantity | product | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|---|
+| $M_*(<10)$ | baseline | +3.6 / +3.6 | +5.3 / +6.7 | +5.8 / +8.9 | −0.8 / +4.3 | −8.9 / −7.8 |
+| | Stage 2 | −1.9 / −1.9 | +0.3 / −0.2 | +0.4 / +1.4 | −8.3 / −3.3 | −21.0 / −16.6 |
+| $M_*(<100)$ | baseline | +0.4 / +0.4 | +5.1 / +4.6 | +6.4 / +5.7 | +3.0 / +3.0 | −4.7 / −7.8 |
+| | Stage 2 | −1.1 / −1.1 | +5.1 / +5.0 | +7.2 / +8.5 | −0.1 / +7.1 | −14.7 / −7.8 |
+| $M_*(50\text{–}100)$ | baseline | −3.5 / −3.5 | +4.6 / −5.4 | +8.7 / −7.4 | +19.7 / −8.4 | +32.4 / −9.5 |
+| | Stage 2 | +4.5 / +4.5 | +19.6 / +16.4 | +31.2 / +24.7 | +35.5 / +28.0 | +35.7 / +21.5 |
+
+Tier 3 per epoch: Stage 2 0.268 / 0.276 / 0.287 / 0.307 / 0.357 against the baseline's
+0.280 / 0.282 / 0.291 / 0.291 / 0.314.
+
+**The C8 decliner split** — median $\log_{10}$(model/truth) of $M_*(<4.92$ kpc):
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | span |
+|---|---|---|---|---|---|---|
+| baseline, centre declined (42 %) | +0.052 | +0.029 | +0.005 | −0.052 | −0.153 | 0.205 |
+| baseline, did not decline (58 %) | −0.027 | −0.018 | −0.004 | −0.003 | +0.010 | 0.037 |
+| Stage 2, centre declined (42 %) | +0.010 | −0.018 | −0.039 | −0.106 | −0.218 | 0.228 |
+| Stage 2, did not decline (58 %) | −0.047 | −0.037 | −0.032 | −0.044 | −0.048 | **0.016** |
+
+What it means. Two things, in opposite directions:
+
+1. **For the 58 per cent of galaxies whose centres never declined, the model fitted
+   at one epoch predicts the other four to within 0.016 dex of a constant** — the
+   "one epoch fitted, four predicted" claim holds for the population the class can
+   describe (the plan's failure criterion was 0.03 dex). The declining 42 per cent
+   are the class limit, as before (span 0.228; the model has their $z=2$ centres
+   0.22 dex too light because it cannot lose mass afterwards — exp54 C8).
+2. **The extended channel arrives too early.** At every earlier epoch the model is
+   too extended: $M_*(50\text{–}100)$ over-predicted by 16–28 per cent on the fit mask
+   (baseline −5 to −10), the amplitude-pinned residual −10 to −25 per cent at
+   2–5 kpc, and the $z=2$ amplitude 15 per cent low on the full sample. The model
+   credits a satellite's stars to the central when the halo accretes the satellite;
+   in TNG they join the central only when the merger completes. The fitted extended
+   size law ($b_e=+0.23$, $s_e$ rising toward high redshift, above Stage 1's required
+   band at $z>2$) is the fit compensating at $z=0.4$ for that early arrival.
+
+**Does the model reproduce Stage 1's leverage?** Partial Spearman at fixed
+$\log M_h$ of the model's compact share against the halo variables, with Stage 1's
+measured inner-share correlation in brackets: `late` −0.34 [+0.25], `f_form` +0.34
+[−0.26], `logtc` +0.29 [−0.18], `t50` +0.76 [−0.06], `c200c` −0.49 [+0.07]. **Every
+sign is wrong.** A split by halo mass at the deposit's time makes early-forming
+haloes (massive early) extended and late-forming ones compact; the data say the
+reverse, and in particular that haloes still growing fast today (`late` index high)
+hold *more* of their stars compactly — which is what an arrival delay produces:
+recently accreted halo mass has not yet delivered its extended stars.
+
+### Stage 2b — the accretion-to-deposition delay (in progress)
+
+A one-parameter extension, `tau_d`: the extended deposit of halo mass accreted at
+$t'$ is credited at $t'+\tau_d/H(z(t'))$, with $\tau_d$ in Hubble times at accretion;
+nothing moves after deposition (not a radial transport), $\tau_d=0$ is the Stage 2
+model exactly (asserted), and mass accreted but not yet arrived is "in transit" —
+exactly what a central's measured stellar mass excludes. **Fitted free at $z=0.4$ it
+is not identifiable**: the nested start returns to the Stage 2 optimum with
+$\tau_d$ railed at 0 (loss 2.763963), and the start at $\tau_d=0.5$ lands in a worse
+basin (2.7848, three parameters railed) — the single-epoch degeneracy of the time
+labels that tech note 04 §4 anticipated; the free fit was stopped after those two
+starts. The delay is therefore **set from physics**: dynamical-friction merger times
+for the 1:3–1:10 mass ratios that carry most ex-situ mass are 0.2–0.5 Hubble times
+at accretion (Boylan-Kolchin et al. 2008), so $\tau_d=0.3$ is held fixed and the
+other twelve parameters are refitted at $z=0.4$ (`stage2_fit.py --tau-fixed 0.3`);
+the earlier epochs remain predictions and decide whether the delay is kept.
