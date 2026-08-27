@@ -284,3 +284,91 @@ not optional.
   z ≤ 1.0 refit tracks the incumbent to within a point or two at its three
   epochs and is 13 to 25 per cent low at z = 1.5 and 2.0 — the profile
   version of Stage 0's answer 1.
+
+## Stage 4 — why the per-epoch ceiling is WORSE on the mass CDFs (2026-08-27)
+
+The user, reading the Stage 3 battery: the per-epoch models improve the
+average curves of growth in places but do not fix the inner region, the z=2
+low-halo-mass bins go the other way — and on `qa_cdf` the per-epoch model
+looks WORSE in several cells. Why?
+
+`stage4_cdf_anatomy.py` answers it by measurement, not by reasoning about the
+loss. A CDF distance can grow for two different reasons and tier 2e's single
+number does not separate them, so the stage reports four quantities per
+tier-2e quantity, epoch and model: the shift of the median [dex], the
+population width divided by the truth's ((P84−P16)/2 in log10 mass), the
+tier 2e W1 ratio, and the same W1 ratio after each distribution is centred on
+its own median. What survives centring is a WIDTH or tail error; the
+difference is a SHIFT. The recomputed W1 ratios reproduce the battery's own
+tier 2e table to the one decimal it prints (gate in the script; worst
+difference 0.05). Figure `figures/exp61_cdf_anatomy`, log
+`outputs/stage4_cdf_anatomy.log`.
+
+### 1. The main cause: the per-epoch fits are MORE under-dispersed
+
+Every model in this class predicts one profile per halo history, so the only
+population spread it can emit is the spread in halo histories. Measured, that
+is not enough — the predicted width is below the truth's everywhere, and
+worst in the outer annuli. Width divided by the truth's width for
+`kpc:M(50-100)`:
+
+| model | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| incumbent | 0.70 | 0.64 | 0.61 | 0.58 | 0.54 |
+| per-epoch-best | 0.68 | 0.60 | 0.56 | **0.50** | **0.46** |
+| z ≤ 1.0 refit | 0.68 | 0.62 | 0.59 | 0.58 | 0.55 |
+
+The narrowing tracks how large a share of the fit each epoch received. At
+z=1.0, where all three fits include the epoch: 0.61 sharing five epochs, 0.59
+sharing three, 0.56 with the epoch to itself. **And the z ≤ 1.0 refit is the
+control**: at z ≥ 1.5, where it was not fitted at all, its width goes back to
+the incumbent's (0.58 / 0.55 against 0.58 / 0.54) while the per-epoch fits —
+which were fitted there — sit at 0.50 / 0.46. The extra narrowing is the
+fitting's doing, not the epoch's.
+
+The mechanism is a mismatch of objectives, and it is structural rather than a
+defect of these fits. The loss is a PAIRED per-galaxy error; tier 2e is
+pairing-blind and population-level. Minimising a per-galaxy error shrinks the
+prediction toward the conditional mean, which narrows the predicted
+distribution, and nothing in the loss rewards width. More freedom to chase
+one epoch's conditional mean therefore buys per-galaxy accuracy with
+population spread.
+
+It bites in the outer annuli because that is where the loss is blind. The
+amplitude term is anchored at M*(<103 kpc) and the shape term is the
+normalised curve of growth, while the annuli are DIFFERENCES of that curve —
+the same blindness [the loss is ~175,000× less sensitive at 132–148 kpc than
+at 2 kpc; only 6.3 per cent of z=2 mass lies beyond 52 kpc] this project has
+measured twice before.
+
+### 2. The secondary cause: a shift, which dominates in two specific cells
+
+Centring separates them, and the answer differs by quantity:
+
+- `kpc:M(<10)` at z=0.7 — incumbent 1.5, ceiling 2.0, and **both are 1.3
+  centred**. The entire difference is the median moving from −0.010 to −0.031
+  dex. The widths are the same (0.92, 0.95). A two-hundredths-of-a-dex trade.
+- `Re:M(2-4Re)` at z=2 — incumbent 3.2, ceiling 7.6. Centred: 2.7 and 4.8. So
+  about 2.8 of the ceiling's 7.6 is shift (median +0.024 → +0.098 dex) and
+  the rest is width (0.86 → 0.72). Both causes, roughly equally.
+- `kpc:M(<10)` at z=2 — the one place the ceiling is clearly BETTER, 5.8 →
+  4.1. The shift is repaired (−0.078 → +0.005 dex) but the width gets worse
+  (0.84 → 0.77), so it recovers less than the shift alone would give. Centred,
+  the ceiling is worse: 3.0 → 4.0.
+
+That is the general shape of the answer to the user's reading: the per-epoch
+fits move medians toward zero where the loss can see them and pay for it in
+population width where it cannot.
+
+### 3. A caveat that matters for hongshao v1: tier 2e never sees the layer
+
+`qa.evaluate` accepts `draw_cogs` but uses it for ONE thing — overlaying the
+first sampled population on the plane figure (`hongshao/qa.py:563-565`).
+Every tier, 2e included, is computed from the MEAN prediction. exp60 Stage
+3d's tier 2e table is identical digit for digit to the bare incumbent's, and
+so is this experiment's. The adopted hongshao v1 is the mean PLUS the Option A
+stochastic layer, and the layer is exactly the component that supplies the
+missing width — so every tier 2e number quoted here describes the mean alone
+and reads as a population failure the delivered model may not have. Filed as
+open question C16. Nothing above is affected: the comparison between the
+three MEAN models is like for like, which is what was asked.

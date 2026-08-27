@@ -672,6 +672,33 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Figures / QA presentation
 
+- **Decompose a distribution distance into shift and width before explaining
+  it (exp61 Stage 4).** Tier 2e showed the per-epoch fits WORSE than the
+  shared law in most cells, and the two causes need opposite fixes. Centring
+  each sample on its own median and re-measuring separates them exactly: at
+  `kpc:M(<10)`, z=0.7 the incumbent is 1.5 and the ceiling 2.0 but BOTH are
+  1.3 centred, so the whole difference is a 0.02 dex shift; at
+  `kpc:M(50-100)`, z=2 almost all of both numbers survives centring, so it is
+  width. W1 is the mean horizontal gap in dex, so a pure shift of d dex gives
+  W1 = |d| — the decomposition is exact, not a heuristic, and it costs one
+  extra call to the same function.
+- **A conditional-mean law gets NARROWER the harder you fit it, and the loss
+  cannot see it (exp61 Stage 4).** Predicted population width divided by the
+  truth's, `kpc:M(50-100)`: 0.70 -> 0.54 across z=0.4..2 for the shared law,
+  0.68 -> 0.46 for the single-epoch fits. The narrowing scales with the share
+  of the fit each epoch received (at z=1.0: 0.61 sharing five epochs, 0.59
+  sharing three, 0.56 alone), and the z <= 1.0 refit is the control — at
+  z >= 1.5, where it was NOT fitted, its width returns to the shared law's.
+  The loss is a paired per-galaxy error and the CDF tier is pairing-blind and
+  population-level; minimising the former shrinks toward the conditional mean
+  and nothing rewards width. Expect any "ceiling" fit to look worse on
+  population tiers, and say so before showing the table.
+- **Check what a QA option actually feeds before quoting the tier it belongs
+  to (exp61 Stage 4).** `qa.evaluate(draw_cogs=...)` sounds like it scores the
+  generative layer; it overlays the draws on ONE figure and every tier is
+  still computed from the mean. exp60's adopted-layer tier 2e table is
+  identical digit for digit to the bare incumbent's, which is the tell — an
+  option that changes nothing measurable is not being measured. Filed as C16.
 - **Report every population number on BOTH samples when the fit mask and the
   QA population differ (exp61 Stage 3).** exp61's headline — the single-epoch
   fits remove the z=2 offset outright, B1 −0.046 → +0.002 dex and B3 −12.7%

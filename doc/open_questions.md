@@ -324,6 +324,29 @@ context bar honestly: exp41's 1.0-1.4x was achieved on the oracle-pinned old
 kernel with zero amplitude scatter to explain; nothing unpinned has ever
 been measured below 1.69x.
 
+### C16. Tier 2e scores the MEAN, never the generative layer's draws
+Raised 2026-08-27 (exp61 Stage 4). `qa.evaluate` takes `draw_cogs` but uses it
+for one thing only — overlaying the first sampled population on the PLANE
+figure (`qa.py:563-565`). Every tier, including 2e (the mass CDFs), is
+computed from the mean `model_cogs`. So the adopted hongshao v1's stochastic
+layer has never been scored on the tier it was built to fix: exp60 Stage 3d's
+tier 2e table is identical, digit for digit, to the bare incumbent's
+(1.4/1.8, 0.7/1.5, ... at `kpc:M(<10)`).
+
+exp61 Stage 4 measured what tier 2e is actually reporting for a mean model:
+the predicted population is too NARROW everywhere, and worst in the outer
+annuli — `kpc:M(50-100)` width is 0.70 of the truth's at z=0.4 falling to
+0.54 at z=2. That is the conditional-mean signature, not a fit defect, and it
+is exactly the deficit a stochastic layer supplies.
+
+The question: should tier 2e (and the tier-2 dex scatters) be computed from
+the drawn populations when a generative layer is present, with the mean's
+value kept alongside? It would change no adopted decision — the layer was
+judged on its own held-out battery in exp60 — but every tier 2e number
+quoted for hongshao v1 in this programme currently describes the mean alone,
+and reads as a population failure that the delivered model may not have.
+Cheap to answer: `evaluate` already measures the draws for the plane figure.
+
 ## D. Resolved
 
 ### D1. Is exp48's density-plus-log objective the repair for the outer blindness?

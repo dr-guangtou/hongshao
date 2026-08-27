@@ -2231,3 +2231,38 @@ predicts for a median-offset change. And at z <= 1.0 all three models lie on
 top of one another, 7 to 13 per cent low inside a few kpc for every epoch
 scope alike, so that inner deficit is a property of the deposition-only
 class, not of the fit's redshift range.
+
+## exp61 Stage 4 — the anatomy of the tier 2e CDF distances (2026-08-27)
+
+- [x] **Answer the user's question by measurement.** Why is the per-epoch
+  ceiling WORSE than the shared law on `qa_cdf`? `stage4_cdf_anatomy.py`
+  reports, per tier-2e quantity / epoch / model: the median shift [dex], the
+  population width over the truth's, the tier 2e W1 ratio, and that ratio
+  after centring each sample on its own median. Gated on reproducing the
+  battery's own tier 2e table (worst difference 0.05 on a table printed to
+  one decimal).
+
+### Review
+
+Two causes, separated. **(1) Under-dispersion, the main one.** The predicted
+population is too narrow everywhere and worst in the outer annuli, and the
+per-epoch fits are narrower still — `kpc:M(50-100)` width over the truth's is
+0.70 -> 0.54 for the shared law and 0.68 -> 0.46 for the per-epoch fits. The
+narrowing scales with how large a share of the fit each epoch got (0.61 / 0.59
+/ 0.56 at z=1.0 for five / three / one epoch), and the z <= 1.0 refit is a
+clean control: at z >= 1.5, where it was not fitted, its width returns to the
+shared law's. The loss is a paired per-galaxy error, tier 2e is pairing-blind
+and population-level, and nothing in the loss rewards width — so more freedom
+to chase one epoch's conditional mean is bought with population spread. It
+bites in the outer annuli because that is where the loss is blind.
+**(2) A shift, which dominates two specific cells** — the whole of the
+`kpc:M(<10)` z=0.7 difference (both models are 1.3 once centred) and about
+2.8 of the ceiling's 7.6 at `Re:M(2-4Re)`, z=2.
+
+Incidental but load-bearing for how v1 is reported: **tier 2e never sees the
+stochastic layer.** `qa.evaluate`'s `draw_cogs` only overlays draws on the
+plane figure; every tier is computed from the mean. exp60's adopted-layer
+tier 2e table is identical digit for digit to the bare incumbent's. Filed as
+open question C16 — every tier 2e number quoted for hongshao v1 describes the
+mean alone, and the layer is precisely the component that supplies the width
+tier 2e says is missing.
