@@ -19,7 +19,9 @@ that "follow the increments, then sum" recipe can be written as one analytic
 integral — and whether doing so buys anything. The answers: **yes, exactly**, because
 every ingredient the sum uses is already a closed-form function of cosmic time; the
 sum is a first-order Riemann approximation of that integral and carries a **radius-dependent
-numerical bias of −0.027 dex at 2 kpc** (about half of the incumbent's central deficit);
+numerical bias of −0.027 dex at 2 kpc** (a *level* error the fit absorbed into its
+parameters — exp63 Stage 0 measured that the incumbent's central *shape* defect is
+unchanged on the exact integral; see the README of `experiments/exp63_analytic_growth`);
 and the integral form reveals that the model's predicted profile is nothing more than
 the **distribution of stellar mass over deposit size**, smoothed by the deposit
 kernel — which is why the class's inner slope is a property of its size law's small
@@ -108,8 +110,10 @@ step convention dictates: each step's mass is deposited at the size the halo has
 the *end* of the step, so the earliest, coarsest steps in $\ln t$ push stars outward.
 Every central bias the programme has reported for the incumbent — "7 to 13 per cent
 low inside a few kpc at every epoch scope" (exp61) — contains about −6 per cent of
-this numerical origin. It has to be re-measured with Eq. (2) before any new model is
-judged against the old one (exp63 Stage 0).
+this numerical origin *as a level*. exp63 Stage 0 re-measured the frozen incumbent on
+Eq. (2): its $z=0.4$ centre goes from −2.4 to +3.6 per cent inside 10 kpc, but the
+amplitude-pinned dip at 3–5 kpc and excess at 10–30 kpc are unchanged — the
+parameters had absorbed the level; the shape is the model's.
 
 Two smaller bookkeeping effects surfaced by the same check: where the group catalog
 has no $R_{200c}$ for a snapshot in the *middle* of a history, `forward` drops that
@@ -254,7 +258,8 @@ not the mean model's.
 ## 5. Findings to carry, in one line each
 
 1. The incumbent's 72-step sum is a first-order Riemann approximation of Eq. (2) and
-   is biased −0.027 dex at 2 kpc → −0.007 dex at 148 kpc (73 galaxies, $z=0.4$).
+   is biased −0.027 dex at 2 kpc → −0.007 dex at 148 kpc (2073 galaxies in exp63
+   Stage 0, all epochs). A level, absorbed by the fit; not the shape defect.
 2. The DiffMAH-driven deposition model is a convolution in log radius of the
    deposit-size distribution with the deposit kernel; its curve of growth is the
    smoothed cumulative of that distribution.

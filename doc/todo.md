@@ -2275,9 +2275,19 @@ Plan: `doc/plans/2026-08-28-exp63-analytic-growth-model.md`; derivation:
 `doc/tech_note/figures/04_analytic_check.png`). Branch `exp63-analytic-growth`.
 Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); Stage 0 may start.
 
-- [ ] Stage 0 — the exact-integral engine, gated on reproducing `exp54/model.forward`
-  to 1e-6 dex on the 72-step grid; the incumbent re-measured on the exact integral
-  through the standard battery (how much of the central deficit was the Riemann sum).
+- [x] Stage 0 — the exact-integral engine, gated on reproducing `exp54/model.forward`
+  on the 72-step grid (2.4e-6 dex, the stored curve's float32 floor); the incumbent
+  re-measured on the exact integral through the standard battery.
+
+  Review (2026-08-28): all four gates pass; the integral is the limit of the sum
+  (Richardson 1.4e-5 dex); 2397 galaxies x 5 epochs in 0.32 s. D3 measured: 3.16%
+  of the stellar mass beyond 3 R200c untruncated -> truncation KEPT. Result 0: the
+  exact integral raises the frozen incumbent by 0.01-0.03 dex (z=0.4 M(<10) -2.4%
+  -> +3.6%; z=2 -12.5% -> -8.9%) but the amplitude-pinned SHAPE defect (dip at
+  3-5 kpc, excess at 10-30 kpc) is unchanged — the numerics were a level the fit
+  absorbed, not the shape. Inner slope 2-6.4 kpc: data 0.94 (0.74-1.13), exact
+  0.83 (0.72-0.92). Baseline for exp63 = `exact-analytic` at the incumbent's theta.
+  README section written.
 - [ ] Stage 1 — per-galaxy non-negative deconvolution of the z=0.4 CoG into the
   deposit-size distribution; quantile-matched size-versus-time law; G1 decides
   whether a two-scale law is warranted BEFORE any population fit.
