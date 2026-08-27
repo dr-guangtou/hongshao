@@ -405,3 +405,29 @@ same time* — mergers are growth in excess of the typical. **Stage 2d** replace
 $\alpha-1$ by $\alpha-\bar\alpha(t)$, $\bar\alpha$ the population-median rate at that
 time (a fixed function tabulated from the sample and stored with the fit, not a
 parameter); `stage2_fit.py --growth-rel`, running.
+
+**Stage 2d verdict (2026-08-28): the same trade, slightly softer.** With the split on
+$\alpha-\bar\alpha(t)$ ($\bar\alpha$ 0.98–2.73 across the nodes), the nested start
+reaches 2.7047 with $g_{\rm rel}=-0.49$, compact deposits at $0.028\,R_{200c}$
+($n_c=0.76$), extended at $0.072\,(1+z)^{0.99}R_{200c}$, and the assembly correlations
+again carry the data's signs (`late` +0.35 [+0.25], `logtc` −0.33 [−0.18], `f_form`
+−0.57 [−0.26], `c200c` +0.17 [+0.07]). The predictions are better than 2c's and
+worse than Stage 2's: $M_*(50\text{–}100)$ on the fit mask +21 / +38 / +63 / +79 per
+cent, $M_*(<10)$ −29 per cent at $z=2$, tier 3 at $z=2$ 0.417, the non-decliners'
+central span 0.080 dex (2c 0.115; Stage 2 0.016). The fit was stopped after the
+nested start (`outputs/stage2_fit_growthrel.PARTIAL.npz`, `stage2_eval_growthrel.log`);
+the other starts could only find a different $z=0.4$ optimum, and the verdict is
+about the predicted epochs, which no $z=0.4$ start can see.
+
+**The decision, and what the three fits say together.** Every split that reproduces
+the $z=0.4$ assembly correlations does so by making the extended channel's early
+deposits large ($b_e\approx+0.9$ to $+1.0$: extended sizes near $R_{200c}(1+z)$, a
+roughly constant physical size), and that is exactly what breaks the earlier
+epochs. The mass-only split (Stage 2) keeps the evolution — the describable 58 per
+cent of galaxies evolve to within 0.016 dex of a constant central error — and gets
+the correlations backwards. **A split on $(M,\ \dot M)$ at the deposit cannot satisfy
+both**; the $z=0.4$ correlation must come from something the extended channel's
+*arrival* or *size* knows about the halo's later history, which a single-epoch fit
+cannot see (P9 stays open with this as its measured content). **The Stage 2
+twelve-parameter mean is the exp63 mean**: it is the one that predicts the other
+four epochs, which is what the plan asked a single-epoch model to do.
