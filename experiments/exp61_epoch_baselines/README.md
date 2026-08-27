@@ -1,10 +1,23 @@
 # exp61 — single-epoch baselines and the z ≤ 1.0 scope
 
 Branch `exp60-stochastic-layer` (this experiment runs alongside exp60; both
-follow the user's 2026-08-26 direction). One script, `stage0_fits.py`; full
-log `outputs/stage0_fits.log`. Seven fits of `gompertz_log-E2-S2` on the
-standard sample under the standard mask: five independent single-epoch fits,
-one z ≤ 1.0 fit, against the shared incumbent.
+follow the user's 2026-08-26 direction). Seven fits of `gompertz_log-E2-S2`
+on the standard sample under the standard mask: five independent single-epoch
+fits, one z ≤ 1.0 fit, against the shared incumbent — then the figures and
+the QA battery the user asked for on 2026-08-27.
+
+| script | what it does | writes |
+|---|---|---|
+| `stage0_fits.py` | the seven fits: the baseline and drift tables | `outputs/stage0_fits.{npz,log}` |
+| `stage1_mx2_fit.py` | the mass×time-curvature term `M2` — a clean null | `outputs/stage1_mx2_fit.{npz,log}` |
+| `stage2_figure_data.py` | re-evaluates the frozen thetas for what the tables never saved (gated) | `outputs/stage2_figure_data.npz` |
+| `stage2_figures.py` | four figures from the npz files alone, no model evaluation | `figures/exp61_{baselines,transfer,drift,m2_null}` |
+| `stage3_qa.py` | the STANDARD `qa.evaluate` battery, three models, both samples | `figures/qa/`, `figures/exp61_qa_compare`, `outputs/stage3_qa.{npz,log}` |
+| `stage4_cdf_anatomy.py` | why the per-epoch ceiling is worse on the mass CDFs (gated) | `figures/exp61_cdf_anatomy`, `outputs/stage4_cdf_anatomy.{npz,log}` |
+
+`outputs/` and `figures/` are gitignored and regenerable; `stage3_qa.py` is
+the only slow one (~25 min, with `--tables-only` and `--compare-only` for
+iteration). Caveats and the one self-correction are in `PROBLEMS.md`.
 
 ## The baseline table
 
