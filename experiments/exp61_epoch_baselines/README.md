@@ -130,6 +130,15 @@ score-only reading of the baseline table (+15.9 per cent of loss recoverable
 at z=2) already implied, now stated in the currency the user reads off the QA
 figures.
 
+**Read that last paragraph with the Stage 3 qualification below.** B1 and B3,
+like every fitted loss in this experiment, are defined on the mh-complete +
+sane FIT MASK, which at z=2 keeps 839 of the 2397 galaxies. On the whole
+clean population the per-epoch fits do NOT put the z=2 bias back to zero —
+they overshoot it, to +5.5 per cent inside 10.25 kpc and +12.4 per cent
+inside 100 kpc. The statement "the per-epoch freedom removes the z=2 offset"
+is true of the sample the fits were driven by and false of the population the
+QA figures show.
+
 ### `figures/exp61_transfer` — the compromise is a CLOSE one
 
 Every parameter set evaluated at every epoch. Each cell is the share of that
@@ -177,3 +186,101 @@ two curves never separate by more than 0.0012 dex or 0.8 of a percentage
 point at any epoch. One extra parameter, +0.04 per cent of loss, and nothing
 the eye can see — which is the 0.6-per-cent-of-loss blindness exp58 P-B
 measured, demonstrated on the exact term built to exploit it.
+
+## Stage 3 — the STANDARD QA battery, at every epoch (2026-08-27)
+
+The user's request: the profiles themselves, not only the fitting metrics —
+average curves of growth in halo- and stellar-mass bins, the stellar-mass
+CDFs, the mass planes, the mass-size relations. `stage3_qa.py` runs
+`hongshao.qa.evaluate`, the battery every promoted model in this programme
+has been shown on, for three models on the same 2397 galaxies:
+
+| label | what it is |
+|---|---|
+| `incumbent` | the shared seven-parameter law — hongshao v1's mean, the reference |
+| `per-epoch-best` | at each epoch, the fit made at THAT epoch alone: the class ceiling, as profiles |
+| `zle1.0-refit` | the z ≤ 1.0 retreat, shown at all five epochs |
+
+Figures: `figures/qa/qa_*_exp61_{incumbent,per-epoch-best,zle1.0-refit}.*` —
+eleven families per model (binned CoGs by halo mass and by stellar mass,
+aperture and annulus mass tables, the observational planes, the mass-size
+planes, the cross-epoch growth planes, the mass CDFs, the density profiles,
+the best/worst gallery). Plus one figure the battery does not draw,
+`figures/exp61_qa_compare`: all three models' median fractional CoG error
+against radius, one panel per epoch. Full log `outputs/stage3_qa.log`.
+
+**Two things to know before reading them.** First, `per-epoch-best` is not a
+model anyone could adopt — it is five parameter sets stitched together by
+epoch, so galaxy i's z=0.4 profile and its z=2.0 profile come from different
+thetas. Every per-epoch tier is a genuine ceiling; tier 2c, the cross-epoch
+growth planes, asks whether the same galaxy evolves coherently between two
+epochs, and for a stitched composite that question has no owner. Second, the
+standing battery caveat (exp57 P-C): the headline tiers cannot see a
+redistribution of a few per cent of the mass inside 10 kpc.
+
+### The result the battery adds: the class ceiling does not transfer
+
+`stage3_qa.py` reports every bias twice, on the whole clean population and on
+the mh-complete + sane fit mask that every loss and every B gate in this
+experiment is defined on. The mask keeps 2397 / 1780 / 1435 / 1144 / **839**
+galaxies at z = 0.4 / 0.7 / 1.0 / 1.5 / 2.0 — at z=2 it is a third of the
+sample, and the third with the most massive haloes.
+
+Median relative bias of the stellar mass inside 100 kpc [%]:
+
+| model | sample | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|---|
+| incumbent | all 2397 | −1.9 | +2.6 | +3.6 | +0.8 | −6.4 |
+| incumbent | fit mask | −1.9 | +1.6 | +2.7 | +0.6 | −10.0 |
+| per-epoch-best | all 2397 | −1.0 | +0.6 | +1.4 | +4.7 | **+12.4** |
+| per-epoch-best | fit mask | −1.0 | −0.1 | −0.4 | −0.2 | **+0.6** |
+| z ≤ 1.0 refit | all 2397 | −2.2 | +1.3 | +1.4 | −3.5 | −13.1 |
+| z ≤ 1.0 refit | fit mask | −2.2 | +0.5 | +0.9 | −2.3 | −14.1 |
+
+Inside 10.25 kpc the same split reads −12.5 (all) / −12.8 (mask) for the
+incumbent and **+5.5 (all) / +0.3 (mask)** for the per-epoch ceiling.
+
+So: **the per-epoch fits do not repair the z=2 profile, they re-aim it.** On
+the sample they were driven by, they land on zero. On the wider population
+they cross over to an excess of comparable size in the other direction — 12
+percentage points of movement at 148 kpc, against 4 for the shared law over
+the same sample change. The halo-mass-binned figure
+(`qa_bins_exp61_per-epoch-best`) shows where it comes from: at z=2 the
+ceiling runs +21 per cent at 2 kpc rising to +25 per cent at 148 kpc in the
+LOWEST halo-mass tercile, against −5 to +4 per cent over the same radii in
+the highest — and the lowest tercile is what the mh-complete mask removes at
+that epoch.
+
+This is exp58 P-C, which measured that a fit-sample median correction
+overshoots the full QA population by +4 per cent at z=2, now visible as
+profiles and larger than that estimate. It does not change either of exp61's
+two answers — the z ≤ 1.0 ceiling result stands (all three models agree
+closely there, and the sample split is under a point), and z=2 remains where
+the shared law's form binds. It changes what may be CLAIMED from the z=2
+recoverable component: 15.9 per cent of the loss is real and reachable on the
+fit sample, and it is not a population-level fix. Any future z=2 attempt must
+first answer open question C13 — which z=2 population the model owes its
+median to — and this table is the sharpest statement of why that question is
+not optional.
+
+### What the battery says about the rest
+
+- **z ≤ 1.0 is a genuinely flat region.** In `exp61_qa_compare` all three
+  models lie on top of one another at z = 0.4, 0.7 and 1.0: inside ±5 per
+  cent beyond about 8 kpc, and 7 to 13 per cent low in the inner few kpc.
+  That inner deficit belongs to every epoch scope alike, so it is a property
+  of the deposition-only class, not of the fit's redshift range — the same
+  conclusion exp58's decliner work reached from a different direction.
+- **The ceiling buys nothing in the battery's headline tiers.** M*(<100 kpc)
+  scatter is unchanged to three decimals — 0.1163 / 0.1428 / 0.1464 / 0.1541
+  / 0.1849 dex for the incumbent against 0.1158 / 0.1425 / 0.1464 / 0.1548 /
+  0.1898 for the ceiling, so it is a hair better at z ≤ 0.7 and a hair worse
+  at z ≥ 1.5. Tier 3 profile max|rel| beyond 5 kpc is 0.2765 / 0.2805 /
+  0.2868 / 0.2965 / 0.3233 against 0.2775 / 0.2808 / 0.2907 / 0.3015 /
+  0.3258 — the ceiling is marginally WORSE at every epoch. The 15.9 per cent
+  it recovers at z=2 is a median offset, not scatter and not profile shape,
+  exactly as the exp57 P-C caveat says the battery would show.
+- **The retreat is expensive out of scope, and buys nothing in it.** The
+  z ≤ 1.0 refit tracks the incumbent to within a point or two at its three
+  epochs and is 13 to 25 per cent low at z = 1.5 and 2.0 — the profile
+  version of Stage 0's answer 1.

@@ -2195,3 +2195,39 @@ of its loss at z=0.4 and the z=1.5 fit 64.2%, against the shared law's worst
 cell of 15.9%. Both sharpen, and neither changes, the recorded conclusion —
 the shared seven parameters sit close to all five per-epoch optima, and z=2
 is where that closeness runs out.
+
+## exp61 Stage 3 — the standard QA battery at every epoch (2026-08-27)
+
+- [x] **Run `hongshao.qa.evaluate` on the exp61 models** (user request: the
+  profiles themselves, not only the fitting metrics). `stage3_qa.py`, three
+  models on the same 2397 galaxies — the shared incumbent, the per-epoch
+  ceiling (each epoch's own fit, stitched), and the z <= 1.0 refit. Eleven
+  standard figure families per model in `figures/qa/`, plus the bespoke
+  `exp61_qa_compare` (median fractional CoG error vs radius, one panel per
+  epoch, both samples).
+- [x] **Report every bias on BOTH samples.** The mh-complete fit mask keeps
+  2397/1780/1435/1144/839 galaxies at z=0.4..2.0; the battery reports the
+  whole clean population. Both are printed for M*(<10) and M*(<100).
+
+### Review
+
+The battery qualified a Stage 2 claim, which is why it was worth running.
+**The per-epoch ceiling does not repair the z=2 profile — it re-aims it.** On
+the fit mask it lands on zero (+0.3% inside 10.25 kpc, +0.6% inside 100 kpc);
+on the whole population it overshoots to +5.5% and +12.4%. Twelve percentage
+points of movement between the two samples, against four for the shared law.
+The halo-mass-binned figure locates it: at z=2 the ceiling is +21% to +25%
+in the lowest halo-mass tercile and −5% to +4% in the highest, and the lowest
+tercile is what the mask removes. exp61's two answers are unchanged; what
+changed is what may be claimed from the 15.9 per cent — it is real on the fit
+sample and is not a population-level fix, which makes open question C13
+(which z=2 population the model owes its median to) load-bearing rather than
+optional. The Stage 2 README paragraph now carries that qualification.
+
+Two supporting confirmations. The ceiling buys nothing in the battery's
+headline tiers — M*(<100 kpc) scatter unchanged to three decimals, tier 3
+max|rel| marginally worse at every epoch — exactly as the exp57 P-C caveat
+predicts for a median-offset change. And at z <= 1.0 all three models lie on
+top of one another, 7 to 13 per cent low inside a few kpc for every epoch
+scope alike, so that inner deficit is a property of the deposition-only
+class, not of the fit's redshift range.

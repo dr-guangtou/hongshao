@@ -672,6 +672,28 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Figures / QA presentation
 
+- **Report every population number on BOTH samples when the fit mask and the
+  QA population differ (exp61 Stage 3).** exp61's headline — the single-epoch
+  fits remove the z=2 offset outright, B1 −0.046 → +0.002 dex and B3 −12.7%
+  → +0.3% — is true on the mh-complete fit mask and FALSE on the clean
+  population the QA figures show, where the same fits overshoot to +5.5%
+  inside 10.25 kpc and +12.4% inside 100 kpc. The mask keeps 839 of 2397
+  galaxies at z=2 and keeps the massive-halo end, so the per-epoch fits are
+  aimed at a different population than the one they are then displayed on.
+  The shared law moves 4 points between the two samples over the same
+  quantity and the ceiling moves 12, which is the tell: a correction fitted
+  on a subsample is only a correction FOR that subsample. Printing the same
+  median twice, once per sample, costs one loop and would have caught the
+  overclaim before it reached a README. Third instance of the fit-sample /
+  QA-population split (exp58 P-C, exp61 Stage 2, exp61 Stage 3).
+- **A "ceiling" model stitched per epoch is an upper bound, not a model
+  (exp61 Stage 3).** Running the standard battery on a composite whose z=0.4
+  and z=2.0 profiles come from different thetas is legitimate for every
+  per-epoch tier and meaningless for tier 2c, the cross-epoch growth planes,
+  which asks whether the SAME galaxy evolves coherently — a question a
+  stitched composite has no owner for. Say so in the driver's own printed
+  report, next to the numbers, not only in the README; the figure files
+  outlive the prose that framed them.
 - **`matplotlib.patheffects` is unusable under this machine's `usetex: True`
   (exp61 Stage 2b).** Adding a `withStroke` path effect to heatmap cell labels
   raised `RendererBase._draw_text_as_path() missing 1 required positional
