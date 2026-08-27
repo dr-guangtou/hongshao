@@ -87,3 +87,23 @@ gradient's shape (tilted 56.6/45.4/37.9/29.1 against the measured
 - **C. Iterate:** the remaining levers (2-D size axis, dc–A coupling,
   radius-structured amplitude noise) target S2; the decliner-depth and
   S1/S3 walls are information-theoretic and will not move.
+
+## ADOPTED (user, 2026-08-27): Option A — with Option B on record
+
+**Option A (the population layer, S3-strict tilted) is hongshao v1's
+stochastic layer.** Frozen artifact: `outputs/hongshao_v1_layer.npz`
+(`stage3d_adopt.py` regenerates it and the battery) — full-sample
+calibration (pool shift −0.592, per-epoch additive amplitude widths
+0.114–0.141 dex), with stage3c's held-out table as its validation record.
+The standard battery with the drawn populations overlaid lives in
+`figures/qa/qa_*_exp60_v1_layer.*`.
+
+**Option B (the decline-realistic S1-scaled variant) is ON RECORD, not
+adopted**: pool scale 0.20 with the shift calibrated to the declining
+fraction (~+0.37 on the calibration halves) reproduces the measured decline
+fraction / overall median / width held out, at the price of a 0.21 dex inner
+(0.065 outer) shift of the drawn median profile — an implicit mean-model
+change. Revisit triggers, as agreed: (1) 3-D or multi-axis profiles shrink
+the orientation component of the decline targets ([[decliner-physics
+interpretation]] — the targets themselves are partly projection geometry);
+or (2) the mean-model question is reopened on other grounds.
