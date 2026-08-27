@@ -82,5 +82,22 @@ ones compact; Stage 1 measured the reverse in the data (inner share vs `late`
 physics-set accretion-to-deposition delay (Stage 2b) did not change the signs and
 destroyed the predicted epochs. The split therefore needs a variable other than
 the instantaneous halo mass — the growth *rate* at deposit (the DiffMAH slope,
-which the forward model has) is the obvious candidate and was not tried in this
-experiment; it is a Stage 2c for a later session, gated by a leverage sweep first.
+which the forward model has) is the obvious candidate. **Leverage probe (by
+evaluation, no fit), 2026-08-28**: with the compact share
+$w_c=\sigma((m_{1/2}-\log M+g\,(\alpha-1))/d)$, $\alpha={\rm d}\ln M/{\rm d}\ln t$
+at the deposit, the partial correlations of the $z=0.4$ compact share with
+(`late`, `f_form`, `logtc`, `t50`) at fixed halo mass are
+
+| g | median share | late | f_form | logtc | t50 |
+|---|---|---|---|---|---|
+| data (Stage 1 inner share) | — | +0.25 | −0.26 | −0.18 | −0.06 |
+| 0 (Stage 2) | 0.56 | −0.34 | +0.34 | +0.29 | +0.76 |
+| −0.5 | 0.43 | +0.22 | −0.29 | −0.06 | +0.26 |
+| −1.0 | 0.30 | +0.35 | −0.45 | −0.21 | +0.06 |
+| −2.0 | 0.15 | +0.49 | −0.70 | −0.48 | −0.18 |
+
+$g\approx-0.5$ to $-1$ reproduces every sign and magnitude: deposits laid down
+during fast halo growth (mergers) are extended, those during slow growth (smooth
+accretion) compact — the in-situ / ex-situ picture in one parameter. Promoted to
+**Stage 2c** (`stage2_fit.py --growth`, thirteen parameters, nests at $g=0$),
+fitted at $z=0.4$ only like Stage 2; judged by the same gates and predictions.
