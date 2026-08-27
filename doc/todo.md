@@ -1805,3 +1805,214 @@ Cross-experiment plan. Mirrors the phase sequence in
   budget was checked and cleared (800 vs 6400 Nelder-Mead iterations return
   bit-identical parameters on four replicates). Tech note Section 3.5.1;
   open question B1 closed, C9 and C10 newly raised.
+
+## exp56 — compact-shape closure and radial halo–CoG relation
+
+- [x] **Stage 0: freeze the references and predeclare the test.** Retain fixed
+  `gamma=1.4` as the simple baseline, the hard halo-mass boundary as the
+  diagnostic ceiling, and the smooth `gamma(log M_peak)` law with width
+  0.20 dex as the continuous candidate. Do not retune the outer-slope
+  endpoints, transition, or width while testing the compact component.
+  **Predeclared in the Exp56 README before writing the driver.**
+- [x] **Stage 1: fold-clean compact Sérsic-index grid.** Compare globally fixed
+  `n = 0.5, 0.75, 1.0` under both fixed `gamma=1.4` and the frozen smooth
+  outer-slope law. Refit the same four galaxy coordinates for every cell.
+  Select on training galaxies only, require a bootstrap-resolved reduction of
+  the 5--30 kpc residual, and preserve cumulative-profile accuracy, density
+  accuracy, R50/R80/R90, parameter conditioning, boundary incidence, and
+  radial-jackknife stability. Do not free `n` per galaxy.
+  **Result:** the complete mass-stratified 90-galaxy path passed in 31.11
+  seconds, then the declared full grid fitted 2,539 galaxies in 478.88 seconds.
+  `n=1` is the numerical winner in all five outer training folds under both
+  outer laws. Under the frozen smooth law its median 5--30 kpc CoG RMS is
+  0.00495 dex against the TNG CoG, better than the worse 0.00625 dex for
+  `n=0.75` and 0.00947 dex for `n=0.5`; its density RMS is likewise better at
+  0.02847 dex versus 0.03591 and 0.04812 dex. Lower indices also move R80/R90
+  inward, and `n=0.75` has one large radial-jackknife coordinate excursion.
+  **Decision:** retain `n=1`; a lower compact index does not repair the
+  5--30 kpc residual.
+- [x] **Stage 2: component and degeneracy diagnosis not triggered.** Plot the
+  compact and extended CoGs and density profiles separately. Use profiled scans
+  that fix one coordinate while re-optimizing the other three to determine
+  whether `n<1` removes compact-component leakage at 5--30 kpc or merely
+  transfers mass among compact fraction and the two radii. The component
+  figure was completed, but no lower index survived Stage 1, so the
+  conditional profiled scans were not run.
+- [x] **Stage 3: refit the held-out halo–CoG relation.** Only the representation
+  selected inside the training folds proceeds. Refit the conditional mean and
+  stochastic residual distribution from `[DiffMAH(4), c_200c]`; repeat the
+  final-mass-only, mass-conditioned shuffled-MAH, and shuffled-concentration
+  controls and the complete standard QA battery. Carry fixed `gamma=1.4` and
+  the frozen smooth `gamma(log M_peak)` law at `n=1` through identical
+  fold-clean predictors. Select the Stage 4 primary using decoded held-out
+  profiles and generated populations, not coordinate error alone. The exact
+  controls, stochastic calibration, safeguards, and sub-minute 90-galaxy gate
+  are predeclared in the Exp56 README before the Stage 3 driver is written.
+  **Validation:** the complete 90-galaxy path passed in 31.18 seconds with both
+  representations, all controls, eight stochastic draws, direct figures, and
+  both standard-QA batteries. **Result:** the full 2,539-galaxy calculation
+  finished in 321.10 seconds. The smooth law improves density accuracy, the
+  largest halo-mass-bin shape residual, and the stellar-mass--R90 slope, but it
+  fails the frozen R50 and self-consistent size-plane safeguards. Fixed
+  `gamma=1.4` is therefore the Stage 4 primary; the smooth law remains a
+  diagnostic rather than a discarded model.
+- [x] **Stage 3b: replace coordinate-space mean fitting with direct decoded-CoG
+  fitting.** The held-out split and the intermediate analytic representation
+  are separate choices: retain the exact Stage 3 folds, representations,
+  sparse halo basis, controls, and nested stochastic calibration, but refit the
+  shared coefficients against the 24-point decoded log-CoG residual on each
+  training fold. Compare with the saved coordinate-regression baseline using
+  held-out CoG and density accuracy, the coherent halo-mass-bin shape
+  residual, R50/R80/R90, boundaries, a radial jackknife, stochastic coverage,
+  null controls, complete-population geometry, and direct per-galaxy curves.
+  Require the complete 90-galaxy path to finish in less than one minute before
+  a full run. **Predeclared in the Exp56 README before writing the driver.**
+  **Validation:** the complete uncached 90-galaxy path passed in 35.57 seconds;
+  decoder, coefficient-Jacobian, and synthetic shared-relation checks all pass.
+  **Result:** on 2,539 galaxies, direct fitting gives fixed `gamma=1.4` a small
+  bootstrap-resolved 0.00020 dex improvement in median full-CoG RMS, but
+  worsens the median 5--30 kpc CoG RMS by 0.00109 dex, full density RMS by
+  0.00282 dex, 5--30 kpc density RMS by 0.00289 dex, and absolute R50/R80/R90
+  errors by 0.00247/0.00593/0.00444 dex; all degradations are bootstrap-
+  resolved. The smooth-law direct fit has the same trade and worsens its
+  largest halo-mass-bin residual from 3.34% to 4.01%. **Decision:** reject the
+  unweighted cumulative-CoG objective as a replacement for Stage 3. It confirms
+  that weak analytic-coordinate directions matter, but does not repair the
+  scientifically important profile residuals. **Coefficient/error audit:** a
+  separate reproducible diagnostic passed the complete 90-galaxy path in 0.78
+  seconds and exported the exact five fold coefficient matrices, an
+  identifiable full-sample recipe, feature normalization, and the matched
+  galaxy-by-galaxy density and size error distributions. It also found that a
+  constant fixed `gamma` must not be standardized as a regression predictor;
+  the readable fixed-slope recipe now keeps `gamma=1.4` only in the decoder.
+- [x] **Stage 3c: structured sparsification of the fixed-slope halo–CoG
+  mean.** Keep the four intercepts and 20 linear coefficients, apply a nested
+  sparse-group penalty only to the 28 nonlinear coefficients, debias the
+  selected support, and compare with the saved 52-coefficient Stage 3 mean on
+  the unchanged five outer folds. Require at most 32 active coefficients and
+  preserve the full CoG, 5--30 kpc CoG and density, R50/R80/R90, CRPS,
+  coverage, mass-bin residual, controls, numerical safeguards, and standard
+  QA. The complete 90-galaxy candidate-selection and QA path must pass in less
+  than one minute before the full run. **Validation:** the complete path passed
+  in 31.17 seconds, including exact zero-penalty closure and exact recovery of
+  a synthetic 31-coefficient support. **Result:** the full 2,539-galaxy run
+  finished in 193.66 seconds and retained 44/51/45/41/45 coefficients across
+  the five outer folds. Median full-CoG and density RMS change by only +0.25%
+  and +0.09%, but the 5--30 kpc CoG and R50/R80/R90 degradations are
+  bootstrap-resolved and the worst mass-bin residual increase exceeds its
+  safeguard. **Decision:** reject entry-wise sparsification as a meaningful
+  simplification; test a shared low-rank halo-response architecture next.
+- [x] **Stage 3d: test shared low-rank halo-response directions.** Keep the
+  fixed `n=1`, fixed `gamma=1.4` profile representation and the complete
+  12-column non-constant halo basis. Compare rank-1, rank-2, rank-3, and
+  unrestricted rank-4 multivariate means on the unchanged outer folds, with
+  rank 2 as the primary 32-effective-coefficient candidate. Require numerical
+  rank-4 closure, synthetic recovery, stable rank-2 output subspaces, nested
+  residual calibration, matched null controls, the complete scientific QA
+  battery, direct galaxies, average CoGs in halo-mass bins, and stellar-mass
+  planes. Pass the complete 90-galaxy path in less than one minute before the
+  full run. **Validation:** the complete path passed in 20.08 seconds, and
+  rank 4 closes to the saved Stage 3 profiles within `1.3e-13` dex. **Result:**
+  the full 2,539-galaxy run finished in 557.49 seconds. Rank 2 uses 32 effective
+  coefficients, captures 96.84% of fitted-response variance, and has a stable
+  2.28-degree maximum fold-to-fold subspace angle, but worsens median full-CoG
+  RMS from 0.08415 to 0.08610 dex. Its 5--30 kpc CoG and R50/R80/R90 errors are
+  bootstrap-resolvedly worse, and the stellar-mass planes are visibly more
+  compressed. Rank 1 is clearly inadequate; rank 3 uses 43 coefficients and
+  still fails protected radial and size metrics. **Decision:** reject global
+  low-rank truncation as the Stage 3 replacement.
+- [x] **Stage 3e: sparsify the nonlinear halo basis inside rank 2.** Treat the
+  saved complete-basis rank-2 relation as the primary reference because its
+  average halo-mass-bin CoGs are visually valid, then exhaustively compare all
+  128 subsets of the seven nonlinear basis terms inside four inner folds of
+  every outer training fold. Keep all five linear terms and both shared latent
+  directions. Select the smallest support inside a frozen decoded-profile
+  accuracy envelope, targeting at most three nonlinear terms and therefore at
+  most 24 effective coefficients. Judge the selected relation against complete
+  rank 2 with paired held-out CoG, density, size, CRPS, coverage, boundaries,
+  radial subsets, controls, and the complete standard QA set; explicitly
+  inspect average CoGs in halo-mass bins and stellar-mass planes. Require the
+  complete 90-galaxy path to finish in less than one minute before a full run.
+  **Predeclared in the Exp56 README before writing the driver. Validation:**
+  the complete path passed in 19.21 seconds. **Result:** the full 2,539-galaxy
+  nested test finished in 217.95 seconds and selected 22/26/26/26/24 effective
+  coefficients. Sparse rank 2 worsens median full-CoG RMS from 0.08610 to
+  0.08728 dex, has bootstrap-resolved degradations in the 5--30 kpc CoG and
+  R50/R80/R90, and further compresses the fixed-aperture stellar-mass planes.
+  **Decision:** retain complete rank 2 as the practical compression; the
+  24--26 coefficient knee is informative but is not an accuracy-preserving
+  replacement.
+- [x] **Stage 3f: give nonlinear curvature one independent response
+  direction.** Fit a rank-2 linear core on all five halo inputs plus a rank-1
+  correction on nonlinear columns residualized against the linear basis.
+  Exhaustively select one to three of the seven established nonlinear terms
+  inside four inner folds, giving 22--24 effective target-relation
+  coefficients. Compare with complete rank 2 using the unchanged held-out
+  CoG, density, size, CRPS, coverage, boundary, radial-subset, control, and
+  visual safeguards. Include the full standard QA set, average halo-bin CoGs,
+  stellar-mass planes, and the fitted correction's radial response. Require the
+  complete 90-galaxy path to finish in less than one minute before a full run.
+  **Predeclared in the Exp56 README before writing the driver. Validation:**
+  the complete path passed in 19.68 seconds, including all 63 nested supports,
+  both diagnostic ceilings, controls, and the standard QA set. **Result:** the
+  full 2,539-galaxy test finished in 188.42 seconds. Only one of five outer
+  folds had any 22--24-coefficient candidate inside the protected inner
+  accuracy envelope, and the nonlinear output direction changed by as much as
+  71.6 degrees between folds. The selected held-out relation has 0.08684 dex
+  median full-CoG RMS versus 0.08610 dex for complete rank 2, with
+  bootstrap-resolved degradations in the full and 5--30 kpc CoG and all three
+  size errors; its stellar-mass planes are also more compressed. **Decision:**
+  reject the independent rank-1 nonlinear correction and retain complete rank
+  2 as the practical compressed reference.
+- [x] **Stage 4: measure radial halo-information content without imposing the
+  expected answer.** Compare nested held-out relations using final mass,
+  recent DiffMAH growth, early assembled fraction, the complete DiffMAH
+  history, and concurrent concentration. Use mass-conditioned shuffles and
+  report incremental CRPS and RMS as functions of radius and in differential
+  annuli. Treat observational motivation as a reason to run the test, not as
+  a constraint on the result. **Predeclared before writing the driver:** use
+  DiffMAH-derived growth from `z=1` to `z=0.4` and the assembled fraction at
+  `z=2`; compare five nested held-out relations plus four mass-conditioned
+  shuffles with one common linear-plus-mass-quadratic mean, fold-internal
+  stochastic calibration, radial and annular bootstrap tests, and a complete
+  sub-minute 90-galaxy gate. **Validation:** the complete path passed in 21.31
+  seconds; final-relation nominal-68% coverage is 69.21%, all generated CoGs
+  are finite and monotonic, and both Stage 3 adequacy safeguards pass. The
+  full-sample test is in progress. **Result:** the corrected 2,539-galaxy run
+  finished in 250.90 seconds with 68.68% nominal-68% coverage. Recent growth,
+  early assembled fraction, and concentration each beat their preceding model
+  and mass-conditioned shuffle across adjacent radial bins; the complete raw
+  DiffMAH coordinates are worse than the two explicit summaries but better
+  than shuffled histories. However, the common comparison mean is 1.11% worse
+  in profile CRPS and 2.73% worse in median CoG RMS than the Stage 3 selected
+  mean, failing both frozen 1% adequacy gates. **Decision:** record the radial
+  patterns as structured hypotheses, not established physical connections;
+  Stage 4 is formally inconclusive until the comparison is reproduced without
+  sacrificing the selected Stage 3 mean accuracy.
+- [x] **Stop conditions.** Stop after the declared Sérsic grid. If `n=0.5`
+  is selected, report a one-sided result rather than extending automatically.
+  Do not add epochs until the redshift-0.4 representation, identifiability,
+  stochastic population geometry, and 5--30 kpc residual are stable. The
+  declared grid is closed without extending `n` or launching a joint global
+  `(n, gamma)` fit.
+- [x] **Stage 1b: jointly fit one global compact index and one global Moffat
+  index.** On a predeclared focused 5-by-5 grid, profile out the same four
+  galaxy coordinates, select grid cells on the five outer training folds, and
+  attempt one local quadratic refinement only if the winner is interior and
+  fold-stable. Compare with fixed `(n=1, gamma=1.4)` and the frozen smooth
+  outer law using 5--30 kpc residuals, full CoG and density accuracy,
+  R50/R80/R90, conditioning, boundaries, exact recovery, four-start agreement,
+  radial jackknifes, and direct profile figures. The complete 90-galaxy path
+  must remain below one minute before a full run. **Predeclared in the Exp56
+  README before writing the Stage 1b driver. Result:** the complete demo passed
+  in 39.04 seconds and the 2,539-galaxy grid finished in 1,236.58 seconds. All
+  five training folds and 99.7% of galaxy bootstraps choose the declared
+  upper-bound cell `(n=1.25, gamma=1.4)`, so the conditional continuous
+  refinement is not attempted. The cell improves the paired 5--30 kpc CoG and
+  density errors relative to fixed `(n=1, gamma=1.4)`, but worsens full-range
+  CoG RMS from 0.00440 to 0.00459 dex and worsens local conditioning. Its
+  stellar-mass--R90 slope is 0.2732 versus 0.2909 in TNG and 0.2924 for the
+  frozen smooth law. Exact recovery, multi-start agreement, boundaries, and
+  radial jackknifes pass, so this is a real profile trade rather than a failed
+  optimizer. **Decision:** do not adopt or extend the boundary pair; retain
+  the fixed single-slope baseline and the frozen smooth outer-shape candidate.

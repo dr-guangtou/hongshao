@@ -105,6 +105,10 @@ clean, portable SHMR library — don't let it grow into an inference framework.
   objects. Add cross-epoch stellar-growth diagnostics for multi-epoch models.
   Give every QA figure a self-contained caption or nearby summary that states
   what is plotted, the reference data, and the main interpretation.
+- **Minimum visual gate for a promising direction.** Always inspect at least
+  the average curves of growth in halo-mass bins and the stellar-mass planes
+  before calling a model direction interesting or promising. Summary scores
+  alone cannot support that judgment.
 
 ## Repo layout
 
