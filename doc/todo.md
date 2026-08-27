@@ -1919,3 +1919,11 @@ Cross-experiment plan. Mirrors the phase sequence in
   protocol, subsample first).
 - [ ] **exp60 Stage 3 — compose the three components, held-out gates S1-S5,
   standard battery with draws. Adoption: the user.**
+- [x] **exp60 Stage 2 — the size/shape anatomy.** The individuality axis is
+  the deposit shape `c` (22.3% median per-galaxy gain), moving in lockstep
+  with the size parameters (rho 0.88-0.91 with log_f0 and b): ONE axis
+  through degenerate coordinates, as exp41 found on the old kernel. It is
+  feature-orthogonal (|rho| <= 0.22 vs every halo feature — stochastic, not
+  conditioning) and NEARLY INDEPENDENT of Stage 1's core axis (rho = -0.16
+  with A_i), so Stage 3 draws the two components independently, with the
+  -0.16 noted for the empirical-resampling fallback.
