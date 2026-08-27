@@ -1938,3 +1938,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   territory resurfacing); S2 planes best 1.69x floor vs the 1.3 target —
   AND the exp41 context bar (1.0-1.4) was achieved on the ORACLE-PINNED old
   kernel, not like for like. CHECKPOINT: the user picks the packaging.
+
+### exp60 — REVIEW (closed 2026-08-27)
+
+Option A ADOPTED as hongshao v1's stochastic layer (frozen artifact +
+battery figures with draws); Option B on record with revisit triggers; the
+three walls (decliner depth, S1/S3 mean coupling, S2 plane gap) measured
+and filed as open questions C14/C15; C13 files the z=2-median map. The
+user's closing read, agreed: the kpc-plane improvement is real, the overall
+success limited, and the inner-region and high-z problems were never the
+layer's to fix — they await additional data (3-D / multi-axis profiles,
+the real merger tree).

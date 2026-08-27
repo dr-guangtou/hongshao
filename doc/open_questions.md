@@ -294,6 +294,36 @@ to REMOVE or REDISTRIBUTE central mass? Options, none costed yet:
 ALONE and see what is left. The current 0.045 dex is from a fit dragged by the
 declining half.
 
+### C13. The z=2 median: reachable per epoch, refused by the shared loss, ambiguous across samples
+Raised 2026-08-27 (exp61). The single-epoch z=2 fit eliminates both visible
+z=2 offsets (median amplitude bias -0.046 -> +0.002 dex; M*(<10 kpc) -12.7%
+-> +0.3%), so the information exists in the halo record; the M2 curvature
+term, the one shared degree of freedom the drift table demanded, converges
+cleanly to zero because the loss prices the entire z=2 bias at ~0.6%; and a
+fit-sample median fix overshoots the full progenitor-selected sample by +4%
+(exp58 P-C). Before any future attempt: decide WHICH z=2 population the
+model owes its median to. A scope question for the user.
+
+### C14. The drawn decliners are twice too deep — the exchangeable-draw ceiling
+Raised 2026-08-27 (exp60 Stage 3c). Any draw that assigns core-expansion
+strengths by feature-conditioned resampling (rather than per-galaxy fitting)
+reproduces the declining FRACTION but overshoots the decliner median depth
+~2x (-0.120 against -0.066) at every pool scale tried, because depth-at-
+crossing is set by each galaxy's own response curve. Candidate resolutions:
+information beyond the halo record (3-D or multi-axis profiles shrinking the
+orientation component of the target itself), or accepting depth as
+unmodelled. Connected to the Option B revisit triggers.
+
+### C15. The S2 plane gap (1.69x floor against 1.3) and its untried levers
+Raised 2026-08-27 (exp60 Stage 3c). The adopted layer takes the unpinned kpc
+planes from 2.7-2.9x the split-half floor to 1.69-2.17x at z=0.4. Untried
+levers, in expected order of value: a 2-D size axis (Stage 2 measured a real
+second component for ~a fifth of galaxies in exp41's version), dc-A coupling
+at the measured rho = -0.16, radius-structured amplitude noise. NOTE the
+context bar honestly: exp41's 1.0-1.4x was achieved on the oracle-pinned old
+kernel with zero amplitude scatter to explain; nothing unpinned has ever
+been measured below 1.69x.
+
 ## D. Resolved
 
 ### D1. Is exp48's density-plus-log objective the repair for the outer blindness?
