@@ -2159,3 +2159,39 @@ the real merger tree).
   radial jackknifes pass, so this is a real profile trade rather than a failed
   optimizer. **Decision:** do not adopt or extend the boundary pair; retain
   the fixed single-slope baseline and the frozen smooth outer-shape candidate.
+
+## exp61 Stage 2 — QA figures for the epoch baselines (2026-08-27)
+
+- [x] **Recover the quantities the exp61 tables never saved, under a gate.**
+  `stage2_figure_data.py`: the cross-epoch loss matrix (7 parameter sets x 5
+  epochs), the B1/B3 bias currencies for every set including the M2 curvature
+  fit, and the parameter bounds. Refuses to write unless every re-evaluated
+  number reproduces the fit's own saved value and the null's gates reproduce
+  the Stage 1 log. **Result:** exact — 0.00e+00 on all five single-epoch
+  losses and both scores, 2e-16 on the shared and z <= 1.0 rows, and the null
+  B1/B2/B2b/B3 identical to the Stage 1 log at every printed digit.
+- [x] **Draw the four figures.** `stage2_figures.py`, reading npz only, no
+  model evaluation, project style (`set_style`/`save_fig`, Okabe-Ito epoch
+  colours, usetex-safe text via `qa._tex`/`_pct` plus explicit math mode):
+  `exp61_baselines` (the table in four currencies), `exp61_transfer` (the
+  cross-epoch matrix), `exp61_drift` (seven parameter panels plus the
+  degeneracy caveat), `exp61_m2_null` (the Stage 1 curvature null).
+- [x] **Review every figure as an image before calling it done.** Four rounds
+  of fixes came out of direct inspection: colliding annotations in three
+  panels, `z:g` tick labels printing "1" and "2" against tables that say
+  "1.0" and "2.0", white text on mid-luminance cividis, and a nearly empty
+  panel (a) in the null figure, rebuilt as start-to-finish arrows.
+
+### Review
+
+Two results that were not in the exp61 README before, both now drawn and
+written up there. **(1)** The single-epoch fits do not merely score better at
+z=2 — they remove the z=2 systematic offset outright: B1 goes −0.0461 →
++0.0016 dex and B3 −12.7% → +0.3%, so the z=2 miss is entirely the
+cross-epoch compromise and not a missing ingredient. **(2)** That compromise
+is a CLOSE one. Carrying any single epoch's own optimum to another epoch
+costs far more than the shared law costs anywhere: the z=2 fit gives up 82.9%
+of its loss at z=0.4 and the z=1.5 fit 64.2%, against the shared law's worst
+cell of 15.9%. Both sharpen, and neither changes, the recorded conclusion —
+the shared seven parameters sit close to all five per-epoch optima, and z=2
+is where that closeness runs out.

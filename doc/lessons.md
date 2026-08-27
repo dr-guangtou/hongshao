@@ -672,6 +672,36 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Figures / QA presentation
 
+- **`matplotlib.patheffects` is unusable under this machine's `usetex: True`
+  (exp61 Stage 2b).** Adding a `withStroke` path effect to heatmap cell labels
+  raised `RendererBase._draw_text_as_path() missing 1 required positional
+  argument: 'mtext'` at savefig time — the TeX path fell back to a code path
+  that does not accept path effects. It fails at DRAW time, not when the
+  artist is created, so a script that builds fine still dies on the first
+  export. For text over a colormap, choose the colour from the cell's own
+  LUMINANCE instead: `im.cmap(im.norm(v))` -> `0.299R + 0.587G + 0.114B`,
+  white below ~0.45. Thresholding on the VALUE puts white text on cividis's
+  mid-luminance greys, which is where the contrast is worst.
+- **Math-mode the symbols and the signs, or usetex will quietly mangle them
+  (exp61 Stage 2b).** Three distinct failures in one figure set: a bare `_` in
+  a text-mode label ("score_A") is a LaTeX error; a bare `-0.0461` renders as
+  a hyphen, not a minus, so a table of signed numbers looks inconsistent with
+  the figure that quotes it; and slicing a math string to reuse part of it
+  (`ZLE[1:-1]`) strips the `$` delimiters and puts `\leq` into text mode,
+  which raises "Missing $ inserted" from deep inside `tight_layout`. Write
+  `$z \leq 1.0$` once as a constant and concatenate it; format signed numbers
+  as `f"${v:+.4f}$"`. This is the same class as the exp57 double-`$` bug: the
+  symptom appears in the layout engine, the cause is in the string.
+- **Re-evaluating frozen thetas is cheap; not saving what the figure will need
+  is what costs (exp61 Stage 2b).** The exp61 tables saved each fit's theta,
+  loss and scores but not the cross-epoch losses or the bias-gate quantities,
+  so the figures needed them recovered later. One `stage0_cost.build` (34 s)
+  plus 0.12 s per loss evaluation regenerated all of it in under a minute —
+  and, because the thetas are frozen, the recovery could be GATED: the script
+  refuses to write unless every re-evaluated number reproduces the one the fit
+  recorded (it did, to 0.00e+00) and the null's gate values reproduce the
+  Stage 1 log. A figure built from quantities that do not reproduce the table
+  it illustrates is worse than no figure, and the check costs one loop.
 - **This machine's matplotlibrc has `text.usetex: True`; raw `<`, `>`, `|`, `%`
   in matplotlib text render as ¡, ¿, em-dash, or eat the rest of the label (%
   is a LaTeX comment) — silently, no error (found 2026-07-13 in every qa.py
