@@ -59,3 +59,25 @@ the fits' losses, not of individual parameters.
   Parked as an open question: the user's stated read is that z ≥ 1.5 likely
   needs additional data (the real merger tree, 3-D information), and the
   stochastic layer leads the current work.
+
+## Stage 1 — the M2 mass x time-curvature fit (2026-08-27): a clean NULL
+
+The one-parameter curvature term the drift table pointed at
+(`a_mz2 (logmh − 13.5) ln(1+z)²` per deposit, exp59's exact-nesting
+machinery): all four starts — including one launched from the wrong sign and
+one from strong curvature — converge to the same interior optimum,
+`a_mz2 = −0.056`, loss −0.04%, shape error 13.754%, and the B gates exactly
+at the null's values (z=2 bias −0.047 against the null's −0.046). Two things
+are established, and the pre-registered sign (`a_mz2 > 0`) is FALSIFIED as a
+loss-optimum prediction:
+
+1. **The shared loss will not spend curvature on the z=2 bias** — the same
+   0.6%-of-loss blindness exp58 P-B measured, now demonstrated on the exact
+   term built to exploit it. The fit is well-identified; the null is real.
+2. Together with exp58 P-C (a fit-sample median fix OVERSHOOTS the full QA
+   population by +4% at z=2, because the mh-complete and full samples carry
+   different biases), the z=2-median question is now fully mapped: reachable
+   per epoch (the single-epoch fit), not adoptable by the shared loss (this
+   fit), and ambiguous across samples (P-C). It stays parked; any future
+   attempt must first decide WHICH z=2 population the model owes its median
+   to, which is a scope question for the user, not a fitting question.
