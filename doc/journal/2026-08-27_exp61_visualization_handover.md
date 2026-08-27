@@ -61,12 +61,11 @@ from the committed scripts and the Stage 3 log was reproduced end to end
 
 ## Problems / Blockers
 
-- ~~NOT PUSHED.~~ **Resolved**: the user approved, and `origin/master` was
-  fast-forwarded to `0665954` (`git push origin HEAD:master`). A `checkout
-  master && merge --no-ff` was not possible — `master` is checked out in the
-  exp56 worktree and the local ref is stale at `a5e4f6a` — and would have been
-  synthetic history anyway, since `origin/master` was a strict ancestor of
-  HEAD with no divergence.
+- ~~NOT PUSHED.~~ **Resolved**: pushed at the user's instruction, then
+  properly merged — see Branch State below. The first attempt pushed
+  `HEAD:master` while still on the feature branch, which is not what
+  `/merge-commit` does; the user caught it and the second pass did the real
+  thing.
 - **Open question C16, filed this session** (`doc/open_questions.md`):
   `qa.evaluate`'s `draw_cogs` overlays draws on the PLANE figure only — every
   tier, 2e included, is computed from the MEAN. exp60's adopted-layer tier 2e
@@ -78,8 +77,14 @@ from the committed scripts and the Stage 3 log was reproduced end to end
 - Open question **C13** (which z=2 population the model owes its median to) is
   promoted from optional to load-bearing by Stage 3 — no z=2 attempt should
   start before the user answers it.
-- Local `master` ref still STALE at `a5e4f6a`, held by the exp56 worktree
-  (another agent's — do not touch). `exp62` still taken.
+- ~~Local `master` ref STALE, held by the exp56 worktree.~~ **Fixed this
+  session.** That worktree was squatting on `master` at `a5e4f6a` with a CLEAN
+  tree and nothing at risk — which is what had kept the local `master` ref
+  behind the remote for two sessions. It was moved onto a properly named
+  branch at the same commit (`git -C <worktree> checkout -b
+  exp56-compact-shape`); its working files are byte-identical and `git status`
+  there is unchanged. `master` is now free and checked out in the primary
+  worktree, where it belongs. `exp62` still taken.
 
 ## Key Decisions
 
@@ -87,6 +92,27 @@ None taken this session — no model was fitted and nothing was adopted. Stages
 2 and 4 evaluate frozen thetas; Stage 3 runs the standard battery. The one
 substantive change is to what may be CLAIMED from exp61's z=2 result, which
 the README, PROBLEMS.md and memory now all state.
+
+## Branch State
+
+**On `master` at `116569f`, level with `origin/master`.** The
+`exp60-stochastic-layer` branch was merged and deleted.
+
+How the merge actually went, because the shape is unusual and the next
+session should not be confused by it. The user asked for `/merge-commit` +
+push. The first pass pushed `HEAD:master` from the feature branch — that moved
+the REMOTE default branch but left the session on the feature branch with a
+stale local `master`, which is neither what the skill does nor what was asked.
+The user caught it. The second pass freed `master` (see Problems), checked it
+out, fast-forwarded it to `origin/master`, and ran
+`git merge exp60-stochastic-layer --no-ff` — which reported **"Already up to
+date"**, because the earlier push had already put the branch's commits into
+`origin/master` and the fast-forward had absorbed them. **So no merge commit
+exists**; master's history is linear through the four exp61 commits. The end
+state is correct — on master, master has the work, branch deleted — but the
+`--no-ff` marker the skill intends was foreclosed by the premature push.
+**Lesson: run the merge first and push the result; do not use the push AS the
+merge.**
 
 ## Files Modified This Session
 
