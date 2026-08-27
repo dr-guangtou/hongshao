@@ -61,8 +61,12 @@ from the committed scripts and the Stage 3 log was reproduced end to end
 
 ## Problems / Blockers
 
-- **NOT PUSHED.** Three (now four) commits sit ahead of `origin/master` on
-  `exp60-stochastic-layer`. The user has not been asked for the push yet.
+- ~~NOT PUSHED.~~ **Resolved**: the user approved, and `origin/master` was
+  fast-forwarded to `0665954` (`git push origin HEAD:master`). A `checkout
+  master && merge --no-ff` was not possible — `master` is checked out in the
+  exp56 worktree and the local ref is stale at `a5e4f6a` — and would have been
+  synthetic history anyway, since `origin/master` was a strict ancestor of
+  HEAD with no divergence.
 - **Open question C16, filed this session** (`doc/open_questions.md`):
   `qa.evaluate`'s `draw_cogs` overlays draws on the PLANE figure only — every
   tier, 2e included, is computed from the MEAN. exp60's adopted-layer tier 2e
