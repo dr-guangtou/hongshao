@@ -2314,9 +2314,13 @@ Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); 
   claim holds for the describable 58%; but the extended channel arrives too
   early (M(50-100) +16-28% on the fit mask at z>=0.7) and the model's
   compact-share/assembly correlations have the WRONG sign against Stage 1.
-- [ ] Stage 2b — the accretion-to-deposition delay tau_d: not identifiable at
-  z=0.4 (railed at 0 / worse basin); fixed at 0.3 Hubble times from physics,
-  other twelve refitted (running). Kept iff the predicted epochs improve.
+- [x] Stage 2b — the accretion-to-deposition delay tau_d: REJECTED. Not
+  identifiable at z=0.4 (railed at 0 / worse basin); fixed at 0.3 it lowers the
+  z=0.4 loss (2.675) only by pushing extended deposits to R200c, and the
+  predicted epochs collapse (M(50-100) -40% at z=0.7, -97% at z=2). The
+  twelve-parameter Stage 2 mean is carried into Stage 3. PROBLEMS P9: the
+  wrong-signed assembly correlations of the mass-only split (a growth-rate
+  split is the untried candidate).
 - [ ] Stage 3 — noise inside the process (lumpy ex-situ accretion, correlated
   efficiency history, per-galaxy size offsets), leverage sweep first, energy score
   on held-out population statistics, tier 2e scored on draws (closes C16).

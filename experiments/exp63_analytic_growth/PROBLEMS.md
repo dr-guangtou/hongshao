@@ -72,3 +72,15 @@ is 43 per cent. This is the class limit stated by a prediction, as the science
 plan intended; it is not a defect of the layer. The exp60 output layer reached
 26.7 per cent (Option A) by adding a post-hoc core expansion to finished
 profiles.
+
+## P9 — the mean's split predicts the wrong sign of every assembly correlation (open)
+
+Stage 2's compact share is a logistic in the halo mass at the deposit's time. At
+fixed final halo mass that makes early-forming haloes extended and late-forming
+ones compact; Stage 1 measured the reverse in the data (inner share vs `late`
++0.25, `f_form` −0.26, `logtc` −0.18; the model gives −0.34, +0.34, +0.29). A
+physics-set accretion-to-deposition delay (Stage 2b) did not change the signs and
+destroyed the predicted epochs. The split therefore needs a variable other than
+the instantaneous halo mass — the growth *rate* at deposit (the DiffMAH slope,
+which the forward model has) is the obvious candidate and was not tried in this
+experiment; it is a Stage 2c for a later session, gated by a leverage sweep first.

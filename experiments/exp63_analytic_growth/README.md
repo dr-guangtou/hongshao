@@ -340,3 +340,23 @@ for the 1:3–1:10 mass ratios that carry most ex-situ mass are 0.2–0.5 Hubble
 at accretion (Boylan-Kolchin et al. 2008), so $\tau_d=0.3$ is held fixed and the
 other twelve parameters are refitted at $z=0.4$ (`stage2_fit.py --tau-fixed 0.3`);
 the earlier epochs remain predictions and decide whether the delay is kept.
+
+**Stage 2b verdict (2026-08-28): the delay is REJECTED by the predicted epochs.**
+With $\tau_d$ fixed at 0.3, two starts (the nested incumbent and Stage 1's default)
+converge to the same $z=0.4$ loss, 2.6752 — *better* than Stage 2's 2.7640 — but
+only by pushing the extended deposit size to its upper bound ($\log f_e=0$: deposits
+as large as the halo, shrinking as $(1+z)^{-2.6}$) and the compact index to its lower
+bound ($n_c=0.5$), with the compact share confined below $10^{12.3}$: the fit uses the
+delay to keep late-accreted stars *outside* the 148 kpc aperture at $z=0.4$. The
+predictions then collapse: $M_*(50\text{–}100)$ −40 per cent at $z=0.7$ and −97 per cent
+at $z=2$, $M_*(<100)$ −46 per cent at $z=2$ (fit mask −53), the non-decliners' central
+span 0.052 (Stage 2: 0.016), and the assembly-correlation signs unchanged
+(`late` −0.37 against the data's +0.25). $\tau_d=0.6$ from the nested start gave 2.892
+with the same railing. Both fits were stopped after their verdict was clear
+(`outputs/stage2_fit_tau0.3.PARTIAL.npz`, `stage2_fit_tau0.6.PARTIAL.npz`,
+`outputs/stage2_eval_tau0.3.log`). What it means: a delay that is a fixed multiple
+of the Hubble time removes the *early* extended deposits too (at $z=2$ almost
+nothing has arrived), and the $z=0.4$ loss cannot see that. The arrival of ex-situ
+stars is not a single lag; it is not a one-parameter repair of this class, and the
+Stage 2 twelve-parameter mean is the mean carried into Stage 3. The wrong-signed
+assembly correlations remain the open question of the mean model (PROBLEMS P9).
