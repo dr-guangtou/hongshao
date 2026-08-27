@@ -107,3 +107,14 @@ change. Revisit triggers, as agreed: (1) 3-D or multi-axis profiles shrink
 the orientation component of the decline targets ([[decliner-physics
 interpretation]] — the targets themselves are partly projection geometry);
 or (2) the mean-model question is reopened on other grounds.
+
+## Closing verdict (user, 2026-08-27)
+
+*"We might be seeing the limitation of the deposition-only model's capability
+to emulate the multi-epoch CoGs of massive galaxies."* The layer's measured
+walls (the decliner depth, the S1/S3 mean coupling, the high-redshift plane
+gap), together with exp57–exp59's closed mechanism and conditioning axes,
+are the quantitative form of that statement. The adopted package — the
+incumbent mean plus the Option A layer, validated at z ≤ 1.0 — is what the
+model class delivers; going further awaits additional data (3-D or
+multi-axis profiles, the real merger tree).
