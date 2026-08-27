@@ -2288,9 +2288,21 @@ Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); 
   absorbed, not the shape. Inner slope 2-6.4 kpc: data 0.94 (0.74-1.13), exact
   0.83 (0.72-0.92). Baseline for exp63 = `exact-analytic` at the incumbent's theta.
   README section written.
-- [ ] Stage 1 — per-galaxy non-negative deconvolution of the z=0.4 CoG into the
+- [x] Stage 1 — per-galaxy non-negative deconvolution of the z=0.4 CoG into the
   deposit-size distribution; quantile-matched size-versus-time law; G1 decides
   whether a two-scale law is warranted BEFORE any population fit.
+
+  Review (2026-08-28): representation floor with per-object W — incumbent
+  kernel 0.0036 dex (exp55's form 0.0044), Sersic n=1 0.0020 (better than
+  PCA-3), Sersic n=4 0.0133 (cuspy deposits REJECTED by the data); W is
+  bimodal in 92% (gompertz) / 99.6% (n=1): a compact mode at a FIXED ~6 kpc
+  (4.3 kpc for n=1) at every halo mass and an extended mode at 43 -> 74 kpc
+  whose share rises 0.35 -> 0.57 with halo mass (r=+0.53), almost nothing at
+  10-30 kpc. Required s*/R200c: 0.04-0.07 early, 0.14-0.28 late (incumbent's
+  law 0.034 -> 0.10: too small late). G1: TWO SCALES WARRANTED (two-mode
+  rule; the trend rule, +0.31 dex, alone would not have fired). 1c: c200c
+  |rho| <= 0.09 -> NOT offered (D2 resolved); late/f_form/logtc/t50/early
+  pass 0.1 but are functions of the curve already integrated. README written.
 - [ ] Stage 2 — the two-channel (in-situ cuspy / ex-situ cored) mean, fitted at
   z=0.4 only; z=0.7-2.0 PREDICTED by truncating the integral, both samples,
   decliners split.

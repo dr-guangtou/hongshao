@@ -116,3 +116,99 @@ progenitor-selection effect exp58 P-C measured, unchanged here.
 later comparison is against it. No refit of the seven parameters on the exact engine
 is made here — Stage 2's nested start ($w_{\rm is}\equiv1$, the incumbent's class on
 the exact engine, $z=0.4$ only) is that refit, by construction.
+
+## Stage 1 — the deposit-size distribution and the size law, read from the data (2026-08-28)
+
+Tech note 04 Eq. 3 says a deposition-only profile is the cumulative of $W(v)$ — the
+stellar mass per logarithm of deposit size — smoothed by the deposit kernel. So, with
+a kernel fixed, $W$ can be **recovered** from each measured $z=0.4$ curve of growth
+by non-negative least squares (`stage1_deconvolve.py`: 20 size bins from 0.3 to
+600 kpc, fractional residuals, no smoothing penalty — the penalty scan showed even
+$\lambda=0.003$ costs 12 per cent in median RMS, so $\lambda=0$ was frozen). Three
+kernels: the incumbent's cored `gompertz_log` ($c=0.80$), a Sérsic $n=4$ (cuspy),
+a Sérsic $n=1$ (exp55's compact component). 2397 galaxies. Log in
+`outputs/stage1_deconvolve.log`, arrays in `outputs/stage1_deconvolve.npz`.
+
+### 1a — how well can ANY deposition-only profile represent a massive galaxy's curve of growth?
+
+| kernel | median CoG RMS [dex] (16–84 %) | permuted control | galaxies with two separated size modes |
+|---|---|---|---|
+| gompertz_log $c=0.80$ (the incumbent's) | **0.0036** (0.0019–0.0070) | 0.0900 | 92.2 % |
+| Sérsic $n=1$ | **0.0020** (0.0008–0.0042) | 0.0909 | 99.6 % |
+| Sérsic $n=4$ | 0.0133 (0.0074–0.0239) | 0.0902 | 56.7 % |
+
+Reference: exp55's four-parameter analytic form reaches 0.0044 dex, PCA-3 0.0034
+(`figures/exp63_stage1_representation.png`, panel a; panels b–d show the best,
+typical and worst galaxy under the incumbent's kernel with their $W$ as bars). What
+it means: with per-object freedom in *where the stars were deposited*, the
+incumbent's own kernel represents the curves as well as the best analytic form the
+project has, and an exponential ($n=1$) deposit does better than PCA-3 — so the class
+is not limited by its kernel at one epoch. A cuspy $n=4$ deposit **cannot** represent
+the curves: the data do not want central cusps in each deposit. That settles the
+Stage 2 kernel question from the plan (§2.1): the in-situ channel's Sérsic index
+should be near 1, not $\ge2$. The permuted control (galaxy $i$'s curve against galaxy
+$\pi(i)$'s $W$, amplitude-matched at 100 kpc) is 0.090 dex under every kernel: the
+per-object $W$ carries 25× more information than the family's generic shape.
+
+### The two modes, by halo mass (`figures/exp63_stage1_w_population.png`)
+
+Under the incumbent's kernel $W$ is **bimodal in 92 per cent of galaxies**: a compact
+mode whose position does not move with halo mass, and an extended mode that grows
+and moves outward with halo mass:
+
+| $\log M_h(z=0.4)$ tercile | share of stellar mass at $s\ge15$ kpc (16–84 %) | compact mode | extended mode |
+|---|---|---|---|
+| 13.00–13.21 | 0.35 (0.12–0.53) | 6.2 kpc | 43 kpc |
+| 13.21–13.40 | 0.45 (0.27–0.60) | 6.0 kpc | 53 kpc |
+| 13.40–15.14 | 0.57 (0.40–0.70) | 6.3 kpc | 74 kpc |
+
+(Sérsic $n=1$: compact mode 4.3 kpc at every mass, extended 46 → 62 kpc, share
+0.49 → 0.69.) Correlation of the extended share with $\log M_h$: $+0.53$. Between
+the modes, at $s\approx10$–30 kpc, the data want almost no deposit mass. What it
+means for the model: the plan's two-channel form is what the data ask for — a
+compact channel at a fixed few-kpc scale and an extended channel at
+$\sim0.1\,R_{200c}$ whose share rises with halo mass (the ex-situ picture) — and the
+incumbent's single size law, which must put deposit mass at every intermediate
+scale as the halo grows, is what makes its 3–5 kpc dip and 10–30 kpc excess
+(Stage 0). The compact mode's size is a *lower edge*: deposits smaller than the
+first measured radius (2 kpc) are indistinguishable from the curve alone, so
+"6 kpc" means "the compact stars sit at ≤ 6 kpc".
+
+### 1b — the size-versus-time law the data demand (`figures/exp63_stage1_size_law.png`)
+
+Matching the cumulative of $W$ against the cumulative stellar mass the incumbent's
+efficiency law deposits in time (quantile by quantile, engine nodes, analytic
+$R_{200c}$) gives each galaxy's required $s^\ast(t)$. Population medians of
+$\log_{10}[s^\ast/R_{200c}(t^\ast)]$:
+
+| kernel | deposits at $z^\ast>3$ | deposits at $z^\ast<0.7$ | trend |
+|---|---|---|---|
+| gompertz_log $c=0.80$ | −1.16 (0.069 $R_{200c}$; 16–84 % −1.36..−0.98) | −0.85 (0.14; −1.16..−0.42) | +0.31 dex |
+| Sérsic $n=1$ | −1.42 (0.038; −1.60..−1.23) | −0.56 (0.28; −0.88..+0.18) | +0.86 dex |
+| incumbent's law $10^{-0.84}(1+z)^{-0.90}$ | −1.47 at $z=4$ | −1.00 at $z=0.5$ | +0.47 dex |
+
+What it means: the late deposits must be **larger** than the incumbent's law makes
+them (0.14–0.28 against 0.10 $R_{200c}$), and the early ones about as the law says
+(0.04–0.07 against 0.034). The pre-registered prediction (0.02 early, 0.1–0.3 late)
+holds for the late end and is a factor 2–3 off at the early end — with the caveat
+stated in the plan: the time labels are the incumbent's efficiency law's, which puts
+most stellar mass early; a law that deposits more stars late would move the early
+labels to smaller sizes. Stage 2's earlier-epoch predictions test the labels.
+
+### Gate G1 and 1c — verdicts
+
+**G1: two scales warranted** (rule: trend > 0.5 dex OR two modes in > 50 per cent,
+under the incumbent's kernel; measured: trend +0.31 — below the rule — and two modes
+in 92 per cent — far above it). Stage 2 builds the two-channel mean.
+
+**1c leverage** (partial Spearman at fixed $\log M_h$, `figures/exp63_stage1_leverage.png`):
+the compact share correlates with the DiffMAH late index at $+0.25$, with
+$f_{\rm form}$ at $-0.26$, with $\log t_c$ at $-0.18$ (incumbent kernel); the
+extended share with $t_{50}$ at $-0.11$. **$c_{200c}$: $|\rho|\le0.09$ under every
+kernel and every statistic — NOT offered to Stage 2 (decision D2 resolved: no).**
+`early`, `late`, `logtc`, `t50`, `f_form` pass the 0.1 rule; all of them are
+functions of the DiffMAH curve the forward model already integrates, so they are
+not added as extra inputs — the test is whether the forward model *reproduces* these
+correlations (a Stage 2 report line), not whether they are fitted. The scatter of
+the extended share at fixed halo mass (16–84 per cent range 0.12–0.53 in the lowest
+tercile) is the diversity the stochastic layer must carry (Stage 3).
