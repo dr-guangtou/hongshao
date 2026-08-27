@@ -34,6 +34,8 @@ Run: HONGSHAO_DATA_DIR=... OMP_NUM_THREADS=1 PYTHONPATH=. uv run python -u \\
 
 `--delay` fits the 13-parameter model with the extended channel's
 accretion-to-deposition delay (Stage 2b); outputs carry the `_delay` tag.
+`--tau-fixed X` holds tau_d at X (a physics-set value) and fits the other
+twelve at z=0.4; outputs carry the `_tauX` tag.
 """
 from __future__ import annotations
 
@@ -204,11 +206,16 @@ def leverage_model(spec2, theta, curves, lmh):
 
 
 # --------------------------------------------------------------------------- #
-def run_fit(smoke, starts_sel, tag, delay=False):
+def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None):
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
     spec2 = M2.Spec2.with_delay() if delay else M2.Spec2()
+    bounds = spec2.bounds()
+    if tau_fixed is not None:
+        # tau_d set from physics, not fitted: an equal-bounds box freezes it
+        bounds[spec2.index("tau_d")] = (tau_fixed, tau_fixed)
+        print(f"  tau_d FIXED at {tau_fixed} Hubble times at accretion (not fitted)")
     fit_rows = np.where(np.asarray(mask, bool)[:, 0] & np.isfinite(data[:, 0]).all(1)
                         & (data[:, 0] > 0).all(1))[0]
     print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies (sane + mh-complete at z=0.4)")
@@ -227,6 +234,8 @@ def run_fit(smoke, starts_sel, tag, delay=False):
 
     rng = np.random.default_rng(63)
     starts = starts_for(spec2, th_inc, rng)
+    if tau_fixed is not None:
+        starts = [(nm, np.r_[th[:-1], tau_fixed]) for nm, th in starts]
     if starts_sel is not None:
         a_, b_ = starts_sel
         starts = starts[a_:b_ + 1]
@@ -236,7 +245,7 @@ def run_fit(smoke, starts_sel, tag, delay=False):
     for name, p0 in starts:
         t0 = time.time(); pr.n_eval = 0
         l0 = pr.loss(p0)
-        r = minimize_loss(pr.loss, p0, method="lbfgsb", bounds=spec2.bounds(),
+        r = minimize_loss(pr.loss, p0, method="lbfgsb", bounds=bounds,
                           max_evals=max_evals, fd_step=1e-5)
         dt = time.time() - t0
         rl = railed(spec2, r.x)
@@ -435,8 +444,9 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
 if __name__ == "__main__":
     args = sys.argv[1:]
     smoke = "--smoke" in args
-    delay = "--delay" in args
-    tag = ("_delay" if delay else "") + ("_smoke" if smoke else "")
+    delay = "--delay" in args or "--tau-fixed" in args
+    tau_fixed = float(args[args.index("--tau-fixed") + 1]) if "--tau-fixed" in args else None
+    tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else "")) + ("_smoke" if smoke else "")
     sel = None
     if "--starts" in args:
         a_, b_ = args[args.index("--starts") + 1].split("-")
@@ -444,6 +454,6 @@ if __name__ == "__main__":
     print(f"{RULE}\nexp63 STAGE 2 — the two-channel mean, fitted at z=0.4 only"
           f"{' (SMOKE)' if smoke else ''}\n{RULE}\n")
     if "--eval-only" not in args:
-        run_fit(smoke, sel, tag, delay=delay)
+        run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed)
     if "--fit-only" not in args:
         run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay)
