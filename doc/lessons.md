@@ -532,6 +532,11 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
 ## Workflow
 
+- **Do not use `path` as a zsh shell variable.** In zsh, lowercase `path` is a
+  special array tied to `PATH`; assigning it in a loop replaces the command
+  search path, so later commands such as `git` and `uv` appear to be missing
+  even though the installation is unchanged. Use a task-specific name such as
+  `artifact_file` for shell loop variables.
 - Multi-hour compute jobs launched as harness background tasks were repeatedly
   killed mid-run (whole process group, silent, no OOM); plain `nohup uv run ... >
   log` survived for ~1 h jobs, and the robust pattern for longer chains is
@@ -1609,3 +1614,142 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   best optimum before writing the canonical file. Long background fits
   belong in the primary session's shell, not a subagent's — the subagent's
   background process did not survive its host's lifecycle.
+- **Shared smoke/full figures must not hard-code the validation scope (exp56
+  Stage 1).** The full-sample component figure initially retained the phrase
+  "demo galaxy" from the 90-galaxy validation because both paths called the
+  same plotting function. Direct image inspection caught the stale label.
+  Titles now describe the selected galaxy without asserting run scope, and the
+  scalar 5--30 kpc comparisons show galaxy-bootstrap intervals rather than
+  bare bars.
+- **Do not import experiment drivers through the generic module name `run`
+  (exp56 Stage 1b).** Importing Exp56's `run.py` under that name made Exp55's
+  `mixed.py` resolve its own `from run import ...` back to the partially loaded
+  Exp56 module, producing a circular import before any fit began. Load a reused
+  driver under an experiment-specific module name so legacy sibling imports
+  retain their intended namespace.
+- **Convert every NumPy container and scalar at JSON boundaries (exp56 Stage
+  1b).** The 90-galaxy numerical path first reached its final writes and then
+  failed on a NumPy configuration array in the manifest and, after that fix,
+  on a NumPy boolean in the result. Manifest parameters now receive ordinary
+  Python lists and the shared result converter handles NumPy booleans as well
+  as arrays, integers, and floats. The validation is rerun from forced fits so
+  a failed final write cannot count as a complete-path timing.
+- **Keep an operational smoke gate separate from scientific candidate
+  acceptance (exp56 Stage 1b).** The first successful 39-second complete path
+  was incorrectly marked failed because its selected pair did not pass the
+  conditioning and radial-jackknife adoption safeguards. Those failures are
+  valid evidence against that candidate, but the smoke gate asks whether every
+  declared computation, exact-recovery check, output, and figure executes
+  correctly below one minute. The gate now requires execution success and
+  exact recovery; the independent adoption flags retain every scientific
+  safeguard without blocking the declared full-sample measurement.
+- **Aggregate binary diagnostic surfaces as fractions, not medians (exp56
+  Stage 1b).** The first joint-shape surface showed 0.000 boundary incidence in
+  every cell because it took the median of each per-galaxy 0/1 boundary flag.
+  The saved candidate comparisons and population summaries already used the
+  individual flags correctly, so selection was unaffected. Direct image review
+  caught the uninformative panel; the surface now plots the mean flag, which is
+  the declared fraction of galaxies near a bound. Its paired bootstrap also
+  uses a mean difference rather than the identically uninformative median of
+  sparse binary differences.
+- **A user's global matplotlib configuration is part of a timed figure path
+  (exp56 Stage 3).** External LaTeX made an otherwise complete 90-galaxy path
+  exceed one minute during PDF export. Explicitly selecting built-in MathText
+  retained correct equations and PNG/PDF products while reducing the measured
+  path from more than 74.8 seconds to 31.18 seconds. Timing gates must include
+  figure rendering under the actual runtime configuration.
+- **Compute validation correlations on explicit finite pairs (exp56 Stage 4).**
+  Two of 2,539 raw histories do not reach the `z=2` anchor, so an unmasked
+  Spearman calculation returned `NaN` even though every DiffMAH-derived model
+  feature was finite. Report both the finite-pair count and the correlation;
+  missing raw diagnostic anchors must not masquerade as failed model inputs.
+- **A fair common mean can still be too weak for physical attribution (exp56
+  Stage 4).** The common linear-plus-mass-quadratic family gives clean nested
+  and shuffled comparisons, but its complete relation is 1.11% worse in
+  profile CRPS and 2.73% worse in median CoG RMS than the selected Stage 3
+  sparse mean. Even coherent radial gains must remain hypotheses when the
+  predeclared adequacy reference fails; do not convert a convenient comparison
+  basis into an inner- or outer-assembly claim.
+- **Constrain end-to-end halo-relation steps in the established analytic
+  domain (exp56 Stage 3b).** The first direct decoded-CoG demo used an
+  unconstrained trust-region solve for shared coefficients. Its first inner
+  fit explored predicted Moffat coordinates far outside the profile bounds,
+  making the outer cumulative fraction numerically undefined before any
+  scientific result was produced. The replacement uses a Gauss-Newton step
+  with backtracking that accepts only lower decoded-CoG loss and
+  training-galaxy coordinates inside the already validated analytic bounds.
+  A stable one-galaxy profile fit does not make an unconstrained global
+  coefficient step safe; enforce the representation's domain at the shared
+  relation boundary rather than clipping invalid profiles after decoding.
+- **An end-to-end observable loss still has to encode every observable that
+  matters (exp56 Stage 3b).** Replacing four-coordinate least squares with an
+  unweighted loss on 24 decoded cumulative masses slightly improves the median
+  full-CoG RMS while driving the shape-coordinate `R^2` below zero, which is
+  acceptable evidence that the optimizer uses analytic degeneracies. However,
+  the same fit bootstrap-resolvedly worsens the 5--30 kpc CoG, differential
+  density, and R50/R80/R90 errors. Cumulative samples are strongly correlated
+  and repeatedly contain the enclosed inner mass, so minimizing them alone can
+  favor normalization at the expense of local radial structure. Judge an
+  end-to-end objective by the complete scientific QA battery, not by the loss
+  it was constructed to minimize.
+- **Sparse coefficients do not imply a low-dimensional scientific relation
+  when signal is distributed across outputs (exp56 Stage 3c).** Nested
+  sparse-group selection retained 41--51 of the 52 fixed-slope mean
+  coefficients. The small reduction preserved aggregate CoG, density, and
+  CRPS accuracy but caused bootstrap-resolved degradations in the 5--30 kpc
+  CoG and all three size errors. Because the nonlinear supports are moderately
+  stable across outer folds, more aggressive entry-wise thresholding would
+  discard repeatable weak signal rather than isolate noise. Seek fewer shared
+  halo-response directions across the four analytic outputs instead of
+  deleting individual polynomial coefficients from the same architecture.
+- **Explained coordinate variance is not observable importance (exp56 Stage
+  3d).** Two shared halo-response directions capture 96.84% of the fitted
+  analytic-coordinate response and form a stable subspace across held-out
+  folds, yet their decoded full-CoG RMS is 2.32% worse than the unrestricted
+  relation and their 5--30 kpc CoG and R50/R80/R90 errors are
+  bootstrap-resolvedly worse. Small coordinate-response directions can carry
+  disproportionate information about profile derivatives and enclosed-mass
+  radii. Select or weight latent directions using the final observables rather
+  than total coordinate variance alone.
+- **Average CoGs in halo-mass bins are necessary but not sufficient visual QA
+  (exp56 Stage 3d).** Rank 2 and unrestricted rank 4 are nearly
+  indistinguishable in the average halo-bin CoGs, while the stellar-mass planes
+  show that rank 2 further compresses the already narrow model scatter and the
+  paired individual-galaxy tests resolve worse CoG and size recovery. Always
+  inspect both average profiles and population planes before judging a
+  direction from either view alone.
+- **A stable whole-term complexity knee can still remove observable-sensitive
+  information (exp56 Stage 3e).** Exhaustive nested selection of seven
+  nonlinear columns inside the accepted rank-2 relation repeatedly stops at
+  24--26 effective coefficients. Its average halo-mass-bin CoGs remain almost
+  unchanged, but held-out full-CoG and size errors become bootstrap-resolvedly
+  worse and the stellar aperture/annular planes narrow further. Treat the
+  24--26 count as evidence for where this polynomial architecture becomes
+  brittle, not as permission to force a simpler recipe past the complete QA
+  battery.
+- **One independent nonlinear direction can match aggregate CoG accuracy
+  without becoming a stable halo–CoG relation (exp56 Stage 3f).** A rank-2
+  linear core plus a rank-1 correction using all seven nonlinear terms reaches
+  0.08609 dex median full-CoG RMS, essentially the 0.08610 dex of complete rank
+  2, with 28 rather than 32 effective coefficients. Yet sparse nested supports
+  pass the protected inner envelope in only one of five folds, the fitted
+  correction direction rotates by up to 71.6 degrees, and held-out 5--30 kpc
+  CoG and size errors remain worse. Matching one cumulative-profile scalar does
+  not establish a reusable low-dimensional response; require fold-stable
+  directions and observable-specific safeguards.
+- **A promising population-plane result on 90 galaxies must survive the full
+  sample (exp56 Stage 3f).** The demo correction appeared to broaden two
+  fixed-aperture stellar-mass planes, but the 2,539-galaxy test made both planes
+  narrower than complete rank 2. Treat small-sample population geometry as a
+  pipeline check and early visual clue, not a scientific decision, even when
+  its aggregate profile metrics look plausible.
+- **Never standardize a constant model prescription as though it were a
+  predictor (exp56 Stage 3b coefficient audit).** The fixed-slope relation had
+  appended `gamma=1.4` to the halo features for symmetry with the smooth model.
+  Floating-point reduction returned a nominal standard deviation of about
+  `6e-14`, so least squares split the intercept between an artificial
+  standardized-gamma column and the real intercept. Decoded predictions stayed
+  stable, but the two printed coefficients were not individually meaningful.
+  For an identifiable model recipe, keep a fixed shape value in the decoder and
+  exclude it from the regression design; preserve the exact fold fits
+  separately when auditing an already completed held-out calculation.
