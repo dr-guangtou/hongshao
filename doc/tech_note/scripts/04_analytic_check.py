@@ -47,7 +47,7 @@ from astropy.table import Table
 from hongshao.tng_data import TNG_COSMO, load_cosmic_time
 from hongshao.diffmah import log_mah, MAH_K
 
-R = np.geomspace(2.0, 148.22, 24)
+R = F.R_GRID          # the measured CoG grid: (2^0.25 + 0.1 k)^4, 2.0 ... 148.2 kpc; NOT geomspace
 H0 = 67.74; OM = 0.3089; OL = 1 - OM
 H0_GYR = H0 / 977.792                      # km/s/Mpc -> 1/Gyr
 RHO_C0 = 2.775e11 * (H0 / 100) ** 2        # Msun / Mpc^3, h-free
@@ -170,7 +170,7 @@ def main(n_gal=40, fully_analytic=False):
     devA = {"int_analytic_r200": []}
     gap_dev, nogap_dev, dropped_frac = [], [], []
     slope_model, slope_data, prof_dev = [], [], []
-    i5 = 4
+    i5 = 3                                   # R_GRID[3] = 4.92 kpc
     for h in recs:
         ok = np.isfinite(h.r200c) & (h.r200c > 0)
         j0 = int(np.argmax(ok))
@@ -205,8 +205,9 @@ def main(n_gal=40, fully_analytic=False):
           f"({len(nogap_dev)} cases); WITH a gap: max {np.max(gap_dev) if gap_dev else float('nan'):.2e} dex ({len(gap_dev)} cases)")
     print(f"    stellar mass forward() silently DROPS at mid-history gaps, as a fraction of what it keeps (z=0.4): median {100*np.median(dropped_frac):.2f}%, max {100*np.max(dropped_frac):.2f}%")
     pd = np.array(prof_dev)
-    print(f"    72-step sum minus integral, log10, z=0.4, by radius: 2 kpc {np.median(pd[:,0]):+.3f}, 5 kpc {np.median(pd[:,4]):+.3f}, 10 kpc {np.median(pd[:,8]):+.3f}, 30 kpc {np.median(pd[:,14]):+.3f}, 100 kpc {np.median(pd[:,21]):+.3f}, 148 kpc {np.median(pd[:,23]):+.3f}")
-    print(f"    inner CoG slope dlogM/dlogR over 2-5 kpc at z=0.4: DATA median {np.median(slope_data):.3f}, INCUMBENT median {np.median(slope_model):.3f}")
+    print("    72-step sum minus integral, log10, z=0.4, by radius: " + ", ".join(
+        f"{R[i]:.1f} kpc {np.median(pd[:, i]):+.3f}" for i in (0, 3, 6, 11, 15, 21, 23)))
+    print(f"    inner CoG slope dlogM/dlogR over 2-4.9 kpc at z=0.4: DATA median {np.median(slope_data):.3f}, INCUMBENT median {np.median(slope_model):.3f}")
     print(f"    ({time.time() - t0:.0f} s)")
 
     # (B) the closed form on a synthetic power-law MAH in EdS, untruncated kernel
@@ -238,8 +239,8 @@ def main(n_gal=40, fully_analytic=False):
         q = beta / c
         cf = A * R ** beta * np.log(2) ** (-q) / c * (
             upper_gamma(q, np.log(2) * (smin / R) ** c) - upper_gamma(q, np.log(2) * (smax / R) ** c))
-        slope_meas = np.gradient(np.log(brute), np.log(R))
-        print(f"    alpha={alpha:.1f}: beta(formula)={beta:+.3f}; local CoG slope at 2-5 kpc (brute) = {slope_meas[:5].mean():+.3f}; "
+        slope_meas = np.gradient(np.log(brute), np.log(R))[:4]
+        print(f"    alpha={alpha:.1f}: beta(formula)={beta:+.3f}; local CoG slope over 2-4.9 kpc (brute) = {slope_meas.mean():+.3f}; "
               f"max |log10(closed/brute)| = {np.max(np.abs(np.log10(cf / brute))):.2e} dex; s range {smin:.2f}-{smax:.1f} kpc")
 
 def part_c():
@@ -254,8 +255,9 @@ def part_c():
     logtc = np.asarray(t["official_logtc"], float)[rr]
     d = pop["data"][:, 0, :]                       # z=0.4 CoGs (2397, 24)
     i5, i10, i30 = np.argmin(np.abs(R - 5)), np.argmin(np.abs(R - 10)), np.argmin(np.abs(R - 30))
+    print(f"    (radii used: {R[i5]:.2f}, {R[i10]:.2f}, {R[i30]:.2f} kpc; inner slope over {R[0]:.1f}-{R[3]:.2f} kpc)")
     f5 = np.log10(d[:, i5] / d[:, i30]); f10 = np.log10(d[:, i10] / d[:, i30])
-    slope_in = np.log10(d[:, 4] / d[:, 0]) / np.log10(R[4] / R[0])       # local CoG slope 2-5 kpc
+    slope_in = np.log10(d[:, 3] / d[:, 0]) / np.log10(R[3] / R[0])       # local CoG slope 2-4.9 kpc
     out30 = np.log10(d[:, -1] / d[:, i30])
     lmh, ms = pop["logmh"], np.log10(d[:, i30])
     ok = np.isfinite(early) & np.isfinite(f5) & np.isfinite(slope_in)
@@ -263,8 +265,8 @@ def part_c():
         X1 = np.column_stack([np.ones(ok.sum()), X])
         return y - X1 @ np.linalg.lstsq(X1, y, rcond=None)[0]
     print("\n(C) DATA: does the halo history know about the core? partial Spearman at fixed log Mh(z=0.4)")
-    print(f"    measured inner CoG slope dlogM/dlogR (2-5 kpc): median {np.median(slope_in[ok]):.3f}, 16-84% {np.percentile(slope_in[ok],[16,84]).round(3)}")
-    for name, y in (("log M(<5)/M(<30)", f5), ("log M(<10)/M(<30)", f10), ("CoG slope 2-5 kpc", slope_in), ("log M(<148)/M(<30)", out30)):
+    print(f"    measured inner CoG slope dlogM/dlogR (2-4.9 kpc): median {np.median(slope_in[ok]):.3f}, 16-84% {np.percentile(slope_in[ok],[16,84]).round(3)}")
+    for name, y in (("log M(<5)/M(<30)", f5), ("log M(<10)/M(<30)", f10), ("CoG slope 2-4.9 kpc", slope_in), ("log M(<148)/M(<30)", out30)):
         ry = resid(y[ok], np.column_stack([lmh[ok], lmh[ok] ** 2]))
         line = f"    {name:<20s} sd {np.std(ry):.3f}: "
         for pn, pv in (("early", early), ("late", late), ("logtc", logtc), ("t50", pop["t50"]), ("c200c", pop["c200c"])):
@@ -295,9 +297,6 @@ def figure(n_gal=60):
     prm = mah_params([h.index for h in recs])
     data = np.load(ROOT / "experiments/exp32_full_population/outputs/population.npz")["data"]
     # reuse the closures by re-running main's inner functions: simplest is to copy them
-    import types
-    g = {}
-    exec(open(__file__).read().split("def main(")[0], g)   # module-level helpers
     fig, ax = plt.subplots(1, 3, figsize=(15, 4.6))
     # (a) per-galaxy log10(sum/integral) by radius at z=0.4
     devs, slopes_m, slopes_d = [], [], []
@@ -331,8 +330,8 @@ def figure(n_gal=60):
             B = M.cog_truncated(spec.family, shape, r50_law(size, z, r200), spec.trunc_C * r200, R)
             tot += B @ (dm * w)
         devs.append(np.log10(ref / tot))
-        slopes_m.append(np.log10(ref[4] / ref[0]) / np.log10(R[4] / R[0]))
-        slopes_d.append(np.log10(data[h.row][0, 4] / data[h.row][0, 0]) / np.log10(R[4] / R[0]))
+        slopes_m.append(np.log10(ref[3] / ref[0]) / np.log10(R[3] / R[0]))
+        slopes_d.append(np.log10(data[h.row][0, 3] / data[h.row][0, 0]) / np.log10(R[3] / R[0]))
     devs = np.array(devs)
     ax[0].fill_between(R, np.percentile(devs, 16, 0), np.percentile(devs, 84, 0), alpha=0.3, label="16-84%")
     ax[0].plot(R, np.median(devs, 0), lw=2, label="median")
@@ -367,9 +366,9 @@ def figure(n_gal=60):
     # (c) inner slope histogram
     ax[2].hist(slopes_d, bins=25, range=(0, 2.5), alpha=0.5, label=f"TNG, median {np.median(slopes_d):.2f}")
     ax[2].hist(slopes_m, bins=25, range=(0, 2.5), alpha=0.5, label=f"incumbent, median {np.median(slopes_m):.2f}")
-    ax[2].set_xlabel(r"CoG slope $d\log M_*/d\log R$ over 2-5 kpc, z=0.4")
+    ax[2].set_xlabel(r"CoG slope $d\log M_*/d\log R$ over 2-4.9 kpc, z=0.4")
     ax[2].set_ylabel("galaxies"); ax[2].legend()
-    ax[2].set_title("(c) the model's centre rises too slowly")
+    ax[2].set_title("(c) inner slope: the model is shallower and narrower")
     fig.tight_layout()
     save_fig(fig, Path(__file__).parents[1] / "figures" / "04_analytic_check")
     print("wrote", Path(__file__).parents[1] / "figures" / "04_analytic_check.png")

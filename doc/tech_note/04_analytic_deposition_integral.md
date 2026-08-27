@@ -1,9 +1,16 @@
 # The deposition model as an analytic integral along the halo's growth curve
 
-*Written 2026-08-28, before exp63. Every number here comes from
-`scripts/04_analytic_check.py` (a throwaway probe: 62 galaxies for the
-sum-versus-integral check, 73 for the figure, the incumbent's parameters
-frozen). Nothing was fitted.*
+*Written 2026-08-28, before exp63; corrected the same day. Every number here
+comes from `scripts/04_analytic_check.py` (a throwaway probe: 62 galaxies for
+the sum-versus-integral check, 73 for the figure, the incumbent's parameters
+frozen). Nothing was fitted. **Correction (2026-08-28, later the same day):**
+the first version of this note read the measured curves of growth on a
+`geomspace(2, 148, 24)` radius grid instead of the measured grid
+$(2^{1/4}+0.1k)^4$; every statement about the inner slope was affected and is
+now stated on the true grid — the data rise as $R^{1.00}$ over 2–4.9 kpc, not
+$R^{1.45}$. The integral, the closed forms and the discretisation numbers were
+never affected (they use the model's own grid consistently). exp63 Stage 0
+re-measures everything on `fit.R_GRID`.*
 
 **What this note answers.** The deposition-only model of exp54 (`gompertz_log-E2-S2`,
 the "incumbent") builds a galaxy by walking the halo's mass history in 72 merger-tree
@@ -15,8 +22,9 @@ sum is a first-order Riemann approximation of that integral and carries a **radi
 numerical bias of −0.027 dex at 2 kpc** (about half of the incumbent's central deficit);
 and the integral form reveals that the model's predicted profile is nothing more than
 the **distribution of stellar mass over deposit size**, smoothed by the deposit
-kernel — which is why the class cannot make a steep centre, and which gives a way to
-read the size law off the data instead of assuming it.
+kernel — which is why the class's inner slope is a property of its size law's small
+end alone, and which gives a way to read the size law off the data instead of
+assuming it.
 
 ---
 
@@ -91,9 +99,9 @@ $\log t$) moves it toward Eq. (2) as $1/n$: the median per-galaxy maximum deviat
 nodes) is the limit. The 72-step sum itself sits **0.026 dex (median), up to 0.083
 dex** from that limit — and the error is not uniform in radius:
 
-| radius | 2 kpc | 5 kpc | 10 kpc | 30 kpc | 100 kpc | 148 kpc |
-|---|---|---|---|---|---|---|
-| median $\log_{10}$(72-step sum / exact integral), $z=0.4$ | −0.027 | −0.021 | −0.016 | −0.010 | −0.008 | −0.007 |
+| radius (grid points of the measured curve) | 2.0 kpc | 4.9 kpc | 10.2 kpc | 27.5 kpc | 52.3 kpc | 117 kpc | 148 kpc |
+|---|---|---|---|---|---|---|---|
+| median $\log_{10}$(72-step sum / exact integral), $z=0.4$ | −0.027 | −0.020 | −0.015 | −0.010 | −0.009 | −0.008 | −0.007 |
 
 (figure `figures/04_analytic_check.png`, panel a). The sign and shape are what the
 step convention dictates: each step's mass is deposited at the size the halo has at
@@ -144,16 +152,19 @@ class can and cannot do follows from that sentence:
   both ends);
 - its **inner slope** is the slope of $W$ below $R$ when the kernel is cored (the
   `gompertz_log` kernel vanishes faster than any power of $R$ at small $R$, so the
-  kernel contributes no central mass of its own). The data rise as $R^{1.45}$ between
-  2 and 5 kpc (median; 16–84 per cent range 1.15–1.76); the incumbent rises as
-  $R^{0.88}$ (panel c). Under a cored kernel the only way to reach 1.45 is a $W$ that
-  rises steeply below 5 kpc, i.e. a lot of stellar mass deposited at sizes of 1–3 kpc
-  — which the size law $s=0.14\,(1+z)^{-0.9}R_{200c}$ only reaches at $z\gtrsim4$, when
-  a few per cent of the halo exists. A cuspy kernel (a Sérsic deposit with $n\ge2$
-  rises as $R^{\lesssim1.2}$ inside its half-mass radius) is the other route to the
-  same slope; the two are distinguishable only with the earlier epochs, because a
-  compact early deposit is already present at $z=2$ while a cuspy kernel puts central
-  mass into every deposit.
+  kernel contributes no central mass of its own). On the measured grid the data rise
+  as $R^{1.00}$ between 2 and 4.9 kpc (median; 16–84 per cent range 0.76–1.14); the
+  incumbent rises as $R^{0.88}$, with a distribution less than half as wide
+  (0.77–0.94) (panel c). The median gap is modest; the missing *diversity* of
+  inner slopes is the larger discrepancy. Under a cored kernel the inner slope is
+  set by how $W$ rises below 5 kpc, i.e. by how much stellar mass was deposited at
+  sizes of 1–3 kpc — which the size law $s=0.14\,(1+z)^{-0.9}R_{200c}$ reaches only
+  at $z\gtrsim4$, when a few per cent of the halo exists, and reaches identically
+  for every halo of the same mass. A cuspy kernel (a Sérsic deposit with $n\ge2$
+  rises as $R^{\lesssim1.2}$ inside its half-mass radius) is the other route;
+  the two are distinguishable only with the earlier epochs, because a compact
+  early deposit is already present at $z=2$ while a cuspy kernel puts central mass
+  into every deposit.
 
 Under the Mellin transform ($\tilde f(\sigma)=\int_0^\infty y^{\sigma-1}f(y)\,\mathrm{d}y$)
 the convolution is a product, and the kernels' transforms are elementary (all three
@@ -202,8 +213,10 @@ $s(t_{\rm obs})$ — the very parametrisation ("radial DiffMAH", $\beta_{\rm in}
 $\beta_{\rm out}$, $R_c$) proposed for the curve of growth in
 `doc/ultimate_shmr_possible_directions.md` §4, now with the map from halo parameters to
 profile parameters written down. With the incumbent's efficiency numbers Eq. (4) gives
-$\beta=-0.39,\,-0.21,\,+0.05,\,+0.24$ for $\alpha=0.5,1,2,3$: the class, as fitted,
-cannot put a slope near 1.45 anywhere.
+$\beta=-0.39,\,-0.21,\,+0.05,\,+0.24$ for $\alpha=0.5,1,2,3$: in the pure power-law
+regime the class, as fitted, has a much shallower slope than the data's 1.00; what
+lifts the incumbent to 0.88 over 2–4.9 kpc is the cut-off of the deposit-size
+distribution at its small end ($s_{\min}$), not the power law.
 
 ## 4. What the integral form buys, and what it does not
 
@@ -248,8 +261,9 @@ not the mean model's.
 3. For a power-law history in Einstein–de Sitter the galaxy is a power law in radius
    with the slope of Eq. (4); for the `gompertz_log` kernel the profile is the
    incomplete-gamma expression (5), verified to $10^{-10}$ dex.
-4. The data's central curve of growth rises as $R^{1.45}$ over 2–5 kpc; the incumbent's
-   as $R^{0.88}$; the class as fitted has no route to the former.
+4. On the measured grid the data's central curve of growth rises as $R^{1.00}$ over
+   2–4.9 kpc (16–84 per cent: 0.76–1.14); the incumbent's as $R^{0.88}$ (0.77–0.94):
+   a modest median gap and a distribution less than half as wide.
 5. The $z=0.4$-anchored `diffmah_*` columns of `diffmah_combined.fits` disagree with
    the official DiffMAH curve at $z>8$ by up to 0.45 dex; use the official
    $z=0$-anchored parameters.

@@ -32,9 +32,11 @@ Three facts from the record, one from this week's probe:
   profile is the distribution of stellar mass over deposit size, $W(v)$, smoothed by
   the deposit kernel (tech note 04, Eq. 3). One size law $s(t)=f_0(1+z)^bR_{200c}(t)$
   means centre and outskirts are the same law read at two times; exp54 Stage 3.7
-  measured that this cannot serve both ends. The data rise as $R^{1.45}$ over 2–5 kpc,
-  the incumbent as $R^{0.88}$; with a cored kernel the class as fitted has no route to
-  1.45 (tech note 04, §3).
+  measured that this cannot serve both ends. On the measured grid the data rise as
+  $R^{1.00}$ over 2–4.9 kpc (16–84 per cent 0.76–1.14), the incumbent as $R^{0.88}$
+  with a distribution less than half as wide (0.77–0.94) (tech note 04, §2–3,
+  corrected 2026-08-28: an earlier version of this bullet quoted 1.45 from a wrong
+  radius grid).
 - **The population is too narrow, and fitting harder makes it narrower**
   (exp61 Stage 4: width 0.70 → 0.54 of the truth's at $M(50\text{–}100)$; per-epoch
   fits 0.46). A per-galaxy loss rewards the conditional mean and nothing rewards
@@ -43,13 +45,14 @@ Three facts from the record, one from this week's probe:
   persisted across epochs at rank 0.97 against the truth's 0.33 (tier 2c) because the
   noise was added per epoch to a finished profile rather than to the history.
 - **The halo history knows a little about the core, in the direction physics
-  expects.** At fixed $\log M_h(z=0.4)$, the measured $\log M_*(<5)/M_*(<30)$
-  correlates with the DiffMAH early index at $-0.23$, the late index at $+0.19$,
-  $t_{50}$ at $+0.16$ (partial Spearman, 2397 galaxies): late-forming haloes hold
-  more centrally concentrated stars, early-forming ones have built larger envelopes.
+  expects.** At fixed $\log M_h(z=0.4)$, the measured $\log M_*(<4.9)/M_*(<33)$
+  correlates with the DiffMAH early index at $-0.21$, the late index at $+0.21$,
+  $t_{50}$ at $+0.08$ (partial Spearman, 2397 galaxies, measured grid): late-forming
+  haloes hold more centrally concentrated stars, early-forming ones have built larger
+  envelopes ($\log M_*(<148)/M_*(<33)$: early $+0.16$, late $-0.15$, $t_{50}$ $-0.17$).
   Weak ($|\rho|\le0.23$, i.e. $\lesssim5$ per cent of the variance), so most of the
-  0.081 dex scatter in that ratio at fixed halo mass is intrinsic to the halo record
-  and must be carried by a stochastic component.
+  0.097 dex scatter in the inner ratio at fixed halo mass is intrinsic to the halo
+  record and must be carried by a stochastic component.
 
 What this plan changes, in order of how much it departs from the incumbent:
 
@@ -224,9 +227,10 @@ that the nested start reproduces Stage 0's loss.
 
 Gates, at the null (incumbent on the exact engine) first, then the candidate:
 
-- **G2a inner slope**: the median $\mathrm{d}\log M_*/\mathrm{d}\log R$ over 2–5 kpc
-  within 0.10 of the data's 1.45, and its 16–84 per cent width within 30 per cent
-  of the data's (1.15–1.76).
+- **G2a inner slope**: the median $\mathrm{d}\log M_*/\mathrm{d}\log R$ over 2–4.9 kpc
+  (grid points 0 and 3 of `fit.R_GRID`) within 0.05 of the data's 1.00, and its
+  16–84 per cent width at least 0.7 of the data's 0.38 (the incumbent: 0.88 and
+  0.17 — the width is the larger failure).
 - **G2b tercile profiles**: median (model − data)/data within ±5 per cent at every
   radius in each halo-mass tercile, amplitude-pinned and raw (the incumbent: −10 per
   cent at 3 kpc, +7 per cent at 20 kpc in the top tercile).

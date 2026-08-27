@@ -1850,12 +1850,24 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   deposit-size distribution with the kernel, and a power-law history is a
   power-law galaxy with an explicit slope (tech note 04, Eqs. 3–5). Ten stages
   of exp54 argued about this class's central deficit without that form; the
-  form says in one line why a cored kernel with one size law cannot rise as
-  R^1.45 over 2–5 kpc, and it makes the size law something to READ from the data
-  (non-negative deconvolution plus quantile matching) instead of assume.
+  form says in one line why a cored kernel with one size law makes the inner
+  slope a property of the size law's small end alone, and it makes the size law
+  something to READ from the data (non-negative deconvolution plus quantile
+  matching) instead of assume.
 - **Verify a re-implementation on the cases that share every convention first,
   then explain the rest.** The first sum-versus-integral check disagreed by
   0.17 dex, all of it two convention differences (the DiffMAH anchor and the
   deposits `forward` drops where the catalog has no R200c). Splitting the
   galaxies by "has a mid-history gap" turned a 0.026 dex residual into 2e-6 dex
   on the clean cases and an explained 5.5 per cent mass drop on the others.
+- **The measured curve-of-growth grid is `(2^0.25 + 0.1 k)^4`, not
+  `geomspace(2, 148, 24)` (2026-08-28, tech note 04 probe).** The first version
+  of the probe evaluated the DATA on a geometric grid: the two grids share
+  their end points and count, so nothing crashed, but grid point 4 is 4.2 kpc
+  on one and 6.4 kpc on the other, and "the data rise as R^1.45 over 2-5 kpc"
+  was an artefact of dividing a 2-6.4 kpc log-mass ratio by a 2-4.2 kpc
+  log-radius ratio. The true number is 1.00. It was caught only because the
+  Stage 0 script used `fit.R_GRID` and printed a different data median. Read
+  the radius grid from `fit.R_GRID` / `tng_data.COG_RAD_KPC`; never rebuild it
+  from its end points; and treat a headline that appears in one probe and not
+  in the gated script as suspect until both agree.
