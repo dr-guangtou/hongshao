@@ -1927,3 +1927,14 @@ Cross-experiment plan. Mirrors the phase sequence in
   conditioning) and NEARLY INDEPENDENT of Stage 1's core axis (rho = -0.16
   with A_i), so Stage 3 draws the two components independently, with the
   -0.16 noted for the empirical-resampling fallback.
+- [x] **exp60 Stage 3 — composed and judged, held out, three variants.**
+  PASSES: S5 amplitude (sigma ratio 1.00, corr offset +0.01), S4 outskirts,
+  S1 fraction+median+width held-out (S1-scaled: 41.4%, +0.042, width 0.525
+  vs 0.537), and the tilt reproduces the conditional gradient's shape.
+  STRUCTURAL MISSES, all measured: decliner DEPTH -0.120 vs -0.066 (any
+  exchangeable draw overshoots ~2x — the assignment-information ceiling);
+  S3 unpassable while hitting S1 (0.21 inner / 0.065 outer median shift —
+  the decline machinery moves the mean, which is the rejected-mean-model
+  territory resurfacing); S2 planes best 1.69x floor vs the 1.3 target —
+  AND the exp41 context bar (1.0-1.4) was achieved on the ORACLE-PINNED old
+  kernel, not like for like. CHECKPOINT: the user picks the packaging.
