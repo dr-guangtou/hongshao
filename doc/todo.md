@@ -2273,7 +2273,7 @@ Plan: `doc/plans/2026-08-28-exp63-analytic-growth-model.md`; derivation:
 `doc/tech_note/04_analytic_deposition_integral.md` (probe script
 `doc/tech_note/scripts/04_analytic_check.py`, figure
 `doc/tech_note/figures/04_analytic_check.png`). Branch `exp63-analytic-growth`.
-Awaiting the user's approval of the plan and decisions D1–D5 before Stage 0.
+Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); Stage 0 may start.
 
 - [ ] Stage 0 — the exact-integral engine, gated on reproducing `exp54/model.forward`
   to 1e-6 dex on the 72-step grid; the incumbent re-measured on the exact integral

@@ -283,27 +283,25 @@ at five epochs; a batched single-epoch quadrature over 2397 galaxies is expected
 faster, and a smooth objective allows gradient-based optimisation, but the schedule
 is written only after G0d. Stage 1's per-galaxy NNLS fits are seconds in total.
 
-## 4. Decisions for the user
+## 4. Decisions taken by the user (interview, 2026-08-28)
 
-- **D1 — $R_{200c}$ analytic or from the catalog.** Analytic changes the incumbent's
-  profiles by 0.04 dex (median per-galaxy maximum). Recommendation: **analytic** — the
-  model is then a function of four DiffMAH numbers and nothing else, portable to any
-  halo with a DiffMAH fit, which is the project's stated goal for the emulator.
-  The catalog value can be kept as a comparison column in Stage 0.
-- **D2 — does concentration enter.** The Stage 1c sweep decides whether
-  $c_{200c}$ has leverage on the in-situ size ($s_{\rm is}\propto R_{200c}/c$ is the
-  physical alternative: the scale radius). Recommendation: offer it only if
-  $|\rho|\ge0.1$ in 1c; [[concentration-history-availability]] says the *history*
-  of $c$ is a dead end, but its $z=0.4$ value on the *in-situ size* is untested.
-- **D3 — truncation.** Keep $3R_{200c}$ (mass conservation contract unchanged) or drop
-  it (the closed forms are cleaner). Recommendation: keep, and report the mass beyond
-  148 kpc as before.
-- **D4 — the objective's inner term.** The shells/log term at equal weight is a
-  choice; the alternative is the production loss alone (which cannot fail G2a
-  loudly — it never has). Recommendation: include it, and report G2a under both.
-- **D5 — C13.** Moot for exp63: nothing at $z=2$ is fitted, and every $z=2$ number
-  is reported on both samples. No decision needed unless the user wants a $z\le1$
-  joint fit later.
+- **D1 — $R_{200c}$: analytic from $M(t)$ and $\rho_c(z)$.** The model is a
+  function of the four DiffMAH numbers and nothing else. The catalog value is kept
+  as a comparison column in Stage 0 only.
+- **D2 — concentration: only if Stage 1c shows leverage.** $c_{200c}$ (its $z=0.4$
+  value, acting on the in-situ size as $R_{200c}/c$) is offered to the fit only if
+  its partial correlation with the required deposit-size distribution is
+  $|\rho|\ge0.1$ at fixed halo mass; otherwise it never enters.
+- **D3 — truncation: measure first.** Stage 0 reports the stellar mass the
+  untruncated kernels place beyond $3R_{200c}$ for the incumbent's parameters; the
+  $3R_{200c}$ truncation is kept only if that exceeds 1 per cent of the total, and
+  the choice is frozen before Stage 1.
+- **D4 — objective: the production loss plus the shells/log term at equal
+  weight**, the weight fixed on the smoke sample and frozen; gate G2a reported under
+  both objectives.
+- **D5 — earlier epochs: report both samples at every epoch**, the full progenitor
+  sample and the halo-mass-complete subset side by side; no pass/fail gate at
+  $z\ge0.7$; C13 stays open as a scope note, nothing at $z>0.4$ is fitted.
 
 ## 5. What would count as failure, stated now
 
