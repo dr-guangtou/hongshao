@@ -76,10 +76,12 @@ def build_products(recs, data, mask, spec, theta, truncate):
                                         truncate=truncate)}
 
 
-def compare_figure(cogs, data, lmh, good, name):
+def compare_figure(cogs, data, lmh, good, name, models=MODELS, styles=None,
+                   pretty=None, title=None):
     """Median (model - data)/data against radius, per epoch, halo-mass
-    terciles, the three products: raw (solid) and amplitude-pinned at 100 kpc
-    (dotted) — the exp61 `qa_bins` residual panel, three products at once."""
+    terciles, the products in `models`: raw (top) and amplitude-pinned at
+    100 kpc (bottom) — the exp61 `qa_bins` residual panel, several products at
+    once. Reused by Stage 2 with its own product names."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -89,19 +91,20 @@ def compare_figure(cogs, data, lmh, good, name):
     R = F.R_GRID
     lm = lmh[good][:, 0]
     edges = np.percentile(lm, [0, 100 / 3, 200 / 3, 100])
-    ls = {"72step": "-", "exact-catalog": "--", "exact-analytic": ":"}
+    ls = styles or {"72step": "-", "exact-catalog": "--", "exact-analytic": ":"}
+    pretty = pretty or PRETTY
     cols = ["#0072B2", "#009E73", "#E69F00", "#D55E00", "#CC79A7"]
     fig, axes = plt.subplots(2, 3, figsize=(16, 8.5), sharex=True)
     for c in range(3):
         sel = (lm >= edges[c]) & (lm <= edges[c + 1])
-        for m in MODELS:
+        for m in models:
             mm, dd = cogs[m][good][sel], data[good][sel]
             raw = 100 * np.median((mm - dd) / dd, axis=0)                    # (5, R)
             pin = mm / mm[:, :, F.I100][:, :, None] * dd[:, :, F.I100][:, :, None]
             pinned = 100 * np.median((pin - dd) / dd, axis=0)
             for j, z in enumerate(ANCHOR_Z):
                 axes[0, c].plot(R, raw[j], ls[m], color=cols[j], lw=1.6,
-                                label=(f"z={z}" if m == "72step" else None))
+                                label=(f"z={z}" if m == models[0] else None))
                 axes[1, c].plot(R, pinned[j], ls[m], color=cols[j], lw=1.6)
         for r in range(2):
             axes[r, c].axhline(0, color="k", lw=0.8)
@@ -113,11 +116,11 @@ def compare_figure(cogs, data, lmh, good, name):
     axes[1, 0].set_ylabel(f"median (model$-$data)/data [{_pct()}], amplitude-pinned at 100 kpc")
     h, l = axes[0, 0].get_legend_handles_labels()
     from matplotlib.lines import Line2D
-    h += [Line2D([], [], color="k", ls=ls[m]) for m in MODELS]
-    l += [PRETTY[m].split(":")[0] if m == "72step" else m for m in MODELS]
+    h += [Line2D([], [], color="k", ls=ls[m]) for m in models]
+    l += [pretty[m].split(":")[0] if m == "72step" else m for m in models]
     axes[0, 0].legend(h, l, fontsize=7, loc="lower right", ncol=2)
-    fig.suptitle(_tex("exp63 Stage 0 — the SAME seven parameters: the 72-step sum, "
-                      "the exact integral (catalog R200c), the exact integral "
+    fig.suptitle(_tex(title or "exp63 Stage 0 — the SAME seven parameters: the 72-step "
+                      "sum, the exact integral (catalog R200c), the exact integral "
                       "(analytic R200c)"), fontsize=11)
     fig.tight_layout()
     FIGDIR.mkdir(parents=True, exist_ok=True)
