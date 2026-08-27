@@ -306,7 +306,7 @@ def figures(sweep, st0, dr, mean, dd, R, truth, rh_t, rh_truth, widths, wnull, t
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from hongshao.plotting import set_style, save_fig
-    from hongshao.qa import _tex
+    from hongshao.qa import _tex, _pct
     set_style()
     FIGDIR.mkdir(parents=True, exist_ok=True)
     paths = []
@@ -318,11 +318,11 @@ def figures(sweep, st0, dr, mean, dd, R, truth, rh_t, rh_truth, widths, wnull, t
     ax[0].axhline(st0["scatter kpc:M(30-50)|kpc:M(<30)"][0], color="#E69F00", lw=2, label="truth")
     ax[0].axhline(st0["scatter kpc:M(30-50)|kpc:M(<30)"][1], color="k", ls="--", label="mean alone")
     ax[0].set_xticks(x); ax[0].set_xticklabels(labels, rotation=70, fontsize=6); ax[0].set_ylabel(_tex("scatter of M(30-50)|M(<30) [dex]"))
-    ax[0].set_title("leverage sweep (blue = keeps the medians within 2%)"); ax[0].legend(fontsize=8)
+    ax[0].set_title(f"leverage sweep (blue = has leverage and keeps the medians within 2{_pct()})"); ax[0].legend(fontsize=8)
     ax[1].bar(x, [s[2]["scatter R50|M*"][1] for s in sweep], color=["#0072B2" if s[5] else "#999999" for s in sweep])
     ax[1].axhline(st0["scatter R50|M*"][0], color="#E69F00", lw=2, label="truth")
     ax[1].axhline(st0["scatter R50|M*"][1], color="k", ls="--", label="mean alone")
-    ax[1].set_xticks(x); ax[1].set_xticklabels(labels, rotation=70, fontsize=6); ax[1].set_ylabel("scatter of R50|M* [dex]"); ax[1].legend(fontsize=8)
+    ax[1].set_xticks(x); ax[1].set_xticklabels(labels, rotation=70, fontsize=6); ax[1].set_ylabel(_tex("scatter of R50|M* [dex]")); ax[1].legend(fontsize=8)
     fig.tight_layout(); save_fig(fig, FIGDIR / f"exp63_stage3_sweep{tag}"); paths.append(FIGDIR / f"exp63_stage3_sweep{tag}.png")
     # planes at z=0.4: truth vs one draw vs mean
     fig, ax = plt.subplots(1, 3, figsize=(15, 4.4))
