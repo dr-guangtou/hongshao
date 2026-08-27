@@ -2266,3 +2266,39 @@ tier 2e table is identical digit for digit to the bare incumbent's. Filed as
 open question C16 — every tier 2e number quoted for hongshao v1 describes the
 mean alone, and the layer is precisely the component that supplies the width
 tier 2e says is missing.
+
+## exp63 — the analytic, two-scale, stochastic deposition model (planned 2026-08-28)
+
+Plan: `doc/plans/2026-08-28-exp63-analytic-growth-model.md`; derivation:
+`doc/tech_note/04_analytic_deposition_integral.md` (probe script
+`doc/tech_note/scripts/04_analytic_check.py`, figure
+`doc/tech_note/figures/04_analytic_check.png`). Branch `exp63-analytic-growth`.
+Awaiting the user's approval of the plan and decisions D1–D5 before Stage 0.
+
+- [ ] Stage 0 — the exact-integral engine, gated on reproducing `exp54/model.forward`
+  to 1e-6 dex on the 72-step grid; the incumbent re-measured on the exact integral
+  through the standard battery (how much of the central deficit was the Riemann sum).
+- [ ] Stage 1 — per-galaxy non-negative deconvolution of the z=0.4 CoG into the
+  deposit-size distribution; quantile-matched size-versus-time law; G1 decides
+  whether a two-scale law is warranted BEFORE any population fit.
+- [ ] Stage 2 — the two-channel (in-situ cuspy / ex-situ cored) mean, fitted at
+  z=0.4 only; z=0.7-2.0 PREDICTED by truncating the integral, both samples,
+  decliners split.
+- [ ] Stage 3 — noise inside the process (lumpy ex-situ accretion, correlated
+  efficiency history, per-galaxy size offsets), leverage sweep first, energy score
+  on held-out population statistics, tier 2e scored on draws (closes C16).
+- [ ] Stage 4 — the standard battery on three models, README, PROBLEMS, memory.
+
+### Bookkeeping found by the 2026-08-28 probe (not yet acted on)
+
+- [ ] The z=0.4-anchored `diffmah_*` columns of
+  `experiments/exp27_tng_api_crossmatch/outputs/diffmah_combined.fits` disagree
+  with the official DiffMAH fit curve (`official_mah.npz[diffmah_log_mah_fit]`)
+  by up to 0.45 dex at z > 8 for galaxies whose source is `official`; the official
+  z=0-anchored columns reproduce the curve to 3e-6 dex. Everything downstream uses
+  the curve, not those columns, so no result is affected — but the columns should
+  not be used as DiffMAH parameters until the re-anchoring is checked.
+- [ ] `exp54/model.forward` silently drops any deposit whose snapshot has no
+  catalog R200c: the first 1-5 steps (z >~ 10) of every galaxy, and mid-history
+  gaps in ~10% of galaxies (up to 5.5% of a galaxy's deposited stellar mass).
+  The exact engine (exp63 Stage 0) has neither issue.

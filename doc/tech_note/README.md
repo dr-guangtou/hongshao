@@ -13,6 +13,7 @@ scratch, with equations and pedagogical figures.
 | [1 — The statistical emulator](01_statistical_emulator.md) | heteroscedastic conditional Gaussian on $[\mathrm{DiffMAH}(4), c_{200c}]$, PCA profile modes, the multi-epoch AR(1) block-pinned product | **adopted** — the accuracy and generative product |
 | [2 — The transport kernel (1ch-mof)](02_transport_kernel.md) | lognormal efficiency window, power-law-tail deposits, migration clock; official $z \le 1.5$ fit scope; the 1-D empirical stochastic layer | **adopted** — the physics companion |
 | [3 — The two-channel alternative (2ch-exp)](03_two_channel_alternative.md) | compact Gaussian + wide exponential channel with a halo-dependent split | documented alternative — never adopted |
+| [4 — The deposition model as an analytic integral](04_analytic_deposition_integral.md) | the exp54 deposition-only sum written as an exact integral along the DiffMAH curve; the convolution-in-log-radius form; the incomplete-gamma closed form; the incumbent's −0.027 dex Riemann bias at 2 kpc | **derivation, verified** — basis of the exp63 plan |
 
 Suggested reading order: 1 → 2 → 3. Note 3 depends on note 2's machinery;
 notes 1 and 2 are self-contained.

@@ -1832,3 +1832,30 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   For an identifiable model recipe, keep a fixed shape value in the decoder and
   exclude it from the regression design; preserve the exact fold fits
   separately when auditing an already completed held-out calculation.
+
+## Analytic forms (2026-08-28, tech note 04)
+
+- **A sum over history steps is a quadrature; check its discretisation error
+  before reading its residuals as physics.** The incumbent's 72-step deposition
+  sum is a first-order Riemann approximation of an integral along the analytic
+  DiffMAH curve, biased −0.027 dex at 2 kpc and −0.007 dex at 148 kpc
+  (`doc/tech_note/figures/04_analytic_check.png`, panel a) — about half of the
+  "7–13 per cent low inside a few kpc" that three experiments attributed to the
+  model class. Splitting each step 2/4/8× converges to the integral as 1/n. When
+  every ingredient of a step-wise model is already a closed-form function of
+  time, write the integral and integrate it with Gauss–Legendre; the sum's error
+  is radius-dependent precisely where the model was being judged.
+- **Change variables to the quantity the data see.** In the deposit-size
+  variable the deposition model is a convolution in log radius of the
+  deposit-size distribution with the kernel, and a power-law history is a
+  power-law galaxy with an explicit slope (tech note 04, Eqs. 3–5). Ten stages
+  of exp54 argued about this class's central deficit without that form; the
+  form says in one line why a cored kernel with one size law cannot rise as
+  R^1.45 over 2–5 kpc, and it makes the size law something to READ from the data
+  (non-negative deconvolution plus quantile matching) instead of assume.
+- **Verify a re-implementation on the cases that share every convention first,
+  then explain the rest.** The first sum-versus-integral check disagreed by
+  0.17 dex, all of it two convention differences (the DiffMAH anchor and the
+  deposits `forward` drops where the catalog has no R200c). Splitting the
+  galaxies by "has a mid-history gap" turned a 0.026 dex residual into 2e-6 dex
+  on the clean cases and an explained 5.5 per cent mass drop on the others.
