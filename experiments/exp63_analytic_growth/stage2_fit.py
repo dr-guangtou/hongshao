@@ -30,7 +30,10 @@ the full nodes.
 
 Run: HONGSHAO_DATA_DIR=... OMP_NUM_THREADS=1 PYTHONPATH=. uv run python -u \\
      experiments/exp63_analytic_growth/stage2_fit.py [--smoke] [--fit-only] [--eval-only]
-       [--starts a-b]
+       [--starts a-b] [--delay]
+
+`--delay` fits the 13-parameter model with the extended channel's
+accretion-to-deposition delay (Stage 2b); outputs carry the `_delay` tag.
 """
 from __future__ import annotations
 
@@ -115,9 +118,9 @@ class Problem2:
 
 
 def starts_for(spec2, th_inc, rng):
-    base = M2.default_theta(th_inc)
+    base = M2.default_theta(th_inc, delay=spec2.delay)
     lo, hi = np.array(spec2.bounds()).T
-    out = [("nested", M2.clip_to_bounds(spec2, M2.nested_theta(th_inc))),
+    out = [("nested", M2.clip_to_bounds(spec2, M2.nested_theta(th_inc, delay=spec2.delay))),
            ("default", base)]
     for k in range(4):
         j = base + rng.normal(0, 0.05, base.shape) * np.maximum(np.abs(base), 0.3)
@@ -201,18 +204,18 @@ def leverage_model(spec2, theta, curves, lmh):
 
 
 # --------------------------------------------------------------------------- #
-def run_fit(smoke, starts_sel, tag):
+def run_fit(smoke, starts_sel, tag, delay=False):
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = M2.Spec2()
+    spec2 = M2.Spec2.with_delay() if delay else M2.Spec2()
     fit_rows = np.where(np.asarray(mask, bool)[:, 0] & np.isfinite(data[:, 0]).all(1)
                         & (data[:, 0] > 0).all(1))[0]
     print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies (sane + mh-complete at z=0.4)")
 
     # the shells/log reference: the NESTED incumbent on the exact engine (frozen)
     pr = Problem2(spec2, curves, data, fit_rows, R, l_s_ref=None)
-    th_nested = M2.nested_theta(th_inc)
+    th_nested = M2.nested_theta(th_inc, delay=spec2.delay)
     a, f, s_raw, nb = pr.scores(th_nested)
     pr.l_s_ref = s_raw
     a, f, s, nb = pr.scores(th_nested)
@@ -263,11 +266,11 @@ def run_fit(smoke, starts_sel, tag):
     print(f"  saved {out.relative_to(ROOT)}")
 
 
-def run_eval(smoke, tag, tables_only=False):
+def run_eval(smoke, tag, tables_only=False, delay=False):
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = M2.Spec2()
+    spec2 = M2.Spec2.with_delay() if delay else M2.Spec2()
     fz = np.load(OUTDIR / f"stage2_fit{tag}.npz", allow_pickle=True)
     theta = np.asarray(fz["theta_best"], float)
     th_nested = np.asarray(fz["theta_nested"], float)
@@ -432,7 +435,8 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
 if __name__ == "__main__":
     args = sys.argv[1:]
     smoke = "--smoke" in args
-    tag = "_smoke" if smoke else ""
+    delay = "--delay" in args
+    tag = ("_delay" if delay else "") + ("_smoke" if smoke else "")
     sel = None
     if "--starts" in args:
         a_, b_ = args[args.index("--starts") + 1].split("-")
@@ -440,6 +444,6 @@ if __name__ == "__main__":
     print(f"{RULE}\nexp63 STAGE 2 — the two-channel mean, fitted at z=0.4 only"
           f"{' (SMOKE)' if smoke else ''}\n{RULE}\n")
     if "--eval-only" not in args:
-        run_fit(smoke, sel, tag)
+        run_fit(smoke, sel, tag, delay=delay)
     if "--fit-only" not in args:
-        run_eval(smoke, tag, tables_only="--tables-only" in args)
+        run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay)

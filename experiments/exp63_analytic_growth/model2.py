@@ -49,11 +49,20 @@ import families                                          # noqa: E402
 
 THETA_NAMES = ("a0", "a_M", "a_z", "a_Mz", "m_half", "d_split",
                "log_f_c", "b_c", "log_f_e", "b_e", "n_c", "c_e")
+#: Stage 2b: the extended channel's ACCRETION-TO-DEPOSITION DELAY. A satellite's
+#: stars join the central only when the merger completes, a dynamical-friction
+#: time after the halo accreted the satellite; the model credits the extended
+#: deposit of halo mass accreted at t' at t' + tau_d / H(z(t')) — tau_d in
+#: Hubble times at accretion. tau_d = 0 is the 12-parameter model exactly.
+#: Not a radial transport: nothing moves after it is deposited; mass accreted
+#: but not yet arrived is "in transit", which is what a central's measured
+#: stellar mass excludes.
+THETA_NAMES_DELAY = THETA_NAMES + ("tau_d",)
 BOUNDS = {"a0": (-6.0, 2.0), "a_M": (-3.0, 3.0), "a_z": (-3.0, 3.0), "a_Mz": (-3.0, 3.0),
           "m_half": (10.5, 15.0), "d_split": (0.1, 3.0),
           "log_f_c": (-3.0, -0.5), "b_c": (-3.0, 3.0),
           "log_f_e": (-2.5, 0.0), "b_e": (-3.0, 3.0),
-          "n_c": (0.5, 2.5), "c_e": (0.2, 8.0)}
+          "n_c": (0.5, 2.5), "c_e": (0.2, 8.0), "tau_d": (0.0, 3.0)}
 TRUNC_C = 3.0
 COMPACT_FAMILY, EXTENDED_FAMILY = "sersic", "gompertz_log"
 #: quadrature for the FIT (checked against the full nodes in stage2_fit.py)
@@ -65,6 +74,14 @@ FULL_NODES = dict(n_early=8, n_node=24)
 class Spec2:
     theta_names: tuple = THETA_NAMES
     trunc_C: float = TRUNC_C
+
+    @staticmethod
+    def with_delay():
+        return Spec2(theta_names=THETA_NAMES_DELAY)
+
+    @property
+    def delay(self):
+        return "tau_d" in self.theta_names
 
     @property
     def n_theta(self):
@@ -83,20 +100,22 @@ class Spec2:
         return self.theta_names.index(name)
 
 
-def nested_theta(theta_incumbent):
+def nested_theta(theta_incumbent, delay=False):
     """The incumbent (a0, a_M, a_z, a_Mz, log_f0, b, c) embedded: compact
     share exactly zero (expit(-1000) underflows to 0.0; -10 leaves 3e-10),
     extended channel = the incumbent's size law and shape."""
     a0, aM, az, aMz, lf0, b, c = np.asarray(theta_incumbent, float)
-    return np.array([a0, aM, az, aMz, -1000.0, 1.0, np.log10(0.04), 0.0, lf0, b, 1.0, c])
+    th = np.array([a0, aM, az, aMz, -1000.0, 1.0, np.log10(0.04), 0.0, lf0, b, 1.0, c])
+    return np.r_[th, 0.0] if delay else th
 
 
-def default_theta(theta_incumbent):
+def default_theta(theta_incumbent, delay=False):
     """Stage 1's starting values: a compact channel at 0.04 R200c with n = 1,
     the extended one at 0.2 R200c, the split at 10^13.2."""
     a0, aM, az, aMz, lf0, b, c = np.asarray(theta_incumbent, float)
-    return np.array([a0, aM, az, aMz, 13.2, 0.5, np.log10(0.04), 0.0,
-                     np.log10(0.2), -0.5, 1.0, c])
+    th = np.array([a0, aM, az, aMz, 13.2, 0.5, np.log10(0.04), 0.0,
+                   np.log10(0.2), -0.5, 1.0, c])
+    return np.r_[th, 0.5] if delay else th
 
 
 def clip_to_bounds(spec2, theta):
@@ -106,6 +125,22 @@ def clip_to_bounds(spec2, theta):
 
 def compact_share(theta_dict, logmh):
     return expit((theta_dict["m_half"] - np.asarray(logmh, float)) / theta_dict["d_split"])
+
+
+def hubble_gyr(z):
+    """H(z) in 1/Gyr for the TNG cosmology."""
+    return E.H0_GYR * np.sqrt(E.OMEGA_M * (1.0 + np.asarray(z, float)) ** 3 + E.OMEGA_L)
+
+
+def arrival_include(spec2, p, lt, include):
+    """(5, N) masks of the extended deposits that have ARRIVED by each epoch:
+    the node's accretion time plus tau_d Hubble times at accretion is at or
+    before the anchor. With tau_d = 0 this is `include` exactly."""
+    if not spec2.delay or p["tau_d"] <= 0.0:
+        return include
+    t = 10.0 ** lt
+    t_arr = t + p["tau_d"] / hubble_gyr(E.z_of_t(t))
+    return np.stack([include[k] & (t_arr <= E.T_ANCHOR[k]) for k in range(len(include))])
 
 
 def _deposits2(spec2, theta, curves, lt, mode="analytic"):
@@ -147,19 +182,21 @@ def predict2(spec2, theta, curves, R, epochs=(0, 1, 2, 3, 4), truncate=True,
             Be = families.cog_unit(EXTENDED_FAMILY, s_e.ravel(), (p["c_e"],), R)
         Bc = Bc.reshape(len(R), n, N); Be = Be.reshape(len(R), n, N)
         wc_ = dm_c * w[None, :]; we_ = dm_e * w[None, :]
+        inc_e = arrival_include(spec2, p, lt, include)
         for j, k in enumerate(epochs):
-            inc = include[k][None, :]
-            out[lo:lo + n, j] = (np.einsum("rgn,gn->gr", Bc, wc_ * inc)
-                                 + np.einsum("rgn,gn->gr", Be, we_ * inc))
+            out[lo:lo + n, j] = (np.einsum("rgn,gn->gr", Bc, wc_ * include[k][None, :])
+                                 + np.einsum("rgn,gn->gr", Be, we_ * inc_e[k][None, :]))
     return out
 
 
 def channel_masses(spec2, theta, curves, nodes=FULL_NODES):
     """Stellar mass deposited by z=0.4 by the compact and extended channels: (n, 2)."""
     lt, w, include, _ = E.nodes(**nodes)
+    p = spec2.unpack(theta)
     dm_c, dm_e, _, _, _ = _deposits2(spec2, theta, curves, lt)
-    inc = include[0][None, :] * w[None, :]
-    return np.column_stack([(dm_c * inc).sum(1), (dm_e * inc).sum(1)])
+    inc_e = arrival_include(spec2, p, lt, include)
+    return np.column_stack([(dm_c * include[0][None, :] * w[None, :]).sum(1),
+                            (dm_e * inc_e[0][None, :] * w[None, :]).sum(1)])
 
 
 # --------------------------------------------------------------------------- #
@@ -212,6 +249,17 @@ if __name__ == "__main__":
     print(f"  (6) compact share at logMh 11 / 13.2 / 15: {wc.round(3)}")
     assert wc[0] > 0.9 and abs(wc[1] - 0.5) < 1e-9 and wc[2] < 0.1
 
+    # (7) the delay nests exactly at tau_d = 0 and moves mass at tau_d > 0
+    sd = Spec2.with_delay()
+    thd = np.r_[th, 0.0]
+    assert np.array_equal(predict2(sd, thd, curves, R), d), "tau_d = 0 does not nest"
+    thd[-1] = 0.5
+    dd_ = predict2(sd, thd, curves, R)
+    print(f"  (7) delay: tau_d = 0 nests bit for bit; tau_d = 0.5 Hubble times lowers M*(<100) at "
+          f"z=0.4 by {np.median(1 - dd_[:, 0, F.I100] / d[:, 0, F.I100]) * 100:.1f}% and at z=2 by "
+          f"{np.median(1 - dd_[:, 4, F.I100] / d[:, 4, F.I100]) * 100:.1f}% (median); still monotone")
+    assert np.all(np.diff(dd_, axis=2) >= -1e-9) and np.all(np.diff(dd_, axis=1) <= 1e-9)
+    assert np.all(dd_ <= d + 1e-9)
     import time
     t0 = time.time(); predict2(s2, th, curves, R, epochs=(0,), nodes=FIT_NODES); dt = time.time() - t0
     print(f"  timing: z=0.4 only, fit nodes, {len(curves)} galaxies: {dt:.2f} s "

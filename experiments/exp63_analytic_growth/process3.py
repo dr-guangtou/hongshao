@@ -102,6 +102,7 @@ def draw(spec2, theta, noise, curves, R, rng, n_draw=8, epochs=(0, 1, 2, 3, 4),
         r_tr = spec2.trunc_C * r200
         # e-folds of halo growth per node interval (for the Poisson means)
         dlnM = (dm / 10.0 ** lm) * w[None, :]              # dlnM/dlnt * dlnt
+        inc_e = M2.arrival_include(spec2, p, lt, include)
         for s in range(n_draw):
             # efficiency history
             if L is not None:
@@ -124,9 +125,8 @@ def draw(spec2, theta, noise, curves, R, rng, n_draw=8, epochs=(0, 1, 2, 3, 4),
             Bc = M.cog_truncated(M2.COMPACT_FAMILY, (p["n_c"],), s_c.ravel(), r_tr.ravel(), R).reshape(len(R), n, N)
             Be = M.cog_truncated(M2.EXTENDED_FAMILY, (p["c_e"],), s_e.ravel(), r_tr.ravel(), R).reshape(len(R), n, N)
             for j, k in enumerate(epochs):
-                inc = include[k][None, :]
-                out[s, lo:lo + n, j] = (np.einsum("rgn,gn->gr", Bc, m_c * inc)
-                                        + np.einsum("rgn,gn->gr", Be, m_e * inc))
+                out[s, lo:lo + n, j] = (np.einsum("rgn,gn->gr", Bc, m_c * include[k][None, :])
+                                        + np.einsum("rgn,gn->gr", Be, m_e * inc_e[k][None, :]))
     return out
 
 
@@ -141,7 +141,8 @@ def lumpy_covariance(spec2, theta, noise, curves, R, nodes=M2.FULL_NODES):
     dm = np.array([E.dm_dlnt(lt, hc) for hc in curves])
     dlnM = (dm / 10.0 ** lm) * w[None, :]
     mu = noise.n_eff * np.clip(dlnM, 1e-12, None)
-    m_e = dm_e * w[None, :] * include[0][None, :]
+    inc_e = M2.arrival_include(spec2, p, lt, include)
+    m_e = dm_e * w[None, :] * inc_e[0][None, :]
     Be = M.cog_truncated(M2.EXTENDED_FAMILY, (p["c_e"],), s_e.ravel(), r_tr.ravel(), R).reshape(len(R), n, N)
     var_w = m_e ** 2 / mu                                  # Var[m_i K_i/mu_i] = m_i^2/mu_i
     return np.einsum("rgn,gn,sgn->grs", Be, var_w, Be)
