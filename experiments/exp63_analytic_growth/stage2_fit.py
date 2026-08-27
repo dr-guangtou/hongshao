@@ -38,6 +38,8 @@ accretion-to-deposition delay (Stage 2b); outputs carry the `_delay` tag.
 twelve at z=0.4; outputs carry the `_tauX` tag.
 `--growth` fits the 13-parameter model whose split also depends on the halo's
 growth rate at the deposit (Stage 2c); outputs carry the `_growth` tag.
+`--growth-rel` uses the growth rate RELATIVE to the population's typical rate at
+that time (Stage 2d); outputs carry the `_growthrel` tag.
 """
 from __future__ import annotations
 
@@ -208,19 +210,24 @@ def leverage_model(spec2, theta, curves, lmh):
 
 
 # --------------------------------------------------------------------------- #
-def _spec(delay, growth):
+def _spec(delay, growth, growth_rel=False):
     if delay:
         return M2.Spec2.with_delay()
+    if growth_rel:
+        return M2.Spec2.with_growth_rel()
     if growth:
         return M2.Spec2.with_growth_split()
     return M2.Spec2()
 
 
-def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False):
+def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, growth_rel=False):
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = _spec(delay, growth)
+    spec2 = _spec(delay, growth, growth_rel)
+    if growth_rel:
+        lt_ref, a_ref = M2.set_alpha_ref(curves)
+        print(f"  alpha_ref(t): population-median dlnM/dlnt at the nodes, {a_ref.min():.2f}-{a_ref.max():.2f}")
     bounds = spec2.bounds()
     if tau_fixed is not None:
         # tau_d set from physics, not fitted: an equal-bounds box freezes it
@@ -275,7 +282,10 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False):
           f"{100 * (1 - best['loss'] / l_null):+.1f}%)")
     print("  " + "  ".join(f"{n}={v:+.4f}" for n, v in zip(spec2.theta_names, best["theta"])))
     out = OUTDIR / f"stage2_fit{tag}.npz"
-    np.savez(out, theta_best=best["theta"], loss_best=best["loss"], best_name=best["name"],
+    extra = {}
+    if growth_rel:
+        extra = dict(alpha_ref_lt=M2._ALPHA_REF["lt"], alpha_ref=M2._ALPHA_REF["alpha"])
+    np.savez(out, theta_best=best["theta"], loss_best=best["loss"], best_name=best["name"], **extra,
              names=np.array([q["name"] for q in results]),
              thetas=np.array([q["theta"] for q in results]),
              losses=np.array([q["loss"] for q in results]),
@@ -285,11 +295,13 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False):
     print(f"  saved {out.relative_to(ROOT)}")
 
 
-def run_eval(smoke, tag, tables_only=False, delay=False, growth=False):
+def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_rel=False):
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = _spec(delay, growth)
+    spec2 = _spec(delay, growth, growth_rel)
+    if growth_rel:
+        M2.set_alpha_ref(curves)
     fz = np.load(OUTDIR / f"stage2_fit{tag}.npz", allow_pickle=True)
     theta = np.asarray(fz["theta_best"], float)
     th_nested = np.asarray(fz["theta_nested"], float)
@@ -457,7 +469,8 @@ if __name__ == "__main__":
     delay = "--delay" in args or "--tau-fixed" in args
     tau_fixed = float(args[args.index("--tau-fixed") + 1]) if "--tau-fixed" in args else None
     growth = "--growth" in args
-    tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else ("_growth" if growth else ""))) + ("_smoke" if smoke else "")
+    growth_rel = "--growth-rel" in args
+    tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else ("_growthrel" if growth_rel else ("_growth" if growth else "")))) + ("_smoke" if smoke else "")
     sel = None
     if "--starts" in args:
         a_, b_ = args[args.index("--starts") + 1].split("-")
@@ -465,6 +478,6 @@ if __name__ == "__main__":
     print(f"{RULE}\nexp63 STAGE 2 — the two-channel mean, fitted at z=0.4 only"
           f"{' (SMOKE)' if smoke else ''}\n{RULE}\n")
     if "--eval-only" not in args:
-        run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth)
+        run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth, growth_rel=growth_rel)
     if "--fit-only" not in args:
-        run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth)
+        run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel)

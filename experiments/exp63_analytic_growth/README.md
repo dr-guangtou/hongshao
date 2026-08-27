@@ -377,3 +377,31 @@ Even a tenth of a Hubble time swings the outskirts from +16–28 per cent to −
 −25 per cent — most extended mass is deposited "recently" in Hubble-time units — and
 every correlation sign moves further from the data's. The delay is the wrong
 mechanism for both symptoms.
+
+### Stage 2c — the split on the halo's growth rate (2026-08-28)
+
+The P9 leverage probe (PROBLEMS.md) found that a compact share
+$w_c=\sigma((m_{1/2}-\log M+g\,(\alpha-1))/d)$, with $\alpha={\rm d}\ln M/{\rm d}\ln t$
+at the deposit and $g\approx-0.5$ to $-1$, reproduces every measured assembly
+correlation by evaluation alone. Fitted (`stage2_fit.py --growth`, thirteen
+parameters, nests at $g=0$; five of seven starts at the time of writing), the
+$z=0.4$ optimum is 2.7003 (three starts; two others in a basin at 2.829 where the
+"compact" channel has become a second extended one at $0.15\,R_{200c}$ — not a
+candidate): $g=-0.66$, compact deposits at $0.030\,R_{200c}$ with $n_c=0.79$,
+extended at $0.083\,(1+z)^{0.90}R_{200c}$, $m_{1/2}=13.5$ over a broad $d=1.6$
+dex. The $z=0.4$ gates are Stage 2's (inner-slope median 1.027, tier 3 0.266,
+compact share 0.50 at $10^{13.5}$) and **the assembly correlations now carry the
+data's signs and sizes**: `late` +0.29 [data +0.25], `logtc` −0.16 [−0.18],
+`f_form` −0.39 [−0.26], `c200c` +0.07 [+0.07] (`early` −0.49 [−0.08] overshoots).
+
+**But the predicted epochs are far worse than Stage 2's**: $M_*(50\text{–}100)$ on the
+fit mask +24 / +43 / +73 / +93 per cent at $z=0.7$–$2$ (Stage 2: +16 to +28),
+$M_*(<10)$ −35 per cent at $z=2$ (Stage 2: −17), tier 3 at $z=2$ 0.454 (0.357), and
+the non-decliners' central span 0.115 dex (0.016). Why: at high redshift *every*
+halo grows fast ($\alpha\approx2$–3), so an absolute growth-rate split makes all
+early deposits extended and the $z\ge1.5$ galaxies too diffuse and too light in
+the centre. The data's correlation is with growth *relative to other haloes at the
+same time* — mergers are growth in excess of the typical. **Stage 2d** replaces
+$\alpha-1$ by $\alpha-\bar\alpha(t)$, $\bar\alpha$ the population-median rate at that
+time (a fixed function tabulated from the sample and stored with the fit, not a
+parameter); `stage2_fit.py --growth-rel`, running.

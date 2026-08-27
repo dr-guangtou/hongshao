@@ -64,11 +64,34 @@ THETA_NAMES_DELAY = THETA_NAMES + ("tau_d",)
 #: extended and those during slow growth (smooth accretion) more compact —
 #: the in-situ / ex-situ picture. g_split = 0 is the 12-parameter model.
 THETA_NAMES_GROWTH = THETA_NAMES + ("g_split",)
+#: Stage 2d: the same split on the growth rate RELATIVE to the population's
+#: typical rate at that time, alpha - alpha_ref(t). At high redshift every
+#: halo grows fast, so an absolute rate makes all early deposits extended
+#: (Stage 2c's failure); mergers are growth in excess of the typical. The
+#: reference is a fixed function set once from the sample (`set_alpha_ref`)
+#: and stored with the fit; it is not a fitted quantity.
+THETA_NAMES_GROWTH_REL = THETA_NAMES + ("g_rel",)
+_ALPHA_REF = {"lt": None, "alpha": None}
+
+
+def set_alpha_ref(curves, nodes=None):
+    """Tabulate the population-median dlnM/dlnt at the quadrature nodes."""
+    lt = E.nodes(**(nodes or FULL_NODES))[0]
+    a = np.array([E.dm_dlnt(lt, hc) / 10.0 ** E.log_mah(lt, hc) for hc in curves])
+    _ALPHA_REF["lt"], _ALPHA_REF["alpha"] = lt, np.median(a, axis=0)
+    return lt, _ALPHA_REF["alpha"]
+
+
+def alpha_ref(lt):
+    if _ALPHA_REF["lt"] is None:
+        raise RuntimeError("call model2.set_alpha_ref(curves) before using g_rel")
+    return np.interp(np.asarray(lt, float), _ALPHA_REF["lt"], _ALPHA_REF["alpha"])
 BOUNDS = {"a0": (-6.0, 2.0), "a_M": (-3.0, 3.0), "a_z": (-3.0, 3.0), "a_Mz": (-3.0, 3.0),
           "m_half": (10.5, 15.0), "d_split": (0.1, 3.0),
           "log_f_c": (-3.0, -0.5), "b_c": (-3.0, 3.0),
           "log_f_e": (-2.5, 0.0), "b_e": (-3.0, 3.0),
-          "n_c": (0.5, 2.5), "c_e": (0.2, 8.0), "tau_d": (0.0, 3.0), "g_split": (-3.0, 3.0)}
+          "n_c": (0.5, 2.5), "c_e": (0.2, 8.0), "tau_d": (0.0, 3.0), "g_split": (-3.0, 3.0),
+          "g_rel": (-3.0, 3.0)}
 TRUNC_C = 3.0
 COMPACT_FAMILY, EXTENDED_FAMILY = "sersic", "gompertz_log"
 #: quadrature for the FIT (checked against the full nodes in stage2_fit.py)
@@ -89,13 +112,21 @@ class Spec2:
     def with_growth_split():
         return Spec2(theta_names=THETA_NAMES_GROWTH)
 
+    @staticmethod
+    def with_growth_rel():
+        return Spec2(theta_names=THETA_NAMES_GROWTH_REL)
+
+    @property
+    def growth_rel(self):
+        return "g_rel" in self.theta_names
+
     @property
     def delay(self):
         return "tau_d" in self.theta_names
 
     @property
     def growth_split(self):
-        return "g_split" in self.theta_names
+        return "g_split" in self.theta_names or "g_rel" in self.theta_names
 
     @property
     def n_theta(self):
@@ -139,12 +170,14 @@ def clip_to_bounds(spec2, theta):
     return np.clip(np.asarray(theta, float), lo, hi)
 
 
-def compact_share(theta_dict, logmh, alpha=None):
+def compact_share(theta_dict, logmh, alpha=None, lt_nodes=None):
     """The compact share of a deposit; `alpha` = dlnM/dlnt at the deposit,
     used only when the spec carries `g_split`."""
     x = theta_dict["m_half"] - np.asarray(logmh, float)
     if "g_split" in theta_dict and alpha is not None:
         x = x + theta_dict["g_split"] * (np.asarray(alpha, float) - 1.0)
+    if "g_rel" in theta_dict and alpha is not None:
+        x = x + theta_dict["g_rel"] * (np.asarray(alpha, float) - alpha_ref(lt_nodes))
     return expit(x / theta_dict["d_split"])
 
 
@@ -176,7 +209,7 @@ def _deposits2(spec2, theta, curves, lt, mode="analytic"):
     z = np.broadcast_to(E.z_of_t(10.0 ** lt), (n, N))
     eff = (p["a0"], p["a_M"], p["a_z"], p["a_Mz"])
     dmstar = 10.0 ** np.clip(E.log_eps_e2(eff, lm, z), -30, 10) * dm
-    wc = compact_share(p, lm, alpha=dm / 10.0 ** lm)
+    wc = compact_share(p, lm, alpha=dm / 10.0 ** lm, lt_nodes=lt)
     lz = np.log10(1.0 + z)
     s_c = 10.0 ** np.clip(p["log_f_c"] + p["b_c"] * lz, -8, 2) * r200
     s_e = 10.0 ** np.clip(p["log_f_e"] + p["b_e"] * lz, -8, 2) * r200
