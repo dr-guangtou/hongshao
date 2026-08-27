@@ -54,13 +54,20 @@ import model as M                                        # noqa: E402
 import stage35_time_law as S35                           # noqa: E402
 
 #: law -> (parameter names). "" is the exp54 incumbent, unconditioned.
-LAWS = {"": (), "F1": ("e_f",), "C1": ("a_c",), "F1+C1": ("e_f", "a_c")}
+#: `M2` (added 2026-08-27, exp61's follow-up): mass x time CURVATURE,
+#: `a_mz2 * (logmh - 13.5) * ln(1+z)^2` per deposit — the one term exp61's
+#: drift table says the E2 cross term cannot express (the fitted a_Mz walks
+#: +0.42 -> +0.86 across the single-epoch fits). Unlike F1/C1 this is not a
+#: new conditioning VARIABLE, just curvature in the two the law already has,
+#: so the exp59 lockstep disqualification does not apply to it.
+LAWS = {"": (), "F1": ("e_f",), "C1": ("a_c",), "F1+C1": ("e_f", "a_c"),
+        "M2": ("a_mz2",)}
 #: two-sided on purpose: "the model does not want conditioning" must be an
 #: interior point, not a rail (exp57's design rule). The spans are set from
 #: the feature ranges — f_form-0.5 spans about [-0.2, +0.4] and dlogc about
 #: [-0.4, +0.4] dex — so ±5 allows ±1-2 dex of efficiency modulation, far
 #: beyond anything physical, leaving room to fail honestly.
-BOUNDS = {"e_f": (-5.0, 5.0), "a_c": (-5.0, 5.0)}
+BOUNDS = {"e_f": (-5.0, 5.0), "a_c": (-5.0, 5.0), "a_mz2": (-3.0, 3.0)}
 #: the conditioning pivot. 0.5 matches the S3 convention in `model.r50_of`,
 #: so a coefficient here is comparable with the S3 slopes exp54 rejected.
 F_PIV = 0.5
@@ -137,6 +144,10 @@ class ConditionedProblem(S35.StackedProblem):
     def __init__(self, cspec, halos, data, mask, **kw):
         super().__init__(cspec.base, halos, data, mask, **kw)
         self.cspec = cspec
+        # `fit.fit` reads the box from `problem.spec.bounds()`, so the FULL
+        # spec (base + conditioning) must sit there; the parent's `predict`
+        # never runs on this class (overridden), so nothing else reads it.
+        self.spec = cspec
 
     def cond_le(self, le, cond, d):
         """The conditioning term, per deposit, added to `log10 eps`."""
@@ -145,6 +156,9 @@ class ConditionedProblem(S35.StackedProblem):
             le = le + cond[names.index("e_f")] * (d.f_form - F_PIV)
         if "a_c" in names:
             le = le + cond[names.index("a_c")] * d.dlogc
+        if "a_mz2" in names:
+            le = le + (cond[names.index("a_mz2")]
+                       * (d.logmh - M.M_PIV) * np.log1p(d.z) ** 2)
         return le
 
     def predict(self, theta):
@@ -209,7 +223,7 @@ def _selfcheck():
     theta = S37.incumbent()
 
     # (1) EXACT nesting for every law, values and NaN pattern
-    for law in ("", "F1", "C1", "F1+C1"):
+    for law in ("", "F1", "C1", "F1+C1", "M2"):
         sp = CSpec(base, law)
         parent, child = check_nesting(sp, recs, data, mask, theta)
         l0 = parent.loss(theta)
