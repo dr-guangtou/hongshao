@@ -360,3 +360,20 @@ nothing has arrived), and the $z=0.4$ loss cannot see that. The arrival of ex-si
 stars is not a single lag; it is not a one-parameter repair of this class, and the
 Stage 2 twelve-parameter mean is the mean carried into Stage 3. The wrong-signed
 assembly correlations remain the open question of the mean model (PROBLEMS P9).
+
+The cleaner test, done afterwards: the delay applied to the **Stage 2 solution
+without any refit** (so no compensating size law can enter). Median relative bias
+of $M_*(<10)$ on all galaxies and of $M_*(50\text{–}100)$ on the fit mask, $z=0.4\ldots2.0$,
+and the partial correlations of the model's compact share with `late`, `f_form`,
+`logtc` at fixed halo mass (data: +0.25, −0.26, −0.18):
+
+| $\tau_d$ | $M_*(<10)$ | $M_*(50\text{–}100)$, fit mask | late / f_form / logtc |
+|---|---|---|---|
+| 0 | −1.9 / +0.3 / +0.4 / −8.3 / −21.0 | +4.5 / +16.4 / +24.6 / +27.9 / +21.3 | −0.34 / +0.34 / +0.29 |
+| 0.1 | −1.9 / +0.3 / +0.3 / −8.6 / −21.6 | −5.1 / +0.5 / −0.6 / −10.2 / −24.7 | −0.35 / +0.56 / +0.48 |
+| 0.3 | −1.9 / +0.2 / +0.1 / −9.3 / −23.0 | −25.8 / −31.0 / −40.2 / −59.6 / −73.3 | −0.39 / +0.81 / +0.68 |
+
+Even a tenth of a Hubble time swings the outskirts from +16–28 per cent to −0.6 to
+−25 per cent — most extended mass is deposited "recently" in Hubble-time units — and
+every correlation sign moves further from the data's. The delay is the wrong
+mechanism for both symptoms.

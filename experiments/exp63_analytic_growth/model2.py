@@ -58,11 +58,17 @@ THETA_NAMES = ("a0", "a_M", "a_z", "a_Mz", "m_half", "d_split",
 #: but not yet arrived is "in transit", which is what a central's measured
 #: stellar mass excludes.
 THETA_NAMES_DELAY = THETA_NAMES + ("tau_d",)
+#: Stage 2c: the split also depends on the halo's GROWTH RATE at the deposit,
+#: alpha = dlnM/dlnt: w_c = expit((m_half - log M + g_split (alpha - 1)) / d).
+#: g_split < 0 makes deposits laid down during fast growth (mergers) more
+#: extended and those during slow growth (smooth accretion) more compact —
+#: the in-situ / ex-situ picture. g_split = 0 is the 12-parameter model.
+THETA_NAMES_GROWTH = THETA_NAMES + ("g_split",)
 BOUNDS = {"a0": (-6.0, 2.0), "a_M": (-3.0, 3.0), "a_z": (-3.0, 3.0), "a_Mz": (-3.0, 3.0),
           "m_half": (10.5, 15.0), "d_split": (0.1, 3.0),
           "log_f_c": (-3.0, -0.5), "b_c": (-3.0, 3.0),
           "log_f_e": (-2.5, 0.0), "b_e": (-3.0, 3.0),
-          "n_c": (0.5, 2.5), "c_e": (0.2, 8.0), "tau_d": (0.0, 3.0)}
+          "n_c": (0.5, 2.5), "c_e": (0.2, 8.0), "tau_d": (0.0, 3.0), "g_split": (-3.0, 3.0)}
 TRUNC_C = 3.0
 COMPACT_FAMILY, EXTENDED_FAMILY = "sersic", "gompertz_log"
 #: quadrature for the FIT (checked against the full nodes in stage2_fit.py)
@@ -79,9 +85,17 @@ class Spec2:
     def with_delay():
         return Spec2(theta_names=THETA_NAMES_DELAY)
 
+    @staticmethod
+    def with_growth_split():
+        return Spec2(theta_names=THETA_NAMES_GROWTH)
+
     @property
     def delay(self):
         return "tau_d" in self.theta_names
+
+    @property
+    def growth_split(self):
+        return "g_split" in self.theta_names
 
     @property
     def n_theta(self):
@@ -100,21 +114,23 @@ class Spec2:
         return self.theta_names.index(name)
 
 
-def nested_theta(theta_incumbent, delay=False):
+def nested_theta(theta_incumbent, delay=False, growth=False):
     """The incumbent (a0, a_M, a_z, a_Mz, log_f0, b, c) embedded: compact
     share exactly zero (expit(-1000) underflows to 0.0; -10 leaves 3e-10),
     extended channel = the incumbent's size law and shape."""
     a0, aM, az, aMz, lf0, b, c = np.asarray(theta_incumbent, float)
     th = np.array([a0, aM, az, aMz, -1000.0, 1.0, np.log10(0.04), 0.0, lf0, b, 1.0, c])
-    return np.r_[th, 0.0] if delay else th
+    return np.r_[th, 0.0] if (delay or growth) else th
 
 
-def default_theta(theta_incumbent, delay=False):
+def default_theta(theta_incumbent, delay=False, growth=False):
     """Stage 1's starting values: a compact channel at 0.04 R200c with n = 1,
     the extended one at 0.2 R200c, the split at 10^13.2."""
     a0, aM, az, aMz, lf0, b, c = np.asarray(theta_incumbent, float)
     th = np.array([a0, aM, az, aMz, 13.2, 0.5, np.log10(0.04), 0.0,
                    np.log10(0.2), -0.5, 1.0, c])
+    if growth:
+        return np.r_[th, -0.5]
     return np.r_[th, 0.5] if delay else th
 
 
@@ -123,8 +139,13 @@ def clip_to_bounds(spec2, theta):
     return np.clip(np.asarray(theta, float), lo, hi)
 
 
-def compact_share(theta_dict, logmh):
-    return expit((theta_dict["m_half"] - np.asarray(logmh, float)) / theta_dict["d_split"])
+def compact_share(theta_dict, logmh, alpha=None):
+    """The compact share of a deposit; `alpha` = dlnM/dlnt at the deposit,
+    used only when the spec carries `g_split`."""
+    x = theta_dict["m_half"] - np.asarray(logmh, float)
+    if "g_split" in theta_dict and alpha is not None:
+        x = x + theta_dict["g_split"] * (np.asarray(alpha, float) - 1.0)
+    return expit(x / theta_dict["d_split"])
 
 
 def hubble_gyr(z):
@@ -155,7 +176,7 @@ def _deposits2(spec2, theta, curves, lt, mode="analytic"):
     z = np.broadcast_to(E.z_of_t(10.0 ** lt), (n, N))
     eff = (p["a0"], p["a_M"], p["a_z"], p["a_Mz"])
     dmstar = 10.0 ** np.clip(E.log_eps_e2(eff, lm, z), -30, 10) * dm
-    wc = compact_share(p, lm)
+    wc = compact_share(p, lm, alpha=dm / 10.0 ** lm)
     lz = np.log10(1.0 + z)
     s_c = 10.0 ** np.clip(p["log_f_c"] + p["b_c"] * lz, -8, 2) * r200
     s_e = 10.0 ** np.clip(p["log_f_e"] + p["b_e"] * lz, -8, 2) * r200
@@ -260,6 +281,14 @@ if __name__ == "__main__":
           f"{np.median(1 - dd_[:, 4, F.I100] / d[:, 4, F.I100]) * 100:.1f}% (median); still monotone")
     assert np.all(np.diff(dd_, axis=2) >= -1e-9) and np.all(np.diff(dd_, axis=1) <= 1e-9)
     assert np.all(dd_ <= d + 1e-9)
+    # (8) the growth split nests exactly at g_split = 0 and moves the split at g_split < 0
+    sg = Spec2.with_growth_split()
+    thg = np.r_[th, 0.0]
+    assert np.array_equal(predict2(sg, thg, curves, R), d), "g_split = 0 does not nest"
+    thg[-1] = -0.5
+    cg = channel_masses(sg, thg, curves); c0 = channel_masses(s2, th, curves)
+    print(f"  (8) growth split: g_split = 0 nests bit for bit; g_split = -0.5 moves the median compact "
+          f"share from {np.median(c0[:, 0] / c0.sum(1)):.3f} to {np.median(cg[:, 0] / cg.sum(1)):.3f}")
     import time
     t0 = time.time(); predict2(s2, th, curves, R, epochs=(0,), nodes=FIT_NODES); dt = time.time() - t0
     print(f"  timing: z=0.4 only, fit nodes, {len(curves)} galaxies: {dt:.2f} s "

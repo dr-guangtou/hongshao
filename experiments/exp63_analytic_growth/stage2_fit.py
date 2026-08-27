@@ -36,6 +36,8 @@ Run: HONGSHAO_DATA_DIR=... OMP_NUM_THREADS=1 PYTHONPATH=. uv run python -u \\
 accretion-to-deposition delay (Stage 2b); outputs carry the `_delay` tag.
 `--tau-fixed X` holds tau_d at X (a physics-set value) and fits the other
 twelve at z=0.4; outputs carry the `_tauX` tag.
+`--growth` fits the 13-parameter model whose split also depends on the halo's
+growth rate at the deposit (Stage 2c); outputs carry the `_growth` tag.
 """
 from __future__ import annotations
 
@@ -120,9 +122,9 @@ class Problem2:
 
 
 def starts_for(spec2, th_inc, rng):
-    base = M2.default_theta(th_inc, delay=spec2.delay)
+    base = M2.default_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split)
     lo, hi = np.array(spec2.bounds()).T
-    out = [("nested", M2.clip_to_bounds(spec2, M2.nested_theta(th_inc, delay=spec2.delay))),
+    out = [("nested", M2.clip_to_bounds(spec2, M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split))),
            ("default", base)]
     for k in range(4):
         j = base + rng.normal(0, 0.05, base.shape) * np.maximum(np.abs(base), 0.3)
@@ -206,11 +208,19 @@ def leverage_model(spec2, theta, curves, lmh):
 
 
 # --------------------------------------------------------------------------- #
-def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None):
+def _spec(delay, growth):
+    if delay:
+        return M2.Spec2.with_delay()
+    if growth:
+        return M2.Spec2.with_growth_split()
+    return M2.Spec2()
+
+
+def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False):
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = M2.Spec2.with_delay() if delay else M2.Spec2()
+    spec2 = _spec(delay, growth)
     bounds = spec2.bounds()
     if tau_fixed is not None:
         # tau_d set from physics, not fitted: an equal-bounds box freezes it
@@ -222,7 +232,7 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None):
 
     # the shells/log reference: the NESTED incumbent on the exact engine (frozen)
     pr = Problem2(spec2, curves, data, fit_rows, R, l_s_ref=None)
-    th_nested = M2.nested_theta(th_inc, delay=spec2.delay)
+    th_nested = M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split)
     a, f, s_raw, nb = pr.scores(th_nested)
     pr.l_s_ref = s_raw
     a, f, s, nb = pr.scores(th_nested)
@@ -275,11 +285,11 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None):
     print(f"  saved {out.relative_to(ROOT)}")
 
 
-def run_eval(smoke, tag, tables_only=False, delay=False):
+def run_eval(smoke, tag, tables_only=False, delay=False, growth=False):
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = M2.Spec2.with_delay() if delay else M2.Spec2()
+    spec2 = _spec(delay, growth)
     fz = np.load(OUTDIR / f"stage2_fit{tag}.npz", allow_pickle=True)
     theta = np.asarray(fz["theta_best"], float)
     th_nested = np.asarray(fz["theta_nested"], float)
@@ -446,7 +456,8 @@ if __name__ == "__main__":
     smoke = "--smoke" in args
     delay = "--delay" in args or "--tau-fixed" in args
     tau_fixed = float(args[args.index("--tau-fixed") + 1]) if "--tau-fixed" in args else None
-    tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else "")) + ("_smoke" if smoke else "")
+    growth = "--growth" in args
+    tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else ("_growth" if growth else ""))) + ("_smoke" if smoke else "")
     sel = None
     if "--starts" in args:
         a_, b_ = args[args.index("--starts") + 1].split("-")
@@ -454,6 +465,6 @@ if __name__ == "__main__":
     print(f"{RULE}\nexp63 STAGE 2 — the two-channel mean, fitted at z=0.4 only"
           f"{' (SMOKE)' if smoke else ''}\n{RULE}\n")
     if "--eval-only" not in args:
-        run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed)
+        run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth)
     if "--fit-only" not in args:
-        run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay)
+        run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth)
