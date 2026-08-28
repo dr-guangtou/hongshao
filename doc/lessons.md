@@ -1871,3 +1871,42 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   the radius grid from `fit.R_GRID` / `tng_data.COG_RAD_KPC`; never rebuild it
   from its end points; and treat a headline that appears in one probe and not
   in the gated script as suspect until both agree.
+
+## exp63 (2026-08-28, one session: engine, deconvolution, two-channel mean, process)
+
+- **Let the predicted epochs judge a single-epoch fit; the z=0.4 loss cannot see
+  time labels.** Three mean-model variants (an accretion delay, an absolute and a
+  relative growth-rate split) each improved or matched the z=0.4 loss and each
+  wrecked the never-fitted epochs (outskirts +40 to +93 per cent, z=2 centres -30
+  to -35 per cent), while the plain mass split kept the non-declining 58 per cent
+  within 0.016 dex of a constant central error across five epochs. A one-epoch
+  objective has no purchase on when stars arrived; the earlier epochs are the
+  test, and a variant must be run through them before its z=0.4 gain is believed.
+- **A physics-set parameter must be applied WITHOUT refitting before it is
+  fitted with.** The delay with the other twelve parameters refitted at z=0.4
+  reached a better loss by pushing the extended deposit size to the bound and
+  hiding late-accreted mass outside the aperture. Applying the delay to the
+  frozen Stage 2 solution (a one-minute table) showed that even a tenth of a
+  Hubble time removes a quarter of the z=2 outskirts and moves every correlation
+  the wrong way. The no-refit table is the honest test of a mechanism; the refit
+  tests the mechanism plus everything the optimiser can do with it.
+- **Sweep a candidate's leverage by evaluation before spending a two-hour fit —
+  it worked both ways.** The growth-rate split's probe (seven values of g, no fit,
+  five minutes) showed every assembly-correlation sign flipping to the data's at
+  g = -0.5 to -1, which justified the fit; the fit then showed the cost in the
+  predicted epochs that no z=0.4 probe could show. Both facts are now on record
+  for the price of one fit instead of a guess.
+- **A boundary solution that beats the interior optimum is a signal about the
+  bound, not a better model.** The fixed-delay fit's "better" loss (2.675 against
+  2.764) came with log f_e at its upper bound (deposits as large as the halo).
+  G2f (railed parameters) is a gate for exactly this reason; do not evaluate a
+  railed solution as if it were the model's answer without saying so.
+- **Noise in the history is coherent across epochs for free; noise on the output
+  is not.** The process fitted at z=0.4 held its tier-2e widths to within 9 per
+  cent at every predicted epoch and halved the excess size persistence of the
+  per-epoch layer (exp60: +0.97; process: +0.68; truth: +0.33) with no coherence
+  parameter at all. When a model has a history, put the randomness there.
+- **Provisional evaluation from a checkpoint saves hours.** Three starts agreeing
+  to six decimals is enough to evaluate a solution's predictions while the other
+  four starts run; twice that early read decided the next step (the delay's
+  failure; the growth split's trade) before the fit finished.

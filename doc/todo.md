@@ -2321,10 +2321,22 @@ Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); 
   twelve-parameter Stage 2 mean is carried into Stage 3. PROBLEMS P9: the
   wrong-signed assembly correlations of the mass-only split (a growth-rate
   split is the untried candidate).
-- [ ] Stage 3 — noise inside the process (lumpy ex-situ accretion, correlated
-  efficiency history, per-galaxy size offsets), leverage sweep first, energy score
-  on held-out population statistics, tier 2e scored on draws (closes C16).
-- [ ] Stage 4 — the standard battery on three models, README, PROBLEMS, memory.
+- [x] Stage 2c/2d — splits on the halo's growth rate (absolute; relative to the
+  population's typical rate at that time). Both reproduce the z=0.4 assembly
+  correlations (late +0.29/+0.35 vs data +0.25; logtc -0.16/-0.33 vs -0.18) and
+  both wreck the predicted epochs (outskirts +24-93% / +21-79% on the fit mask;
+  non-decliner span 0.115 / 0.080 vs Stage 2's 0.016). A (M, Mdot) split cannot
+  satisfy both; the Stage 2 mass-only split is the exp63 mean. P9 open with this
+  as its content.
+- [x] Stage 3 — noise inside the process: leverage sweep (all four sources have
+  leverage), held-out fit (n_eff 5.2, sigma_eta 0.148 dex, ell 0.33, sigma_sc 0.17,
+  sigma_se 0.13; the two calibrations agree to a few per cent), G3a PASS
+  (kpc planes 1.20-1.28x floor; mean alone 2.6-2.9; exp60 1.69-2.17), G3b PASS
+  (tier-2e widths from draws 0.94-1.02 at z=0.4 — C16 closed), widths hold
+  0.95-1.09 at every predicted epoch, tier-2c persistence +0.68 (truth +0.33,
+  exp60 +0.97), declining fraction 0 by construction (P8).
+- [ ] Stage 4 — the standard battery on three products (baseline / Stage 2 mean /
+  mean + process), tier 2e from draws per epoch (running).
 
 ### Bookkeeping found by the 2026-08-28 probe (not yet acted on)
 
