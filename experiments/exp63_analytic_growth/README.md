@@ -431,3 +431,70 @@ both**; the $z=0.4$ correlation must come from something the extended channel's
 cannot see (P9 stays open with this as its measured content). **The Stage 2
 twelve-parameter mean is the exp63 mean**: it is the one that predicts the other
 four epochs, which is what the plan asked a single-epoch model to do.
+
+## Stage 3 — noise inside the deposition process (2026-08-28)
+
+`process3.py` puts three physically named random modifications INSIDE the history,
+drawn once per galaxy and shared by every epoch (so every draw is a coherent
+multi-epoch galaxy) on top of the Stage 2 mean (frozen): **lumpy accretion** — the
+extended channel's deposition is a compound-Poisson process with `n_eff` events per
+e-fold of halo growth (mean preserved; variance by Campbell's theorem, checked
+against 300 draws to 7.5 per cent); an **efficiency history** — `log10 eps` gets a
+zero-mean Gaussian process in ln t of amplitude `sigma_eta` and correlation length
+`ell` (mean-preserving); **size offsets** — per-galaxy normal offsets `sigma_sc`,
+`sigma_se` on the two size laws. Five parameters. `stage3_process.py`: targets,
+leverage sweep, held-out fit, gates, predictions (log `outputs/stage3_process.log`).
+
+**Targets and the null** ($z=0.4$, 2397 galaxies): the truth's scatter about the plane
+regression is 0.170 dex for $M(30\text{–}50)|M(<30)$, 0.204 for $M(50\text{–}100)|M(<30)$,
+0.173 for $R_{50}|M_*$; the mean model's is 0.047 / 0.061 / 0.053, its energy
+distance to the truth 3.9 / 3.7 / 5.5 × the split-half floor, and its tier-2e widths
+0.82–0.87 of the truth's — the conditional-mean under-dispersion exp61 Stage 4
+measured, now on a model whose mean shape is right.
+
+**Leverage sweep** (each source alone, four draws, `figures/exp63_stage3_sweep.png`):
+all four sources can widen a kpc plane by ≥ 0.03 dex while moving no median by
+more than 2 per cent — lumpy accretion at $n_{\rm eff}\le5$ (a handful of events per
+e-fold is what the outskirts' width needs; 20 is too smooth), the efficiency history
+at 0.2 dex, the compact size at 0.2 dex, the extended size at 0.1–0.2 dex. Nothing
+dropped.
+
+**Held-out fit** (Nelder–Mead on the sum of plane E/floor and tier-2e W1 ratios,
+common random numbers, eight draws; calibrate on one random half, score on the
+other):
+
+| | $n_{\rm eff}$ | $\sigma_\eta$ [dex] | $\ell$ [ln t] | $\sigma_{sc}$ | $\sigma_{se}$ | held-out E/floor 30–50 / 50–100 / R50 (mean alone) | tier-2e widths |
+|---|---|---|---|---|---|---|---|
+| A→B | 6.16 | 0.143 | 0.29 | 0.150 | 0.153 | 1.27 / 1.20 / 1.27 (2.70 / 2.85 / 3.98) | 1.00, 0.94, 0.97, 1.02 |
+| B→A | 6.25 | 0.139 | 0.30 | 0.165 | 0.140 | 1.25 / 1.28 / 1.19 (2.64 / 2.86 / 3.76) | 1.00, 0.94, 0.96, 0.96 |
+| all | 5.21 | 0.148 | 0.33 | 0.170 | 0.132 | objective 11.94 (mean alone 25.42) | — |
+
+The two calibrations agree to a few per cent on every parameter. **G3a passes on
+both halves** (kpc-plane E/floor 1.20–1.28 against the 1.5 rule; exp60's output
+layer reached 1.69–2.17) and **G3b passes on both** (tier-2e widths within 0.06 of 1,
+from draws — the first time this programme has scored tier 2e on a generative
+layer, closing open question C16). In words: about five significant accretion
+events per e-fold of halo growth, a 0.15 dex efficiency history correlated over a
+third of an e-fold of time, and 0.13–0.17 dex per-galaxy size offsets reproduce the
+$z=0.4$ population planes to within 1.2–1.3× the noise floor of the simulation's
+own sample (`figures/exp63_stage3_planes.png`).
+
+**Predictions — the same draws at every epoch** (`figures/exp63_stage3_predictions.png`):
+
+| tier-2e width, draws/truth [mean alone] | $M(<10)$ | $M(<30)$ | $M(30\text{–}50)$ | $M(50\text{–}100)$ |
+|---|---|---|---|---|
+| z=0.4 | 1.01 [0.82] | 0.95 [0.83] | 0.97 [0.86] | 1.00 [0.87] |
+| z=0.7 | 1.00 [0.83] | 0.97 [0.87] | 0.98 [0.85] | 0.98 [0.83] |
+| z=1.0 | 1.01 [0.85] | 1.01 [0.92] | 0.96 [0.84] | 0.98 [0.84] |
+| z=1.5 | 1.05 [0.93] | 1.09 [0.99] | 1.01 [0.87] | 1.02 [0.87] |
+| z=2.0 | 1.00 [0.93] | 1.03 [0.96] | 1.05 [0.90] | 1.00 [0.85] |
+
+The widths fitted at $z=0.4$ hold at every earlier epoch to within 9 per cent —
+because the noise is in the history, not added per epoch. Tier 2c: the size-rank
+persistence of the same galaxy between $z=0.4$ and $z=2$ is **+0.68 ± 0.01** from the
+draws against the truth's +0.33 and exp60's +0.97 — half the excess coherence of a
+per-epoch layer removed, by construction rather than by a coherence prior. The
+declining-centre fraction of the draws is **0** (truth 41.8 per cent): every draw is
+a deposition-only galaxy, monotone in time — the class limit stated by a prediction
+(PROBLEMS P8), and the reason the drawn $z=2$ sizes sit above the truth's in the
+tier-2c plane.
