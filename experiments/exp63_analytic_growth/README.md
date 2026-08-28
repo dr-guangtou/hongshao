@@ -300,9 +300,13 @@ Tier 3 per epoch: Stage 2 0.268 / 0.276 / 0.287 / 0.307 / 0.357 against the base
 What it means. Two things, in opposite directions:
 
 1. **For the 58 per cent of galaxies whose centres never declined, the model fitted
-   at one epoch predicts the other four to within 0.016 dex of a constant** — the
-   "one epoch fitted, four predicted" claim holds for the population the class can
-   describe (the plan's failure criterion was 0.03 dex). The declining 42 per cent
+   at one epoch holds a *constant* central error across the other four, to 0.016
+   dex** (`figures/exp63_stage2_c8.png`) — constant at −0.03 to −0.05 dex, i.e. the
+   inner 5 kpc is 7–11 per cent light at every epoch alike, not right. That is the
+   sense in which the "one epoch fitted, four predicted" claim holds for the
+   population the class can describe (the plan's failure criterion was 0.03 dex on
+   the span); it concerns the innermost aperture only — the whole population's
+   amplitude at z ≥ 1.5 is worse than the incumbent's (point 2). The declining 42 per cent
    are the class limit, as before (span 0.228; the model has their $z=2$ centres
    0.22 dex too light because it cannot lose mass afterwards — exp54 C8).
 2. **The extended channel arrives too early.** At every earlier epoch the model is
@@ -424,7 +428,8 @@ the $z=0.4$ assembly correlations does so by making the extended channel's early
 deposits large ($b_e\approx+0.9$ to $+1.0$: extended sizes near $R_{200c}(1+z)$, a
 roughly constant physical size), and that is exactly what breaks the earlier
 epochs. The mass-only split (Stage 2) keeps the evolution — the describable 58 per
-cent of galaxies evolve to within 0.016 dex of a constant central error — and gets
+cent of galaxies keep a constant central error (to 0.016 dex, at a −0.03 to −0.05
+dex offset) — and gets
 the correlations backwards. **A split on $(M,\ \dot M)$ at the deposit cannot satisfy
 both**; the $z=0.4$ correlation must come from something the extended channel's
 *arrival* or *size* knows about the halo's later history, which a single-epoch fit
@@ -566,8 +571,15 @@ Against the science plan's three requests:
 2. **A better single-epoch mean (request 2): done, with its limit measured.** Read
    from the data by deconvolution (Stage 1: two size modes, cuspy deposits rejected,
    $c_{200c}$ no leverage), the two-channel mean fitted at $z=0.4$ alone has the
-   data's inner slope and a 4 per cent better shape, and predicts the other four
-   epochs for the non-declining 58 per cent to 0.016 dex. It over-predicts the
+   data's inner slope and a 4 per cent better shape in the two lower halo-mass
+   terciles (the top tercile keeps a −12 per cent deficit at 2–4 kpc). Its
+   predictions must be read precisely (`figures/exp63_stage2_c8.png`,
+   `figures/qa/qa_bins_exp63_stage4_stage2.png`): for the non-declining 58 per
+   cent the *central* error is **constant** across the five epochs to 0.016 dex —
+   at an offset of −0.03 to −0.05 dex, not at zero — while for the whole
+   population the amplitude at z ≥ 1.5 is *worse* than the incumbent's (M(<10 kpc)
+   −8 and −21 per cent at z=1.5 and 2 against −1 and −9; the incumbent was fitted
+   at all five epochs, this model at one). It over-predicts the
    $z\ge0.7$ outskirts (+16–28 per cent) and gets the assembly correlations
    backwards; the three variants that fix the correlations (delay, two growth-rate
    splits) all break the evolution — a measured tension of the class (P9), not a
