@@ -452,7 +452,7 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
     for a, (nm, col) in zip(ax, (("baseline", "#999999"), ("stage2", "#0072B2"))):
         e = np.log10(np.clip(cogs[nm][good][:, :, I3], 1, None)) - np.log10(data[good][:, :, I3])
         for sel, ls, lab in ((np.ones_like(dec, bool), "-", "all galaxies"),
-                             (~dec, "--", "centre did NOT decline z=2->0.4"), (dec, ":", "centre declined")):
+                             (~dec, "--", "centre did NOT decline from z=2 to 0.4"), (dec, ":", "centre declined")):
             med = [np.median(e[sel, j]) for j in range(5)]
             a.plot(ANCHOR_Z, med, ls, color=col, lw=2.2, marker="o",
                    label=f"{lab} ({100 * sel.mean():.0f}{_pct()}): span {np.ptp(med):.3f} dex")
