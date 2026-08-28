@@ -1910,3 +1910,23 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   to six decimals is enough to evaluate a solution's predictions while the other
   four starts run; twice that early read decided the next step (the delay's
   failure; the growth split's trade) before the fit finished.
+- **The user's reading of exp63 Stage 2 (2026-08-28): judged by the average curves
+  of growth in halo- and stellar-mass bins, the two-channel mean is not a clear
+  improvement — and at the predicted epochs it shows a GLOBAL slope difference
+  rather than the incumbent's central-region defect, so it is worse there.** Two
+  lessons. (1) The summary was written from the bias tables and the gate
+  numbers; the average-CoG figures were looked at but described selectively.
+  AGENTS.md's minimum visual gate exists for this: inspect the binned average
+  CoGs and the planes and describe what they show BEFORE any claim of
+  improvement, and quote the failure mode the figure shows, not the metric that
+  improved. (2) A single-epoch fit leaves every time exponent unconstrained —
+  the efficiency law's redshift terms (a_z, a_Mz) and the size laws' (b_c, b_e)
+  are degenerate at one epoch with each other and with the amplitude — so the
+  fit chose a_z = +0.93 and a_Mz = +0.75 (incumbent +0.51, +0.32) to shape z=0.4
+  and those extrapolate to a 21 per cent amplitude deficit and a tilted CoG at
+  z=2. When fitting one epoch, FREEZE the time exponents (at the incumbent's or
+  at physically set values) and fit only what that epoch can see; the
+  extrapolation then tests the frozen physics, not the optimiser's freedom.
+  (3) Say plainly, every time, which epochs entered the loss: exp63's fits used
+  z=0.4 ONLY; every z > 0.4 number is an extrapolation of the same integral, and
+  the incumbent it is compared with was fitted at all five epochs.
