@@ -210,6 +210,28 @@ $\beta<0$. For $s_{\min}\ll R\ll s_{\max}$ and $\beta>0$ the bracket is $\Gamma(
 and the galaxy is a pure power law $R^{\beta}$; for $R\gg s_{\max}$ it converges to the
 total deposited mass $A\,s_{\max}^{\beta}/\beta$.
 
+**Is this the Sérsic profile?** No — but it is the Sérsic *integral*. The Sérsic
+curve of growth is $M(<R)/M_{\rm tot}=P\big(2n,\,b_n(R/R_e)^{1/n}\big)$: the cumulative
+of a Gamma$(2n)$ density in the variable $u=b_n(R/R_e)^{1/n}$, integrated over
+*radius* up to $R$. Eq. (5) is the cumulative of a Gamma$(\beta/c)$ density in
+$X=\ln2\,(s/R)^{c}$, integrated over *deposit size* up to $s_{\max}$ at fixed $R$;
+the radius enters only through the size ratio $(s/R)^{c}$. Both come from the same
+one-dimensional integral "power × stretched exponential" — the Sérsic profile's
+$\int x\,e^{-b x^{1/n}}dx$ and the gompertz kernel's $\int s^{\beta-1}e^{-\ln2 (s/R)^{c}}ds$
+— which is why the incomplete gamma function appears in both, with $n\leftrightarrow1/c$
+and $2n\leftrightarrow\beta/c$. As functions of radius they differ at both ends
+(`figures/04b_sersic_vs_deposition.png`): a Sérsic curve rises as $R^{2}$ at the
+centre (finite central density) and reaches its total through a stretched
+exponential; the deposition curve rises as $R^{\beta}$ — a power law of any slope,
+a cusp when $\beta<2$ — and reaches its total through the kernel's power-law tail,
+$1-M/M_{\rm tot}\propto(s_{\max}/R)^{c}$. Over the measured decade and a half the
+$\beta\approx1$ deposition curve does track a de Vaucouleurs ($n=4$) profile
+closely, which is why de Vaucouleurs-like galaxies come out of this class; the
+resemblance holds on a finite range, not asymptotically, and it is inherited from
+the kernel's stretched-exponential form (a modelling choice), not derived. The
+statement that *is* a prediction of the class is Eq. (4): the inner slope of the
+curve of growth is set by the halo's growth index and the efficiency law.
+
 The full DiffMAH curve rolls from $\alpha_e$ to $\alpha_l$ at $t_c$, so the incumbent's
 prediction is, structurally, a **rolling power law in radius**: inner slope
 $\beta(\alpha_e)$, outer slope $\beta(\alpha_l)$, transition near $s(t_c)$, cut-off at
