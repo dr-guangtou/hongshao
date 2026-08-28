@@ -704,6 +704,7 @@ ways to test that, both fitted with the frozen exponents:
 | `_frozen_binned_kpc` | 2.95 / 2.98 / 2.99 | −0.2 / −1.7 / −1.1 | +2.6 / +1.8 / +2.5 | **−2.8 / −2.2 / −1.0** | 2.9 | **1.50** | 1.34 | 2.857 |
 | `_frozen_binned_levers` ($R_{200c}$ form + `g_c,g_e,w_min`) | 2.85 (cap) / 3.47 / fail | +1.1 / −2.0 / −0.4 | +2.5 / −0.8 / +0.5 | **+0.4 / −3.7 / −1.4** | **1.7** | **1.16** | **1.44** | **2.796** |
 | `_frozen_sersic_binned_levers` | 2.95 / 2.96 / 2.96 (cap) | +1.0 / −4.0 / −2.6 | — | — | 1.8 | 1.50 | 1.44 | 2.858 |
+| `_frozen_binned_kpc_levers` (kpc form + `g_c,g_e,w_min`) | 2.89 / fail / 2.98 (cap) | −0.5 / −3.2 / −1.6 | +3.2 / +0.9 / +2.4 | **−1.1 / −1.3 / −0.7** | 1.8 | 1.41 | **1.42** | 2.811 |
 
 ("cap": the start used all 3000 evaluations; "fail": jitter0 started in a region
 where the model does not evaluate and stopped at once.)
@@ -725,7 +726,12 @@ where the model does not evaluate and stopped at once.)
    best production loss of any frozen fit (2.796; Stage 2 with four free time
    exponents: 2.764). The 5a slice that "disqualified" $g_c=-1/3$ was wrong for
    the reason recorded in `doc/lessons.md`: a slice from another optimum cannot
-   judge a reparameterisation whose other parameters all move.
+   judge a reparameterisation whose other parameters all move. The third
+   direction agrees: with the compact size already in kpc, the levers fit
+   chooses $g_c=-0.07$ and `w_min` = 0.02 — no residual mass dependence and no
+   floor are wanted once the size is physical — and puts the plane slope on the
+   truth (1.42) with the top tercile within 1.3 per cent at 2–5 kpc (rms 1.41,
+   D4 loss 2.811). The three products are one result seen three ways.
 2. **What the channels are, physically** (mass-weighted medians of the $z=0.4$
    stars; `single_epoch` numbers): a compact channel of 2.6–4 kpc with an
    exponential-like profile ($n_c$ 0.9–1.9), deposited at a median $z\approx2$–2.6,
@@ -788,9 +794,12 @@ Against the science plan's three requests:
    cross-epoch size coherence of a per-epoch layer — with no coherence parameter.
 
 What it does not do: declining centres (0 per cent against 42 — the deposition-only
-class, P8), the top halo-mass tercile's inner 3 kpc (−11 per cent), the $z\ge1.5$
-amplitude (−15 to −21 per cent at $z=2$ on the full sample), and the $z=0.4$
-assembly correlations (P9). The plan's §5 failure criteria: G1 did find two scales
+class, P8), the top halo-mass tercile's inner 3 kpc (−11 per cent — **repaired at
+$z=0.4$ by Stage 5**: the compact size in physical kpc, or a mass exponent that
+cancels $R_{200c}$'s, puts every halo-mass tercile within ±3 per cent at every
+radius; the extrapolation of that mean has not been looked at, by the user's
+rule), the $z\ge1.5$ amplitude (−15 to −21 per cent at $z=2$ on the full sample),
+and the $z=0.4$ assembly correlations (P9). The plan's §5 failure criteria: G1 did find two scales
 (not the first failure); the two-channel mean's $z=2$ B3 on the non-decliners is
 −0.048 dex against the baseline's +0.010 — worse by 0.058, past the 0.05 line the
 plan set, so by the plan's own rule the "one epoch fitted, four predicted" claim
