@@ -71,6 +71,24 @@ THETA_NAMES_GROWTH = THETA_NAMES + ("g_split",)
 #: reference is a fixed function set once from the sample (`set_alpha_ref`)
 #: and stored with the fit; it is not a fitted quantity.
 THETA_NAMES_GROWTH_REL = THETA_NAMES + ("g_rel",)
+#: The single-epoch round (2026-08-28): optional LEVERS, each nesting at zero.
+#:   g_c, g_e  halo-mass exponents on the two sizes, s = f (1+z)^b R200c(t')
+#:             (M(t') / 10^13)^g. Since R200c is proportional to M^(1/3) at
+#:             fixed z, g = -1/3 makes the deposit a FIXED PHYSICAL size at
+#:             every halo mass (Stage 1: the compact mode does not move with
+#:             halo mass; the model's s_c does, by R200c).
+#:   w_min     a floor on the compact share: w_c = w_min + (1 - w_min) sigma(.)
+#:             (the mass-only split sends the heaviest haloes' share to zero;
+#:             Stage 1 wants 0.43 in the top tercile).
+LEVER_NAMES = ("g_c", "g_e", "w_min")
+LEVER_PIVOT_LOGM = 13.0
+#: `Spec2(compact_in_kpc=True)`: the compact size is a PHYSICAL scale,
+#: s_c = 10^log_f_c (1+z)^b_c kpc, not a fraction of R200c(t'). Stage 1 found
+#: the compact mode at a fixed few kpc at every halo mass; tied to R200c(t')
+#: the model spreads a galaxy's compact deposits over ~10x in size along its
+#: history. Then `log_f_c` is log10(kpc) with bounds (-0.5, 1.5), and the
+#: nested incumbent is unchanged (compact share zero).
+COMPACT_KPC_BOUNDS = (-0.5, 1.5)
 _ALPHA_REF = {"lt": None, "alpha": None}
 
 
@@ -91,7 +109,9 @@ BOUNDS = {"a0": (-6.0, 2.0), "a_M": (-3.0, 3.0), "a_z": (-3.0, 3.0), "a_Mz": (-3
           "log_f_c": (-3.0, -0.5), "b_c": (-3.0, 3.0),
           "log_f_e": (-2.5, 0.0), "b_e": (-3.0, 3.0),
           "n_c": (0.5, 2.5), "c_e": (0.2, 8.0), "tau_d": (0.0, 3.0), "g_split": (-3.0, 3.0),
-          "g_rel": (-3.0, 3.0)}
+          "g_rel": (-3.0, 3.0), "g_c": (-1.5, 1.5), "g_e": (-1.5, 1.5), "w_min": (0.0, 0.95)}
+#: the extended kernel may also be a Sersic deposit; then `c_e` is its INDEX
+EXTENDED_SHAPE_BOUNDS = {"gompertz_log": (0.2, 8.0), "sersic": (0.5, 6.0)}
 TRUNC_C = 3.0
 COMPACT_FAMILY, EXTENDED_FAMILY = "sersic", "gompertz_log"
 #: quadrature for the FIT (checked against the full nodes in stage2_fit.py)
@@ -103,6 +123,21 @@ FULL_NODES = dict(n_early=8, n_node=24)
 class Spec2:
     theta_names: tuple = THETA_NAMES
     trunc_C: float = TRUNC_C
+    extended_family: str = EXTENDED_FAMILY
+    compact_in_kpc: bool = False
+
+    @staticmethod
+    def with_levers(levers=(), extended_family=EXTENDED_FAMILY, compact_in_kpc=False):
+        """The twelve parameters plus the named levers (subset of LEVER_NAMES)."""
+        bad = [l for l in levers if l not in LEVER_NAMES]
+        if bad:
+            raise ValueError(f"unknown levers {bad}; choose from {LEVER_NAMES}")
+        return Spec2(theta_names=THETA_NAMES + tuple(levers), extended_family=extended_family,
+                     compact_in_kpc=compact_in_kpc)
+
+    @property
+    def levers(self):
+        return tuple(n for n in self.theta_names if n in LEVER_NAMES)
 
     @staticmethod
     def with_delay():
@@ -133,7 +168,15 @@ class Spec2:
         return len(self.theta_names)
 
     def bounds(self):
-        return [BOUNDS[n] for n in self.theta_names]
+        out = []
+        for n in self.theta_names:
+            if n == "c_e":
+                out.append(EXTENDED_SHAPE_BOUNDS[self.extended_family])
+            elif n == "log_f_c" and self.compact_in_kpc:
+                out.append(COMPACT_KPC_BOUNDS)
+            else:
+                out.append(BOUNDS[n])
+        return out
 
     def unpack(self, theta):
         theta = np.asarray(theta, float)
@@ -143,6 +186,11 @@ class Spec2:
 
     def index(self, name):
         return self.theta_names.index(name)
+
+
+def with_levers_theta(theta12, spec2):
+    """Append the spec's levers at their nesting value (zero)."""
+    return np.r_[np.asarray(theta12, float), np.zeros(len(spec2.levers))]
 
 
 def nested_theta(theta_incumbent, delay=False, growth=False):
@@ -172,13 +220,15 @@ def clip_to_bounds(spec2, theta):
 
 def compact_share(theta_dict, logmh, alpha=None, lt_nodes=None):
     """The compact share of a deposit; `alpha` = dlnM/dlnt at the deposit,
-    used only when the spec carries `g_split`."""
+    used only when the spec carries `g_split`. `w_min` (a lever) floors it."""
     x = theta_dict["m_half"] - np.asarray(logmh, float)
     if "g_split" in theta_dict and alpha is not None:
         x = x + theta_dict["g_split"] * (np.asarray(alpha, float) - 1.0)
     if "g_rel" in theta_dict and alpha is not None:
         x = x + theta_dict["g_rel"] * (np.asarray(alpha, float) - alpha_ref(lt_nodes))
-    return expit(x / theta_dict["d_split"])
+    w = expit(x / theta_dict["d_split"])
+    w_min = theta_dict.get("w_min", 0.0)
+    return w_min + (1.0 - w_min) * w
 
 
 def hubble_gyr(z):
@@ -211,8 +261,10 @@ def _deposits2(spec2, theta, curves, lt, mode="analytic"):
     dmstar = 10.0 ** np.clip(E.log_eps_e2(eff, lm, z), -30, 10) * dm
     wc = compact_share(p, lm, alpha=dm / 10.0 ** lm, lt_nodes=lt)
     lz = np.log10(1.0 + z)
-    s_c = 10.0 ** np.clip(p["log_f_c"] + p["b_c"] * lz, -8, 2) * r200
-    s_e = 10.0 ** np.clip(p["log_f_e"] + p["b_e"] * lz, -8, 2) * r200
+    dlm = lm - LEVER_PIVOT_LOGM
+    s_c = 10.0 ** np.clip(p["log_f_c"] + p["b_c"] * lz + p.get("g_c", 0.0) * dlm, -8, 2) * (
+        1.0 if spec2.compact_in_kpc else r200)
+    s_e = 10.0 ** np.clip(p["log_f_e"] + p["b_e"] * lz + p.get("g_e", 0.0) * dlm, -8, 2) * r200
     return dmstar * wc, dmstar * (1.0 - wc), s_c, s_e, spec2.trunc_C * r200
 
 
@@ -230,10 +282,10 @@ def predict2(spec2, theta, curves, R, epochs=(0, 1, 2, 3, 4), truncate=True,
         n, N = dm_c.shape
         if truncate:
             Bc = M.cog_truncated(COMPACT_FAMILY, (p["n_c"],), s_c.ravel(), r_tr.ravel(), R)
-            Be = M.cog_truncated(EXTENDED_FAMILY, (p["c_e"],), s_e.ravel(), r_tr.ravel(), R)
+            Be = M.cog_truncated(spec2.extended_family, (p["c_e"],), s_e.ravel(), r_tr.ravel(), R)
         else:
             Bc = families.cog_unit(COMPACT_FAMILY, s_c.ravel(), (p["n_c"],), R)
-            Be = families.cog_unit(EXTENDED_FAMILY, s_e.ravel(), (p["c_e"],), R)
+            Be = families.cog_unit(spec2.extended_family, s_e.ravel(), (p["c_e"],), R)
         Bc = Bc.reshape(len(R), n, N); Be = Be.reshape(len(R), n, N)
         wc_ = dm_c * w[None, :]; we_ = dm_e * w[None, :]
         inc_e = arrival_include(spec2, p, lt, include)
@@ -322,6 +374,32 @@ if __name__ == "__main__":
     cg = channel_masses(sg, thg, curves); c0 = channel_masses(s2, th, curves)
     print(f"  (8) growth split: g_split = 0 nests bit for bit; g_split = -0.5 moves the median compact "
           f"share from {np.median(c0[:, 0] / c0.sum(1)):.3f} to {np.median(cg[:, 0] / cg.sum(1)):.3f}")
+    # (9) the levers nest at zero and move what they say they move
+    sl = Spec2.with_levers(LEVER_NAMES)
+    thl = with_levers_theta(th, sl)
+    assert np.array_equal(predict2(sl, thl, curves, R), d), "levers at zero do not nest"
+    thl_c = thl.copy(); thl_c[sl.index("g_c")] = -1.0 / 3.0
+    dl = predict2(sl, thl_c, curves, R)
+    lmh0 = np.array([E.log_mah(np.log10(E.T_ANCHOR[0]), hc) for hc in curves])
+    hi_, lo_ = lmh0 > np.median(lmh0), lmh0 <= np.median(lmh0)
+    r_hi = np.median(np.log10(dl[hi_, 0, 0] / d[hi_, 0, 0])); r_lo = np.median(np.log10(dl[lo_, 0, 0] / d[lo_, 0, 0]))
+    print(f"  (9) levers nest at zero; g_c = -1/3 moves M*(<2 kpc) at z=0.4 by {r_hi:+.3f} dex (heavier half) "
+          f"and {r_lo:+.3f} dex (lighter half)")
+    assert r_hi > r_lo
+    thl_w = thl.copy(); thl_w[sl.index("w_min")] = 0.5
+    pw = sl.unpack(thl_w)
+    assert compact_share(pw, np.array([15.0])) >= 0.5 - 1e-9
+    sk = Spec2.with_levers((), compact_in_kpc=True)
+    thk = th.copy(); thk[sk.index("log_f_c")] = np.log10(4.0)
+    dk = predict2(sk, thk, curves, R)
+    assert np.all(np.isfinite(dk)) and np.all(np.diff(dk, axis=2) >= -1e-9)
+    assert np.array_equal(predict2(sk, nested_theta(th_inc), curves, R), ref), "kpc compact: nested broken"
+    print("  (9) compact_in_kpc: the nested incumbent is unchanged; a 4 kpc compact channel evaluates and is monotone")
+    ss = Spec2.with_levers((), extended_family="sersic")
+    ths = th.copy(); ths[ss.index("c_e")] = 1.0
+    ds = predict2(ss, ths, curves[:5], R)
+    assert np.all(np.isfinite(ds)) and np.all(np.diff(ds, axis=2) >= -1e-9)
+    print("  (9) w_min floors the share; a Sersic extended kernel evaluates and is monotone")
     import time
     t0 = time.time(); predict2(s2, th, curves, R, epochs=(0,), nodes=FIT_NODES); dt = time.time() - t0
     print(f"  timing: z=0.4 only, fit nodes, {len(curves)} galaxies: {dt:.2f} s "

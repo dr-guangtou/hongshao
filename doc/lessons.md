@@ -1930,3 +1930,30 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   (3) Say plainly, every time, which epochs entered the loss: exp63's fits used
   z=0.4 ONLY; every z > 0.4 number is an extrapolation of the same integral, and
   the incumbent it is compared with was fitted at all five epochs.
+
+## 2026-08-28 (exp63 Stage 5, the single-epoch round): the loss can be blind to the gate
+
+- **A per-galaxy loss is nearly blind to a binned offset when the intrinsic
+  scatter dominates.** In the top halo-mass tercile the 2-5 kpc log residual has
+  a per-galaxy rms of 0.18 dex and a median offset of 0.065 dex; the production
+  loss (a mean over galaxies) trades the offset away for gains elsewhere, so a
+  lever that improves the binned average CoGs by evaluation (`w_min`) is railed
+  at zero by the fit, and every fit under that loss leaves the top tercile 11-17
+  per cent low. When the user's judgement is a binned average, put that
+  statistic in the objective (`--objective binned`) and say what it costs in the
+  production loss (1 per cent). Do not argue from the loss about what the gate
+  should show.
+- **A slice from the wrong optimum can mislead in both directions.** The lever
+  sweep (one parameter moved from Stage 2's optimum) said a fixed-kpc compact
+  size is disqualified; but the sweep held the deposit-weighted size fixed
+  through a mass pivot, and the R200c-tied size is the one structural feature
+  every product shares. A slice may disqualify a *lever*; it cannot disqualify a
+  *reparameterisation* whose other parameters would all move. Refit before
+  concluding (`--compact-kpc`).
+- **Guard every early return of a scoring function.** `scores()` returned a
+  4-tuple when fewer than ten galaxies evaluated; the loss indexed a fifth
+  element and the job died 20 minutes in, unnoticed until the process list was
+  checked. Check `ps` for every launched job, not only its log.
+- **A median in the objective is piecewise-smooth**: the binned fits' three
+  starts spread 3.29-3.48 where the production-loss fits agreed to 1e-6. Report
+  the spread and the best; consider a smooth (mean-log) proxy if the term stays.

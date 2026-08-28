@@ -2345,6 +2345,33 @@ Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); 
   user). README closing section "What exp63 delivered" written. Branch NOT
   pushed; nothing merged.
 
+### exp63 Stage 5 — the single-epoch round (2026-08-28, the user's direction)
+
+Focus on z=0.4 ONLY; judge by the average CoGs in halo- and stellar-mass
+terciles and the planes (`single_epoch.py --gate`); targets: the top halo-mass
+tercile (Stage 2: -12% at 2-4 kpc) and the outskirts. Every fit freezes the time
+exponents (a_z, a_Mz, b_e at the incumbent's; b_c = 0). No z > 0.4 number is
+quoted until z=0.4 passes the gate.
+
+- [x] `stage2_fit.py --freeze`, `--levers`, `--extended-family`, `--objective outer`,
+  `--tag`; `model2.py` levers g_c / g_e / w_min and a Sersic extended kernel,
+  nested at zero (self-check (9)).
+- [x] `single_epoch.py`: the z=0.4 gate table + overlay figure; the lever sweep
+  by evaluation. Sweep verdict: `w_min` and a Sersic extended kernel promoted;
+  a compact size fixed in kpc (g_c = -1/3) DISQUALIFIED (top tercile -20%);
+  g_e, c_e, m_half, d_split not levers.
+- [x] Fits (frozen exponents): `_frozen` (7/7 agree, rms(h) 4.52 — worse than
+  Stage 2's 3.89: freezing costs the top tercile), `_frozen_sersic` (3.76),
+  `_frozen_wmin` (w_min railed at 0), `_frozen_outer` (4.37, no help),
+  `_frozen_binned` (3.16; the objective that reads the gate).
+- [x] The structural lever: the compact size in PHYSICAL kpc (`--compact-kpc`):
+  `_frozen_binned_kpc` rms 1.50, every tercile within +-3%; the size levers on
+  the R200c form (`_frozen_binned_levers`, g_c = -0.45) rms 1.16, plane slope
+  1.44 (truth 1.42), D4 loss 2.796 (best of any frozen fit).
+- [ ] `_frozen_binned_kpc_levers` (running). Then the user reads the z=0.4 gate
+  figures and picks the candidate; only then the extrapolation (both samples),
+  which is also what separates the compact-share / extended-core degeneracy.
+
 ### Bookkeeping found by the 2026-08-28 probe (not yet acted on)
 
 - [ ] The z=0.4-anchored `diffmah_*` columns of

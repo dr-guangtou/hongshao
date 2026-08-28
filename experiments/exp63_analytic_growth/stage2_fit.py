@@ -40,6 +40,31 @@ twelve at z=0.4; outputs carry the `_tauX` tag.
 growth rate at the deposit (Stage 2c); outputs carry the `_growth` tag.
 `--growth-rel` uses the growth rate RELATIVE to the population's typical rate at
 that time (Stage 2d); outputs carry the `_growthrel` tag.
+`--freeze name=value[,name=value...]` holds the named parameters at the given
+values in every start (equal-bounds box; they are not fitted and not counted as
+railed). The single-epoch round (2026-08-28, the user's direction) freezes the
+time exponents a_z, a_Mz, b_e at the incumbent's values and b_c at 0 — one epoch
+cannot constrain a time exponent. `--tag X` appends X to the output tag.
+`--levers g_c,g_e,w_min` adds the named levers of `model2.LEVER_NAMES` (each
+nests at zero; the nested start still reproduces the incumbent);
+`--extended-family sersic` makes the extended deposit a Sersic profile whose
+index is the `c_e` slot (then no start nests the incumbent). Both are recorded
+in the fit file and re-read by `--eval-only`.
+`--objective outer` adds a fourth, OUTSKIRT-AWARE term to the loss: the rms
+over galaxies of log10(model/data) of the outer annulus mass M*(50-148 kpc),
+divided by its value for the nested incumbent (so 1 at the null). The
+production shape loss pins the amplitude at 100 kpc and sees only three radii
+beyond it (memory: the loss is blind past its own pin); this term prices the
+outskirts explicitly. Recorded in the fit file.
+`--compact-kpc` sizes the compact channel in physical kpc (`model2.Spec2(compact_in_kpc=True)`;
+`log_f_c` is then log10 kpc); recorded in the fit file.
+`--objective binned` adds instead the term the VISUAL GATE reads: the rms over
+the three halo-mass terciles and the 24 radii of the tercile-MEDIAN fractional
+residual (model-data)/data at z=0.4, divided by its value for the nested
+incumbent. Why: the per-galaxy terms are dominated by the intrinsic scatter of
+the centre (rms 0.18 dex at 2-5 kpc in the top tercile) that no mean model can
+reduce, so they are nearly blind to the binned median offset (0.065 dex there)
+that the average CoGs show; this term prices that offset directly.
 """
 from __future__ import annotations
 
@@ -83,8 +108,16 @@ MAX_EVALS = {"smoke": 60, "full": 3000}
 class Problem2:
     """The z=0.4 objective on the fit mask."""
 
-    def __init__(self, spec2, curves, data, fit_rows, R, l_s_ref=None):
+    def __init__(self, spec2, curves, data, fit_rows, R, l_s_ref=None, outer=False, l_o_ref=None,
+                 binned=False, lmh=None, l_b_ref=None):
         self.spec2, self.R = spec2, R
+        self.outer, self.l_o_ref = outer, l_o_ref
+        self.binned, self.l_b_ref = binned, l_b_ref
+        self.i50 = int(np.argmin(np.abs(R - 50.0)))
+        if binned:
+            lm = np.asarray(lmh, float)[fit_rows]
+            e = np.quantile(lm, [0, 1 / 3, 2 / 3, 1])
+            self.terciles = [(lm >= e[b]) & (lm <= e[b + 1] + 1e-9) for b in range(3)]
         self.curves = [curves[i] for i in fit_rows]
         d = data[fit_rows, 0, :]
         self.d = d
@@ -113,21 +146,40 @@ class Problem2:
         P_m = F_m * self.d[good][:, None, F.I100][:, :, None]
         l_s = float(self.obj_S(P_m, self.D_msun[good], self.R))
         score_S = l_s / self.l_s_ref if self.l_s_ref else l_s
-        return score_A, score_F, score_S, n_bad
+        if self.binned:
+            rel = (mg - self.d[good]) / self.d[good]
+            med = np.array([np.median(rel[t[good]], axis=0) for t in self.terciles])
+            l_b = float(np.sqrt(np.mean(med ** 2)))
+            return score_A, score_F, score_S, n_bad, (l_b / self.l_b_ref if self.l_b_ref else l_b)
+        if not self.outer:
+            return score_A, score_F, score_S, n_bad
+        d = self.d[good]
+        o_m = np.clip(mg[:, -1] - mg[:, self.i50], 1.0, None)
+        o_d = np.clip(d[:, -1] - d[:, self.i50], 1.0, None)
+        l_o = float(np.sqrt(np.mean(np.log10(o_m / o_d) ** 2)))
+        score_O = l_o / self.l_o_ref if self.l_o_ref else l_o
+        return score_A, score_F, score_S, n_bad, score_O
 
     def loss(self, theta):
         self.n_eval += 1
-        a, f, s, n_bad = self.scores(theta)
-        if not np.all(np.isfinite([a, f, s])):
+        sc = self.scores(theta)
+        a, f, s, n_bad = sc[:4]
+        if len(sc) < 5 and (self.outer or self.binned):
+            return F.FAIL                                # scores() bailed: too few galaxies evaluate
+        o = sc[4] if (self.outer or self.binned) else 0.0
+        if not np.all(np.isfinite([a, f, s, o])):
             return F.FAIL
-        return a * a + f * f + s * s + F.FAIL * n_bad / len(self.curves)
+        return a * a + f * f + s * s + o * o + F.FAIL * n_bad / len(self.curves)
 
 
 def starts_for(spec2, th_inc, rng):
-    base = M2.default_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split)
+    base = M2.with_levers_theta(M2.default_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split), spec2)
     lo, hi = np.array(spec2.bounds()).T
-    out = [("nested", M2.clip_to_bounds(spec2, M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split))),
-           ("default", base)]
+    nested = M2.with_levers_theta(M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split), spec2)
+    if spec2.compact_in_kpc:
+        base[spec2.index("log_f_c")] = np.log10(4.0)
+        nested[spec2.index("log_f_c")] = np.log10(4.0)
+    out = [("nested", M2.clip_to_bounds(spec2, nested)), ("default", base)]
     for k in range(4):
         j = base + rng.normal(0, 0.05, base.shape) * np.maximum(np.abs(base), 0.3)
         out.append((f"jitter{k}", np.clip(j, lo, hi)))
@@ -140,13 +192,13 @@ def inner_slope(cogs, R):
     return np.log10(cogs[..., I3] / cogs[..., 0]) / np.log10(R[I3] / R[0])
 
 
-def railed(spec2, theta, tol=1e-3):
-    lo, hi = np.array(spec2.bounds()).T
+def railed(spec2, theta, tol=1e-3, bounds=None):
+    lo, hi = np.array(bounds if bounds is not None else spec2.bounds()).T
     return [n for n, v, a, b in zip(spec2.theta_names, theta, lo, hi)
-            if v - a < tol * max(abs(a), 1) or b - v < tol * max(abs(b), 1)]
+            if b - a > tol and (v - a < tol * max(abs(a), 1) or b - v < tol * max(abs(b), 1))]
 
 
-def gates(name, cogs, data, lmh, good, spec2, theta, curves):
+def gates(name, cogs, data, lmh, good, spec2, theta, curves, bounds=None):
     """The G2 table for one product. Returns dict gate -> (value_str, passed)."""
     R = F.R_GRID
     out = {}
@@ -176,7 +228,7 @@ def gates(name, cogs, data, lmh, good, spec2, theta, curves):
     out["G2e sizes physical"] = (f"log f_c {p['log_f_c']:+.2f} (0.02 -> {G2E_LOG_F_C:+.2f}), log f_e {p['log_f_e']:+.2f}",
                                  p["log_f_c"] < p["log_f_e"] and abs(p["log_f_c"] - G2E_LOG_F_C) <= G2E_TOL)
     share = float(M2.compact_share(p, 13.5))
-    rl = railed(spec2, theta)
+    rl = railed(spec2, theta, bounds=bounds)
     out["G2f identifiable"] = (f"railed {rl or 'none'}; compact share at 10^13.5 = {share:.2f}",
                                not rl and 0.05 <= share <= 0.95)
     print(f"\n  GATES — {name}")
@@ -210,21 +262,52 @@ def leverage_model(spec2, theta, curves, lmh):
 
 
 # --------------------------------------------------------------------------- #
-def _spec(delay, growth, growth_rel=False):
+def _spec(delay, growth, growth_rel=False, levers=(), extended_family=M2.EXTENDED_FAMILY, compact_in_kpc=False):
     if delay:
         return M2.Spec2.with_delay()
     if growth_rel:
         return M2.Spec2.with_growth_rel()
     if growth:
         return M2.Spec2.with_growth_split()
-    return M2.Spec2()
+    return M2.Spec2.with_levers(levers, extended_family=extended_family, compact_in_kpc=compact_in_kpc)
 
 
-def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, growth_rel=False):
+def spec_from_fit(fz):
+    """Rebuild the Spec2 a fit file was made with."""
+    names = tuple(str(n) for n in fz["theta_names"])
+    fam = str(fz["extended_family"]) if "extended_family" in fz.files else M2.EXTENDED_FAMILY
+    if "tau_d" in names:
+        return M2.Spec2.with_delay()
+    if "g_rel" in names:
+        return M2.Spec2.with_growth_rel()
+    if "g_split" in names:
+        return M2.Spec2.with_growth_split()
+    kpc = bool(fz["compact_in_kpc"]) if "compact_in_kpc" in fz.files else False
+    return M2.Spec2.with_levers(tuple(n for n in names if n in M2.LEVER_NAMES), extended_family=fam,
+                                compact_in_kpc=kpc)
+
+
+def parse_freeze(arg):
+    """'a_z=0.505,b_c=0' -> {'a_z': 0.505, 'b_c': 0.0}."""
+    if not arg:
+        return {}
+    return {kv.split("=")[0]: float(kv.split("=")[1]) for kv in arg.split(",")}
+
+
+def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, growth_rel=False,
+            freeze=None, levers=(), extended_family=M2.EXTENDED_FAMILY, objective="production",
+            compact_in_kpc=False):
+    freeze = freeze or {}
+    outer, binned = objective == "outer", objective == "binned"
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = _spec(delay, growth, growth_rel)
+    spec2 = _spec(delay, growth, growth_rel, levers, extended_family, compact_in_kpc)
+    if compact_in_kpc:
+        print("  compact channel sized in PHYSICAL kpc (log_f_c = log10 kpc)")
+    if levers or extended_family != M2.EXTENDED_FAMILY:
+        print(f"  levers {list(levers) or 'none'}; extended kernel {extended_family}; "
+              f"{spec2.n_theta} parameters")
     if growth_rel:
         lt_ref, a_ref = M2.set_alpha_ref(curves)
         print(f"  alpha_ref(t): population-median dlnM/dlnt at the nodes, {a_ref.min():.2f}-{a_ref.max():.2f}")
@@ -233,26 +316,43 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
         # tau_d set from physics, not fitted: an equal-bounds box freezes it
         bounds[spec2.index("tau_d")] = (tau_fixed, tau_fixed)
         print(f"  tau_d FIXED at {tau_fixed} Hubble times at accretion (not fitted)")
+    for nm, val in freeze.items():
+        bounds[spec2.index(nm)] = (val, val)
+        print(f"  {nm} FROZEN at {val:+.4f} (not fitted)")
     fit_rows = np.where(np.asarray(mask, bool)[:, 0] & np.isfinite(data[:, 0]).all(1)
                         & (data[:, 0] > 0).all(1))[0]
     print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies (sane + mh-complete at z=0.4)")
 
     # the shells/log reference: the NESTED incumbent on the exact engine (frozen)
-    pr = Problem2(spec2, curves, data, fit_rows, R, l_s_ref=None)
-    th_nested = M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split)
-    a, f, s_raw, nb = pr.scores(th_nested)
-    pr.l_s_ref = s_raw
-    a, f, s, nb = pr.scores(th_nested)
+    # the references (shells/log, and the outer term if used) are ALWAYS the
+    # gompertz_log nested incumbent on the exact engine, whatever the family
+    pr_ref = Problem2(M2.Spec2(), curves, data, fit_rows, R, l_s_ref=None, outer=outer, l_o_ref=None,
+                      binned=binned, lmh=lmh[:, 0], l_b_ref=None)
+    ref = pr_ref.scores(M2.nested_theta(th_inc))
+    pr = Problem2(spec2, curves, data, fit_rows, R, l_s_ref=ref[2], outer=outer,
+                  l_o_ref=(ref[4] if outer else None), binned=binned, lmh=lmh[:, 0],
+                  l_b_ref=(ref[4] if binned else None))
+    print(f"  references from the nested incumbent: shells/log {ref[2]:.5f}"
+          + (f", outer log-rms M*(50-148) {ref[4]:.5f} dex" if outer else "")
+          + (f", binned tercile-median rms {100 * ref[4]:.3f}%" if binned else "") + " (each -> 1 by definition)")
+    th_nested = M2.with_levers_theta(M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split), spec2)
+    sc = pr.scores(th_nested)
+    a, f, s, nb = sc[:4]
     l_null = pr.loss(th_nested)
-    print(f"  the null (nested incumbent, exact engine, z=0.4): score_A {a:.4f}, score_F {f:.4f}, "
-          f"shells/log {s_raw:.5f} (-> score_S = 1 by definition), loss {l_null:.6f}, failures {nb}")
-    a2, f2, s2, _ = pr.scores(th_nested, nodes=M2.FULL_NODES)
-    print(f"  the same on the full nodes: {a2:.4f} / {f2:.4f} / {s2:.4f} (fit nodes are adequate)")
+    print(f"  the null (nested incumbent{'' if spec2.extended_family == M2.EXTENDED_FAMILY else ' — NOT a nesting under this family'}, "
+          f"exact engine, z=0.4): score_A {a:.4f}, score_F {f:.4f}, score_S {s:.4f}"
+          + (f", score_O {sc[4]:.4f}" if outer else "") + (f", score_B {sc[4]:.4f}" if binned else "")
+          + f", loss {l_null:.6f}, failures {nb}")
+    sc2 = pr.scores(th_nested, nodes=M2.FULL_NODES)
+    print(f"  the same on the full nodes: {sc2[0]:.4f} / {sc2[1]:.4f} / {sc2[2]:.4f} (fit nodes are adequate)")
 
     rng = np.random.default_rng(63)
     starts = starts_for(spec2, th_inc, rng)
     if tau_fixed is not None:
         starts = [(nm, np.r_[th[:-1], tau_fixed]) for nm, th in starts]
+    for nm, val in freeze.items():
+        for _, th in starts:
+            th[spec2.index(nm)] = val
     if starts_sel is not None:
         a_, b_ = starts_sel
         starts = starts[a_:b_ + 1]
@@ -265,7 +365,7 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
         r = minimize_loss(pr.loss, p0, method="lbfgsb", bounds=bounds,
                           max_evals=max_evals, fd_step=1e-5)
         dt = time.time() - t0
-        rl = railed(spec2, r.x)
+        rl = railed(spec2, r.x, bounds=bounds)
         print(f"  start {name:<11} loss {l0:.6f} -> {r.fun:.6f}  ({pr.n_eval} evals, {dt / 60:.1f} min)"
               f"{'  RAILED: ' + ','.join(rl) if rl else ''}", flush=True)
         results.append(dict(name=name, theta0=p0, theta=np.asarray(r.x), loss=float(r.fun),
@@ -286,6 +386,10 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     if growth_rel:
         extra = dict(alpha_ref_lt=M2._ALPHA_REF["lt"], alpha_ref=M2._ALPHA_REF["alpha"])
     np.savez(out, theta_best=best["theta"], loss_best=best["loss"], best_name=best["name"], **extra,
+             frozen_names=np.array(list(freeze)), frozen_values=np.array(list(freeze.values())),
+             bounds=np.array(bounds), extended_family=spec2.extended_family, objective=objective,
+             compact_in_kpc=spec2.compact_in_kpc,
+             l_o_ref=(pr.l_o_ref if outer else np.nan), l_b_ref=(pr.l_b_ref if binned else np.nan),
              names=np.array([q["name"] for q in results]),
              thetas=np.array([q["theta"] for q in results]),
              losses=np.array([q["loss"] for q in results]),
@@ -299,10 +403,10 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
-    spec2 = _spec(delay, growth, growth_rel)
-    if growth_rel:
-        M2.set_alpha_ref(curves)
     fz = np.load(OUTDIR / f"stage2_fit{tag}.npz", allow_pickle=True)
+    spec2 = spec_from_fit(fz)
+    if spec2.growth_rel:
+        M2.set_alpha_ref(curves)
     theta = np.asarray(fz["theta_best"], float)
     th_nested = np.asarray(fz["theta_nested"], float)
     print(f"  best theta ({str(fz['best_name'])}, loss {float(fz['loss_best']):.6f} vs null "
@@ -319,7 +423,8 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
           + "/".join(f"{int(msk[:, j].sum())}" for j in range(5)) + " per epoch")
 
     g_null = gates("baseline (nested incumbent, exact engine)", cogs["baseline"], data, lmh, good, spec2, th_nested, curves)
-    g_fit = gates("stage2 two-channel fit", cogs["stage2"], data, lmh, good, spec2, theta, curves)
+    g_fit = gates("stage2 two-channel fit", cogs["stage2"], data, lmh, good, spec2, theta, curves,
+                  bounds=(fz["bounds"] if "bounds" in fz.files else None))
 
     print(f"\n{RULE}\nPREDICTIONS at z=0.7-2.0 (never fitted) — median relative bias [%], all / fit mask\n{RULE}")
     out = {}
@@ -491,7 +596,13 @@ if __name__ == "__main__":
     tau_fixed = float(args[args.index("--tau-fixed") + 1]) if "--tau-fixed" in args else None
     growth = "--growth" in args
     growth_rel = "--growth-rel" in args
-    tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else ("_growthrel" if growth_rel else ("_growth" if growth else "")))) + ("_smoke" if smoke else "")
+    freeze = parse_freeze(args[args.index("--freeze") + 1]) if "--freeze" in args else {}
+    levers = tuple(args[args.index("--levers") + 1].split(",")) if "--levers" in args else ()
+    ext_fam = args[args.index("--extended-family") + 1] if "--extended-family" in args else M2.EXTENDED_FAMILY
+    objective = args[args.index("--objective") + 1] if "--objective" in args else "production"
+    compact_kpc = "--compact-kpc" in args
+    tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else ("_growthrel" if growth_rel else ("_growth" if growth else ""))))
+    tag += (args[args.index("--tag") + 1] if "--tag" in args else "") + ("_smoke" if smoke else "")
     sel = None
     if "--starts" in args:
         a_, b_ = args[args.index("--starts") + 1].split("-")
@@ -499,6 +610,8 @@ if __name__ == "__main__":
     print(f"{RULE}\nexp63 STAGE 2 — the two-channel mean, fitted at z=0.4 only"
           f"{' (SMOKE)' if smoke else ''}\n{RULE}\n")
     if "--eval-only" not in args:
-        run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth, growth_rel=growth_rel)
+        run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth, growth_rel=growth_rel,
+                freeze=freeze, levers=levers, extended_family=ext_fam, objective=objective,
+                compact_in_kpc=compact_kpc)
     if "--fit-only" not in args:
         run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel)

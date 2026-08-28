@@ -559,6 +559,202 @@ distribution falls below the mean — a property of any multiplicative noise, no
 fit defect; a median-preserving convention is a one-line change and is left as a
 reporting decision.
 
+## Stage 5 — the single-epoch round: z=0.4 only, judged by the binned average CoGs (2026-08-28)
+
+**The user's direction after Stage 2.** Stage 2 is not a clear $z=0.4$ improvement
+by the binned average curves of growth (`qa_bins` / `qa_bins_ms`): the top
+halo-mass tercile is $-12$ per cent at 2–4 kpc, and its extrapolation to earlier
+epochs tilts. So this round looks at **$z=0.4$ only**, judges every candidate by
+the average CoGs in halo- and stellar-mass terciles and the planes (the *visual
+gate*, `single_epoch.py --gate`), and does not quote any $z>0.4$ number until
+$z=0.4$ is right. Every fit in this round **freezes the four time exponents** —
+$a_z$, $a_{Mz}$, $b_e$ at the incumbent's values ($+0.505$, $+0.318$, $-0.896$) and
+$b_c$ at 0 (the incumbent has no compact channel; 0 means "a fixed fraction of
+$R_{200c}$ at the deposit") — because a single epoch cannot constrain a time
+exponent, and Stage 2's free exponents were what tilted its extrapolation
+(`stage2_fit.py --freeze`). The incumbent it is compared with was fitted at five
+epochs; this is said wherever it is compared.
+
+**What the gate reads.** For each product at $z=0.4$: the median
+(model$-$data)/data per halo-mass tercile at 2, 3.7, 4.9, 10, 33, 103 and 148 kpc,
+raw and amplitude-pinned (model scaled to the data's $M_*(<100)$); the worst
+central ($\le5$ kpc) and outskirt ($\ge50$ kpc) tercile residual; the rms of the
+tercile residual over all radii ("rms(h)"); the two kpc planes' slope and scatter;
+the same at 148 kpc by stellar-mass tercile; the loss components. One overlay
+figure per comparison, `figures/exp63_single_epoch_gate*.png` (median CoGs and
+residuals by halo-mass tercile; residuals by stellar-mass tercile).
+
+### 5a — the lever sweep by evaluation (no fit; `single_epoch.py --sweep`, log `outputs/single_epoch_sweep.log`)
+
+Standing method: sweep a candidate's gate leverage by evaluation before spending
+a fit; a slice may disqualify, never promote. Every lever moved one at a time from
+the Stage 2 solution (so the loss can only rise); the size exponents `g_c`/`g_e`
+have their `log_f` compensated so only the *trend* with halo mass changes. Top
+halo-mass tercile mean raw residual at 2–5 kpc, worst central and outskirt
+tercile residuals, rms over terciles and radii, and the (unrefitted) loss:
+
+| lever | top-tercile centre | worst centre | worst outskirt | rms(h) | loss |
+|---|---|---|---|---|---|
+| Stage 2 (base) | −12.5 % | 14.0 % | 2.4 % | 3.89 | 2.764 |
+| `w_min` = 0.1 (compact share floored) | **−6.6** | **8.4** | 2.6 | **3.26** | 2.868 |
+| `w_min` = 0.2 | −0.8 | 7.2 | 6.1 | 6.82 | 3.197 |
+| `g_c` = −1/3 (compact size fixed in kpc) | −20.3 | 47.4 | 2.4 | 13.30 | 3.604 |
+| `g_c` = +0.15 | −9.2 | 18.8 | 2.6 | 4.95 | 2.934 |
+| `g_e` = ±0.15 | −12.8 / −11.9 | 14.1 / 13.5 | 3.6 | 4.66 / 3.84 | 2.837 / 2.827 |
+| `c_e` = 0.5 (extended core steeper) | +0.8 | 10.3 | 7.9 | 8.49 | 4.402 |
+| `n_c` = 1.0 | −9.9 | 11.6 | 2.4 | 3.62 | 2.787 |
+| `m_half` = 13.3 | +1.2 | 10.0 | 5.4 | 7.67 | 3.299 |
+| `d_split` = 0.4 | −4.1 | 14.4 | 6.9 | 6.42 | 3.094 |
+| extended kernel Sérsic $n_e$ = 1 | −9.8 | 11.7 | 3.9 | **3.17** | 2.918 |
+| extended kernel Sérsic $n_e$ = 2 | **−6.0** | **8.0** | **1.7** | 3.85 | 3.010 |
+| extended kernel Sérsic $n_e$ = 4 | +3.6 | 11.5 | 5.4 | 7.53 | 3.764 |
+
+What it means. Two levers reach the top tercile's centre without breaking the
+other two terciles or the outskirts, and are promoted to fits: **a floor on the
+compact share** (`w_min`; the mass-only logistic sends the heaviest haloes' share
+toward zero while Stage 1 wants 0.43 in the top tercile), and **the extended
+kernel's family** (a Sérsic deposit of index 1–2 in place of the cored
+`gompertz_log`: more central mass from the extended stars themselves, and the
+best outskirts of any row). Two are disqualified: **a compact size fixed in
+physical kpc** (`g_c` = −1/3, the hypothesis that the model's $s_c\propto R_{200c}(t')$
+makes the top tercile's compact deposits too large) makes the top tercile −20 per
+cent and the low tercile −47 per cent — because the size is set by the halo mass
+*at the deposit*, which is $10^{12}$–$10^{12.5}$ for most compact stars whatever
+the final mass, the mass exponent acts on the early deposits, not on the final
+tercile; and the extended size's mass exponent `g_e` moves nothing. `c_e`,
+`m_half`, `d_split` reach the centre only by breaking the outskirts. Note that the
+gate and the loss disagree at `n_c`: the gate prefers 1.0 (rms 3.62 against 3.89),
+the loss 0.75 — the loss is a mean over galaxies of per-galaxy residuals, the gate
+a median over a tercile; recorded, not acted on.
+
+### 5b — the fits with frozen exponents, at the gate (`single_epoch.py --gate`, logs `outputs/single_epoch_gate_*.log`)
+
+Every fit: $z=0.4$ only, the 2397 sane + mh-complete galaxies, $a_z$, $a_{Mz}$,
+$b_c$, $b_e$ frozen as above, L-BFGS-B from three starts (seven for `_frozen`),
+each converged (no start hit the evaluation cap). "loss" is always the
+production D4 loss, whatever objective the fit used, so the column compares.
+Median (model$-$data)/data by halo-mass tercile, raw, at 2 / 3.7 / 4.9 kpc and
+the worst outskirt ($\ge50$ kpc) residual; rms over terciles and radii; the
+slope of $M_*(30\text{–}50)|M_*(<30)$ (truth 1.42):
+
+| product (fit file tag) | starts agree | low tercile 2/3.7/4.9 kpc | mid | **top** | worst outskirt | rms(h) | plane slope | D4 loss |
+|---|---|---|---|---|---|---|---|---|
+| incumbent, exact engine (five-epoch fit) | — | +17.8 / −0.6 / −2.5 | +19.3 / +2.9 / +1.9 | +9.5 / −2.1 / −1.2 | 4.0 | 4.98 | 1.26 | 3.166 |
+| Stage 2 (free exponents) | 7/7 | −2.4 / −6.5 / −5.3 | −2.6 / −6.1 / −4.0 | **−12.2 / −13.4 / −10.5** | 2.4 | 3.89 | 1.59 | 2.764 |
+| `_frozen` | 7/7 at 2.86082 | +4.4 / −6.0 / −5.6 | +3.0 / −6.0 / −5.6 | **−11.1 / −17.0 / −14.1** | 2.6 | 4.52 | 1.51 | 2.861 |
+| `_frozen_sersic` (extended kernel Sérsic, $n_e$ = 2.4) | 3/3 | −3.3 / −6.3 / −4.1 | −3.3 / −6.1 / −4.1 | **−10.8 / −13.1 / −10.9** | 2.5 | 3.76 | — | 2.815 |
+| `_frozen_wmin` (compact-share floor) | `w_min` railed at 0 | = `_frozen` | | | | | | 2.861 |
+| `_frozen_outer` (+ outskirt term $M_*(50\text{–}148)$) | 3/3 | +2.3 / −8.8 / −8.4 | +3.1 / −6.5 / −6.1 | **−8.0 / −15.2 / −12.0** | 3.2 | 4.37 | 1.48 | 2.869 |
+| `_frozen_binned` (+ the tercile-median term) | 3.29 / 3.32 / 3.48 | +10.6 / −2.9 / −3.2 | +10.1 / −1.4 / −1.7 | **−2.8 / −10.7 / −8.0** | **1.8** | **3.16** | **1.43** | 2.891 |
+
+What it means, in order:
+
+1. **Freezing the exponents costs the top tercile.** With the incumbent's time
+   exponents the two-channel mean is *worse* at the gate than Stage 2 (rms 4.52
+   against 3.89; top tercile −17 per cent at 3.7 kpc). Stage 2's free exponents
+   were doing real work at $z=0.4$ — the price of not tilting the extrapolation.
+2. **The production loss is nearly blind to what the gate reads.** In the top
+   tercile the per-galaxy rms of the $2$–$5$ kpc log residual is 0.18 dex (the
+   intrinsic diversity of the centre, memory `halo-history-knows-a-little-about-the-core`)
+   against a median offset of 0.065 dex; both the galaxies whose centres
+   declined and those that did not are low there (Stage 2: −7 and −15 per cent).
+   A loss that is a mean over galaxies of per-galaxy residuals is dominated by
+   the scatter it cannot reduce, so it trades the binned offset away for gains
+   elsewhere: the compact-share floor `w_min`, which improved the gate by
+   evaluation, is railed at zero by the fit; the Sérsic extended kernel wins the
+   loss (2.815) and leaves the top tercile where it was.
+3. **Pricing the binned average CoG directly (`--objective binned`) moves the
+   gate most**: rms 3.16, the best outskirts (1.8 per cent), the plane slope on
+   the truth (1.43 against 1.42), for 1 per cent of the production loss. Its
+   three starts do not agree (3.29–3.48; a median is piecewise-smooth, so
+   L-BFGS-B on finite differences stalls in different places — the best start
+   is reported and the spread is stated). What it cannot do: hold 2 kpc and
+   4 kpc at once — the low and mid terciles rise to +10 per cent at 2 kpc as the
+   top tercile's 4 kpc improves. That is the incumbent's 3–5 kpc dip (Stage 0,
+   Result 0) now inside the compact channel: one Sérsic index and one
+   $R_{200c}$-scaled size for every compact deposit give a fixed curvature over
+   2–5 kpc, and the data's median curvature differs between terciles.
+4. The outskirt term does nothing at the gate: by halo-mass tercile the
+   outskirts were already within 2–3 per cent, and the $\pm10$–17 per cent at
+   148 kpc by *stellar-mass* tercile is the regression-to-the-mean of a mean
+   with no scatter about it (the `qa_bins_ms` caveat) — a property of every mean
+   model here, incumbent included (+20 / −10), and not something an objective
+   term on the mean can remove.
+
+### 5c — the compact channel in physical kpc, and the size levers (2026-08-28)
+
+Every product of 5b shares one residual: 2 kpc high relative to 3.7–4.9 kpc, in
+every tercile, whatever the objective or the extended kernel — the compact
+channel's *curvature* over 2–5 kpc is wrong. In Stage 2's form the compact size
+is $s_c = f_c\,R_{200c}(t')$: tied to the halo's radius at the deposit, it spreads
+one galaxy's compact deposits over a factor ~10 in size along its history, while
+Stage 1 read a *narrow* compact mode at a fixed few kpc at every halo mass. Two
+ways to test that, both fitted with the frozen exponents:
+
+- `--compact-kpc`: $s_c = 10^{\log f_c}$ kpc, a physical scale (`model2.Spec2(compact_in_kpc=True)`;
+  the nested incumbent is unchanged);
+- the size levers on the $R_{200c}$ form: $s = f\,(1+z)^b R_{200c}(t')\,(M(t')/10^{13})^{g}$
+  for both channels (`g_c`, `g_e`; $g=-1/3$ cancels $R_{200c}\propto M^{1/3}$), plus the
+  compact-share floor `w_min` (`--levers g_c,g_e,w_min`).
+
+| product (tag) | starts (binned-objective loss) | low 2/3.7/4.9 kpc | mid | top | worst outskirt | rms(h) | plane slope | D4 loss |
+|---|---|---|---|---|---|---|---|---|
+| `_frozen_binned` (5b, for reference) | 3.29 / 3.32 / 3.48 | +10.6 / −2.9 / −3.2 | +10.1 / −1.4 / −1.7 | −2.8 / −10.7 / −8.0 | 1.8 | 3.16 | 1.43 | 2.891 |
+| `_frozen_kpc` (production loss) | 3/3 agree | −6.5 / −5.9 / −4.0 | −4.6 / −3.6 / −1.8 | −13.1 / −11.1 / −8.1 | 2.7 | 3.65 | 1.40 | **2.817** |
+| `_frozen_binned_kpc` | 2.95 / 2.98 / 2.99 | −0.2 / −1.7 / −1.1 | +2.6 / +1.8 / +2.5 | **−2.8 / −2.2 / −1.0** | 2.9 | **1.50** | 1.34 | 2.857 |
+| `_frozen_binned_levers` ($R_{200c}$ form + `g_c,g_e,w_min`) | 2.85 (cap) / 3.47 / fail | +1.1 / −2.0 / −0.4 | +2.5 / −0.8 / +0.5 | **+0.4 / −3.7 / −1.4** | **1.7** | **1.16** | **1.44** | **2.796** |
+| `_frozen_sersic_binned_levers` | 2.95 / 2.96 / 2.96 (cap) | +1.0 / −4.0 / −2.6 | — | — | 1.8 | 1.50 | 1.44 | 2.858 |
+
+("cap": the start used all 3000 evaluations; "fail": jitter0 started in a region
+where the model does not evaluate and stopped at once.)
+
+**What it means.**
+
+1. **The compact size must not scale with the halo's mass at the deposit.** Sized
+   in kpc, the two-channel mean under the binned objective puts **every halo-mass
+   tercile within ±3 per cent at every radius** (rms 1.50; Stage 2: 3.89; the
+   five-epoch incumbent: 4.98) — the top tercile's 2–4 kpc goes from −12 to −2
+   per cent, the outskirts stay within 3 per cent, and the production D4 loss
+   (2.857) is *lower* than the frozen $R_{200c}$-form fit's (2.861), i.e. this is
+   not a trade against the per-galaxy fit. The levers fit reaches the same
+   place from the other side: it chooses $g_c=-0.45$ (a compact size
+   $\propto M^{-0.45}R_{200c}\approx M^{-0.12}$, nearly mass-free), $g_e=+0.08$
+   (the extended size stays $\propto R_{200c}$ — the halo-mass-dependent extended
+   size the user asked about is *not* needed beyond $R_{200c}$'s own scaling), and
+   `w_min` = 0.12; rms 1.16, plane slope 1.44 against the truth's 1.42, and the
+   best production loss of any frozen fit (2.796; Stage 2 with four free time
+   exponents: 2.764). The 5a slice that "disqualified" $g_c=-1/3$ was wrong for
+   the reason recorded in `doc/lessons.md`: a slice from another optimum cannot
+   judge a reparameterisation whose other parameters all move.
+2. **What the channels are, physically** (mass-weighted medians of the $z=0.4$
+   stars; `single_epoch` numbers): a compact channel of 2.6–4 kpc with an
+   exponential-like profile ($n_c$ 0.9–1.9), deposited at a median $z\approx2$–2.6,
+   holding 17 per cent (`_frozen_binned_kpc`) to 44 per cent
+   (`_frozen_sersic_binned_levers`) of the stars — the share falling with halo
+   mass in every product (e.g. 0.42 / 0.33 / 0.23 across the terciles for
+   `_frozen_binned_levers`; Stage 1's $s<15$ kpc share: 0.66 / 0.55 / 0.42) — and an
+   extended channel of 24–39 kpc deposited at a median $z\approx1.2$–1.5, with a
+   core shape 1.1–1.5. The levers fits switch sharply: $d$ = 0.12–0.14 dex at
+   $m_{1/2}=10^{12.4-12.6}$ — deposits laid down while the halo was below
+   $\sim10^{12.5}$ are compact, everything after is extended (with a 12 per cent
+   floor), which is the in-situ-core-then-accretion picture in one number.
+3. **At one epoch the compact share is degenerate with the extended kernel's
+   inner shape.** Three products within 0.35 of each other in rms(h) hold 17, 33
+   and 44 per cent of the stars in the compact channel, compensating with the
+   extended kernel's core. The $z=0.4$ curves cannot separate them; the earlier
+   epochs can (the compact stars are in place by $z\approx2$, the extended ones
+   arrive later) — that is the first thing the extrapolation must be asked, *after*
+   the user has read these $z=0.4$ figures.
+4. The stellar-mass-binned view (`exp63_single_epoch_gate_levers.png`, bottom
+   row) is unchanged in shape for every product — +20 / −5 / −10 per cent at
+   148 kpc — because it is the regression-to-the-mean of a conditional mean
+   with 0.09 dex of plane scatter against the truth's 0.17; the amplitude-pinned
+   curves are within ±5–8 per cent. That is the stochastic layer's job, not the
+   mean's.
+
+Figures: `figures/exp63_single_epoch_gate_{frozen,binned,sersic_binned,kpc,levers}.png`;
+tables in `outputs/single_epoch_gate_*.log`; the sweep in `outputs/single_epoch_sweep.log`.
+
 ## What exp63 delivered, and what it did not (2026-08-28)
 
 Against the science plan's three requests:
