@@ -2335,8 +2335,15 @@ Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); 
   (tier-2e widths from draws 0.94-1.02 at z=0.4 — C16 closed), widths hold
   0.95-1.09 at every predicted epoch, tier-2c persistence +0.68 (truth +0.33,
   exp60 +0.97), declining fraction 0 by construction (P8).
-- [ ] Stage 4 — the standard battery on three products (baseline / Stage 2 mean /
-  mean + process), tier 2e from draws per epoch (running).
+- [x] Stage 4 — the standard battery on three products (baseline / Stage 2 mean /
+  mean + process), tier 2e from draws per epoch.
+
+  Review (2026-08-28): widths from draws 0.96-1.09 at every epoch (mean alone
+  0.82-0.99); full-sample kpc-plane E/floor 1.5-1.7 at z=0.4 (mean 3.7-5.5),
+  growing with z where the mean is wrong; the draws' medians sit 4-5% below the
+  mean's (P10, mean- vs median-preserving noise — a reporting decision for the
+  user). README closing section "What exp63 delivered" written. Branch NOT
+  pushed; nothing merged.
 
 ### Bookkeeping found by the 2026-08-28 probe (not yet acted on)
 

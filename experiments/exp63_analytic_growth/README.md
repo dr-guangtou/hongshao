@@ -498,3 +498,94 @@ declining-centre fraction of the draws is **0** (truth 41.8 per cent): every dra
 a deposition-only galaxy, monotone in time — the class limit stated by a prediction
 (PROBLEMS P8), and the reason the drawn $z=2$ sizes sit above the truth's in the
 tier-2c plane.
+
+## Stage 4 — the standard battery on three products (2026-08-28)
+
+`stage4_battery.py`: `hongshao.qa.evaluate` on the same 2397 galaxies for
+**baseline** (the incumbent's seven numbers on the exact integral), **stage2** (the
+two-channel mean) and **stage2+p** (the mean with the Stage 3 process; the battery's
+paired tiers score the FIRST draw — a realisation, not a prediction — and eight
+draws feed the plane figure and the tier-2e-from-draws table). Figures
+`figures/qa/qa_*_exp63_stage4_{baseline,stage2,stage2+p}.*`; log
+`outputs/stage4_battery.log`.
+
+Median relative bias, per cent, all / fit mask ($M_*(<10)$ and $M_*(<100)$):
+
+| product | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| $M_*(<10)$ baseline | +3.6 / +3.6 | +5.3 / +6.7 | +5.8 / +8.9 | −0.8 / +4.3 | −8.9 / −7.8 |
+| $M_*(<10)$ stage2 | −1.9 / −1.9 | +0.3 / −0.2 | +0.4 / +1.4 | −8.3 / −3.3 | −21.0 / −16.6 |
+| $M_*(<10)$ stage2+p (one draw) | −6.2 / −6.2 | −4.7 / −5.3 | −5.1 / −4.3 | −12.3 / −8.2 | −25.6 / −21.5 |
+| $M_*(<100)$ baseline | +0.4 / +0.4 | +5.1 / +4.6 | +6.4 / +5.7 | +3.0 / +3.0 | −4.7 / −7.8 |
+| $M_*(<100)$ stage2 | −1.1 / −1.1 | +5.1 / +5.0 | +7.2 / +8.6 | −0.1 / +7.1 | −14.7 / −7.8 |
+| $M_*(<100)$ stage2+p (one draw) | −5.0 / −5.0 | +0.7 / +0.5 | +2.6 / +2.8 | −3.9 / +3.0 | −18.0 / −11.5 |
+
+Tier 3 (median max|rel| beyond 5 kpc): baseline 0.280 / 0.282 / 0.291 / 0.291 / 0.314;
+stage2 0.268 / 0.276 / 0.287 / 0.306 / 0.357; one draw 0.387–0.432 (a realisation
+carries the population's own scatter into a paired statistic; this number is not a
+model error, exp41's lesson).
+
+**Tier 2e from draws (C16 closed) and the planes, per epoch** — 16–84 width of the
+drawn population over the truth's, and the energy-distance ratio to the split-half
+floor on the full sample (mean alone in brackets):
+
+| z | width $M(<10)$ / $M(<30)$ / $M(30\text{–}50)$ / $M(50\text{–}100)$ | E/floor $M(30\text{–}50)|M(<30)$ / $M(50\text{–}100)|M(<30)$ / $R_{50}|M_*$ |
+|---|---|---|
+| 0.4 | 1.01 / 0.96 / 0.97 / 1.00 [0.82 / 0.83 / 0.86 / 0.87] | 1.68 / 1.53 / 1.68 [3.88 / 3.73 / 5.50] |
+| 0.7 | 1.00 / 0.98 / 0.98 / 0.97 [0.83 / 0.87 / 0.85 / 0.83] | 2.08 / 1.63 / 3.44 [4.65 / 4.56 / 7.08] |
+| 1.0 | 1.01 / 1.02 / 0.96 / 0.98 [0.85 / 0.92 / 0.84 / 0.84] | 2.61 / 1.98 / 4.44 [4.86 / 4.65 / 7.56] |
+| 1.5 | 1.06 / 1.09 / 1.01 / 1.02 [0.93 / 0.99 / 0.87 / 0.87] | 5.41 / 4.10 / 7.31 [7.92 / 6.47 / 10.12] |
+| 2.0 | 1.00 / 1.04 / 1.04 / 0.99 [0.93 / 0.96 / 0.90 / 0.85] | 7.48 / 7.54 / 10.02 [9.18 / 9.10 / 12.79] |
+
+(The full-sample E/floor is higher than Stage 3's held-out 1.2–1.3 because the
+split-half floor shrinks with sample size while the model's residual distance does
+not; the two are the same comparison at two sample sizes. exp60's Option A reached
+1.69 / 2.17 on its own sample.) The widths hold at every epoch; the plane distances
+grow with redshift because the *mean* is wrong there — the extended channel's
+early excess and the missing decliners (`figures/qa/qa_planes_exp63_stage4_stage2+p.png`:
+at $z\ge1$ the draws sit above the truth in $M(30\text{–}50)|M(<30)$ exactly where
+Result 2 said the mean does).
+
+**One caveat found here (PROBLEMS P10).** The draws' medians sit 4–5 per cent below
+the mean model's at every epoch ($M_*(<10)$ at $z=0.4$: −6.2 against −1.9 per cent).
+The process is mean-preserving in linear mass (the Poisson thinning and the
+efficiency history both have unit expectation), so the median of the skewed drawn
+distribution falls below the mean — a property of any multiplicative noise, not a
+fit defect; a median-preserving convention is a one-line change and is left as a
+reporting decision.
+
+## What exp63 delivered, and what it did not (2026-08-28)
+
+Against the science plan's three requests:
+
+1. **The analytic integral (request 1): done and proved.** The incumbent's 72-step
+   sum is a first-order approximation of an exact integral along the DiffMAH curve;
+   the engine evaluates 2397 galaxies × 5 epochs in 0.32 s; the model is a
+   convolution in log radius of the deposit-size distribution with the kernel, with
+   closed forms for power-law histories (tech note 04; Stage 0).
+2. **A better single-epoch mean (request 2): done, with its limit measured.** Read
+   from the data by deconvolution (Stage 1: two size modes, cuspy deposits rejected,
+   $c_{200c}$ no leverage), the two-channel mean fitted at $z=0.4$ alone has the
+   data's inner slope and a 4 per cent better shape, and predicts the other four
+   epochs for the non-declining 58 per cent to 0.016 dex. It over-predicts the
+   $z\ge0.7$ outskirts (+16–28 per cent) and gets the assembly correlations
+   backwards; the three variants that fix the correlations (delay, two growth-rate
+   splits) all break the evolution — a measured tension of the class (P9), not a
+   tuning problem.
+3. **A model that is statistical from the start (request 3): done, and it
+   transfers.** Five noise parameters inside the history reproduce the $z=0.4$
+   population planes to 1.2–1.3× the sampling floor held out (the mean alone:
+   2.6–3.0; exp60's output layer: 1.7–2.2), the tier-2e widths to within 6 per cent
+   at $z=0.4$ and 9 per cent at every predicted epoch, and halve the excess
+   cross-epoch size coherence of a per-epoch layer — with no coherence parameter.
+
+What it does not do: declining centres (0 per cent against 42 — the deposition-only
+class, P8), the top halo-mass tercile's inner 3 kpc (−11 per cent), the $z\ge1.5$
+amplitude (−15 to −21 per cent at $z=2$ on the full sample), and the $z=0.4$
+assembly correlations (P9). The plan's §5 failure criteria: G1 did find two scales
+(not the first failure); the two-channel mean's $z=2$ B3 on the non-decliners is
+−0.048 dex against the baseline's +0.010 — worse by 0.058, past the 0.05 line the
+plan set, so by the plan's own rule the "one epoch fitted, four predicted" claim
+holds at $z\le1.0$ (span 0.015) and is degraded at $z=2$ by the extended channel's
+early arrival; every noise source had leverage (not the third failure); the joint
+mean–noise refit was not needed (the mean was frozen throughout; not the fourth).

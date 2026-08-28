@@ -101,3 +101,15 @@ during fast halo growth (mergers) are extended, those during slow growth (smooth
 accretion) compact — the in-situ / ex-situ picture in one parameter. Promoted to
 **Stage 2c** (`stage2_fit.py --growth`, thirteen parameters, nests at $g=0$),
 fitted at $z=0.4$ only like Stage 2; judged by the same gates and predictions.
+
+## P10 — the process is mean-preserving, so the drawn medians sit below the mean (open, reporting)
+
+Both the Poisson thinning of the extended channel and the log-normal efficiency
+history have unit expectation in linear mass, so the mean over draws equals the
+mean model, but the median of the (right-skewed) drawn distribution is 4–5 per
+cent lower at every aperture and epoch (Stage 4: $M_*(<10)$ at $z=0.4$ −6.2 per
+cent for a draw against −1.9 for the mean). A median-preserving convention
+(divide by the median factor instead of the mean factor; centre the Poisson
+thinning on its median) is a one-line change; which convention the reported
+biases should use is a decision for the user, since every bias table in the
+programme quotes medians.
