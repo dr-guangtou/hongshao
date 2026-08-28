@@ -446,6 +446,27 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
     ax[1].legend(fontsize=7); ax[1].set_title("the two size laws")
     fig.tight_layout(); save_fig(fig, FIGDIR / f"exp63_stage2_channels{tag}"); paths.append(FIGDIR / f"exp63_stage2_channels{tag}.png")
 
+    # C8 figure: the central error against epoch, whole population and the decliner split
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4.6), sharey=True)
+    dec = data[good][:, 4, I3] > data[good][:, 0, I3]
+    for a, (nm, col) in zip(ax, (("baseline", "#999999"), ("stage2", "#0072B2"))):
+        e = np.log10(np.clip(cogs[nm][good][:, :, I3], 1, None)) - np.log10(data[good][:, :, I3])
+        for sel, ls, lab in ((np.ones_like(dec, bool), "-", "all galaxies"),
+                             (~dec, "--", "centre did NOT decline z=2->0.4"), (dec, ":", "centre declined")):
+            med = [np.median(e[sel, j]) for j in range(5)]
+            a.plot(ANCHOR_Z, med, ls, color=col, lw=2.2, marker="o",
+                   label=f"{lab} ({100 * sel.mean():.0f}{_pct()}): span {np.ptp(med):.3f} dex")
+            if ls == "--":
+                a.fill_between(ANCHOR_Z, [np.percentile(e[sel, j], 16) for j in range(5)],
+                               [np.percentile(e[sel, j], 84) for j in range(5)], color=col, alpha=0.12)
+        a.axhline(0, color="k", lw=0.8); a.axvspan(0.35, 0.45, color="#E69F00", alpha=0.15)
+        a.set_xlabel("z"); a.legend(fontsize=7.5, loc="lower left")
+        a.set_title("incumbent, exact engine (fitted at all five epochs)" if nm == "baseline"
+                    else "two-channel mean (fitted at z=0.4 only, shaded)", fontsize=9.5)
+    ax[0].set_ylabel(_tex("median log10(model/truth) of M*(<4.92 kpc)")); ax[0].set_ylim(-0.3, 0.12)
+    fig.suptitle("C8: the central error against epoch (band: 16-84% of the non-decliners)", fontsize=10.5)
+    fig.tight_layout(); save_fig(fig, FIGDIR / f"exp63_stage2_c8{tag}"); paths.append(FIGDIR / f"exp63_stage2_c8{tag}.png")
+
     # predictions figure: bias vs epoch, both samples
     ev = None
     fig, ax = plt.subplots(1, 3, figsize=(15, 4.2), sharex=True)
