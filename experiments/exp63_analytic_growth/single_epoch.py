@@ -17,6 +17,10 @@ Two entry points:
                     ONE overlay figure `figures/exp63_single_epoch_gate{name}`
                     (median CoGs by halo-mass tercile; residuals by halo-mass
                     and by stellar-mass tercile; z=0.4 only).
+  --qa TAGS         the STANDARD `qa.evaluate` battery (qa_bins, qa_bins_ms,
+                    qa_planes, ...) for each fit file at z=0.4 ONLY — the model
+                    and the data are passed as single-epoch arrays, so nothing
+                    at z > 0.4 is evaluated; figures `figures/qa/qa_*_exp63_z04{tag}`.
   --sweep [TAG]     the LEVER SWEEP: every candidate lever moved one at a time
                     from the base solution (Stage 2, or the fit at TAG) with no
                     refit, read by the same table. Standing method: sweep a
@@ -307,6 +311,26 @@ def run_sweep(base_tag, smoke):
              pin_h=np.array([r[1]["pin_h"] for r in rows]), loss=np.array([r[2] for r in rows]))
 
 
+def run_qa(tags, smoke):
+    """The standard battery at z=0.4 only, one product per tag."""
+    sample = Sample(smoke)
+    g = sample.good
+    QADIR = FIGDIR / "qa"
+    QADIR.mkdir(parents=True, exist_ok=True)
+    for tag in tags:
+        spec2, theta, _ = load_fit(tag)
+        m0 = sample.predict(spec2, theta)
+        name = f"exp63_z04{tag or '_stage2'}{'_smoke' if smoke else ''}"
+        print(f"\n{RULE}\nSTANDARD QA at z=0.4 ONLY — {name}\n{RULE}")
+        qa.evaluate(m0[g][:, None, :], sample.d0[g][:, None, :], R, [ANCHOR_Z0], name=name,
+                    figdir=QADIR, figures=True, verbose=True,
+                    bin_by=sample.lmh[g], bin_label=r"logM$_h$(z=0.4)",
+                    bin_by_ms=sample.logms[g], ms_label=r"logM$_*$ (total)")
+
+
+ANCHOR_Z0 = E.ANCHOR_Z[0]
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     smoke = "--smoke" in args
@@ -315,6 +339,8 @@ if __name__ == "__main__":
         i = args.index("--sweep") + 1
         base = args[i] if i < len(args) and not args[i].startswith("--") else ""
         run_sweep(base, smoke)
+    if "--qa" in args:
+        run_qa(args[args.index("--qa") + 1].split(","), smoke)
     if "--gate" in args:
         tags = [t for t in args[args.index("--gate") + 1].split(",") if t]
         name = args[args.index("--name") + 1] if "--name" in args else ""
