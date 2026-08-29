@@ -2382,10 +2382,17 @@ quoted until z=0.4 passes the gate.
   not the frozen -0.9), split flattens (d -> bound) at z>=1.5. Option 2 agrees
   (g_c -0.32..-0.40 at every epoch). Plane slope too steep at z>=1.5 even when
   fitted there (1.40 vs 1.00 at z=2).
-- [ ] DECISION (user): a joint five-epoch fit of the kpc form with b_c, b_e free
-  (a_z, a_Mz frozen or free), the binned term summed over epochs — one theta
-  against five gates. Is the per-epoch optimum a ceiling the shared law cannot
-  reach (exp61's lesson), or is this a five-epoch model?
+- [x] 5f the joint five-epoch fit (`--joint`, user-approved): one theta, b_c/b_e
+  free -> gate rms 3.44/2.66/3.90/4.03/10.42; four exponents free -> 3.33/2.04/
+  3.77/3.72/7.59 (incumbent 4.98/6.54/7.67/5.60/10.48; per-epoch 1.50/1.05/1.48/
+  1.17/1.36). Better than the incumbent at every epoch; NOT at the per-epoch
+  ceiling (exp61's lesson again, gap measured). C8 whole-population span 0.013.
+  z=2 fails in amplitude (-7..-11% at every radius on the fit mask): the
+  efficiency law's time dependence is the next thing the class needs.
+- [ ] Owed by the user: adopt the joint kpc mean (`stage2_fit_joint_kpc_free.npz`)
+  as the exp63 five-epoch mean? Merge/push. P10. Whether to pursue the
+  efficiency time law / an epoch-dependent n_c and split (what the per-epoch
+  sequence asked for).
 
 ### Bookkeeping found by the 2026-08-28 probe (not yet acted on)
 

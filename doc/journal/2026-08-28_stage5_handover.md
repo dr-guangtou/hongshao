@@ -67,8 +67,19 @@ objective), each judged by the binned CoGs. No z > 0.4 number until z=0.4 is rig
   Option 2 converges to the same structure at every epoch (g_c -0.32..-0.40).
   Residual the class keeps: the plane slope at z>=1.5 too steep even when fitted
   there (1.40 vs 1.00 at z=2).
-- **Owed by the user**: whether to run the joint five-epoch fit of the kpc form
-  with b_c, b_e free (binned term summed over epochs). Not started.
+- **5f joint fit, run on the user's word** (`--joint`; README 5f;
+  `figures/exp63_single_epoch_joint_summary.png`): one theta with b_c, b_e free
+  gate rms 3.44/2.66/3.90/4.03/10.42; with all four time exponents free
+  3.33/2.04/3.77/3.72/7.59 (incumbent 4.98/6.54/7.67/5.60/10.48; per-epoch
+  1.50/1.05/1.48/1.17/1.36). Better than the five-epoch incumbent at every
+  epoch by the gate and the battery (M(<10), tier 3, fit-mask outskirts; C8
+  whole-population span 0.013 vs 0.058); not at the per-epoch ceiling — the
+  exponents carry ~40% of the gap; z=2 fails in AMPLITUDE (-7..-11% at every
+  radius on the fit mask). Joint starts rail n_c at 0.5; the four-exponent
+  fits are a flat valley (same loss, different a_z/b_e). Fit files
+  `stage2_fit_joint_kpc{,_free}.npz` (merged from `_s0.._s2`), batteries run.
+- **Owed by the user**: adopt `_joint_kpc_free` as the exp63 five-epoch mean?
+  pursue the efficiency law's time dependence / epoch-dependent n_c and split?
 - Fit files added: `stage2_fit_frozen_binned_{kpc,levers}_e{1,2,3,4}.npz`; eval
   logs `stage2_eval_frozen_binned_{levers,kpc}.log` (+ their figures).
 

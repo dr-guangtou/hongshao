@@ -902,6 +902,82 @@ rms ≲ 1.5 at every epoch, or the per-epoch optimum is a ceiling the shared law
 cannot reach (exp61's lesson for the incumbent), is the question that decides
 whether this is a five-epoch model. Not started: a scope decision for the user.
 
+### 5f — one θ at all five epochs: the joint fit against the per-epoch ceiling (2026-08-29)
+
+`stage2_fit.py --joint`: one θ, the loss the sum over the five epochs of that
+epoch's $A^2+F^2+S^2+B^2$, each on its own sane + mh-complete mask with its own
+$\sigma_A$, halo-mass terciles and null references (every term 1 at the null;
+null loss 19.27), one `predict2` call over all galaxies and epochs per
+evaluation (0.32 s). The kpc form. Two versions: (i) $b_c$, $b_e$ free, $a_z$,
+$a_{Mz}$ frozen (three starts: nested, from the $z=0.4$ solution, from it with
+the 5e exponents re-anchored — 16.18 / 16.15 / 16.22; two named starts that
+were re-anchored crudely began at loss 48–182 and the first line search ran
+them into the failing region: a start must begin near a valid solution);
+(ii) all four time exponents free (two starts: 15.630 / 15.633 — the same loss
+from different parameters, $a_z$ 0.30 vs 0.41, $b_e$ −1.35 vs −0.49: a flat
+valley, the exponents partly degenerate; $n_c$ at its lower bound 0.5 in every
+joint start). The sum of the five per-epoch optima (5e) is 13.37.
+
+Gate rms on each epoch's fit mask (`figures/exp63_single_epoch_joint_summary.png`;
+tables `outputs/single_epoch_gate_joint_e*.log`):
+
+| judged at | incumbent (5-epoch fit) | Option 1 from z=0.4 | joint, $b_c$ $b_e$ free | joint, four exponents free | fitted at that epoch alone |
+|---|---|---|---|---|---|
+| z=0.4 | 4.98 | 1.50 | 3.44 | 3.33 | 1.50 |
+| z=0.7 | 6.54 | 5.07 | 2.66 | 2.04 | 1.05 |
+| z=1.0 | 7.67 | 8.21 | 3.90 | 3.77 | 1.48 |
+| z=1.5 | 5.60 | 11.34 | 4.03 | 3.72 | 1.17 |
+| z=2.0 | 10.48 | 16.47 | 10.42 | 7.59 | 1.36 |
+
+The standard battery on the four-exponent joint fit (`--eval-only --tag _joint_kpc_free`;
+nothing is a prediction here — every epoch was fitted), whole sample / fit mask,
+incumbent in brackets:
+
+| quantity | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| $M_*(<10)$ | −1.5 / −1.5 [+3.6] | +1.6 / +2.1 [+5.3] | +4.6 / +5.6 [+5.8] | +3.2 / +4.1 [−0.8] | +1.4 / −3.1 [−8.9] |
+| $M_*(<100)$ | −2.6 / −2.6 [+0.4] | +2.0 / +1.2 [+5.1] | +3.5 / +1.6 [+6.4] | +3.8 / +0.9 [+3.0] | +1.3 / −7.0 [−4.7] |
+| $M_*(50\text{–}100)$ | +9.2 / +9.2 [−3.5] | +14.9 / +3.8 [+4.6 / −5.4] | +15.9 / −1.7 [+8.7 / −7.4] | +23.0 / −6.6 [+19.7 / −8.4] | +33.0 / −10.7 [+32.4 / −9.5] |
+| tier 3 (beyond 5 kpc) | 0.276 [0.280] | 0.278 [0.282] | 0.286 [0.291] | 0.292 [0.291] | 0.305 [0.314] |
+
+C8 (median log model/truth of $M_*(<4.92)$): whole population span **0.013**
+[incumbent 0.058]; decliners 0.161 [0.205]; non-decliners 0.091 [0.037] — the
+joint fit centres the whole population at every epoch by letting the
+non-decliners drift from −0.038 to +0.053 dex. Plane slope $M(30\text{–}50)|M(<30)$
+1.28 / 1.31 / 1.32 / 1.37 / 1.49 against the truth's 1.42 / 1.62 / 1.67 / 1.63 / 1.43:
+shallow at $z=0.7$–1.5, as the per-epoch fits were.
+
+**What it means.**
+
+1. **One shared law is better than the five-epoch incumbent at every epoch**
+   (gate rms 2.0–3.8 against 5.0–7.7 at $z\le1.5$; 7.6 against 10.5 at $z=2$;
+   the battery better on $M_*(<10)$, tier 3 and the fit-mask outskirts at every
+   epoch; the whole-population central error flat to 0.013 dex). By the
+   programme's own bar it is the best five-epoch mean the deposition-only
+   class has produced.
+2. **It does not reach the per-epoch ceiling.** 3.3–3.8 against 1.0–1.5 at
+   $z\le1.5$ and 7.6 against 1.4 at $z=2$ — the same lesson exp61 recorded for
+   the incumbent (memory `per-epoch-ceiling-does-not-transfer`), now with the
+   gap measured for this form: the four time exponents carry about half of the
+   distance (16.15 → 15.63 → the per-epoch sum 13.37 is in loss units 40 per
+   cent of the way). What the per-epoch sequence asked for and the shared law
+   cannot write: a compact index that rises with redshift ($n_c$ 0.9 → 1.25;
+   the joint fits rail $n_c$ at 0.5 instead), a split that flattens at $z\ge1.5$
+   ($d$ at its bound in the per-epoch fits at $z\ge1.5$, at the *other* bound in
+   the joint fit), and a compact size that shrinks toward high $z$ faster than
+   any $(1+z)^{b_c}$ that also fits $z=0.4$.
+3. **$z=2$ is where the shared law fails most, and it fails in amplitude**: on
+   the fit mask the joint fit is −7 to −11 per cent at every radius at $z=2$
+   (the incumbent −12). The per-epoch $z=2$ fit removed this with its own
+   $a_0$, $a_M$; freeing $a_z$, $a_{Mz}$ recovered part of it (10.4 → 7.6) at the
+   cost of a flat valley in the exponents. The efficiency law's time dependence
+   is the next thing the class needs, and it is not a size law.
+
+The joint fits are the closing product of the single-epoch round:
+`outputs/stage2_fit_joint_kpc{,_free}.npz` (merged from the parallel starts),
+their batteries in `figures/qa/qa_*_exp63_stage2_stage2_joint_kpc{,_free}.png`
+and `figures/exp63_stage2_{predictions,c8,residuals,gates,channels}_joint_kpc{,_free}.png`.
+
 ## What exp63 delivered, and what it did not (2026-08-28)
 
 Against the science plan's three requests:
