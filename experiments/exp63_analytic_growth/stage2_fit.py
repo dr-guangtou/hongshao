@@ -58,6 +58,12 @@ beyond it (memory: the loss is blind past its own pin); this term prices the
 outskirts explicitly. Recorded in the fit file.
 `--compact-kpc` sizes the compact channel in physical kpc (`model2.Spec2(compact_in_kpc=True)`;
 `log_f_c` is then log10 kpc); recorded in the fit file.
+`--epoch k` (0-4 for z = 0.4, 0.7, 1.0, 1.5, 2.0; default 0) fits at THAT epoch
+alone: the loss sees that epoch's data on that epoch's sane + mh-complete mask
+with that epoch's SIGMA_A and halo-mass terciles; the model is the same integral
+truncated at that epoch's anchor, so the fit sees only the MAH before it. The
+evaluation then predicts all five epochs as before ("fitted at one epoch, four
+predicted"). Recorded in the fit file as `fit_epoch`.
 `--objective binned` adds instead the term the VISUAL GATE reads: the rms over
 the three halo-mass terciles and the 24 radii of the tercile-MEDIAN fractional
 residual (model-data)/data at z=0.4, divided by its value for the nested
@@ -109,8 +115,8 @@ class Problem2:
     """The z=0.4 objective on the fit mask."""
 
     def __init__(self, spec2, curves, data, fit_rows, R, l_s_ref=None, outer=False, l_o_ref=None,
-                 binned=False, lmh=None, l_b_ref=None):
-        self.spec2, self.R = spec2, R
+                 binned=False, lmh=None, l_b_ref=None, epoch=0):
+        self.spec2, self.R, self.epoch = spec2, R, epoch
         self.outer, self.l_o_ref = outer, l_o_ref
         self.binned, self.l_b_ref = binned, l_b_ref
         self.i50 = int(np.argmin(np.abs(R - 50.0)))
@@ -119,19 +125,19 @@ class Problem2:
             e = np.quantile(lm, [0, 1 / 3, 2 / 3, 1])
             self.terciles = [(lm >= e[b]) & (lm <= e[b + 1] + 1e-9) for b in range(3)]
         self.curves = [curves[i] for i in fit_rows]
-        d = data[fit_rows, 0, :]
+        d = data[fit_rows, epoch, :]
         self.d = d
         self.A_d = np.log10(d[:, F.I100])
         self.F_d = (d / d[:, F.I100][:, None])[:, None, :]
         self.D_msun = d[:, None, :]                      # for the shells/log term, in Msun
         self.obj_F = Objective()
         self.obj_S = Objective(quantity="shells", residual="log")
-        self.sig = F.SIGMA_A[0]
+        self.sig = F.SIGMA_A[epoch]
         self.l_s_ref = l_s_ref
         self.n_eval = 0
 
     def scores(self, theta, nodes=M2.FIT_NODES):
-        m = M2.predict2(self.spec2, theta, self.curves, self.R, epochs=(0,), nodes=nodes)[:, 0, :]
+        m = M2.predict2(self.spec2, theta, self.curves, self.R, epochs=(self.epoch,), nodes=nodes)[:, 0, :]
         good = np.isfinite(m).all(1) & (m[:, F.I100] > 0)
         n_bad = int((~good).sum())
         if good.sum() < 10:
@@ -296,8 +302,11 @@ def parse_freeze(arg):
 
 def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, growth_rel=False,
             freeze=None, levers=(), extended_family=M2.EXTENDED_FAMILY, objective="production",
-            compact_in_kpc=False):
+            compact_in_kpc=False, epoch=0):
     freeze = freeze or {}
+    if epoch:
+        print(f"  FIT EPOCH {epoch}: z = {ANCHOR_Z[epoch]} — the loss sees this epoch's data only; the integral "
+              f"is truncated at its anchor (the MAH before it)")
     outer, binned = objective == "outer", objective == "binned"
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
@@ -319,19 +328,19 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     for nm, val in freeze.items():
         bounds[spec2.index(nm)] = (val, val)
         print(f"  {nm} FROZEN at {val:+.4f} (not fitted)")
-    fit_rows = np.where(np.asarray(mask, bool)[:, 0] & np.isfinite(data[:, 0]).all(1)
-                        & (data[:, 0] > 0).all(1))[0]
-    print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies (sane + mh-complete at z=0.4)")
+    fit_rows = np.where(np.asarray(mask, bool)[:, epoch] & np.isfinite(data[:, epoch]).all(1)
+                        & (data[:, epoch] > 0).all(1))[0]
+    print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies (sane + mh-complete at z={ANCHOR_Z[epoch]})")
 
     # the shells/log reference: the NESTED incumbent on the exact engine (frozen)
     # the references (shells/log, and the outer term if used) are ALWAYS the
     # gompertz_log nested incumbent on the exact engine, whatever the family
     pr_ref = Problem2(M2.Spec2(), curves, data, fit_rows, R, l_s_ref=None, outer=outer, l_o_ref=None,
-                      binned=binned, lmh=lmh[:, 0], l_b_ref=None)
+                      binned=binned, lmh=lmh[:, epoch], l_b_ref=None, epoch=epoch)
     ref = pr_ref.scores(M2.nested_theta(th_inc))
     pr = Problem2(spec2, curves, data, fit_rows, R, l_s_ref=ref[2], outer=outer,
-                  l_o_ref=(ref[4] if outer else None), binned=binned, lmh=lmh[:, 0],
-                  l_b_ref=(ref[4] if binned else None))
+                  l_o_ref=(ref[4] if outer else None), binned=binned, lmh=lmh[:, epoch],
+                  l_b_ref=(ref[4] if binned else None), epoch=epoch)
     print(f"  references from the nested incumbent: shells/log {ref[2]:.5f}"
           + (f", outer log-rms M*(50-148) {ref[4]:.5f} dex" if outer else "")
           + (f", binned tercile-median rms {100 * ref[4]:.3f}%" if binned else "") + " (each -> 1 by definition)")
@@ -388,7 +397,7 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     np.savez(out, theta_best=best["theta"], loss_best=best["loss"], best_name=best["name"], **extra,
              frozen_names=np.array(list(freeze)), frozen_values=np.array(list(freeze.values())),
              bounds=np.array(bounds), extended_family=spec2.extended_family, objective=objective,
-             compact_in_kpc=spec2.compact_in_kpc,
+             compact_in_kpc=spec2.compact_in_kpc, fit_epoch=epoch,
              l_o_ref=(pr.l_o_ref if outer else np.nan), l_b_ref=(pr.l_b_ref if binned else np.nan),
              names=np.array([q["name"] for q in results]),
              thetas=np.array([q["theta"] for q in results]),
@@ -405,6 +414,9 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
     R = F.R_GRID
     fz = np.load(OUTDIR / f"stage2_fit{tag}.npz", allow_pickle=True)
     spec2 = spec_from_fit(fz)
+    fit_epoch = int(fz["fit_epoch"]) if "fit_epoch" in fz.files else 0
+    FIT_EPOCH["k"] = fit_epoch
+    print(f"  fitted at z = {ANCHOR_Z[fit_epoch]} only; every other epoch is a prediction")
     if spec2.growth_rel:
         M2.set_alpha_ref(curves)
     theta = np.asarray(fz["theta_best"], float)
@@ -492,6 +504,14 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
     print(f"  saved {(OUTDIR / f'stage2_eval{tag}.npz').relative_to(ROOT)}")
 
 
+FIT_EPOCH = {"k": 0}                                     # set by run_eval: which epoch the figures shade
+
+
+def _shade_fitted(a):
+    z = ANCHOR_Z[FIT_EPOCH["k"]]
+    a.axvspan(z - 0.05, z + 0.05, color="#E69F00", alpha=0.15)
+
+
 def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share, tag):
     import matplotlib
     matplotlib.use("Agg")
@@ -564,10 +584,10 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
             if ls == "--":
                 a.fill_between(ANCHOR_Z, [np.percentile(e[sel, j], 16) for j in range(5)],
                                [np.percentile(e[sel, j], 84) for j in range(5)], color=col, alpha=0.12)
-        a.axhline(0, color="k", lw=0.8); a.axvspan(0.35, 0.45, color="#E69F00", alpha=0.15)
+        a.axhline(0, color="k", lw=0.8); _shade_fitted(a)
         a.set_xlabel("z"); a.legend(fontsize=7.5, loc="lower left")
         a.set_title("incumbent, exact engine (fitted at all five epochs)" if nm == "baseline"
-                    else "two-channel mean (fitted at z=0.4 only, shaded)", fontsize=9.5)
+                    else f"two-channel mean (fitted at z={ANCHOR_Z[FIT_EPOCH['k']]} only, shaded)", fontsize=9.5)
     ax[0].set_ylabel(_tex("median log10(model/truth) of M*(<4.92 kpc)")); ax[0].set_ylim(-0.3, 0.12)
     fig.suptitle("C8: the central error against epoch (band: 16-84% of the non-decliners)", fontsize=10.5)
     fig.tight_layout(); save_fig(fig, FIGDIR / f"exp63_stage2_c8{tag}"); paths.append(FIGDIR / f"exp63_stage2_c8{tag}.png")
@@ -581,10 +601,10 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
             t, mm = qa.measure_all(cogs[m][good], data[good], R)[:2]
             b_all = [100 * np.nanmedian(qa.relerr(mm[key][:, j], t[key][:, j])) for j in range(5)]
             a.plot(ANCHOR_Z, b_all, "o-", color=col, lw=2, label=f"{m}, all")
-        a.axhline(0, color="k", lw=0.8); a.axvspan(0.35, 0.45, color="#E69F00", alpha=0.15)
+        a.axhline(0, color="k", lw=0.8); _shade_fitted(a)
         a.set_title(_tex(key)); a.set_xlabel("z"); a.set_ylabel(f"median relative bias [{_pct()}]")
         a.legend(fontsize=7)
-    fig.suptitle("fitted at z=0.4 (shaded); every other epoch is a prediction", fontsize=11)
+    fig.suptitle(f"fitted at z={ANCHOR_Z[FIT_EPOCH['k']]} (shaded); every other epoch is a prediction", fontsize=11)
     fig.tight_layout(); save_fig(fig, FIGDIR / f"exp63_stage2_predictions{tag}"); paths.append(FIGDIR / f"exp63_stage2_predictions{tag}.png")
     return paths
 
@@ -601,6 +621,7 @@ if __name__ == "__main__":
     ext_fam = args[args.index("--extended-family") + 1] if "--extended-family" in args else M2.EXTENDED_FAMILY
     objective = args[args.index("--objective") + 1] if "--objective" in args else "production"
     compact_kpc = "--compact-kpc" in args
+    epoch = int(args[args.index("--epoch") + 1]) if "--epoch" in args else 0
     tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else ("_growthrel" if growth_rel else ("_growth" if growth else ""))))
     tag += (args[args.index("--tag") + 1] if "--tag" in args else "") + ("_smoke" if smoke else "")
     sel = None
@@ -612,6 +633,6 @@ if __name__ == "__main__":
     if "--eval-only" not in args:
         run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth, growth_rel=growth_rel,
                 freeze=freeze, levers=levers, extended_family=ext_fam, objective=objective,
-                compact_in_kpc=compact_kpc)
+                compact_in_kpc=compact_kpc, epoch=epoch)
     if "--fit-only" not in args:
         run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel)
