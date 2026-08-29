@@ -2266,3 +2266,191 @@ tier 2e table is identical digit for digit to the bare incumbent's. Filed as
 open question C16 — every tier 2e number quoted for hongshao v1 describes the
 mean alone, and the layer is precisely the component that supplies the width
 tier 2e says is missing.
+## exp62 — multi-epoch analytic CoG fitting atlas
+
+- [x] **Predeclare the scientific scope before implementation.** Use every
+  valid per-epoch CoG for representation, matched tracks for redshift
+  evolution, and the quality-clean epoch-local DiffMAH plus concurrent
+  concentration overlap for interpretation. Compare a finite taxonomy of
+  single functions, constrained mixtures, and unrestricted double Sersic.
+- [x] **Stage 0: common mechanics and 90-galaxy gate.** Implement one bounded,
+  deterministic multi-start interface; exact synthetic recovery; analytic
+  limit, monotonicity, normalization, and metric checks. Require the complete
+  Stage 1 demo to finish in less than one minute. **Validation:** all 33
+  concrete variants pass; the complete 90-galaxy path finished in 15.39
+  seconds after two over-one-minute implementations were rejected.
+- [x] **Stage 1: independent-epoch family atlas.** Fit all eleven analytic
+  candidates at all five epochs, compare with PCA/readable-coordinate ceilings,
+  and produce direct profiles plus accuracy--stability figures. **Result:** all
+  16,900 galaxy--epoch CoGs were fitted. Unrestricted double Sersic is the
+  analytic accuracy ceiling (0.00263 dex median full-CoG RMS) but its raw
+  shapes are degenerate; constrained Sersic--Moffat is the identifiable
+  two-component compromise (0.00439 dex); log-Gompertz is the stable
+  three-parameter reference (0.00765 dex).
+- [x] **Stage 2: objective and identifiability audit.** Refit the best stable
+  single component, the best stable constrained mixture, and unrestricted
+  double Sersic under CoG/shell/density crossed with linear/log objectives;
+  profile parameters and test radial jackknifes, starts, bounds, and recovery.
+  **Result:** no universal objective. Absolute-CoG fitting improves density and
+  R90 but worsens full CoG; log-shell fitting trades still more CoG accuracy for
+  local structure; density-only fitting is rejected because it is blind to the
+  central aperture. Exact recovery and optimizer agreement pass. Alternating
+  radii change decoded CoGs by only 0.0010--0.0018 dex, while removing R<5 kpc
+  changes them by 0.0160--0.0252 dex.
+- [x] **Stage 3: scaling and smooth evolution.** Measure raw and decoded
+  parameter scaling with stellar and halo mass, follow matched tracks, and use
+  held-epoch decoded-CoG closure before any joint smooth-in-time fit. **Result:**
+  population median relations are smooth, individual tracks are not. The best
+  quadratic raw-parameter interpolation has 0.05979 dex median held-epoch CoG
+  RMS; interpolating analytic or measured CoGs gives 0.05355/0.05351 dex.
+  **Decision:** no family proceeds to a joint per-galaxy smooth-in-time fit.
+- [x] **Stage 4: interpret the epoch-local halo--CoG relation.** Use simple
+  cross-fitted associations, bootstrap stability, and mass-conditioned
+  DiffMAH/concentration shuffles to test which assembly aspects are associated
+  with which radial aspects without imposing a physical answer. **Result:** on
+  2,365 galaxies, the descriptive complete relation improves median full-CoG
+  RMS against TNG from 0.11155 dex for current halo mass alone to 0.08985 dex.
+  At z=0.4, real inputs reduce R20--R90 target RMS by 6.85--8.50% and radial
+  block-mass RMS by 22.03--24.25%. Shuffled DiffMAH erases the size gains but
+  retains 7.53--8.38% block-mass gains from concentration; shuffled
+  concentration retains 19.44--20.96% from DiffMAH. The response pattern
+  correlates 0.973 with targets decoded directly from TNG CoGs and 0.923--0.965
+  across analytic families. **Decision:** record these as robust conditional
+  associations and hypothesis generators, not an established inner--early-MAH
+  or outer--recent-assembly connection and not a portable emulator.
+- [x] **Final visual record.** Compare all three roles through population-level
+  halo/stellar-mass-bin CoGs, mass planes, mass--size relations, aperture and
+  outskirt CDF residuals, and epoch-dependent errors; show only each model's
+  ten worst galaxies as individual failure examples. Add common decoded
+  scaling relations, matched-track parameter evolution, direct
+  mass-conditioned parameter--DiffMAH relations, and the symbolic halo--CoG
+  relation. Validate the complete figure path on 90 galaxies in under one
+  minute first. **Result:** the revised 90-galaxy path passed in 27.96 seconds;
+  the 2,395-track full record finished in 41.07 seconds. The figures confirm
+  the CoG/density hierarchy, expose different worst-case residual shapes, and
+  show that the 100--148 kpc mass CDF remains discriminating even when the
+  cumulative fit is excellent. After current-halo-mass conditioning, the
+  clearest raw-parameter relations are carried by `log_mstar_148`; the compact
+  fraction and component radii have much weaker direct binned relations with
+  individual DiffMAH coordinates.
+- [x] **Quick normalized-CoG diversity test.** Divide every measured CoG by
+  Mstar within 148 kpc and scale radius by its own R50, then compare inner and
+  outer population scatter across redshift without extrapolating below the
+  2 kpc data limit. **Result:** on the same 1,745 galaxies with measured
+  support over 0.7--3 R50 at every epoch, robust inner shape diversity declines
+  from 0.01924 dex at z=2 to 0.00671 dex at z=0.4, while outer diversity
+  declines from 0.02783 to 0.01278 dex. Alternative inner cutoffs reproduce
+  the direction. **Interpretation:** after removing total stellar mass and
+  overall size, CoGs become more self-similar toward low redshift, but the
+  outer half remains more diverse than the inner interval.
+- [x] **Quick normalized-DiffMAH diversity test.** Normalize each epoch-local
+  parameterized Mpeak history by its endpoint mass and half-mass time, enforce
+  the 1 Gyr--endpoint fit domain, and compare the same halos across endpoints.
+  **Result:** on 1,208 halos supported over 0.6--1.3 t50, early-history
+  diversity rises from 0.03854 dex at z=0.4 to 0.07121 dex at z=2. Late-history
+  diversity is smaller, 0.01768--0.02440 dex, but its redshift ordering changes
+  with the late-time limit and common-support selection. **Interpretation:**
+  the high-redshift increase before t50 is robust; no unique post-t50 trend is
+  established by this normalization.
+- [x] **Stage 5: simpler analytic CoG search.** Prefer four and allow at most
+  five total per-galaxy parameters, with no more than four reported shared
+  dimensionless constants plus one cosmic-time coefficient. Search monotonic
+  closed forms using normalized-CoG residual geometry, constrained symbolic
+  regression, sparse analytic transition functions, and bounded residual
+  kernels. Start with generalized Moffat/Burr and regularized-beta cumulative
+  profiles. Require the full 90-profile path below one minute before any full
+  run, and judge survivors against unrestricted double Sersic and PCA(3) using
+  CoG, density, R50/R80/R90, conditioning, robustness, worst cases, and the
+  standard population QA figures. **Result:** all eleven candidates passed the
+  90-profile path in 30.98 seconds. Familiar four- and five-parameter
+  one-transition functions did not improve the frontier. A new five-parameter
+  asymmetric monotonic cubic-logit cumulative has 0.00249 dex median
+  full-CoG RMS across epochs under the log objective, compared with 0.00263
+  dex for unrestricted double Sersic, with no boundary hits and about twelve
+  times stronger median-epoch local conditioning. Its absolute-CoG fit beats
+  PCA(3) in full-CoG RMS at four epochs and improves PCA(3)'s median density
+  RMS from 0.07560 to 0.07206 dex and median R90 error from 0.01709 to 0.00968
+  dex. Excluding the 90 development profiles leaves these decisions unchanged
+  on 16,810 validation profiles. It nevertheless fails the strict
+  double-Sersic replacement gate, and
+  the 100--148 kpc shell-mass CDF remains systematically displaced.
+  **Decision:** retain the cubic-logit family as a qualified five-parameter
+  analytic compression with log- and absolute-objective variants; do not
+  replace double Sersic, claim a successful four-parameter solution, or assign
+  physical meaning to the warp coordinates.
+- [x] **Stage 6: halo information in the cubic-logit shape.** Exclude stellar
+  mass from the targets and use five galaxy-level folds to compare concurrent
+  halo mass alone with DiffMAH alone, `c_200c` alone, their complete linear
+  residual relation, and a restrained additive-quadratic alternative. Decode
+  predictions with each galaxy's fitted `Mstar(<148 kpc)` to isolate shape;
+  require a sub-minute 90-galaxy path before the 2,365-galaxy calculation.
+  Use bootstrap and mass-conditioned block-shuffle controls, compare log- and
+  absolute-CoG cubic-logit coordinates with direct normalized-CoG responses,
+  and judge CoGs, density, R50/R80/R90, population planes, CDFs, and worst
+  cases. Record associations as descriptive and do not impose an
+  inner--early-MAH or outer--recent-assembly interpretation. **Result:** the
+  90-galaxy complete path took 17.58 seconds, so the 2,365-galaxy calculation
+  proceeded with five held-out galaxy folds, 200 bootstraps, and 32
+  mass-conditioned block shuffles. The predeclared additive-quadratic relation
+  failed its demo gate, so the complete linear relation was retained. Relative
+  to concurrent halo mass alone, adding DiffMAH plus `c_200c` improves median
+  held-out full-CoG RMS by 4.19%, 6.25%, 3.21%, and 0.67% at z=0.4--1.5 and
+  worsens it by 0.12% at z=2; median 5--30 kpc CoG RMS improves by 3.34--5.12%
+  at every epoch. DiffMAH carries nearly all of this gain, while concentration
+  alone explains at most 1.9% of the mass-residual variance of any coordinate.
+  Log- and absolute-objective coefficient patterns correlate by 0.954--0.986,
+  and the decoded versus direct normalized-CoG radial patterns have median
+  correlation 0.896, although only 69.6% of radial signs agree. Rare
+  predictor-extreme histories produce maximum held-out CoG RMS of 0.61--2.90
+  dex despite better median and percentile performance. **Decision:** record a
+  small, population-level DiffMAH--shape association beyond concurrent halo
+  mass, but do not promote this linear relation to an individual-galaxy
+  emulator or give its analytic coordinates a unique physical interpretation.
+- [x] **Stage 7: assembly information in scale-free CoG diversity.** Normalize
+  every measured CoG by `Mstar(<148 kpc)` and its measured R50, exclude the
+  fixed R/R50=1 anchor, and use the direct normalized curve as the primary
+  target. On the 1,257-galaxy five-epoch common-support sample spanning
+  0.7--3 R50, compare concurrent halo mass alone with DiffMAH, `c_200c`, their
+  complete linear relation, and an additive-quadratic sensitivity relation in
+  five held-out galaxy folds. Repeat with a strict halo-mass+stellar-mass+R50
+  baseline, fold-local PCA(3), coarse independent annuli, and the 1,743-galaxy
+  0.85--3 R50 support sensitivity. Require the complete 90-galaxy path below
+  one minute before the full run; then use 200 bootstraps, 32 block shuffles,
+  radial/redshift QA, CDFs, predictor-quantile residual profiles, and worst
+  cases. Define a material result as at least 5% held-out inner or outer
+  diversity variance explained at three epochs, above the shuffled 95th
+  percentile and consistent between direct and PCA representations. Record a
+  weaker separated signal as detectable but minor and do not assign causal or
+  component-level physics. **Result:** the complete 90-galaxy path took 16.97
+  seconds, so the 1,257-galaxy primary calculation proceeded. Concurrent halo
+  mass already reproduces the average normalized CoG. The complete linear
+  relation explains 0.35--6.20% of held-out 0.7--1 R50 diversity and only
+  0.17--3.20% beyond R50, which is detectable but minor. The predeclared
+  additive-quadratic diagnostic explains 6.81%, 6.45%, and 7.31% of inner
+  diversity at z=0.4, 1, and 1.5; it clears the shuffled-DiffMAH control and
+  agrees with fold-local PCA(3), the strict mass+stellar-mass+R50 baseline, and
+  independent annular fractions. Concentration adds negligible information.
+  The larger 1,743-galaxy 0.85--3 R50 sensitivity sample retains a positive
+  1.81--6.77% inner signal, but only z=1 exceeds 5%. **Decision:** record a
+  modest nonlinear DiffMAH association with scale-free diversity mainly just
+  inside R50, not a need for assembly information to recover the average CoG
+  or outer profile. More than 90% of individual diversity remains unexplained;
+  retain the quadratic relation only as an information diagnostic and assign
+  no causal inner--early-MAH or outer--recent-assembly interpretation.
+- [x] **Stage 8: name, analyze, and promote the cubic-logit profile.** Adopt
+  `cubic_logit` as the descriptive family name; derive its projected density,
+  exact enclosed-radius solution, 2-D normalization, Hankel transform, and
+  Gaussian/Moffat PSF-convolution route. Quantify its central density turnover
+  and extrapolated total mass over all 16,900 Stage 5 galaxy--epoch fits, with
+  a sub-minute 90-profile gate. Add a documented reusable module, route the
+  experiment evaluator through it, test the analytic and numerical identities,
+  and make a PNG+PDF mathematical reference and resolved-range QA record.
+  The 90-profile end-to-end gate took 15.85 seconds; the 16,900-profile audit
+  took 21.50 seconds and reproduced the stored model within 1.78e-15 dex.
+  R20/R50/R80 are exact cubic roots, projected rendering is direct, and
+  Fourier/PSF work has a documented numerical route. The central density
+  maximum is below 2 kpc for 16,896 fits and the median total-mass correction
+  beyond 148 kpc is only 0.00563 dex, but the 99th-percentile correction is
+  0.401 dex. **Decision:** promote the family for aperture-normalized,
+  finite-resolution projected CoGs; reject its unresolved central and extreme
+  infinite-total extrapolations as physical predictions.
