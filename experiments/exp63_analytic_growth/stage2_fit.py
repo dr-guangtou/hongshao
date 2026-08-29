@@ -64,6 +64,15 @@ with that epoch's SIGMA_A and halo-mass terciles; the model is the same integral
 truncated at that epoch's anchor, so the fit sees only the MAH before it. The
 evaluation then predicts all five epochs as before ("fitted at one epoch, four
 predicted"). Recorded in the fit file as `fit_epoch`.
+`--joint` fits ALL FIVE EPOCHS with one theta: the loss is the sum over epochs
+of that epoch's (A^2 + F^2 + S^2 [+ B^2]), each on its own sane + mh-complete
+mask with its own sigma_A, halo-mass terciles and null references (so every
+term is 1 at the null and the null loss is 5 x the per-epoch null). One
+`predict2` call over all galaxies and epochs per evaluation. `--start-from TAG`
+replaces the "default" start with that fit's best theta (mapped by parameter
+name; missing names keep the default), and `--set name=val,...` edits that
+start — e.g. the z=0.4 kpc solution with the time exponents read from the
+per-epoch sequence (Stage 5e). Recorded as `fit_epoch = -1` (joint).
 `--objective binned` adds instead the term the VISUAL GATE reads: the rms over
 the three halo-mass terciles and the 24 radii of the tercile-MEDIAN fractional
 residual (model-data)/data at z=0.4, divided by its value for the nested
@@ -138,6 +147,10 @@ class Problem2:
 
     def scores(self, theta, nodes=M2.FIT_NODES):
         m = M2.predict2(self.spec2, theta, self.curves, self.R, epochs=(self.epoch,), nodes=nodes)[:, 0, :]
+        return self.score_model(m)
+
+    def score_model(self, m):
+        """The scores from a precomputed (n_fit, 24) model at this epoch."""
         good = np.isfinite(m).all(1) & (m[:, F.I100] > 0)
         n_bad = int((~good).sum())
         if good.sum() < 10:
@@ -176,6 +189,65 @@ class Problem2:
         if not np.all(np.isfinite([a, f, s, o])):
             return F.FAIL
         return a * a + f * f + s * s + o * o + F.FAIL * n_bad / len(self.curves)
+
+
+class JointProblem2:
+    """One theta, five epochs: the sum of each epoch's Problem2 loss, each on its
+    own mask with its own references; one predict2 call per evaluation."""
+
+    def __init__(self, spec2, curves, data, mask, lmh, R, th_inc, outer=False, binned=False,
+                 epochs=(0, 1, 2, 3, 4)):
+        self.spec2, self.R, self.epochs = spec2, R, list(epochs)
+        mask = np.asarray(mask, bool)
+        self.rows = {}
+        for k in self.epochs:
+            self.rows[k] = np.where(mask[:, k] & np.isfinite(data[:, k]).all(1) & (data[:, k] > 0).all(1))[0]
+        self.all_rows = np.unique(np.concatenate(list(self.rows.values())))
+        self.curves = [curves[i] for i in self.all_rows]
+        pos = {r: i for i, r in enumerate(self.all_rows)}
+        self.index = {k: np.array([pos[r] for r in self.rows[k]]) for k in self.epochs}
+        self.problems = {}
+        for k in self.epochs:
+            ref = Problem2(M2.Spec2(), curves, data, self.rows[k], R, l_s_ref=None, outer=outer, l_o_ref=None,
+                           binned=binned, lmh=lmh[:, k], l_b_ref=None, epoch=k)
+            sc = ref.scores(M2.nested_theta(th_inc))
+            self.problems[k] = Problem2(spec2, curves, data, self.rows[k], R, l_s_ref=sc[2], outer=outer,
+                                        l_o_ref=(sc[4] if outer else None), binned=binned, lmh=lmh[:, k],
+                                        l_b_ref=(sc[4] if binned else None), epoch=k)
+        # per-epoch references live in the problems; these keep the fit-file fields uniform
+        self.l_s_ref = np.array([self.problems[k].l_s_ref for k in self.epochs])
+        self.l_o_ref = np.array([self.problems[k].l_o_ref or np.nan for k in self.epochs])
+        self.l_b_ref = np.array([self.problems[k].l_b_ref or np.nan for k in self.epochs])
+        self.n_eval = 0
+
+    def per_epoch(self, theta, nodes=M2.FIT_NODES):
+        m = M2.predict2(self.spec2, theta, self.curves, self.R, epochs=tuple(self.epochs), nodes=nodes)
+        return {k: self.problems[k].score_model(m[self.index[k], j]) for j, k in enumerate(self.epochs)}
+
+    def loss(self, theta):
+        self.n_eval += 1
+        total = 0.0
+        for k, sc in self.per_epoch(theta).items():
+            pr = self.problems[k]
+            a, f, s, n_bad = sc[:4]
+            if len(sc) < 5 and (pr.outer or pr.binned):
+                return F.FAIL * len(self.epochs)
+            o = sc[4] if (pr.outer or pr.binned) else 0.0
+            if not np.all(np.isfinite([a, f, s, o])):
+                return F.FAIL * len(self.epochs)
+            total += a * a + f * f + s * s + o * o + F.FAIL * n_bad / len(pr.curves)
+        return total
+
+    def report(self, theta, label):
+        print(f"  {label}: per-epoch (A, F, S[, B]) and loss")
+        tot = 0.0
+        for k, sc in self.per_epoch(theta, nodes=M2.FULL_NODES).items():
+            vals = [v for v in (sc[0], sc[1], sc[2]) + ((sc[4],) if len(sc) > 4 else ())]
+            lk = sum(v * v for v in vals)
+            tot += lk
+            print(f"    z={ANCHOR_Z[k]}: " + " ".join(f"{v:.3f}" for v in vals) + f" -> {lk:.4f}")
+        print(f"    total {tot:.4f}")
+        return tot
 
 
 def starts_for(spec2, th_inc, rng):
@@ -302,8 +374,9 @@ def parse_freeze(arg):
 
 def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, growth_rel=False,
             freeze=None, levers=(), extended_family=M2.EXTENDED_FAMILY, objective="production",
-            compact_in_kpc=False, epoch=0):
+            compact_in_kpc=False, epoch=0, joint=False, start_from=None, set_values=None):
     freeze = freeze or {}
+    set_values = set_values or {}
     if epoch:
         print(f"  FIT EPOCH {epoch}: z = {ANCHOR_Z[epoch]} — the loss sees this epoch's data only; the integral "
               f"is truncated at its anchor (the MAH before it)")
@@ -331,32 +404,53 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     fit_rows = np.where(np.asarray(mask, bool)[:, epoch] & np.isfinite(data[:, epoch]).all(1)
                         & (data[:, epoch] > 0).all(1))[0]
     print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies (sane + mh-complete at z={ANCHOR_Z[epoch]})")
+    if joint:
+        pr = JointProblem2(spec2, curves, data, mask, lmh, R, th_inc, outer=outer, binned=binned)
+        print(f"  JOINT FIT at all five epochs: masks " + " / ".join(f"{len(pr.rows[k])}" for k in pr.epochs)
+              + f" galaxies (union {len(pr.all_rows)}); each epoch's terms are 1 at the null")
+        fit_rows = pr.all_rows
 
     # the shells/log reference: the NESTED incumbent on the exact engine (frozen)
     # the references (shells/log, and the outer term if used) are ALWAYS the
     # gompertz_log nested incumbent on the exact engine, whatever the family
-    pr_ref = Problem2(M2.Spec2(), curves, data, fit_rows, R, l_s_ref=None, outer=outer, l_o_ref=None,
+    if not joint:
+      pr_ref = Problem2(M2.Spec2(), curves, data, fit_rows, R, l_s_ref=None, outer=outer, l_o_ref=None,
                       binned=binned, lmh=lmh[:, epoch], l_b_ref=None, epoch=epoch)
-    ref = pr_ref.scores(M2.nested_theta(th_inc))
-    pr = Problem2(spec2, curves, data, fit_rows, R, l_s_ref=ref[2], outer=outer,
-                  l_o_ref=(ref[4] if outer else None), binned=binned, lmh=lmh[:, epoch],
-                  l_b_ref=(ref[4] if binned else None), epoch=epoch)
-    print(f"  references from the nested incumbent: shells/log {ref[2]:.5f}"
-          + (f", outer log-rms M*(50-148) {ref[4]:.5f} dex" if outer else "")
-          + (f", binned tercile-median rms {100 * ref[4]:.3f}%" if binned else "") + " (each -> 1 by definition)")
+      ref = pr_ref.scores(M2.nested_theta(th_inc))
+      pr = Problem2(spec2, curves, data, fit_rows, R, l_s_ref=ref[2], outer=outer,
+                    l_o_ref=(ref[4] if outer else None), binned=binned, lmh=lmh[:, epoch],
+                    l_b_ref=(ref[4] if binned else None), epoch=epoch)
+      print(f"  references from the nested incumbent: shells/log {ref[2]:.5f}"
+            + (f", outer log-rms M*(50-148) {ref[4]:.5f} dex" if outer else "")
+            + (f", binned tercile-median rms {100 * ref[4]:.3f}%" if binned else "") + " (each -> 1 by definition)")
     th_nested = M2.with_levers_theta(M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split), spec2)
-    sc = pr.scores(th_nested)
-    a, f, s, nb = sc[:4]
-    l_null = pr.loss(th_nested)
-    print(f"  the null (nested incumbent{'' if spec2.extended_family == M2.EXTENDED_FAMILY else ' — NOT a nesting under this family'}, "
-          f"exact engine, z=0.4): score_A {a:.4f}, score_F {f:.4f}, score_S {s:.4f}"
-          + (f", score_O {sc[4]:.4f}" if outer else "") + (f", score_B {sc[4]:.4f}" if binned else "")
-          + f", loss {l_null:.6f}, failures {nb}")
-    sc2 = pr.scores(th_nested, nodes=M2.FULL_NODES)
-    print(f"  the same on the full nodes: {sc2[0]:.4f} / {sc2[1]:.4f} / {sc2[2]:.4f} (fit nodes are adequate)")
+    if joint:
+        l_null = pr.loss(th_nested)
+        pr.report(th_nested, "the null (nested incumbent, exact engine)")
+    else:
+      sc = pr.scores(th_nested)
+      a, f, s, nb = sc[:4]
+      l_null = pr.loss(th_nested)
+      print(f"  the null (nested incumbent{'' if spec2.extended_family == M2.EXTENDED_FAMILY else ' — NOT a nesting under this family'}, "
+            f"exact engine, z=0.4): score_A {a:.4f}, score_F {f:.4f}, score_S {s:.4f}"
+            + (f", score_O {sc[4]:.4f}" if outer else "") + (f", score_B {sc[4]:.4f}" if binned else "")
+            + f", loss {l_null:.6f}, failures {nb}")
+      sc2 = pr.scores(th_nested, nodes=M2.FULL_NODES)
+      print(f"  the same on the full nodes: {sc2[0]:.4f} / {sc2[1]:.4f} / {sc2[2]:.4f} (fit nodes are adequate)")
 
     rng = np.random.default_rng(63)
     starts = starts_for(spec2, th_inc, rng)
+    if start_from is not None:
+        fz0 = np.load(OUTDIR / f"stage2_fit{start_from}.npz", allow_pickle=True)
+        names0 = [str(n) for n in fz0["theta_names"]]
+        th_from = starts[1][1].copy()
+        for i, nm in enumerate(spec2.theta_names):
+            if nm in names0:
+                th_from[i] = float(fz0["theta_best"][names0.index(nm)])
+        for nm, val in set_values.items():
+            th_from[spec2.index(nm)] = val
+        starts[1] = (f"from{start_from}", M2.clip_to_bounds(spec2, th_from))
+        print(f"  start 'from{start_from}': that fit's theta" + (f" with {set_values}" if set_values else ""))
     if tau_fixed is not None:
         starts = [(nm, np.r_[th[:-1], tau_fixed]) for nm, th in starts]
     for nm, val in freeze.items():
@@ -390,6 +484,8 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     print(f"\n  best start: {best['name']} loss {best['loss']:.6f} (null {l_null:.6f}, "
           f"{100 * (1 - best['loss'] / l_null):+.1f}%)")
     print("  " + "  ".join(f"{n}={v:+.4f}" for n, v in zip(spec2.theta_names, best["theta"])))
+    if joint:
+        pr.report(best["theta"], "best (full nodes)")
     out = OUTDIR / f"stage2_fit{tag}.npz"
     extra = {}
     if growth_rel:
@@ -397,7 +493,7 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     np.savez(out, theta_best=best["theta"], loss_best=best["loss"], best_name=best["name"], **extra,
              frozen_names=np.array(list(freeze)), frozen_values=np.array(list(freeze.values())),
              bounds=np.array(bounds), extended_family=spec2.extended_family, objective=objective,
-             compact_in_kpc=spec2.compact_in_kpc, fit_epoch=epoch,
+             compact_in_kpc=spec2.compact_in_kpc, fit_epoch=(-1 if joint else epoch),
              l_o_ref=(pr.l_o_ref if outer else np.nan), l_b_ref=(pr.l_b_ref if binned else np.nan),
              names=np.array([q["name"] for q in results]),
              thetas=np.array([q["theta"] for q in results]),
@@ -416,7 +512,8 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
     spec2 = spec_from_fit(fz)
     fit_epoch = int(fz["fit_epoch"]) if "fit_epoch" in fz.files else 0
     FIT_EPOCH["k"] = fit_epoch
-    print(f"  fitted at z = {ANCHOR_Z[fit_epoch]} only; every other epoch is a prediction")
+    print("  fitted at ALL FIVE EPOCHS jointly (nothing is a prediction)" if fit_epoch < 0 else
+          f"  fitted at z = {ANCHOR_Z[fit_epoch]} only; every other epoch is a prediction")
     if spec2.growth_rel:
         M2.set_alpha_ref(curves)
     theta = np.asarray(fz["theta_best"], float)
@@ -508,6 +605,9 @@ FIT_EPOCH = {"k": 0}                                     # set by run_eval: whic
 
 
 def _shade_fitted(a):
+    if FIT_EPOCH["k"] < 0:
+        a.axvspan(0.35, 2.05, color="#E69F00", alpha=0.08)
+        return
     z = ANCHOR_Z[FIT_EPOCH["k"]]
     a.axvspan(z - 0.05, z + 0.05, color="#E69F00", alpha=0.15)
 
@@ -587,7 +687,8 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
         a.axhline(0, color="k", lw=0.8); _shade_fitted(a)
         a.set_xlabel("z"); a.legend(fontsize=7.5, loc="lower left")
         a.set_title("incumbent, exact engine (fitted at all five epochs)" if nm == "baseline"
-                    else f"two-channel mean (fitted at z={ANCHOR_Z[FIT_EPOCH['k']]} only, shaded)", fontsize=9.5)
+                    else ("two-channel mean (fitted at all five epochs jointly)" if FIT_EPOCH["k"] < 0 else
+                          f"two-channel mean (fitted at z={ANCHOR_Z[FIT_EPOCH['k']]} only, shaded)"), fontsize=9.5)
     ax[0].set_ylabel(_tex("median log10(model/truth) of M*(<4.92 kpc)")); ax[0].set_ylim(-0.3, 0.12)
     fig.suptitle("C8: the central error against epoch (band: 16-84% of the non-decliners)", fontsize=10.5)
     fig.tight_layout(); save_fig(fig, FIGDIR / f"exp63_stage2_c8{tag}"); paths.append(FIGDIR / f"exp63_stage2_c8{tag}.png")
@@ -604,7 +705,8 @@ def figures_stage2(cogs, data, lmh, good, spec2, theta, th_nested, curves, share
         a.axhline(0, color="k", lw=0.8); _shade_fitted(a)
         a.set_title(_tex(key)); a.set_xlabel("z"); a.set_ylabel(f"median relative bias [{_pct()}]")
         a.legend(fontsize=7)
-    fig.suptitle(f"fitted at z={ANCHOR_Z[FIT_EPOCH['k']]} (shaded); every other epoch is a prediction", fontsize=11)
+    fig.suptitle("fitted at all five epochs jointly (one theta)" if FIT_EPOCH["k"] < 0 else
+                 f"fitted at z={ANCHOR_Z[FIT_EPOCH['k']]} (shaded); every other epoch is a prediction", fontsize=11)
     fig.tight_layout(); save_fig(fig, FIGDIR / f"exp63_stage2_predictions{tag}"); paths.append(FIGDIR / f"exp63_stage2_predictions{tag}.png")
     return paths
 
@@ -622,6 +724,9 @@ if __name__ == "__main__":
     objective = args[args.index("--objective") + 1] if "--objective" in args else "production"
     compact_kpc = "--compact-kpc" in args
     epoch = int(args[args.index("--epoch") + 1]) if "--epoch" in args else 0
+    joint = "--joint" in args
+    start_from = args[args.index("--start-from") + 1] if "--start-from" in args else None
+    set_values = parse_freeze(args[args.index("--set") + 1]) if "--set" in args else {}
     tag = (f"_tau{tau_fixed:g}" if tau_fixed is not None else ("_delay" if delay else ("_growthrel" if growth_rel else ("_growth" if growth else ""))))
     tag += (args[args.index("--tag") + 1] if "--tag" in args else "") + ("_smoke" if smoke else "")
     sel = None
@@ -633,6 +738,7 @@ if __name__ == "__main__":
     if "--eval-only" not in args:
         run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth, growth_rel=growth_rel,
                 freeze=freeze, levers=levers, extended_family=ext_fam, objective=objective,
-                compact_in_kpc=compact_kpc, epoch=epoch)
+                compact_in_kpc=compact_kpc, epoch=epoch, joint=joint, start_from=start_from,
+                set_values=set_values)
     if "--fit-only" not in args:
         run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel)
