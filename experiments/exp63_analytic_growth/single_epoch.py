@@ -21,6 +21,11 @@ Two entry points:
                     qa_planes, ...) for each fit file at z=0.4 ONLY — the model
                     and the data are passed as single-epoch arrays, so nothing
                     at z > 0.4 is evaluated; figures `figures/qa/qa_*_exp63_z04{tag}`.
+  --epoch k         (with --gate or --qa) judge at epoch k (0-4 = z 0.4, 0.7, 1.0,
+                    1.5, 2.0) instead of z=0.4: that epoch's data, halo mass and
+                    stellar mass, the model's integral truncated at that epoch.
+                    The gate's QA sample is the galaxies with finite, positive
+                    data at that epoch (the fit used the sane + mh-complete mask).
   --sweep [TAG]     the LEVER SWEEP: every candidate lever moved one at a time
                     from the base solution (Stage 2, or the fit at TAG) with no
                     refit, read by the same table. Standing method: sweep a
@@ -74,30 +79,32 @@ COLORS = ("#999999", "#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56
 # the sample                                                                   #
 # --------------------------------------------------------------------------- #
 class Sample:
-    """Everything the gate needs, at z=0.4 only."""
+    """Everything the gate needs, at ONE epoch (default z=0.4)."""
 
-    def __init__(self, smoke=False):
+    def __init__(self, smoke=False, epoch=0):
         recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
         self.curves = E.build_curves(recs, verbose=False)
         self.data = data                                  # (n, 5, 24)
         self.mask = np.asarray(mask, bool)
-        self.lmh = lmh[:, 0]
+        self.epoch = epoch
+        self.z = E.ANCHOR_Z[epoch]
+        self.lmh = lmh[:, epoch]
         self.th_inc = th_inc
-        self.good = np.isfinite(data[:, 0]).all(1) & (data[:, 0] > 0).all(1)
-        self.fit_rows = np.where(self.mask[:, 0] & self.good)[0]
-        self.d0 = data[:, 0]
-        self.logms = np.log10(np.clip(data[:, 0, -1], 1.0, None))
+        self.good = np.isfinite(data[:, epoch]).all(1) & (data[:, epoch] > 0).all(1) & np.isfinite(self.lmh)
+        self.fit_rows = np.where(self.mask[:, epoch] & self.good)[0]
+        self.d0 = data[:, epoch]
+        self.logms = np.log10(np.clip(data[:, epoch, -1], 1.0, None))
         self._problem = {}
 
     def predict(self, spec2, theta):
-        """M*(<R) at z=0.4, full nodes: (n, 24)."""
-        return M2.predict2(spec2, theta, self.curves, R, epochs=(0,))[:, 0]
+        """M*(<R) at this epoch, full nodes: (n, 24)."""
+        return M2.predict2(spec2, theta, self.curves, R, epochs=(self.epoch,))[:, 0]
 
     def problem(self, spec2):
         key = spec2                                       # frozen dataclass: hashable, all fields
         if key not in self._problem:
-            pr = S2.Problem2(spec2, self.curves, self.data, self.fit_rows, R, l_s_ref=None)
-            ref = S2.Problem2(M2.Spec2(), self.curves, self.data, self.fit_rows, R, l_s_ref=None)
+            pr = S2.Problem2(spec2, self.curves, self.data, self.fit_rows, R, l_s_ref=None, epoch=self.epoch)
+            ref = S2.Problem2(M2.Spec2(), self.curves, self.data, self.fit_rows, R, l_s_ref=None, epoch=self.epoch)
             pr.l_s_ref = ref.scores(M2.nested_theta(self.th_inc))[2]
             self._problem[key] = pr
         return self._problem[key]
@@ -233,8 +240,8 @@ def load_fit(tag):
     return spec2, np.asarray(fz["theta_best"], float), fz
 
 
-def run_gate(tags, name, smoke):
-    sample = Sample(smoke)
+def run_gate(tags, name, smoke, epoch=0):
+    sample = Sample(smoke, epoch)
     s2 = M2.Spec2()
     products, rows = {}, []
     th_nested = M2.nested_theta(sample.th_inc)
@@ -246,9 +253,10 @@ def run_gate(tags, name, smoke):
         rows.append((pname, gate_row(sample, m0), sample.loss_components(spec2, theta)))
         print(f"  {pname:<20} " + "  ".join(f"{n}={v:+.3f}" for n, v in zip(spec2.theta_names, theta))
               + (f"  [compact in kpc]" if spec2.compact_in_kpc else "") + f"  [{spec2.extended_family}]")
-    print_table(rows, "THE z=0.4 GATE — median (model-data)/data [%] by halo-mass tercile, raw and amplitude-pinned")
-    path = gate_figure(sample, products, name, "exp63 single-epoch round — the z=0.4 visual gate "
-                       "(fitted at z=0.4 only; the baseline is the incumbent on the exact engine, fitted at five epochs)")
+    print_table(rows, f"THE z={sample.z} GATE — median (model-data)/data [%] by halo-mass tercile, raw and amplitude-pinned"
+                f" (QA sample {int(sample.good.sum())} galaxies; fit mask {len(sample.fit_rows)})")
+    path = gate_figure(sample, products, name, f"exp63 single-epoch round — the z={sample.z} visual gate "
+                       "(each product fitted at ONE epoch; the baseline is the incumbent on the exact engine, fitted at five epochs)")
     print(f"\n  wrote {path.relative_to(ROOT)}")
     return rows
 
@@ -311,24 +319,22 @@ def run_sweep(base_tag, smoke):
              pin_h=np.array([r[1]["pin_h"] for r in rows]), loss=np.array([r[2] for r in rows]))
 
 
-def run_qa(tags, smoke):
-    """The standard battery at z=0.4 only, one product per tag."""
-    sample = Sample(smoke)
+def run_qa(tags, smoke, epoch=0):
+    """The standard battery at ONE epoch, one product per tag."""
+    sample = Sample(smoke, epoch)
     g = sample.good
     QADIR = FIGDIR / "qa"
     QADIR.mkdir(parents=True, exist_ok=True)
+    ztag = f"z{sample.z:.1f}".replace(".", "")
     for tag in tags:
         spec2, theta, _ = load_fit(tag)
         m0 = sample.predict(spec2, theta)
-        name = f"exp63_z04{tag or '_stage2'}{'_smoke' if smoke else ''}"
-        print(f"\n{RULE}\nSTANDARD QA at z=0.4 ONLY — {name}\n{RULE}")
-        qa.evaluate(m0[g][:, None, :], sample.d0[g][:, None, :], R, [ANCHOR_Z0], name=name,
+        name = f"exp63_{ztag}{tag or '_stage2'}{'_smoke' if smoke else ''}"
+        print(f"\n{RULE}\nSTANDARD QA at z={sample.z} ONLY — {name}\n{RULE}")
+        qa.evaluate(m0[g][:, None, :], sample.d0[g][:, None, :], R, [sample.z], name=name,
                     figdir=QADIR, figures=True, verbose=True,
-                    bin_by=sample.lmh[g], bin_label=r"logM$_h$(z=0.4)",
+                    bin_by=sample.lmh[g], bin_label=rf"logM$_h$(z={sample.z})",
                     bin_by_ms=sample.logms[g], ms_label=r"logM$_*$ (total)")
-
-
-ANCHOR_Z0 = E.ANCHOR_Z[0]
 
 
 if __name__ == "__main__":
@@ -339,9 +345,10 @@ if __name__ == "__main__":
         i = args.index("--sweep") + 1
         base = args[i] if i < len(args) and not args[i].startswith("--") else ""
         run_sweep(base, smoke)
+    epoch = int(args[args.index("--epoch") + 1]) if "--epoch" in args else 0
     if "--qa" in args:
-        run_qa(args[args.index("--qa") + 1].split(","), smoke)
+        run_qa(args[args.index("--qa") + 1].split(","), smoke, epoch)
     if "--gate" in args:
         tags = [t for t in args[args.index("--gate") + 1].split(",") if t]
         name = args[args.index("--name") + 1] if "--name" in args else ""
-        run_gate(tags, name + ("_smoke" if smoke else ""), smoke)
+        run_gate(tags, name + ("_smoke" if smoke else ""), smoke, epoch)

@@ -761,6 +761,61 @@ where the model does not evaluate and stopped at once.)
 Figures: `figures/exp63_single_epoch_gate_{frozen,binned,sersic_binned,kpc,levers}.png`;
 tables in `outputs/single_epoch_gate_*.log`; the sweep in `outputs/single_epoch_sweep.log`.
 
+### 5d — the extrapolation of the two candidates, opened after the user read the z=0.4 gate (2026-08-29)
+
+The user's reading of the z=0.4 QA figures: greatly improved by the average CoGs
+and the planes; Option 2 (`_frozen_binned_levers`) for performance, Option 1
+(`_frozen_binned_kpc`) as the simple back-up (it is 3–5 per cent low in total
+stellar mass above $10^{13.7}$ — the incumbent's tilt, slightly worse; Option 2
+halves it). With that, `stage2_fit.py --eval-only` was run on both: fitted at
+$z=0.4$ only, the frozen exponents the incumbent's, every other epoch a
+prediction; the incumbent it is compared with was fitted at all five epochs.
+Median relative bias, whole sample / fit mask (`outputs/stage2_eval_frozen_binned_{levers,kpc}.log`,
+`figures/exp63_stage2_predictions_frozen_binned_{levers,kpc}.png`):
+
+| quantity | product | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|---|
+| $M_*(<10)$ | incumbent | +3.6 / +3.6 | +5.3 / +6.7 | +5.8 / +8.9 | −0.8 / +4.3 | −8.9 / −7.8 |
+| | Option 2 | +0.9 / +0.9 | +2.6 / +1.6 | +4.5 / +3.3 | +2.2 / +1.5 | **−2.4** / −4.4 |
+| | Option 1 | 0.0 / 0.0 | +0.9 / +1.2 | +2.0 / +2.8 | −2.3 / +0.5 | −7.4 / −7.9 |
+| $M_*(<100)$ | incumbent | +0.4 / +0.4 | +5.1 / +4.6 | +6.4 / +5.7 | +3.0 / +3.0 | −4.7 / −7.8 |
+| | Option 2 | 0.0 / 0.0 | +4.8 / +4.4 | +6.1 / +5.5 | +1.1 / +2.8 | −8.3 / −9.0 |
+| | Option 1 | −0.1 / −0.1 | +4.8 / +4.2 | +6.1 / +5.4 | +2.5 / +2.7 | −5.6 / −8.4 |
+| $M_*(50\text{–}100)$ | incumbent | −3.5 / −3.5 | +4.6 / −5.4 | +8.7 / −7.4 | +19.7 / −8.4 | +32.4 / −9.5 |
+| | Option 2 | +4.8 / +4.8 | +4.3 / +1.4 | −5.7 / −8.3 | **−31.8** / −27.2 | **−57.7** / −46.9 |
+| | Option 1 | +0.8 / +0.8 | +4.1 / −3.7 | +2.3 / −10.5 | −3.7 / −20.4 | −7.1 / −32.5 |
+
+Tier 3 (median max |rel| beyond 5 kpc): incumbent 0.280 / 0.282 / 0.291 / 0.291 / 0.314;
+Option 2 0.267 / 0.272 / 0.286 / 0.299 / 0.314; Option 1 0.269 / 0.275 / 0.287 / 0.296 / 0.315.
+C8 (median log model/truth of $M_*(<4.92)$, whole population span over the five
+epochs): incumbent 0.058, Option 2 0.058, Option 1 0.087; the non-decliners' span
+0.037 / 0.032 / 0.028. Plane $M(30\text{–}50)|M(<30)$ slope at $z=2$ (truth 1.43):
+incumbent 1.26, Option 2 **2.70**, Option 1 **1.44** (Option 1 is on the truth's
+slope at every epoch, 1.34–1.44 against 1.42–1.67).
+
+**What it means.** Both beat the five-epoch incumbent at the centre at every
+epoch — Option 2's $M_*(<10)$ is within ±4.5 per cent at all five, against the
+incumbent's −9 at $z=2$ — and both fail differently in the outskirts. Option 2's
+extended channel arrives far too late/compact at $z\ge1.5$ ($M_*(50\text{–}100)$
+−32 and −58 per cent; the $z=2$ plane slope 2.7): the sharp switch at
+$10^{12.4}$ with the incumbent's $b_e=-0.9$ leaves the early extended deposits
+tiny. Option 1 keeps the outskirts and the plane slopes at every epoch on the
+whole sample but tilts at the centre ($M_*(<10)$ −7 per cent at $z=2$, C8 span
+0.087). Neither is a five-epoch model as fitted; both have the structure to be
+one. The $z=2$ gate on the whole sample (`single_epoch.py --gate --epoch 4`,
+`figures/exp63_single_epoch_gate_z2_from_z04.png`) shows the shared limit: the
+top tercile's 2 kpc is −40 to −45 per cent at $z=2$ for both (incumbent −17), the
+class-limit decline problem (P8) seen from $z=2$'s side.
+
+**Decision (the user's rule: if either extrapolates well or has the potential,
+fit the other epochs independently).** Both qualify. Stage 5e fits each option at
+$z=0.7$, 1.0, 1.5 and 2.0 alone (`stage2_fit.py --epoch k`: that epoch's data on
+that epoch's sane + mh-complete mask, its $\sigma_A$ and halo-mass terciles; the
+integral truncated at its anchor, so each fit sees only the MAH before its
+epoch), judged by the gate at that epoch (`single_epoch.py --gate --epoch k`) and
+by how the parameters move with epoch — a parameter that must change across
+epochs is a time law the frozen exponents do not carry.
+
 ## What exp63 delivered, and what it did not (2026-08-28)
 
 Against the science plan's three requests:
