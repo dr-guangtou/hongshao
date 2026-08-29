@@ -48,6 +48,30 @@ objective), each judged by the binned CoGs. No z > 0.4 number until z=0.4 is rig
 - Records: README Stage 5 (+ closing summary amended), `doc/todo.md`,
   `doc/lessons.md` (four lessons), memory `loss-is-blind-to-the-binned-gate`.
 
+## Added 2026-08-29 (after the user read the z=0.4 QA figures)
+
+- `single_epoch.py --qa TAGS [--epoch k]`: the standard `qa.evaluate` battery at
+  ONE epoch (single-epoch arrays); `--gate --epoch k` judges at any epoch, on the
+  whole sample AND on the fit mask (D5). `stage2_fit.py --epoch k` fits one epoch
+  alone (its data, mask, sigma_A, terciles; integral truncated at its anchor).
+- **5d extrapolation** of Options 2 and 1 (README 5d): both beat the five-epoch
+  incumbent at M(<10) at every epoch; Option 2's outskirts collapse at z>=1.5
+  (the sharp switch + frozen b_e = -0.9), Option 1 keeps outskirts and plane
+  slopes but tilts at the centre (C8 span 0.087).
+- **5e per-epoch fits** (README 5e, `figures/exp63_single_epoch_gate_e{1..4}.png`,
+  `exp63_single_epoch_params_vs_epoch.png`): the kpc form fits EVERY epoch to
+  gate rms 1.05-1.50 on its fit mask (incumbent 5-10); parameters move smoothly
+  and read as a time law: b_c ~ -0.5 (compact size 2.64 -> 1.75 kpc toward z=2),
+  b_e ~ +0.1 (extended size a constant fraction of R200c at deposit — the frozen
+  -0.9 is wrong by +1.0), the split flattens at z>=1.5, small drift in a0/a_M.
+  Option 2 converges to the same structure at every epoch (g_c -0.32..-0.40).
+  Residual the class keeps: the plane slope at z>=1.5 too steep even when fitted
+  there (1.40 vs 1.00 at z=2).
+- **Owed by the user**: whether to run the joint five-epoch fit of the kpc form
+  with b_c, b_e free (binned term summed over epochs). Not started.
+- Fit files added: `stage2_fit_frozen_binned_{kpc,levers}_e{1,2,3,4}.npz`; eval
+  logs `stage2_eval_frozen_binned_{levers,kpc}.log` (+ their figures).
+
 ## In Progress (Not Finished)
 
 - Nothing running. `_frozen_binned_kpc_levers` finished: rms 1.41, plane slope

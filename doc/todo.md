@@ -2368,9 +2368,24 @@ quoted until z=0.4 passes the gate.
   `_frozen_binned_kpc` rms 1.50, every tercile within +-3%; the size levers on
   the R200c form (`_frozen_binned_levers`, g_c = -0.45) rms 1.16, plane slope
   1.44 (truth 1.42), D4 loss 2.796 (best of any frozen fit).
-- [ ] `_frozen_binned_kpc_levers` (running). Then the user reads the z=0.4 gate
-  figures and picks the candidate; only then the extrapolation (both samples),
-  which is also what separates the compact-share / extended-core degeneracy.
+- [x] `_frozen_binned_kpc_levers`: rms 1.41, slope 1.42 (= truth); g_c -0.07,
+  w_min 0.02 once the compact size is in kpc. User read the z=0.4 QA: Option 2
+  (`_frozen_binned_levers`) for performance, Option 1 (`_frozen_binned_kpc`) as
+  the simple back-up.
+- [x] 5d the extrapolation of both (`--eval-only`): both beat the incumbent at
+  M(<10) at every epoch; Option 2's outskirts collapse at z>=1.5 (M(50-100) -58%
+  at z=2, plane slope 2.7); Option 1 keeps outskirts and plane slopes, tilts at
+  the centre. Both qualify for per-epoch fits by the user's rule.
+- [x] 5e each epoch fitted alone (`--epoch k`, 8 fits): the kpc form reaches gate
+  rms 1.05-1.50 at EVERY epoch on its fit mask (incumbent 5-10); parameters move
+  smoothly: s_c 2.64 -> 1.75 kpc (b_c ~ -0.5), log f_e -0.72 -> -0.39 (b_e ~ +0.1,
+  not the frozen -0.9), split flattens (d -> bound) at z>=1.5. Option 2 agrees
+  (g_c -0.32..-0.40 at every epoch). Plane slope too steep at z>=1.5 even when
+  fitted there (1.40 vs 1.00 at z=2).
+- [ ] DECISION (user): a joint five-epoch fit of the kpc form with b_c, b_e free
+  (a_z, a_Mz frozen or free), the binned term summed over epochs — one theta
+  against five gates. Is the per-epoch optimum a ceiling the shared law cannot
+  reach (exp61's lesson), or is this a five-epoch model?
 
 ### Bookkeeping found by the 2026-08-28 probe (not yet acted on)
 

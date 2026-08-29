@@ -255,6 +255,12 @@ def run_gate(tags, name, smoke, epoch=0):
               + (f"  [compact in kpc]" if spec2.compact_in_kpc else "") + f"  [{spec2.extended_family}]")
     print_table(rows, f"THE z={sample.z} GATE — median (model-data)/data [%] by halo-mass tercile, raw and amplitude-pinned"
                 f" (QA sample {int(sample.good.sum())} galaxies; fit mask {len(sample.fit_rows)})")
+    if len(sample.fit_rows) < int(sample.good.sum()):
+        # D5: both samples. The fit mask (sane + mh-complete at this epoch) is what any
+        # fit at this epoch saw; its terciles are re-drawn on the mask.
+        fm = np.zeros(len(sample.good), bool); fm[sample.fit_rows] = True
+        rows_fm = [(nm, gate_row(sample, products[nm], good=fm), None) for nm, _, _ in rows]
+        print_table(rows_fm, f"THE SAME GATE ON THE FIT MASK at z={sample.z} ({len(sample.fit_rows)} galaxies; terciles re-drawn on the mask)")
     path = gate_figure(sample, products, name, f"exp63 single-epoch round — the z={sample.z} visual gate "
                        "(each product fitted at ONE epoch; the baseline is the incumbent on the exact engine, fitted at five epochs)")
     print(f"\n  wrote {path.relative_to(ROOT)}")

@@ -816,6 +816,92 @@ epoch), judged by the gate at that epoch (`single_epoch.py --gate --epoch k`) an
 by how the parameters move with epoch — a parameter that must change across
 epochs is a time law the frozen exponents do not carry.
 
+### 5e — each epoch fitted alone (2026-08-29)
+
+`stage2_fit.py --epoch k` fits the same model at one epoch: that epoch's data on
+that epoch's sane + mh-complete mask (1780 / 1435 / 1144 / 839 galaxies at
+$z=0.7$ / 1.0 / 1.5 / 2.0), its $\sigma_A$ and its halo-mass terciles for the
+binned term; the integral truncated at that epoch's anchor, so the fit sees only
+the MAH before its epoch. Time exponents frozen as in every Stage 5 fit; binned
+objective; three starts. Judged by the gate at that epoch, on both samples
+(`single_epoch.py --gate --epoch k`; `figures/exp63_single_epoch_gate_e{1,2,3,4}.png`;
+logs `outputs/single_epoch_gate_e*.log`). Gate rms over terciles × radii on the
+fit mask, with the worst central / outskirt tercile residual:
+
+| judged at | incumbent (5-epoch fit) | Option 1 from its z=0.4 fit | Option 1 fitted at this epoch | Option 2 fitted at this epoch |
+|---|---|---|---|---|
+| z=0.4 (2397) | 4.98 (19.3 / 4.0) | **1.50** (3.9 / 2.9) | — | 1.16 (3.7 / 1.7) |
+| z=0.7 (1780) | 6.54 (16.6 / 7.4) | 5.07 (14.6 / 6.3) | **1.05** (3.2 / 1.9) | 0.95 (3.4 / 1.9) |
+| z=1.0 (1435) | 7.67 (13.6 / 9.7) | 8.21 (26.3 / 8.9) | **1.48** (5.5 / 2.3) | 1.37 (4.7 / 2.4) |
+| z=1.5 (1144) | 5.60 (14.9 / 9.6) | 11.34 (39.2 / 9.7) | **1.17** (3.2 / 1.9) | 1.27 (4.2 / 1.7) |
+| z=2.0 (839) | 10.48 (22.8 / 12.5) | 16.47 (49.9 / 13.7) | **1.36** (4.2 / 1.8) | 1.32 (3.6 / 1.7) |
+
+**Every epoch can be fitted to the z=0.4 precision by the same form** — every
+halo-mass tercile within ±4–5 per cent at every radius at each of the five
+epochs, where the five-epoch incumbent is 5–10 and the z=0.4 fit extrapolated is
+5–16. The plane slope $M(30\text{–}50)|M(<30)$ is reproduced at $z\le1.0$ (1.39 vs
+1.37; 1.37 vs 1.31) and is too steep at $z\ge1.5$ even when fitted there (1.35 vs
+1.21; 1.40 vs 1.00 at $z=2$): the mean's outskirt-against-centre relation at
+$z=2$ is steeper than the data's — a residual the class shows only at $z\ge1.5$
+and only in the plane, not in the average CoGs. On the whole 2397-galaxy sample
+at $z=2$ the per-epoch fit is +22–28 per cent in the lowest tercile — those are
+galaxies outside the mask (incomplete halo histories at $z=2$) that the fit never
+saw; D5 says both samples are reported, and this is the sample difference.
+
+**How the parameters move with the epoch fitted** (Option 1, the kpc form;
+`figures/exp63_single_epoch_params_vs_epoch.png`):
+
+| fitted at | $a_0$ | $a_M$ | $m_{1/2}$ | $d$ | $s_c$ [kpc] | $\log(f_e)$ | $n_c$ | $c_e$ |
+|---|---|---|---|---|---|---|---|---|
+| z=0.4 | −2.564 | −0.563 | 10.65 | 1.24 | 2.64 | −0.717 | 0.88 | 1.09 |
+| z=0.7 | −2.571 | −0.559 | 11.21 | 1.25 | 2.58 | −0.640 | 1.09 | 1.07 |
+| z=1.0 | −2.585 | −0.575 | 10.91 | 1.78 | 2.37 | −0.573 | 1.14 | 1.04 |
+| z=1.5 | −2.611 | −0.614 | 10.95 | 3.00 (bound) | 2.02 | −0.463 | 1.28 | 1.00 |
+| z=2.0 | −2.621 | −0.658 | 12.09 | 3.00 (bound) | 1.75 | −0.393 | 1.25 | 1.05 |
+
+Smooth and monotonic, which is what makes them readable as a time law the frozen
+exponents do not carry:
+
+1. **The compact size shrinks toward high redshift**, 2.64 → 1.75 kpc. With
+   $b_c$ frozen at 0 every fit uses one size for its whole history, so the
+   sequence says the stars in place by $z=2$ sit at ~1.8 kpc and by $z=0.4$ the
+   compact component is at ~2.6 kpc. Read as a deposit-size law it is
+   $s_c\propto(1+z')^{b_c}$ with $b_c\approx-0.5$ (from the end points, −0.54) —
+   later compact deposits larger; a single-epoch fit cannot tell that from the
+   early compact stars expanding, but the sequence fixes the exponent either way.
+2. **The extended size is a constant fraction of $R_{200c}$ at the deposit.**
+   $\log f_e$ rises by 0.32 over $\Delta\log(1+z)=0.33$, i.e. the frozen
+   $b_e=-0.90$ is wrong by +1.0: $b_e\approx+0.1$. The incumbent's strongly
+   negative $b$ was a single size law compensating for having no compact
+   channel (Stage 1's reading); with the compact channel in place the extended
+   deposits simply scale with the halo. This is also why the z=0.4 fits'
+   outskirts collapsed at $z\ge1.5$ in 5d: with $b_e=-0.9$ the early extended
+   deposits were made far too small.
+3. **The split flattens at high redshift** ($d$ 1.2 → 3.0, at the bound): at
+   $z\ge1.5$ the compact share hardly depends on the halo mass at deposit —
+   every halo is below the switch mass early on, so the mass-only logistic has
+   nothing to act on and the fit asks for a constant share instead.
+4. The efficiency law drifts a little ($a_0$ −2.56 → −2.62, $a_M$ −0.56 → −0.66)
+   — the frozen $a_z$, $a_{Mz}$ are close but not exact; $n_c$ 0.9 → 1.25 and
+   $c_e\approx1.0$–1.1 are steady.
+
+Option 2 fitted at each epoch converges to the same structure: $g_c$ = −0.39 /
+−0.40 / −0.32 / −0.40 at $z$ = 0.7 / 1.0 / 1.5 / 2.0 (a compact size that does
+not scale with the halo mass at deposit, at every epoch), $d$ at the bound at
+$z=2$, and gate rms 0.95 / 1.37 / 1.27 / 1.32 — the third time the two forms
+have agreed. (Its `w_min` is 0.13–0.17 at $z\le1$ and 0 at $z\ge1.5$; its
+three starts spread more than the kpc form's, e.g. 2.68 / 2.83 at $z=1.0$.)
+
+**What follows from this.** The frozen exponents were the right move for the
+single-epoch question, and the per-epoch sequence now *measures* two of them:
+$b_c\approx-0.5$, $b_e\approx+0.1$. The natural next fit is the kpc form with
+$b_c$ and $b_e$ free (and $a_z$, $a_{Mz}$ either frozen or free — the drift in
+$a_0$, $a_M$ is small) at all five epochs jointly, the binned term summed over
+epochs — one $\theta$ tested against five gates. Whether one $\theta$ reaches
+rms ≲ 1.5 at every epoch, or the per-epoch optimum is a ceiling the shared law
+cannot reach (exp61's lesson for the incumbent), is the question that decides
+whether this is a five-epoch model. Not started: a scope decision for the user.
+
 ## What exp63 delivered, and what it did not (2026-08-28)
 
 Against the science plan's three requests:
