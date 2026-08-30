@@ -9,6 +9,29 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
+## Current experiment — damped-cosine reparameterization
+
+- [x] **Exp69 predeclaration.** Freeze the original free damped cosine, four
+  global fixed-damping cases, finite-window pivot coordinates, finite-window
+  orthogonalization, deterministic conditioned-branch rule, paired references,
+  all three objectives, synthetic recovery, weakest-direction and two-dimensional
+  scans, multi-start overlays, coordinate-continuity tests, blind sample roles,
+  numerical thresholds, and the complete sub-minute operational path before
+  writing evaluator or driver code.
+- [ ] Write the focused mechanics, archive-isolation, coordinate-mapping,
+  recovery, degeneracy-diagnostic, continuity, and operational checks first and
+  observe their expected failure.
+- [ ] Pass the complete 25-galaxy, 125-profile operational path in under one
+  measured minute without inspecting Exp67 selection or validation profiles.
+- [ ] If the operational gate passes, fit every declared system to the 6,000
+  Exp67 discovery profiles with eight starts and freeze at most two eligible
+  systems under the predeclared gates.
+- [ ] Load the 5,000 selection profiles only if discovery produces an eligible
+  system; freeze exactly one finalist without changing a coordinate or gate.
+- [ ] Load the 5,900 untouched validation profiles only for the frozen finalist,
+  fit all three objectives, render the full standard QA, and record the final
+  promote-or-reject decision.
+
 ## Current experiment — squared-slope symbolic-density search
 
 - [x] **Exp67 predeclaration.** Freeze the positive squared-slope construction,
