@@ -2,6 +2,25 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **Use a reference-family teacher gate before searching measured profiles
+  when the candidate grammar may be structurally too narrow (Exp65).** All 13
+  hard-constrained expressions were mathematically valid, and damped
+  sine/cosine atoms improved substantially over sigmoid and rational controls.
+  None could reproduce both the typical and 90th-percentile unrestricted-
+  double-Sersic teacher CoGs at the predeclared accuracy. The 7.565-second gate
+  prevented a larger structure-selection exercise from turning inadequate
+  basis capacity into a misleading galaxy-data result.
+- **Serialize a terminal gate failure before returning or raising (Exp65).**
+  The first teacher-screen implementation raised immediately, leaving the
+  decisive per-expression measurements only in memory. A failed gate is a
+  scientific result: write its summary, predictions, manifest, and diagnostic
+  figure before stopping so the negative remains inspectable and reproducible.
+- **Do not launch a spawn-based process pool from a Python standard-input
+  script (Exp65).** macOS multiprocessing tried to reload the parent from the
+  nonexistent path `<stdin>` and broke the pool. Run parallel diagnostics from
+  a real script guarded by `if __name__ == "__main__"`, or use a serial loop for
+  a small interactive audit.
+
 ## Data handling (TNG300 drop)
 
 - **DiffMAH was fit to SubhaloMass, not M200c (exp28 refines exp27).** Per-halo,
@@ -2008,3 +2027,49 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   0.00563 dex, but the 99th percentile is 0.401 dex. A harmless median does
   not validate every extrapolated total. Public profile functions should
   provide an aperture-normalized route and label infinite totals explicitly.
+
+# 2026-08-30 — Exp66 expanded symbolic-density screen
+
+- **A broad grammar cannot rescue a restrictive outer wrapper.** Across 1,250
+  measured profiles, the best-conditioned log-periodic forms frequently drive
+  the bounded modulation toward `|rho| = 1`. The frequency-2 log-periodic
+  cosine has adequate relative Jacobian conditioning at all five epochs but
+  22.72% boundary incidence, dominated by its modulation coordinate. This is
+  evidence that the bounded-linear slope contrast, not merely the choice of
+  symbolic atom, limits the family. Change that construction in a separately
+  predeclared experiment rather than widening a bound after inspecting fits.
+- **Free trigonometric phase can buy accuracy by introducing a nearly null
+  direction.** The fitted-frequency-and-phase harmonic has the best frozen
+  Round-A accuracy, with median full-CoG RMS of 0.00238--0.00349 dex across
+  epochs, but only 0.62--1.94% of cubic-logit's paired Jacobian strength and
+  65.36% boundary incidence. Report the frequency--phase degeneracy beside the
+  lower RMS; the extra freedom is not a usable profile coordinate.
+- **Missing stratification variables must be counted before freezing a split.**
+  The full profile atlas has 3,380 complete five-epoch CoGs but finite halo mass
+  for only 2,395 galaxies; 985 halo masses are missing. Exp66's deterministic
+  sort distributes them reproducibly but does not provide the clean
+  halo-mass stratification implied by the predeclaration. Future profile-only
+  searches should declare a separate missing-mass stratum before selecting any
+  galaxy.
+
+# 2026-08-30 — Exp67 squared-slope symbolic-density search
+
+- **Removing an artificial amplitude ceiling can reveal a real family without
+  producing a usable coordinate system.** Replacing Exp66's bounded-linear
+  slope modulation by an algebraically positive square lets fitted damped
+  harmonics beat double Sersic's median full-CoG RMS at every epoch. Their
+  scaled-Jacobian strength is nevertheless only 1.38--3.60% of cubic-logit's
+  paired value, and 17.83--21.35% of fits approach a coordinate bound. Separate
+  representational accuracy from parameter identifiability.
+- **Localized trigonometric packets occupy a different accuracy--conditioning
+  regime from free damped harmonics.** A fixed frequency-0.5, width-0.5 sine
+  packet is at most 14.78% worse than double Sersic in epoch-median CoG RMS,
+  while retaining 46.87--62.80% of cubic-logit's Jacobian strength and only
+  2.72% boundary incidence. Its failure is rare but real: 12 of 6,000 profiles
+  have near-equal two-start solutions separated by more than 0.003 dex in CoG.
+  Report both the population incidence and the predeclared worst-case failure.
+- **More galaxies can reverse which symbolic atom looks best.** Exp66's
+  bounded-linear wrapper favored log-periodic atoms on 250 galaxies. Exp67's
+  squared-slope search over 1,200 galaxies favors low-frequency localized
+  packets for conditioning and fitted damped harmonics for accuracy. Do not
+  generalize an atom ranking across constraint wrappers or from a demo sample.

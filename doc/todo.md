@@ -9,6 +9,93 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
+## Current experiment — squared-slope symbolic-density search
+
+- [x] **Exp67 predeclaration.** Freeze the positive squared-slope construction,
+  explicit finite- and missing-halo-mass strata, 1,200/1,000/1,180 galaxy
+  split, complete relaxed Exp66 atom library, analytic-integral audit,
+  degeneracy tests, replacement criteria, and sub-minute operational gate
+  before writing the evaluator or driver.
+- [x] Write the focused mathematical, split, exact-integral, recovery, and
+  checkpoint checks first and observe their expected failure.
+- [x] Pass the complete 125-profile operational path in under one measured
+  minute. **Result:** all mechanics, fits, metrics, serialization, and figures
+  completed in 42.88 seconds.
+- [x] Fit every Round-A expression directly to all 6,000 discovery profiles;
+  generate Round B only from the frozen eligible survivors. **Result:** all 88
+  expressions and two starts per profile completed in 3,905.30 seconds; none
+  passed every frozen gate, so Round B was not generated.
+- [x] Fit the best six eligible families to 5,000 separate selection profiles.
+  **Not triggered:** the eligible discovery list is empty.
+- [x] Fit the finalist under all three objectives on 5,900 untouched validation
+  profiles. **Not triggered:** no finalist exists; all selection and validation
+  galaxies remain untouched.
+- [x] Complete the Exp67 review without changing a gate after seeing results.
+  **Decision:** retain the fixed low-frequency packet as the most interesting
+  conditioned new family and the free damped squared harmonic as the most
+  interesting analytic but non-identifiable family; promote neither.
+
+## Current experiment — expanded constrained symbolic-density search
+
+- [x] **Exp66 predeclaration.** Freeze a 3,380-galaxy discovery/selection/final
+  split, relaxed transition and trigonometric grammar, mechanically generated
+  two-atom round, analytic-property audit, paired references, eligibility and
+  replacement gates, and staged measured runtime checks before implementation.
+- [x] Write the mathematical, analytic-integral, split, grammar-generation, and
+  synthetic-recovery checks first and observe their expected failure.
+- [x] Pass the complete 125-profile operational path in under one measured
+  minute; do not use it for scientific selection.
+- [x] Fit every Round-A expression to 1,250 broad-screen profiles, freeze the
+  best 12 eligible forms, then fit those and Round B to all 5,000 discovery
+  profiles. **Result:** all 88 expressions were fit to 1,250 measured profiles
+  in 623.17 seconds, but none passed all success, boundary, and conditioning
+  gates. The survivor list is empty, so the declared stop prevents Round B.
+- [x] Freeze the best five eligible expressions and evaluate them on 5,000
+  separate selection profiles. **Not triggered:** no Round-A expression was
+  eligible.
+- [x] Fit the finalist under all three objectives on 6,900 untouched validation
+  profiles. **Not triggered:** no finalist was selected, and all 2,380
+  selection/validation galaxies remain untouched by expression choice.
+- [x] If the numerical gates pass, inspect average CoGs in halo- and stellar-
+  mass bins and the stellar-mass planes. **Not triggered:** the broad numerical
+  gate failed.
+- [x] **Exp66 review:** report sample accounting, every expression and analytic
+  property class, measured timings, all numerical/visual gates, and the final
+  decision without expanding the grammar after validation. **Decision:** the
+  bounded-linear wrapper is a null; retain the log-periodic atom for a separate
+  squared-slope experiment that removes the saturated modulation ceiling.
+
+## Current experiment — constrained symbolic projected-density search
+
+- [x] **Exp65 predeclaration.** Freeze a hard-constrained density-slope wrapper,
+  finite expression grammar, bounded damped sine/cosine atoms, paired Exp62
+  references, three fitting objectives, degeneracy tests, held-out expression
+  selection, strict replacement gates, and the measured sub-minute path before
+  writing evaluator or driver code.
+- [x] Write the mechanics and synthetic-recovery checks first and observe their
+  expected failure before implementing the symbolic density evaluator.
+- [x] Run the 15-profile unrestricted-double-Sersic teacher feasibility gate.
+  **Result:** all 13 expressions fit successfully, but none passes both the
+  0.003 dex median and 0.010 dex 90th-percentile candidate-to-teacher CoG RMS
+  limits. The best joint compromise is a damped sine with damping 0.5 and
+  frequency 2: its 0.00321 dex median misses the median limit while its 0.00973
+  dex 90th percentile passes. Four-start, finer-grid refits confirm the null.
+- [x] Run the complete 90-profile expression search and three-objective finalist
+  path only if the teacher gate passes. **Not triggered:** the declared teacher
+  stop occurred after 7.565 measured seconds, including mechanics, fits,
+  serialization, and the PNG+PDF teacher diagnostic.
+- [x] If and only if the development gates pass, exclude the 90 development
+  pairs and run the 16,810-profile population validation. **Not authorized.**
+- [x] If the population candidate passes numerically, inspect average CoGs in
+  halo- and stellar-mass bins and the stellar-mass planes before calling it
+  promising; otherwise close Exp65 without expanding the grammar. **Closed at
+  the teacher gate; no model is called promising.**
+- [x] **Exp65 review:** report the complete searched grammar, measured timings,
+  accuracy/conditioning/boundary/robustness results, direct visual judgment,
+  and whether the analytic-family search should stop. **Decision:** damped
+  trigonometric atoms improve the restricted frontier but do not pass the
+  teacher gate; stop the present analytic-family search.
+
 ## Phase 1 — exploratory diagnostics
 - [x] **exp01_aperture_mah_corr** — partial-correlation map of stellar aperture
   mass vs `Mpeak(z)` at fixed `M0` (directions A + F). **Result:** at fixed M0,
@@ -2454,3 +2541,19 @@ tier 2e says is missing.
   0.401 dex. **Decision:** promote the family for aperture-normalized,
   finite-resolution projected CoGs; reject its unresolved central and extreme
   infinite-total extrapolations as physical predictions.
+- [x] **Exp67 post-result comparative QA.** On the already inspected
+  1,200-galaxy discovery sample only, compare unrestricted double Sersic with
+  the free damped cosine, fixed sine packet, and log-periodic sine. Put the
+  formulas in the figures and show epoch metrics, resolved residuals,
+  halo-/stellar-mass-binned average CoGs, stellar-mass planes, and shared
+  representative objects. Require the complete 25-galaxy figure path below
+  one minute before rendering the full discovery figures. Do not refit models,
+  inspect the selection/validation samples, or change the Exp67 null decision.
+  **Result:** the complete 25-galaxy path took 0.30 seconds, and the full
+  discovery-only render used 1,200 galaxies and 6,000 stored profile fits in
+  6.12 seconds. The free damped cosine is more accurate than double Sersic in
+  CoG and shell density at every epoch but substantially less identifiable;
+  the fixed sine packet is the best-conditioned competitive new family but
+  retains a rare, directly visible multi-start branch failure; the log-periodic
+  sine is less accurate and has the largest branch ambiguity. The binned CoGs
+  and z=0.4 stellar-mass planes do not overturn those conclusions.
