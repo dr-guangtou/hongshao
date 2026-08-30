@@ -18,19 +18,42 @@ Cross-experiment plan. Mirrors the phase sequence in
   multi-start and weakest-direction diagnostics, continuity, numerical and
   visual gates, full production QA, checkpointing, and the complete sub-minute
   operational path before writing Exp70 code.
-- [ ] Write the focused family-grid, archive-isolation, mechanics, stage-gate,
+- [x] Write the focused family-grid, archive-isolation, mechanics, stage-gate,
   ranking, and serialization checks first and observe their expected failure.
-- [ ] Pass the complete 25-galaxy operational path in less than one measured
+- [x] Pass the complete 25-galaxy operational path in less than one measured
   minute without inspecting Exp67 selection or validation profiles.
-- [ ] Fit the free reference and all four fixed values to all 6,000 discovery
+  **Result:** the all-in path passed in 20.88 seconds; all twenty synthetic
+  recovery cases and seven focused checks pass.
+- [x] Fit the free reference and all four fixed values to all 6,000 discovery
   profiles with eight starts, render the minimum population visual gate, and
   freeze at most one eligible shared damping value.
-- [ ] If discovery passes, fit the frozen value and free reference to all 5,000
+  **Result:** the 1,200-galaxy calculation took 1,284.26 seconds. Every fixed
+  value made the weakest Jacobian 17.9--20.0 times stronger than newly refit
+  free damping in its weakest epoch, but the best worst-epoch full-CoG RMS was
+  still 20.9% worse than free against a 10% allowance, maximum near-optimal CoG
+  spread was 0.00682--0.01275 dex against a 0.003 dex limit, and no continuity
+  p95 ratio reached the required 0.75. No value was frozen.
+- [x] If discovery passes, fit the frozen value and free reference to all 5,000
   untouched selection profiles, apply the stricter gates, and render the full
   standard QA without retuning damping.
-- [ ] If selection passes, fit both families to all 5,900 untouched validation
+  **Not triggered:** no discovery candidate was eligible.
+- [x] If selection passes, fit both families to all 5,900 untouched validation
   profiles under all three objectives, render cross-epoch growth diagnostics,
   and decide whether the five-coordinate family is production-ready.
+  **Not triggered:** selection was not run. **Decision:** do not pursue the
+  free damped-cosine family for production through a global fixed damping
+  constant; it removes the local damping direction by sacrificing required
+  population accuracy and does not control the near-solution or continuity
+  tails.
+
+### Review
+
+Exp70 answered the narrow production question without reopening a symbolic
+search. One shared damping constant does remove the fitted free-damping
+direction locally, but none of the four frozen values retains the required CoG
+and shell-density accuracy or controls the multi-start and continuity tails.
+The experiment therefore stops at discovery; no result-dependent grid
+refinement, selection fit, validation fit, or library promotion is warranted.
 
 ## Current experiment — damped-cosine reparameterization
 

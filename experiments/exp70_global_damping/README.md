@@ -1,7 +1,8 @@
 # Exp70 — Population-wide damped cosine
 
-Status: PREDECLARED. No Exp70 evaluator, driver, or fit exists yet. Exp67
-selection and validation profiles have not been loaded by this experiment.
+Status: COMPLETE — NEGATIVE PRODUCTION DECISION. The operational gate passed,
+but no population-wide damping value passed discovery. No value was frozen;
+selection and validation were not evaluated.
 
 ## Production question
 
@@ -22,6 +23,52 @@ This is a new experiment rather than a revision of Exp69's failed runtime gate.
 Its narrower scope follows the measured Exp69 result. It does not reopen pivot
 coordinates, finite-window orthogonalization, canonical branch selection, a
 broad damping search, or any symbolic grammar.
+
+## Result and decision
+
+The complete operational path passed in 20.88 measured seconds against the
+60-second limit. All twenty synthetic cases passed: every numerical CoG was
+strictly increasing, the analytic and numerical density-rate integrals agreed
+to better than `1.11e-7`, 512- versus 2,048-point CoGs agreed to better than
+`1.65e-4 dex`, and noiseless-fit CoG RMS was below `1.80e-5 dex`. The focused
+Exp70 check suite has seven passing checks.
+
+The scientific discovery calculation then fit the newly refit free family and
+all four fixed values, with eight starts each, to the predeclared 6,000
+discovery profiles from 1,200 galaxies. It took 1,284.26 measured seconds. The
+free family had `0.00166 dex` median full-CoG RMS across all discovery profiles.
+Every fixed value converged on all 6,000 profiles and substantially strengthened
+the weakest scaled Jacobian, but every value failed multiple non-compensating
+production gates:
+
+| shared damping | worst epoch full-CoG RMS versus newly refit free | worst epoch shell-density RMS versus newly refit free | weakest epoch Jacobian versus newly refit free | maximum CoG spread among near-optimal starts | nearest / adjacent-epoch continuity p95 versus newly refit free |
+|---:|---:|---:|---:|---:|---:|
+| 0.75 | 29.2% worse | 18.9% worse | 20.0 times stronger | 0.01275 dex | 0.837 / 0.822 |
+| 1.00 | 21.9% worse | 14.9% worse | 19.8 times stronger | 0.00693 dex | 0.893 / 0.885 |
+| 1.25 | 21.4% worse | 13.5% worse | 19.1 times stronger | 0.00682 dex | 0.997 / 0.960 |
+| 1.50 | 20.9% worse | 13.2% worse | 17.9 times stronger | 0.00947 dex | 1.112 / 1.061 |
+
+The declared limits were no more than 10% worse full, 5--30 kpc, and shell RMS
+at every epoch; less than `0.003 dex` near-optimal CoG spread; and continuity
+p95 ratios no larger than 0.75. All four values missed all three classes of
+gate. Shared damping 1.50 also put 5.58% of fits within 1% of a finite bound,
+above the 5% limit; the other three values were just below that limit at
+4.82--4.95%. All four passed the convergence and Jacobian-strength gates.
+
+The direct figures agree with the numerical decision. Fixing damping removes
+the nearly invisible free-damping direction, but the new weakest directions
+can still move inner CoGs by about 0.1 dex. Fixed damping improves the median
+descriptor continuity, yet the required 95th-percentile tails remain too
+large. The worst-profile overlay also shows coherent radial residuals rather
+than harmless coordinate relabeling.
+
+**Decision:** do not promote a population-wide fixed damping value and do not
+continue to selection or validation. Fixing damping is a useful diagnostic of
+the degeneracy, but it buys local conditioning by removing profile flexibility
+that the measured population needs. The free damped-cosine family is therefore
+not worth further production work through either coordinate relabeling (Exp69)
+or one global damping constant (Exp70). A genuinely different family would be
+needed; the frozen grid must not be refined after this result.
 
 ## Frozen physical family and parameter accounting
 
@@ -279,15 +326,22 @@ generating turn, and listed with full paths and one-line descriptions.
   sample roles, objectives, starts, mechanics, metrics, continuity definition,
   stage gates, production QA, checkpointing, and sub-minute path before writing
   Exp70 code.
-- [ ] Write focused checks first and observe failure because Exp70 code is
+- [x] Write focused checks first and observe failure because Exp70 code is
   absent.
-- [ ] Pass the complete operational path in less than 60 measured seconds.
-- [ ] Fit all four fixed values and the free reference on discovery with no
+- [x] Pass the complete operational path in less than 60 measured seconds.
+  **Result:** 20.88 seconds, including mechanics, 2,500 measured-profile
+  optimizations, serialization, common metrics, continuity, and five PNG/PDF
+  figure pairs.
+- [x] Fit all four fixed values and the free reference on discovery with no
   grid change; freeze at most one eligible value.
-- [ ] If discovery passes, confirm the frozen value on untouched selection with
+  **Result:** all 30,000 eight-start profile fits completed; no fixed value was
+  eligible and no value was frozen.
+- [x] If discovery passes, confirm the frozen value on untouched selection with
   no retuning and render full QA.
-- [ ] If selection passes, use untouched validation once under all three
+  **Not triggered:** discovery produced no eligible value.
+- [x] If selection passes, use untouched validation once under all three
   objectives and make the production decision.
-- [ ] Display and inspect every generated figure in its generating turn.
-- [ ] Record the measured result without changing a gate or adding a damping
+  **Not triggered:** selection was not run.
+- [x] Display and inspect every generated figure in its generating turn.
+- [x] Record the measured result without changing a gate or adding a damping
   value after seeing results.
