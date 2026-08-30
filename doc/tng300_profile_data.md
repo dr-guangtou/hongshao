@@ -513,3 +513,111 @@ the shape is genuinely less well determined there.
   `has_shape_cols`; the correct certificate for the constant shape is
   `ellip_const_agree`. `test` remains a good cut for the CoG-ratio *recovery*
   outliers, which is a different thing.
+
+---
+
+## 11. Is the error model good enough to fit with? Three tests (2026-08-31)
+
+Nothing in this programme has ever fitted with an error bar, so before the C17
+likelihood is built the error model has to be shown to be the right SIZE. Code:
+`scripts/profile_error_validation.py`. Figure:
+`figures/profile_error_validation.png`.
+
+### 11.1 The curve-of-growth error model: complete at z = 0.4, incomplete above it
+
+A flexible five-parameter profile family is fitted to each measured curve of
+growth by **generalised least squares** — residuals whitened by the Cholesky
+factor of the covariance, so this is a real GLS fit and not a diagonal fit with
+a covariance quoted afterwards. With 24 radii and 5 parameters there are 19
+degrees of freedom, and a correctly sized error model gives a reduced
+chi-square near 1. 800 galaxies, four nested covariances:
+
+| covariance | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| `sigma_iso` only, **diagonal** | 0.4 | 0.3 | 0.2 | 0.1 | 0.03 |
+| `sigma_iso` only, **full covariance** | 3.4 | 3.4 | 3.7 | 4.6 | 7.6 |
+| `+ sigma_shape` | 3.4 | 3.4 | 3.7 | 4.6 | 7.6 |
+| `+ sigma_proj` (z = 0.4 only) | **1.1** | — | — | — | — |
+
+Four things follow, and the last is the headline.
+
+**The diagonal makes the fit look far better than it is.** Reduced chi-square
+0.4 falling to 0.03 is not a good fit; it is an error model whose off-diagonal
+structure has been thrown away. Under the diagonal, the large common mode is
+compared point by point and the model absorbs it in its normalisation. Under
+the true covariance the common mode is *cheap* and what is tested is the fine
+radial structure — which is the stringent and correct test.
+
+**The coherent shape term buys nothing** — 3.4 against 3.4, identical to three
+digits. That is not a null result, it is a structural one: `sigma_shape`
+multiplies the whole curve coherently, and a full cumulative covariance already
+makes a common mode nearly free. The term is real and should be carried, but it
+cannot repair a shape misfit.
+
+**Adding the measured projection term brings z = 0.4 to 1.1.** From 3.4 to 1.1
+by adding a term that was *measured*, not tuned: the per-galaxy three-projection
+scatter with the radius-to-radius correlation matrix of section 11.3. **At
+z = 0.4 the error model is complete**, and the thing that had been missing was
+the orientation of the galaxy.
+
+**Above z = 0.4 it is not complete, and we cannot complete it.** Without the
+projection term the chi-square rises to 7.6 at z = 2. If projection is the whole
+explanation there too, `sigma_proj` at z = 2 would have to be roughly 2.6 times
+its z = 0.4 value — plausible, since galaxies are more irregular then, but
+**unmeasurable from this drop**. This is the single strongest argument for
+re-supplying the stellar mass maps (section 9).
+
+### 11.2 The density profile as an independent check
+
+The stored curve of growth and the curve rebuilt from the 1-D density profile
+are two routes to the same quantity, so their difference divided by the
+predicted error is a pull whose width should be about 1:
+
+| width of the pull | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| 2 kpc | 1.15 | 1.15 | 1.13 | 1.13 | 1.16 |
+| 10 kpc | 0.54 | 0.58 | 0.56 | 0.59 | 0.62 |
+| 52 kpc | 0.39 | 0.42 | 0.43 | 0.48 | 0.50 |
+| 148 kpc | 0.69 | 0.66 | 0.66 | 0.66 | 0.63 |
+
+The error model is right-sized to within a factor of two at every radius and
+every epoch, slightly **generous** at intermediate radii (pull below 1) and
+slightly **tight** at 2 kpc (1.15), where section 5's smooth-model
+reconstruction bias lives. Notably the width barely moves with redshift, so
+whatever is missing at high z in 11.1 is *not* missing from this comparison —
+consistent with it being projection, which cancels here because both routes use
+the same projection.
+
+### 11.3 The projection effect at z = 0.4
+
+**It is strongly correlated between radii.** Measured from the three sky
+projections of the same galaxies:
+
+| corr | 10 | 30 | 50 | 75 | 100 | 150 kpc |
+|---|---|---|---|---|---|---|
+| 10 | 1.000 | 0.939 | 0.884 | 0.823 | 0.774 | 0.703 |
+| 30 | | 1.000 | 0.970 | 0.912 | 0.860 | 0.782 |
+| 100 | | | | | 1.000 | 0.946 |
+
+A galaxy seen edge-on is over-dense at **every** radius. Treating this term as
+diagonal would badly understate it, and it is why 11.1 works: the term supplies
+correlated error, which is exactly the kind the cumulative covariance leaves
+uncovered.
+
+**But it is only a few per cent of the signal.** Against the galaxy-to-galaxy
+scatter at fixed halo mass — the thing a model is actually asked to reproduce:
+
+| radius [kpc] | 10 | 30 | 50 | 75 | 100 | 150 |
+|---|---|---|---|---|---|---|
+| projection scatter [dex] | 0.0234 | 0.0157 | 0.0120 | 0.0092 | 0.0073 | 0.0051 |
+| scatter at fixed `Mh` [dex] | 0.1300 | 0.1225 | 0.1238 | 0.1245 | 0.1247 | 0.1248 |
+| **projection share of the variance** | **3.2%** | 1.6% | 0.9% | 0.6% | 0.3% | 0.2% |
+
+**This corrects an overstatement in section 6.** Projection is the dominant
+*measurement error* — larger than the statistical term from 10 to 100 kpc, and
+the term that completes the error model at z = 0.4. It is **not** a large part
+of the signal: at most 3.2% of the variance at fixed halo mass, falling to 0.2%
+at 150 kpc. So it matters enormously for a per-galaxy likelihood and hardly at
+all as an excuse for population-level model failure. Both statements are true
+and they are about different quantities; anything quoting one should quote the
+other.

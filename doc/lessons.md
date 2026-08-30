@@ -2372,3 +2372,21 @@ session should not rediscover them:
   semi-major aperture is 8.08 kpc circularized at z=0.4 and 8.58 kpc at z=2: a
   6.1 per cent epoch differential that would read as size evolution if the two
   conventions were ever mixed. Recorded as `r_circ`, not silently adopted.
+- **A term can dominate the error budget and still be a rounding error in the
+  signal.** The projection term is the largest measurement error from 10 to 100
+  kpc, and adding it takes the z=0.4 reduced chi-square from 3.4 to 1.1 -- the
+  error model is complete only with it. It is also at most 3.2 per cent of the
+  variance at fixed halo mass, falling to 0.2 per cent at 150 kpc. The first
+  fact makes it essential to a per-galaxy likelihood; the second means it is no
+  excuse for population-level model failure. Quoting either alone misleads.
+- **Test an error model by fitting with it, not by admiring it.** A flexible
+  family fitted by GLS gives a reduced chi-square that says whether the errors
+  are the right SIZE, and comparing NESTED covariances says WHICH term is
+  missing. Here it showed that the coherent shape term buys literally nothing
+  (3.4 -> 3.4: a full cumulative covariance already makes a common mode cheap)
+  while the measured projection term buys everything (3.4 -> 1.1).
+- **A diagonal covariance flatters the fit.** Reduced chi-square 0.4 falling to
+  0.03 with redshift is not a good fit; it is the off-diagonal structure thrown
+  away, letting the model absorb the common mode in its normalisation. The full
+  covariance tests the fine radial structure, which is the stringent and correct
+  test, and it is 10-200x larger.
