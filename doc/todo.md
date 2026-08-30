@@ -9,6 +9,29 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
+## Current experiment — population-wide damped cosine
+
+- [x] **Exp70 predeclaration.** Freeze the original six-coordinate free
+  reference, four shared damping values from 0.75 to 1.50, five-coordinate
+  candidate accounting, unchanged Exp67 discovery/selection/validation roles,
+  three objectives, eight-start scientific fits, synthetic recovery, direct
+  multi-start and weakest-direction diagnostics, continuity, numerical and
+  visual gates, full production QA, checkpointing, and the complete sub-minute
+  operational path before writing Exp70 code.
+- [ ] Write the focused family-grid, archive-isolation, mechanics, stage-gate,
+  ranking, and serialization checks first and observe their expected failure.
+- [ ] Pass the complete 25-galaxy operational path in less than one measured
+  minute without inspecting Exp67 selection or validation profiles.
+- [ ] Fit the free reference and all four fixed values to all 6,000 discovery
+  profiles with eight starts, render the minimum population visual gate, and
+  freeze at most one eligible shared damping value.
+- [ ] If discovery passes, fit the frozen value and free reference to all 5,000
+  untouched selection profiles, apply the stricter gates, and render the full
+  standard QA without retuning damping.
+- [ ] If selection passes, fit both families to all 5,900 untouched validation
+  profiles under all three objectives, render cross-epoch growth diagnostics,
+  and decide whether the five-coordinate family is production-ready.
+
 ## Current experiment — damped-cosine reparameterization
 
 - [x] **Exp69 predeclaration.** Freeze the original free damped cosine, four
