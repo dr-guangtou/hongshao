@@ -2027,3 +2027,27 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   0.00563 dex, but the 99th percentile is 0.401 dex. A harmless median does
   not validate every extrapolated total. Public profile functions should
   provide an aperture-normalized route and label infinite totals explicitly.
+
+# 2026-08-30 — Exp66 expanded symbolic-density screen
+
+- **A broad grammar cannot rescue a restrictive outer wrapper.** Across 1,250
+  measured profiles, the best-conditioned log-periodic forms frequently drive
+  the bounded modulation toward `|rho| = 1`. The frequency-2 log-periodic
+  cosine has adequate relative Jacobian conditioning at all five epochs but
+  22.72% boundary incidence, dominated by its modulation coordinate. This is
+  evidence that the bounded-linear slope contrast, not merely the choice of
+  symbolic atom, limits the family. Change that construction in a separately
+  predeclared experiment rather than widening a bound after inspecting fits.
+- **Free trigonometric phase can buy accuracy by introducing a nearly null
+  direction.** The fitted-frequency-and-phase harmonic has the best frozen
+  Round-A accuracy, with median full-CoG RMS of 0.00238--0.00349 dex across
+  epochs, but only 0.62--1.94% of cubic-logit's paired Jacobian strength and
+  65.36% boundary incidence. Report the frequency--phase degeneracy beside the
+  lower RMS; the extra freedom is not a usable profile coordinate.
+- **Missing stratification variables must be counted before freezing a split.**
+  The full profile atlas has 3,380 complete five-epoch CoGs but finite halo mass
+  for only 2,395 galaxies; 985 halo masses are missing. Exp66's deterministic
+  sort distributes them reproducibly but does not provide the clean
+  halo-mass stratification implied by the predeclaration. Future profile-only
+  searches should declare a separate missing-mass stratum before selecting any
+  galaxy.

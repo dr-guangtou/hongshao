@@ -9,6 +9,36 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
+## Current experiment — expanded constrained symbolic-density search
+
+- [x] **Exp66 predeclaration.** Freeze a 3,380-galaxy discovery/selection/final
+  split, relaxed transition and trigonometric grammar, mechanically generated
+  two-atom round, analytic-property audit, paired references, eligibility and
+  replacement gates, and staged measured runtime checks before implementation.
+- [x] Write the mathematical, analytic-integral, split, grammar-generation, and
+  synthetic-recovery checks first and observe their expected failure.
+- [x] Pass the complete 125-profile operational path in under one measured
+  minute; do not use it for scientific selection.
+- [x] Fit every Round-A expression to 1,250 broad-screen profiles, freeze the
+  best 12 eligible forms, then fit those and Round B to all 5,000 discovery
+  profiles. **Result:** all 88 expressions were fit to 1,250 measured profiles
+  in 623.17 seconds, but none passed all success, boundary, and conditioning
+  gates. The survivor list is empty, so the declared stop prevents Round B.
+- [x] Freeze the best five eligible expressions and evaluate them on 5,000
+  separate selection profiles. **Not triggered:** no Round-A expression was
+  eligible.
+- [x] Fit the finalist under all three objectives on 6,900 untouched validation
+  profiles. **Not triggered:** no finalist was selected, and all 2,380
+  selection/validation galaxies remain untouched by expression choice.
+- [x] If the numerical gates pass, inspect average CoGs in halo- and stellar-
+  mass bins and the stellar-mass planes. **Not triggered:** the broad numerical
+  gate failed.
+- [x] **Exp66 review:** report sample accounting, every expression and analytic
+  property class, measured timings, all numerical/visual gates, and the final
+  decision without expanding the grammar after validation. **Decision:** the
+  bounded-linear wrapper is a null; retain the log-periodic atom for a separate
+  squared-slope experiment that removes the saturated modulation ceiling.
+
 ## Current experiment — constrained symbolic projected-density search
 
 - [x] **Exp65 predeclaration.** Freeze a hard-constrained density-slope wrapper,
