@@ -1071,6 +1071,84 @@ conditioning result makes the cubic-logit coordinates a candidate *objective*,
 and its halo-information result independently confirms that the mean is
 already at the limit of what the halo history determines.
 
+### 5i — the fitting sample, corrected: the same fits on all sane galaxies (2026-08-30)
+
+**The gap, and the rule (the user).** Every fit in this experiment — and in
+exp57 and exp54's later stages — used exp54 Stage 3.7's per-epoch masks as the
+*fit* sample: the progenitors above the halo-mass completeness cut (2397 / 1780
+/ 1435 / 1144 / 839 galaxies). exp54 had designed that subset as an *after-fit*
+re-score with θ frozen (`selection.py`, section 3), and `stage37_size_epoch.build`
+handed it on as the mask. The user's rule, now repo-wide (`CLAUDE.md`,
+`doc/lessons.md`, memory): **the fit uses every galaxy selected at z=0.4 whose
+halo history and stellar history are sane, at every epoch; halo-mass
+completeness is an after-fit check, never a fitting criterion.** Implemented
+once, `selection.fitting_sample_mask`: finite CoGs and DiffMAH mass at all
+five epochs, the 3 dex backward rule, and no stellar-history outlier at any
+epoch (5g's rules, now in `selection.stellar_history_flags`: 0.5 dex off the
+running-median $M_*$–$M_h$ relation, > 1 dex adjacent jump, > 0.3 dex adjacent
+drop); one flagged epoch removes the galaxy everywhere. **2356 of 2397
+galaxies, at every epoch.** `stage2_fit.py --sample sane` is the default
+(`legacy` reproduces the old masks); every fit log prints the sample and what
+each criterion removed; the mh-complete subset (2356 / 1758 / 1416 / 1129 / 831)
+is printed after every fit as the check.
+
+**The refits** (kpc form, binned objective, frozen exponents for the per-epoch
+fits; the four-exponent joint fit from two starts, 15.70 / 15.35 against the
+sane-sample null 19.25). Gate rms, judged on the fitting sample | on the
+mh-complete check (`figures/exp63_single_epoch_sample_summary.png`; logs
+`outputs/single_epoch_gate_sane_e*.log`, `..._jointsane_e*.log`):
+
+| judged at | incumbent | joint, old masks | **joint, fitting sample** | each epoch alone, old masks | **each epoch alone, fitting sample** |
+|---|---|---|---|---|---|
+| z=0.4 | 5.04 \| — | 3.32 \| — | 3.33 \| — | 1.46 \| — | **1.42** \| — |
+| z=0.7 | 6.25 \| 6.54 | 2.45 \| 2.11 | 2.36 \| 2.76 | 1.56 \| 1.08 | **1.17** \| 1.23 |
+| z=1.0 | 6.86 \| 7.67 | 4.25 \| 3.78 | 3.57 \| 4.32 | 2.93 \| 1.44 | **1.37** \| 2.35 |
+| z=1.5 | 4.99 \| 5.60 | 4.78 \| 3.75 | 3.28 \| 4.62 | 3.54 \| 1.19 | **1.23** \| 2.90 |
+| z=2.0 | 8.45 \| 10.48 | 8.24 \| 7.48 | 6.88 \| 9.45 | 11.91 \| 1.61 | **2.86** \| 4.99 |
+
+The joint refit's battery on the fitting sample (mh-complete check in
+brackets), $M_*(<10)$: −1.7 / +1.2 / +4.2 / +1.7 / −1.6 per cent [−1.7 / +1.7 /
++5.1 / +4.1 / −4.7]; $M_*(<100)$: −2.5 / +1.5 / +2.1 / +0.2 / −4.6 [… −9.7 at
+$z=2$]; $M_*(50\text{–}100)$: +1.1 / +2.7 / +1.2 / −1.5 / −1.6 [+1.1 / −4.6 /
+−12.3 / −20.8 / −28.4]; tier 3 0.274 / 0.272 / 0.279 / 0.283 / 0.297 (incumbent
+0.279 / 0.281 / 0.290 / 0.289 / 0.310); C8 whole-population span 0.013 dex.
+Battery in `figures/qa_joint/` (`*_joint_kpc_free_sane`).
+
+**What changed, and what it means.**
+
+1. **On the sample the rule prescribes, the picture of 5e–5f holds and the
+   numbers improve.** Fitted alone, every epoch reaches gate rms 1.2–1.4 at
+   $z\le1.5$ and 2.9 at $z=2$; the joint θ beats the incumbent at every epoch
+   (2.4–3.6 against 5.0–6.9 at $z\le1.5$; 6.9 against 8.5 at $z=2$) and its
+   whole-sample outskirts are now within 3 per cent at every epoch (5f: +9 to
+   +33). The old-mask fits, judged on the sample they never saw, were far
+   worse than they looked (the per-epoch $z=2$ fit: 11.9).
+2. **The massive subset is no longer a free lunch.** Every refit is worse on
+   the mh-complete check than the old fit that had been tuned to it (per-epoch
+   $z=2$: 1.6 → 5.0; joint $z=2$: 7.5 → 9.5; $M_*(50\text{–}100)$ on the subset
+   −28 per cent at $z=2$). One θ cannot fit the massive third and the whole
+   sample at $z=2$ to the same precision: the low-mass $z=2$ progenitors (two
+   thirds of the sample, the progenitor-selected, fast-growing minority of
+   their mass) want a different model than the massive third — a halo-mass
+   dependence at high redshift that the old masks had hidden. This is the
+   after-fit check doing its job, and it is the first concrete thing the
+   corrected sample teaches.
+3. **The per-epoch parameter sequence changes at $z=2$** (fitting sample):
+   $s_c$ 2.9 → 2.2–2.5 kpc (a milder shrink, $b_c\approx-0.3$), $\log f_e$
+   −0.68 → −0.16 (a steeper rise, $b_e\approx+0.7$), and the split now moves
+   *up* in mass with redshift ($m_{1/2}$ 11.5 → 13.1, $d$ 1.0 → 0.5) instead of
+   flattening; $n_c$ 1.25 → 2.1 and $c_e$ 1.2 → 1.6 at $z=2$. Read with point 2:
+   the $z=2$ fit is describing a different population, and the "time law" of
+   5e was partly a mass-selection law.
+4. The joint refit's parameters: $a_z$ 0.35, $a_{Mz}$ 0.12, $b_c$ −0.80,
+   $b_e$ −1.20, $n_c$ 0.53 (at the bound again), split width 0.24 dex at
+   $10^{11.8}$ — the same structure as 5f's, so the n_c symptom is not a
+   sample artefact.
+
+Fit files: `stage2_fit_frozen_binned_kpc_sane_e{0..4}.npz`,
+`stage2_fit_joint_kpc_free_sane{,_s0,_s1}.npz`. Everything before 5i in this
+README was fitted on the old masks and is labelled as such where quoted.
+
 ## What exp63 delivered, and what it did not (2026-08-28)
 
 Against the science plan's three requests:

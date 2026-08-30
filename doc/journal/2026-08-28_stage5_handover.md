@@ -90,9 +90,23 @@ objective), each judged by the binned CoGs. No z > 0.4 number until z=0.4 is rig
   central hole is unphysical for a deposit); usable as a size-and-shape
   OBJECTIVE (R20/R50/R80 + warp coordinates) — a single-epoch leverage test,
   not started.
-- **Owed by the user**: adopt `_joint_kpc_free` as the exp63 five-epoch mean?
-  pursue the efficiency law's time dependence / epoch-dependent n_c and split?
-  add the 0.5 dex M*-Mh rule to `selection`? test the cubic-logit objective?
+- **5i THE FITTING SAMPLE (the user's repo-wide rule, 2026-08-30)**: fits use
+  ALL z=0.4-selected galaxies with a sane halo + stellar history
+  (`selection.fitting_sample_mask`, 2356/2397); halo-mass completeness is an
+  AFTER-FIT check. Rule in the repo `CLAUDE.md`, lessons, memory
+  `fitting-sample-rule`. `stage2_fit.py --sample sane` (default) | `legacy`.
+  Refits on the new sample (README 5i, `figures/exp63_single_epoch_sample_summary.png`):
+  per-epoch gate rms 1.42/1.17/1.37/1.23/2.86 on the fitting sample (old-mask
+  fits judged there: 1.46/1.56/2.93/3.54/11.91); joint 3.33/2.36/3.57/3.28/6.88
+  (incumbent 5.04/6.25/6.86/4.99/8.45); on the mh-complete check every refit is
+  WORSE than the old tuned fit (z=2 per-epoch 1.6 -> 5.0): a halo-mass
+  dependence at z=2 the old masks hid. Products now:
+  `stage2_fit_joint_kpc_free_sane.npz`, `stage2_fit_frozen_binned_kpc_sane_e{0..4}.npz`.
+- **Owed by the user**: adopt `_joint_kpc_free_sane` as the exp63 five-epoch
+  mean? the z=2 mass dependence (massive third vs the rest) — next question?
+  pursue the efficiency law's time dependence? test the cubic-logit objective?
+  merge/push (note: `master` moved to e7092c3 with exp62 + `docs/SPEC.md`; add
+  the fitting-sample rule to `docs/SPEC.md` at merge time).
 - Fit files added: `stage2_fit_frozen_binned_{kpc,levers}_e{1,2,3,4}.npz`; eval
   logs `stage2_eval_frozen_binned_{levers,kpc}.log` (+ their figures).
 
