@@ -2339,3 +2339,99 @@ session should not rediscover them:
   (per-epoch ceiling, railed compact channel, z=2 amplitude, the z=2 mass
   dependence). Recording the gap between "best so far" and "good enough to
   adopt" is part of delivering the result.
+
+## 2026-08-30 — the 1-D profile data (branch `exp68-profile-data`)
+
+- **Open the other half of the data drop before modelling harder.** Every
+  experiment in this programme had fitted `save_tng300_072_hist_aper_dir` and
+  none had opened `save_tng300_072_hist_prof`, which carries the isophote fit
+  the curves of growth were built from — including a measured uncertainty on
+  the surface density at every radius, epoch and galaxy, and the ellipticity
+  and position-angle profiles. Two years of objectives were written with no
+  error model while the ingredients sat unread in the same directory tree.
+- **Do not guess the aperture geometry; test the candidates.** Five geometries
+  were tried against the stored curve of growth. The winner (a *constant*
+  isophotal shape, `R` = semi-major axis) reproduces it to 0.0024 dex; the
+  radius-by-radius ellipticity profile is fifteen times worse and a circular
+  aperture is out by 10–45 per cent. Reasoning from the first ratio being
+  "roughly 0.8" would have picked the wrong one.
+- **A quantity that is not recorded may still be recoverable.** The constant
+  isophotal shape is stored only at z=0.4. But `(1 - e_const)` is by
+  construction the ratio of the stored CoG to the circular integral of the same
+  profile, so it is recoverable at every epoch — validated at z=0.4 against the
+  recorded value at correlation 0.994, rms 0.019.
+- **The drop's own `test` flag is the quality cut, and it was never used.**
+  `test = False` (the isophote fitter fell back to its default starting radius)
+  identifies the entire outlier population: including those galaxies drops the
+  shape recovery from correlation 0.994 to 0.895 and triples the rms. They are
+  also the galaxies whose stored apertures do not match the projection table.
+  One boolean, already in the data, separates them.
+- **A curve of growth's covariance is not a modelling choice.** It is a
+  cumulative sum, so `Cov(M_i, M_j) = Var(M_min(i,j))` exactly: the variance
+  vector determines the whole matrix. Treating the 24 radii as independent
+  shrinks the uncertainty by about a factor of five and is simply wrong, not
+  conservative.
+- **The term we assumed was uncalibratable was already measured.** The C17
+  discussion recorded the projection/orientation term as the one ingredient
+  with no calibration path. The aperture table has the same galaxies in three
+  sky projections: the term is measurable at z=0.4, and it turns out to be the
+  LARGEST of the three error terms at every radius — larger than the
+  statistical error the objective has been implicitly weighting by. Check what
+  the data contains before declaring a quantity unmeasurable.
+- **Guard raw-drop readers against per-galaxy structural variants.** Three
+  radial-grid families, a reduced column set on some galaxies, a missing `prof`
+  table, and a scalar-valued `aper` entry each crashed the build in turn. A
+  loader over a heterogeneous drop needs an explicit flag per variant, not an
+  assumption plus a traceback.
+- **A flag's name is not its meaning; check what it gates.** `test` was read as
+  "the ellipticity profile is usable" and used to quote a 43 per cent coverage
+  figure. It gates the isophote fit's CONVERGENCE. 35 per cent of `test=False`
+  galaxy-epochs carry full ellipticity and PA profiles, those profiles are not
+  degenerate, and they reproduce the recorded constant shape as well as
+  `test=True` ones. The user asked "have you checked the profiles themselves?"
+  and the answer was no.
+- **Distinguish "needs a quantity" from "needs a quantity to be certified".**
+  Density-profile availability was quoted as 1908 galaxies, which was the
+  SHAPE-certification count. A density profile needs only the surface density
+  and its error and needs no shape at all: all 2356 fitting-sample galaxies have
+  one from 2 to 50 kpc at every epoch. The real limit is a different thing
+  entirely — the profile truncates in the outskirts at high z.
+- **A second, independent estimate beats a self-consistency check.** The radial
+  spread of the CoG-to-circular ratio looked like a quality test and certifies
+  nothing: the fallback galaxies are smooth but wrongly normalised, and 87 per
+  cent of them pass it. Two independent routes to the same constant shape — the
+  CoG ratio and a 5-30 kpc mean of the measured ellipticity profile — disagree
+  when either is wrong, and that works at every epoch, where no recorded
+  reference exists.
+- **Let the convention do the work instead of special-casing.** Setting the
+  density to exactly zero outside its measured range makes a reconstructed curve
+  of growth stay flat there by construction; no branch, no clamp, and the
+  selftest measures a rise of exactly 0.0. Verified to cost at most 0.010 dex at
+  148 kpc, with truncated and untruncated galaxies indistinguishable.
+- **A rebuilt grid is not the grid it was rebuilt from.** `R0 * 1.2**k` differs
+  from the accumulated native ladder by 1e-13 at the outermost radius, which
+  silently dropped the last point and reported 2977 of 3388 galaxies as
+  truncated at z=0.4 instead of 100. Compare float grids with a relative
+  tolerance, and sanity-check a coverage number against an independent estimate.
+- **The programme's radii are semi-major axes and the model has none.** A 10 kpc
+  semi-major aperture is 8.08 kpc circularized at z=0.4 and 8.58 kpc at z=2: a
+  6.1 per cent epoch differential that would read as size evolution if the two
+  conventions were ever mixed. Recorded as `r_circ`, not silently adopted.
+- **A term can dominate the error budget and still be a rounding error in the
+  signal.** The projection term is the largest measurement error from 10 to 100
+  kpc, and adding it takes the z=0.4 reduced chi-square from 3.4 to 1.1 -- the
+  error model is complete only with it. It is also at most 3.2 per cent of the
+  variance at fixed halo mass, falling to 0.2 per cent at 150 kpc. The first
+  fact makes it essential to a per-galaxy likelihood; the second means it is no
+  excuse for population-level model failure. Quoting either alone misleads.
+- **Test an error model by fitting with it, not by admiring it.** A flexible
+  family fitted by GLS gives a reduced chi-square that says whether the errors
+  are the right SIZE, and comparing NESTED covariances says WHICH term is
+  missing. Here it showed that the coherent shape term buys literally nothing
+  (3.4 -> 3.4: a full cumulative covariance already makes a common mode cheap)
+  while the measured projection term buys everything (3.4 -> 1.1).
+- **A diagonal covariance flatters the fit.** Reduced chi-square 0.4 falling to
+  0.03 with redshift is not a good fit; it is the off-diagonal structure thrown
+  away, letting the model absorb the common mode in its normalisation. The full
+  covariance tests the fine radial structure, which is the stringent and correct
+  test, and it is 10-200x larger.

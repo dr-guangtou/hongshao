@@ -2843,3 +2843,66 @@ quoted until z=0.4 passes the gate.
   near-optimal starts in its worst case. The central repair adds a median
   0.718% of the mass inside 148 kpc but as much as 24.1%. **Decision:** do not
   promote either Exp64 family and do not add another post-result candidate.
+
+## 2026-08-30 — `exp68-profile-data`: finalize the 1-D profile input data
+
+Infrastructure, not an experiment. Prepares the inputs for open questions C17
+(a likelihood with a measured error model) and C18. Reference:
+`doc/tng300_profile_data.md`; code `hongshao/profile_data.py`; QA figure
+`scripts/profile_data_qa.py`.
+
+- [x] **Inventory the profile directory.** All 3388 galaxies have both `.npy`
+  files; the per-epoch counts of `flag`, `test` and usable isophote lists are in
+  the build report and QA panel D.
+- [x] **Establish what the files contain.** Seven physical columns including the
+  **ellipticity and position-angle PROFILES with their own errors** (not just an
+  average), plus photutils' full diagnostic set in `other`, plus two quality
+  booleans. Three radial-grid families found.
+- [x] **Find where the constant isophotal shape is recorded.** It is the
+  `ellipticity`/`PA` of the projection table, and the stored five-epoch curves
+  of growth are the `xy` projection (bit-identical apertures at z=0.4). Recorded
+  at z=0.4 only, but recoverable at every epoch to correlation 0.994, rms 0.019.
+- [x] **Reproduce the stored curves of growth by integrating the 1-D profiles.**
+  Five geometries tested; the constant-shape elliptical aperture with `R` =
+  semi-major axis wins at 0.0024 dex, fifteen times better than the
+  variable-ellipticity integration. Both reconstructions are stored.
+- [x] **Compute the correct errors for the reconstructed curves.** Three
+  measured terms: azimuthal/statistical (with the exact cumulative covariance),
+  constant-shape (coherent in radius), and projection (from the three sky
+  projections). The projection term is the largest at every radius.
+- [x] **Record the surface mass density profiles and their errors.** Raw on the
+  isophote grid plus a convenience interpolation onto the CoG grid.
+- [x] **Write the data model and the notes.** `doc/tng300_profile_data.md`
+  sections 7 and 8, with the "do not" list.
+
+Data model settled with the user 2026-08-31 (interview; `doc/tng300_profile_data.md`
+section 10). v2 built: shared 32-radius grid, isophote density fiducial,
+zero-fill + flat outskirts, semi-major primary with `r_circ`, two shape routes
+with an agreement certificate, annulus form co-primary, projection term raw only.
+
+- [x] **Correct the two claims the user challenged.** `test` does not gate the
+  ellipticity profile (35 per cent of `test=False` epochs carry good profiles);
+  density availability is not the shape-certification count (all 2356 have a
+  density from 2-50 kpc at every epoch, the limit is outer truncation at high z).
+- [x] **Answer the three-projection question.** All 3388 galaxies have all six
+  aperture masses in all three projections, but ONLY at z=0.4 and ONLY as
+  apertures: zero 24-point CoGs and zero density profiles in xz/yz.
+- [x] **Build v2 and verify it.** Eight selftest claims pass, F-H new.
+
+Owed to the user, and NOT decided here:
+- [ ] **The stellar mass map file is unreadable** (`map_tng100_hist_stellar.hdf5`:
+  no HDF5 signature, first 201 MB zeros, float64 data beyond). Re-supplying it
+  would settle the aperture geometry by direct measurement instead of inference
+  and would give the projection error term at every epoch, not just z=0.4.
+- [ ] **Whether the projection term enters the C17 likelihood**, given it is
+  measured only at z=0.4 and from only three projections.
+- [ ] **Whether any fit ever switches target** from `cog_provided` to the
+  isophote density. Settled for the data model (`cog_provided` stays the
+  target), NOT settled as science: the isophote density is sigma-clipped and so
+  excludes the satellites and intracluster light the aperture counts, which
+  arguably makes it the cleaner target for a model that never deposits them.
+  The two differ by up to 0.64 dex at z=2 in the outskirts.
+- [ ] **What to do about the z=2 shape.** Only 46 per cent of galaxies have the
+  two independent shape routes agreeing within 0.05 at z=2, against 85 per cent
+  at z=0.4. The constant isophotal shape is genuinely less well determined at
+  the epoch where the model already fails.
