@@ -1187,7 +1187,13 @@ $z=0.4$ by Stage 5**: the compact size in physical kpc, or a mass exponent that
 cancels $R_{200c}$'s, puts every halo-mass tercile within ±3 per cent at every
 radius; the extrapolation of that mean has not been looked at, by the user's
 rule), the $z\ge1.5$ amplitude (−15 to −21 per cent at $z=2$ on the full sample),
-and the $z=0.4$ assembly correlations (P9). The plan's §5 failure criteria: G1 did find two scales
+and the $z=0.4$ assembly correlations (P9). **Stage 5i (2026-08-30):** every fit up
+to then had used the per-epoch mh-complete masks as the fit sample; under the
+user's repo-wide rule (fit on all sane galaxies, completeness an after-fit check)
+the refits keep the picture — each epoch alone to gate rms 1.2–1.4 (2.9 at
+$z=2$), one θ better than the incumbent at every epoch — and expose a halo-mass
+dependence at $z=2$ on the massive subset that the old masks had hidden. The
+plan's §5 failure criteria: G1 did find two scales
 (not the first failure); the two-channel mean's $z=2$ B3 on the non-decliners is
 −0.048 dex against the baseline's +0.010 — worse by 0.058, past the 0.05 line the
 plan set, so by the plan's own rule the "one epoch fitted, four predicted" claim
