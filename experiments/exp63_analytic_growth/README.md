@@ -1149,6 +1149,29 @@ Fit files: `stage2_fit_frozen_binned_kpc_sane_e{0..4}.npz`,
 `stage2_fit_joint_kpc_free_sane{,_s0,_s1}.npz`. Everything before 5i in this
 README was fitted on the old masks and is labelled as such where quoted.
 
+## The branch's product decision (2026-08-30)
+
+**The exp63 mean is `outputs/stage2_fit_joint_kpc_free_sane.npz`** (the user):
+the two-channel deposition mean with a compact channel sized in physical kpc,
+fitted with one θ at all five epochs on the fitting sample under the binned
+objective, twelve parameters with all four time exponents free. It is the best
+five-epoch mean the deposition-only class has produced here — better than the
+five-epoch incumbent at every epoch by the gate (2.4–3.6 against 5.0–6.9 at
+z ≤ 1.5; 6.9 against 8.5 at z = 2), by `M*(<10 kpc)` at every epoch, by tier 3
+at every epoch, with the whole-sample outskirts within 3 per cent everywhere
+and the whole-population central error flat to 0.013 dex.
+
+**It is not proposed as hongshao's adopted mean** (the user: "I don't think this
+is the final model I'd like to adopt for hongshao"). It is this branch's
+product and reference point. What stands against adoption is recorded in
+Stage 5f and 5i: it does not reach the per-epoch ceiling (1.2–1.4 against
+2.4–3.6); its compact channel is misused by the shared law (`n_c` at its lower
+bound in every joint start — Stage 5f point 2); z = 2 fails in amplitude; and
+the after-fit check shows a halo-mass dependence at z = 2 that no single θ
+covers. The Stage 3 noise process and the Stage 4 battery were built on the
+Stage 2 mean and the pre-5i masks; if this mean is ever carried forward, the
+process must be refitted on top of it under the sample rule.
+
 ## What exp63 delivered, and what it did not (2026-08-28)
 
 Against the science plan's three requests:

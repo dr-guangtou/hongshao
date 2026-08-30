@@ -2,6 +2,32 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **Artifact-dependent checks must remain portable across worktrees (Exp67
+  closeout).** The comparative-QA loader check initially assumed its gitignored
+  discovery archives lived under the current worktree, so it passed in the
+  experiment worktree and failed after merging into a clean `master` worktree.
+  Accept an explicit artifact-root environment variable and skip only the
+  archive-dependent check with a clear reason when regenerable outputs are
+  absent; keep mathematical and source-only checks active everywhere.
+- **Use a reference-family teacher gate before searching measured profiles
+  when the candidate grammar may be structurally too narrow (Exp65).** All 13
+  hard-constrained expressions were mathematically valid, and damped
+  sine/cosine atoms improved substantially over sigmoid and rational controls.
+  None could reproduce both the typical and 90th-percentile unrestricted-
+  double-Sersic teacher CoGs at the predeclared accuracy. The 7.565-second gate
+  prevented a larger structure-selection exercise from turning inadequate
+  basis capacity into a misleading galaxy-data result.
+- **Serialize a terminal gate failure before returning or raising (Exp65).**
+  The first teacher-screen implementation raised immediately, leaving the
+  decisive per-expression measurements only in memory. A failed gate is a
+  scientific result: write its summary, predictions, manifest, and diagnostic
+  figure before stopping so the negative remains inspectable and reproducible.
+- **Do not launch a spawn-based process pool from a Python standard-input
+  script (Exp65).** macOS multiprocessing tried to reload the parent from the
+  nonexistent path `<stdin>` and broke the pool. Run parallel diagnostics from
+  a real script guarded by `if __name__ == "__main__"`, or use a serial loop for
+  a small interactive audit.
+
 ## Data handling (TNG300 drop)
 
 - **DiffMAH was fit to SubhaloMass, not M200c (exp28 refines exp27).** Per-halo,
@@ -1832,7 +1858,228 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   For an identifiable model recipe, keep a fixed shape value in the decoder and
   exclude it from the regression design; preserve the exact fold fits
   separately when auditing an already completed held-out calculation.
+# 2026-08-27 — Exp62 metric interface
 
+- **`density_from_cog` takes log10 cumulative masses, despite its generic
+  argument name.** Passing linear masses exponentiates them a second time,
+  overflows, and makes even exact-reconstruction density checks fail. Exp62's
+  common metric path now passes the fitted and measured log CoGs directly and
+  keeps separately converted linear masses only for shell and fractional
+  calculations.
+- **A perturbation robustness refit should continue from the unperturbed
+  solution.** Exp62 initially repeated the complete generic multistart search
+  for every alternating-radius, inner-cut, and alternate-optimizer diagnostic;
+  the 90-profile path took 83 seconds and mixed local stability with global
+  mode discovery. Starting each perturbation from the original best fit asks
+  the intended question--whether that solution moves when the data or solver
+  changes--while separate profiled scans still search competing valleys. The
+  same diagnostics then took 10.4 seconds and produced essentially unchanged
+  decoded-profile conclusions.
+- **Smooth population evolution does not imply smooth individual tracks.** In
+  Exp62, median size, mass-fraction, and radial-block relations vary regularly
+  with redshift, but leaving out one interior epoch gives 0.0535 dex CoG RMS
+  even when the measured 24-point CoGs themselves are interpolated. A smooth
+  coefficient trend can be valid for a population model while a per-galaxy
+  parameter interpolation is invalid; require held-epoch closure for the
+  product actually being proposed.
+- **Test halo-association patterns in decoded observables across
+  representations before interpreting analytic parameters.** Exp62's primary
+  constrained Sersic--Moffat conditional-response pattern correlates 0.973
+  with targets decoded directly from the measured CoGs and 0.923--0.965 across
+  the other analytic families. This makes the radial statistical pattern much
+  more credible, while the unrestricted double-Sersic raw parameters remain
+  uninterpretable because their profiled loss has broad component-shape
+  valleys. Representation robustness supports an association; it does not
+  establish a causal assembly connection.
+- **A visual record should be organized around the scientific comparison, not
+  around every available generic QA panel.** The first Exp62 synthesis attempt
+  invoked the complete generic battery for each family. Although those panels
+  were population statistics rather than one plot per galaxy, the result
+  obscured the requested model-to-model comparison. The replacement uses
+  common mass-bin CoGs, mass planes, mass--size relations, CDF residuals, and
+  epoch trends, with individual profiles restricted to each model's ten worst
+  cases. Choose the figure topology from the scientific question before
+  choosing a reusable plotting entry point.
+- **Representation-complete CoGs and halo-complete tracks are different
+  samples.** Exp62 has 3,380 complete five-epoch CoG tracks but only 2,395 with
+  complete quality-clean halo histories. A halo-mass-binned multi-epoch figure
+  must explicitly use the latter common sample; allocating an array by the
+  largest original row identifier also creates false gaps when valid galaxy
+  identifiers are non-contiguous. Compact identifiers with `np.unique` and
+  record the resulting sample.
+- **An excellent cumulative fit can still shift the outer-shell population.**
+  Exp62's unrestricted double Sersic has the best median CoG and density RMS,
+  yet its 100--148 kpc mass CDF has a coherent residual with the opposite sign
+  from the simpler families. Differencing magnifies small coherent CoG-shape
+  errors where the added mass is small. Retain aperture/annulus CDFs beside
+  per-object cumulative RMS whenever the population distribution matters.
+- **R50 normalization needs an explicit common-support selection.** The Exp62
+  CoGs begin at 2 kpc, while some compact high-redshift galaxies have an R50
+  below that radius through the standard size extrapolation. A normalized
+  profile comparison must not silently extrapolate those CoGs. Use the same
+  galaxies with measured support over the declared R/R50 interval at every
+  epoch, show the usable fraction versus normalized radius, and repeat the
+  result for alternative inner cutoffs before interpreting redshift evolution.
+- **Half-mass-time normalization makes the late-MAH support strongly
+  endpoint-dependent.** At z=2, an epoch-local DiffMAH history typically ends
+  near 1.4 t50. Requiring progressively later normalized times therefore
+  selects small and changing halo subsets, and the inferred late-branch
+  redshift trend can reverse. Treat the robust pre-t50 trend separately from
+  the range-dependent post-t50 result, and show both time coverage and common-
+  support sample sizes.
+
+# 2026-08-28 — Exp62 compact analytic CoG search
+
+- **Search for new profile functions in a transform where the physical
+  constraints can be exact.** Directly combining familiar cumulative profiles
+  left Exp62 with either inadequate outer flexibility or degenerate shape
+  coordinates. Writing the normalized cumulative as a logistic of a polynomial
+  in log radius made the repeated residual curvature easy to encode, while a
+  completed-square derivative constraint guaranteed monotonicity everywhere.
+  This produced a five-parameter family with cumulative-CoG accuracy close to
+  unrestricted double Sersic and substantially stronger local conditioning.
+- **An extra parameter is useful only when its mathematical role addresses the
+  measured residual.** The five-parameter regularized-beta cumulative did not
+  solve the problem because its added freedom duplicated existing transition
+  controls and accumulated at bounds. The cubic-logit asymmetry coordinate
+  instead represented the observed change of residual curvature and moved the
+  accuracy--stability frontier. Count identifiable roles, not just parameters.
+- **A compact analytic family does not remove the fitting-objective trade.**
+  The cubic-logit log-CoG fit reaches 0.00249 dex median full-CoG RMS across
+  epochs, whereas its absolute-CoG fit gives worse cumulative accuracy but
+  better density and R90 recovery. The latter passes the numerical PCA(3)
+  compression gate, yet its 100--148 kpc shell-mass CDF is still coherently
+  displaced. Preserve both objective variants and continue to judge
+  differenced shell masses directly.
+- **Do not fit a shared epoch coefficient when independently fitted per-epoch
+  coordinates can absorb it.** In a representation-only atlas, such a
+  coefficient is not identifiable. Exp62 instead tested one unchanged radial
+  equation at all five epochs; redshift dependence belongs in a later
+  population relation or in a genuinely joint fit with restrictions that make
+  the shared term measurable.
+
+# 2026-08-28 — Exp62 halo information in compact CoG shape
+
+- **A small median held-out gain can coexist with unusable individual
+  extrapolations.** Exp62's complete linear DiffMAH-plus-concentration relation
+  improves median decoded CoG RMS by up to 6.25% and usually improves its 90th
+  and 99th percentiles, yet a few predictor-extreme histories yield 0.61--2.90
+  dex CoG RMS. The worst galaxy has epoch-local DiffMAH slopes on their allowed
+  extremes. Always pair median and population QA with worst-case profiles and
+  explicit error-tail statistics before calling a halo--CoG relation portable.
+- **Representation robustness has more than one level.** The log-CoG and
+  absolute-CoG cubic-logit coefficient patterns agree closely, with
+  correlations of 0.954--0.986 across epochs, and the decoded versus direct
+  normalized-CoG radial patterns have median correlation 0.896. Their radial
+  signs agree only 69.6% of the time, however. A stable aggregate association
+  does not license a predictor-by-predictor radial or physical interpretation.
+- **The incremental value of a halo property depends on the target layer.** In
+  Exp62, total stellar mass is fixed and only four compact CoG-shape
+  coordinates are predicted. DiffMAH carries nearly all the small held-out
+  gain beyond concurrent halo mass, while `c_200c` alone explains at most 1.9%
+  of any coordinate's remaining variance. This result should not be
+  generalized to target layers that include total mass or different radial
+  summaries; test secondary halo properties against each declared product.
+
+# 2026-08-29 — Exp62 assembly information in scale-free CoG diversity
+
+- **Separate the average profile from diversity around it.** After dividing
+  every CoG by its total stellar mass and measured R50, concurrent halo mass
+  already reproduces the average normalized curve in halo-mass bins. Exp62
+  nevertheless finds that DiffMAH predicts 6.45--7.31% of the remaining
+  0.7--1 R50 variance at three of five epochs with an additive-quadratic
+  held-out relation. State these as two different results: assembly is not
+  needed for the mean profile, but carries modest information about individual
+  deviations from it.
+- **A cumulative-profile association needs an independent-annulus check.** The
+  same enclosed mass appears in every larger CoG radius, so radial points are
+  correlated. Exp62's inner DiffMAH result survives when the targets are
+  replaced by independent coarse annular mass fractions, with 6.41--6.65% of
+  inner variance explained at the same three epochs. Use this check before
+  interpreting a cumulative-profile gain as local structural information.
+- **The strength of a scale-free shape result can depend on normalized radial
+  support.** The 0.7--3 R50 common-support sample contains 1,257 galaxies and
+  meets the predeclared material threshold inside R50 at three epochs. The
+  larger 1,743-galaxy sample restricted to 0.85--3 R50 retains a positive
+  signal but crosses 5% at only one epoch. Record the effect as localized near
+  0.7--1 R50 rather than as generic information about the entire CoG.
+- **A statistically significant association is not automatically a useful
+  emulator.** More than 90% of scale-free CoG diversity remains unexplained,
+  and predicted normalized aperture and annular-mass distributions are too
+  narrow even though the mean curves and median profile errors look good.
+  Preserve CDF and worst-case QA beside explained-variance summaries, and keep
+  the present quadratic halo--CoG relation as an information diagnostic.
+
+# 2026-08-30 — Exp62 cubic-logit mathematical audit
+
+- **Unexplained by DiffMAH is not the same as unrelated to assembly.** More
+  than 90% of the individual, scale-free CoG diversity remains unexplained by
+  the supplied current halo mass, main-branch DiffMAH coordinates, and
+  concentration. This bounds the information in that parameterization; it
+  does not show that the final CoG is mostly independent of halo assembly.
+  Relevant information may live in secondary progenitors, merger mass ratios
+  and orbits, spatial deposition, baryonic response, or other history details
+  that a smooth main-branch MAH does not encode, alongside projection and
+  measurement noise. State the tested inputs whenever describing unexplained
+  diversity.
+- **A precise cumulative interpolator can have an unphysical derivative
+  outside its fitted domain.** The cubic-logit profile reproduces measured
+  2--148 kpc CoGs very accurately, yet positive cubic curvature forces its
+  projected density to zero at the exact center. The turnover is below 2 kpc
+  for 16,896 of 16,900 fitted profiles, so resolved QA does not reveal the
+  defect. Derive and audit density and extrapolation properties before
+  promoting a new CoG family, even when cumulative residuals are excellent.
+- **Keep measured aperture mass separate from analytic total mass.** The
+  cubic-logit median correction from `Mstar(<148 kpc)` to infinite total is
+  0.00563 dex, but the 99th percentile is 0.401 dex. A harmless median does
+  not validate every extrapolated total. Public profile functions should
+  provide an aperture-normalized route and label infinite totals explicitly.
+
+# 2026-08-30 — Exp66 expanded symbolic-density screen
+
+- **A broad grammar cannot rescue a restrictive outer wrapper.** Across 1,250
+  measured profiles, the best-conditioned log-periodic forms frequently drive
+  the bounded modulation toward `|rho| = 1`. The frequency-2 log-periodic
+  cosine has adequate relative Jacobian conditioning at all five epochs but
+  22.72% boundary incidence, dominated by its modulation coordinate. This is
+  evidence that the bounded-linear slope contrast, not merely the choice of
+  symbolic atom, limits the family. Change that construction in a separately
+  predeclared experiment rather than widening a bound after inspecting fits.
+- **Free trigonometric phase can buy accuracy by introducing a nearly null
+  direction.** The fitted-frequency-and-phase harmonic has the best frozen
+  Round-A accuracy, with median full-CoG RMS of 0.00238--0.00349 dex across
+  epochs, but only 0.62--1.94% of cubic-logit's paired Jacobian strength and
+  65.36% boundary incidence. Report the frequency--phase degeneracy beside the
+  lower RMS; the extra freedom is not a usable profile coordinate.
+- **Missing stratification variables must be counted before freezing a split.**
+  The full profile atlas has 3,380 complete five-epoch CoGs but finite halo mass
+  for only 2,395 galaxies; 985 halo masses are missing. Exp66's deterministic
+  sort distributes them reproducibly but does not provide the clean
+  halo-mass stratification implied by the predeclaration. Future profile-only
+  searches should declare a separate missing-mass stratum before selecting any
+  galaxy.
+
+# 2026-08-30 — Exp67 squared-slope symbolic-density search
+
+- **Removing an artificial amplitude ceiling can reveal a real family without
+  producing a usable coordinate system.** Replacing Exp66's bounded-linear
+  slope modulation by an algebraically positive square lets fitted damped
+  harmonics beat double Sersic's median full-CoG RMS at every epoch. Their
+  scaled-Jacobian strength is nevertheless only 1.38--3.60% of cubic-logit's
+  paired value, and 17.83--21.35% of fits approach a coordinate bound. Separate
+  representational accuracy from parameter identifiability.
+- **Localized trigonometric packets occupy a different accuracy--conditioning
+  regime from free damped harmonics.** A fixed frequency-0.5, width-0.5 sine
+  packet is at most 14.78% worse than double Sersic in epoch-median CoG RMS,
+  while retaining 46.87--62.80% of cubic-logit's Jacobian strength and only
+  2.72% boundary incidence. Its failure is rare but real: 12 of 6,000 profiles
+  have near-equal two-start solutions separated by more than 0.003 dex in CoG.
+  Report both the population incidence and the predeclared worst-case failure.
+- **More galaxies can reverse which symbolic atom looks best.** Exp66's
+  bounded-linear wrapper favored log-periodic atoms on 250 galaxies. Exp67's
+  squared-slope search over 1,200 galaxies favors low-frequency localized
+  packets for conditioning and fitted damped harmonics for accuracy. Do not
+  generalize an atom ranking across constraint wrappers or from a demo sample.
 ## Analytic forms (2026-08-28, tech note 04)
 
 - **A sum over history steps is a quadrature; check its discretisation error
@@ -1974,3 +2221,45 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   M*-Mh running median at the epoch catches 41 (a minor or wrong progenitor
   early — never an over-massive one). A galaxy is sane or it is not: one
   flagged epoch removes it from every epoch.
+
+## 2026-08-30: what the single-epoch runs taught (exp63 Stage 5, closing)
+
+The round fitted one epoch at a time — z=0.4 first, then each of the five alone
+— and finally all five jointly. Recorded because the next model-building
+session should not rediscover them:
+
+- **A single epoch cannot constrain a time exponent; freeze them and say so.**
+  Stage 2's free `a_z`, `a_Mz`, `b_c`, `b_e` bought z=0.4 accuracy and tilted
+  every extrapolated epoch. Frozen at the incumbent's values the same form is
+  worse at z=0.4 (gate rms 4.52 against 3.89) and honest about it.
+- **Fit each epoch alone before fitting them together.** The five separate fits
+  cost minutes and gave three things a joint fit cannot: the per-epoch ceiling
+  (1.2–1.4 gate rms) to measure the shared law against; the direction and size
+  of every parameter's motion with redshift, which is the time law the shared
+  form must carry; and the diagnosis of what the shared form is missing when it
+  cannot follow (here: the compact index, the split's width, the efficiency
+  amplitude at z=2).
+- **Read a parameter sequence only after the sample is right.** The Stage 5e
+  sequence — compact size shrinking, split flattening toward z=2 — was measured
+  on the per-epoch mh-complete masks; on the corrected fitting sample the split
+  moves the other way (`m_half` 11.5 → 13.1 instead of flattening). Part of what
+  looked like a time law was a mass-selection law. A "trend with redshift"
+  measured across samples of different composition is not a trend.
+- **A railed parameter is a symptom; diagnose it by measuring what the component
+  became.** Every joint start pushed the compact Sérsic index to its lower bound
+  (0.5, a Gaussian). The useful step was not widening the bound but measuring
+  the channel: mass-weighted sizes showed the shared law had turned a 2–3 kpc
+  in-situ core into 1.4–8 kpc blobs (or emptied it to 6 per cent of the stars and
+  built the centre from the extended kernel). The bound was where the model was
+  paying for a time dependence it could not write.
+- **The gate and the loss can disagree, and the gate is what the user reads.**
+  Documented in the 2026-08-28 entry; the single-epoch round's whole shape
+  followed from it, including `--objective binned`, which prices the statistic
+  the visual gate shows. State the production loss for every product anyway, so
+  the two are always visible together.
+- **A product decision is not an adoption decision.** `stage2_fit_joint_kpc_free_sane`
+  is the branch's mean and beats the five-epoch incumbent at every epoch; it is
+  explicitly not proposed as hongshao's adopted model, and the README says why
+  (per-epoch ceiling, railed compact channel, z=2 amplitude, the z=2 mass
+  dependence). Recording the gap between "best so far" and "good enough to
+  adopt" is part of delivering the result.
