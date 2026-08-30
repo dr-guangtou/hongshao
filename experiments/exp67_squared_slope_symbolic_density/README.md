@@ -184,6 +184,39 @@ planes have been inspected. Only a promising validation result receives the
 full standard aperture, annular, outskirt, density, size, CDF, and
 representative-object QA battery.
 
+## Post-result comparative QA predeclaration
+
+At the user's request after the frozen null decision, a read-only QA pass will
+compare the three scientifically informative Round-A families with unrestricted
+double Sersic on the same 1,200-galaxy discovery set. This comparison does not
+reopen the discovery gate, inspect the selection or validation galaxies, refit
+any profile, or alter the ranking. The compared trigonometric families are the
+raw-accuracy leader (`free_damped_cosine`), the best accuracy--conditioning
+compromise (`wave_packet_sine_w0p5_w0p5`), and the distinct log-periodic case
+(`log_harmonic_sine_w4`).
+
+The figure set is frozen before its driver is written:
+
+1. a formula-and-scorecard figure showing the fitted functional form, parameter
+   count, analytic status, epoch-resolved full-CoG and shell-density RMS, and
+   convergence, boundary, Jacobian, and multi-start diagnostics;
+2. a resolved-profile figure showing median CoG and shell-density residuals at
+   every epoch for each family;
+3. amplitude-pinned average CoG residuals in halo- and stellar-mass terciles at
+   z=0.4, using exactly the finite-mass subset for halo bins and all discovery
+   galaxies for stellar bins;
+4. the three standard inner--outer stellar-mass planes at z=0.4 plus common
+   best, typical, and worst individual CoGs and residuals.
+
+Each figure must print the relevant equations in the plotting area and state
+that it uses discovery data only. Representative profiles are selected once by
+the maximum full-CoG RMS across the three new families, then held fixed for all
+four models. All mass quantities come from the primary measured one-dimensional
+CoGs. The sub-minute development gate loads 25 discovery galaxies, constructs
+all four figure types without saving publication artifacts, and must finish in
+under 60 measured seconds. Only after that passes may the same read-only code
+render the 1,200-galaxy discovery figures as PNG and PDF.
+
 ## Result
 
 The complete operational path fit all 88 Round-A expressions to 25 galaxies at
@@ -289,6 +322,54 @@ but a near-equal solution pair differs by 0.01499 dex. Its stretched
 oscillation is more useful than ordinary frequency-4 ringing, but both `Q` and
 the projected density require numerical quadrature.
 
+### Post-result comparative QA
+
+The predeclared read-only figure path completed on 25 discovery galaxies and
+all five epochs in 0.30 seconds, below the 60-second development limit. The
+full render then used the already inspected 1,200 discovery galaxies and 6,000
+stored profile fits and took 6.12 seconds. No profile was refit and neither the
+selection nor validation population was analyzed.
+
+The free damped cosine has 0.00167--0.00178 dex epoch-median full-CoG RMS,
+13.67--38.37% lower than unrestricted double Sersic's 0.00197--0.00275 dex on
+the same profiles. Its epoch-median shell-density RMS is also 12.40--24.46%
+lower than double Sersic's reference value. The resolved residuals and
+halo-/stellar-mass-binned average CoGs show that this is a broad radial and
+population improvement, not a cancellation in one aggregate statistic.
+However, its scaled minimum-Jacobian strength is only 2.41--4.05% of the
+cubic-logit reference, versus 8.65--11.47% for double Sersic, and its 99.50%
+convergence and 0.00443 dex maximum near-optimal CoG difference remain worse
+than the frozen requirements. The QA therefore reinforces both sides of the
+original result: this analytic family is genuinely more accurate in raw
+profile reconstruction and genuinely less identifiable.
+
+The fixed sine packet has 0.00234--0.00255 dex epoch-median full-CoG RMS. It is
+1.72--15.00% lower than double Sersic at z=0.4, 0.7, and 1, then 7.13% and
+14.78% higher at z=1.5 and 2. Its shell-density RMS is lower than double Sersic
+at every epoch, but the advantage shrinks from 15.16% at z=0.4 to 0.15% at
+z=2. Its scaled minimum-Jacobian strength is 48.52--59.39% of cubic-logit's
+paired value, far stronger than double Sersic, while its maximum near-optimal
+CoG difference remains 0.00695 dex. The direct figures make the compromise
+clear: this is the best-conditioned competitive new form, but the worst shared
+profile exposes a discrete branch failure that its median scores conceal.
+
+The log-periodic sine has 0.00222--0.00290 dex epoch-median full-CoG RMS,
+3.65--12.69% higher than double Sersic at every epoch, and its shell-density
+RMS is likewise higher. Its scaled minimum-Jacobian strength is 38.24--52.13%
+of cubic-logit's paired value, but the common worst-profile panel shows the
+large coherent radial excursion summarized by its 0.01499 dex maximum
+near-optimal CoG difference. Its distinct stretched oscillation is
+mathematically informative, but the direct QA provides no performance reason
+to retain it as a replacement candidate.
+
+All four fitted families closely follow the measured binned median relations
+in the three z=0.4 inner--outer stellar-mass planes and remain inside the broad
+measured 16--84% population width. The largest visible separation is in the
+100--148.2 kpc shell at the low-mass end, where the analytic-family medians
+separate while the measured population is intrinsically broad. Thus the
+population planes do not overturn the individual-profile and conditioning
+diagnostics.
+
 ### Decision
 
 The squared-slope construction shows that Exp66's bounded modulation was
@@ -308,6 +389,12 @@ trade-off. A future investigation, if desired, should be narrowly targeted at
 the packet's discrete sign/location branches rather than another open-ended
 symbolic search.
 
+The post-result QA strengthens, rather than changes, this decision. Keep the
+free damped cosine as a mathematical and raw-accuracy result, and the fixed
+sine packet as the numerically best compromise. Neither is a production
+replacement because their multi-start identifiability failures remain visible
+in direct profiles even though their median population relations are good.
+
 ## Review checklist
 
 - [x] Confirm this predeclaration predates evaluator and driver code.
@@ -319,3 +406,5 @@ symbolic search.
 - [x] Keep selection and validation untouched until their frozen stage.
 - [x] Display and inspect every generated figure in the generating turn.
 - [x] Stop without changing a gate or adding a post-result expression.
+- [x] Render and inspect the post-result discovery-only comparative QA without
+  refitting profiles or reopening the null decision.

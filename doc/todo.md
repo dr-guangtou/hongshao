@@ -2541,3 +2541,19 @@ tier 2e says is missing.
   0.401 dex. **Decision:** promote the family for aperture-normalized,
   finite-resolution projected CoGs; reject its unresolved central and extreme
   infinite-total extrapolations as physical predictions.
+- [x] **Exp67 post-result comparative QA.** On the already inspected
+  1,200-galaxy discovery sample only, compare unrestricted double Sersic with
+  the free damped cosine, fixed sine packet, and log-periodic sine. Put the
+  formulas in the figures and show epoch metrics, resolved residuals,
+  halo-/stellar-mass-binned average CoGs, stellar-mass planes, and shared
+  representative objects. Require the complete 25-galaxy figure path below
+  one minute before rendering the full discovery figures. Do not refit models,
+  inspect the selection/validation samples, or change the Exp67 null decision.
+  **Result:** the complete 25-galaxy path took 0.30 seconds, and the full
+  discovery-only render used 1,200 galaxies and 6,000 stored profile fits in
+  6.12 seconds. The free damped cosine is more accurate than double Sersic in
+  CoG and shell density at every epoch but substantially less identifiable;
+  the fixed sine packet is the best-conditioned competitive new family but
+  retains a rare, directly visible multi-start branch failure; the log-periodic
+  sine is less accurate and has the largest branch ambiguity. The binned CoGs
+  and z=0.4 stellar-mass planes do not overturn those conclusions.
