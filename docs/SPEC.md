@@ -32,6 +32,33 @@ not. A fitting script must print the sample it used and the count removed by
 each criterion. Where an older stage passed a per-epoch mh-complete mask into a
 fit, that is the superseded path and must be corrected rather than reproduced.
 
+## The measured profile data and its error model
+
+`hongshao/profile_data.py` is the single reader for the raw TNG300 profile drop.
+It consolidates both per-galaxy directories into
+`data/processed/tng300_072_profiles_v1.npz` and is the only place a new
+experiment should get isophote profiles, surface mass densities, or profile
+uncertainties. Reference: `doc/tng300_profile_data.md`.
+
+Interface guarantees:
+
+- `load_profiles()` returns a dict of arrays indexed `(galaxy, epoch, radius)`
+  with galaxy 0..3387 matching every other product in the repo and epoch 0..4
+  for z = 0.4, 0.7, 1.0, 1.5, 2.0.
+- `cog_provided` remains the fitting target. The two reconstructions
+  (`cog_const_shape`, `cog_var_shape`) exist to explain the stored curve and to
+  carry its error, and a fit must not switch target to one of them without an
+  explicit recorded decision.
+- The error model has three separately named terms and they must not be summed
+  silently: `sigma_iso_dex` (statistical, with the covariance built by
+  `cog_covariance`), `sigma_shape_dex` (coherent in radius), and
+  `sigma_proj_dex` (projection; measured at z = 0.4 and outside 10 kpc only).
+- A curve of growth's radius-to-radius covariance is fixed by its variance,
+  `Cov(M_i, M_j) = Var(M_min(i,j))`. Any objective treating the radii as
+  independent must say so explicitly and justify it.
+- `iso_shape_ok` is the profile-quality cut. It is separate from, and never a
+  substitute for, the fitting-sample rule above; the two compose.
+
 ## Analytic projected profiles
 
 Reusable analytic profile families live in `hongshao/`. A promoted family must

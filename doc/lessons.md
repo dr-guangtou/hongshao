@@ -2294,3 +2294,47 @@ session should not rediscover them:
   (per-epoch ceiling, railed compact channel, z=2 amplitude, the z=2 mass
   dependence). Recording the gap between "best so far" and "good enough to
   adopt" is part of delivering the result.
+
+## 2026-08-30 — the 1-D profile data (branch `exp68-profile-data`)
+
+- **Open the other half of the data drop before modelling harder.** Every
+  experiment in this programme had fitted `save_tng300_072_hist_aper_dir` and
+  none had opened `save_tng300_072_hist_prof`, which carries the isophote fit
+  the curves of growth were built from — including a measured uncertainty on
+  the surface density at every radius, epoch and galaxy, and the ellipticity
+  and position-angle profiles. Two years of objectives were written with no
+  error model while the ingredients sat unread in the same directory tree.
+- **Do not guess the aperture geometry; test the candidates.** Five geometries
+  were tried against the stored curve of growth. The winner (a *constant*
+  isophotal shape, `R` = semi-major axis) reproduces it to 0.0024 dex; the
+  radius-by-radius ellipticity profile is fifteen times worse and a circular
+  aperture is out by 10–45 per cent. Reasoning from the first ratio being
+  "roughly 0.8" would have picked the wrong one.
+- **A quantity that is not recorded may still be recoverable.** The constant
+  isophotal shape is stored only at z=0.4. But `(1 - e_const)` is by
+  construction the ratio of the stored CoG to the circular integral of the same
+  profile, so it is recoverable at every epoch — validated at z=0.4 against the
+  recorded value at correlation 0.994, rms 0.019.
+- **The drop's own `test` flag is the quality cut, and it was never used.**
+  `test = False` (the isophote fitter fell back to its default starting radius)
+  identifies the entire outlier population: including those galaxies drops the
+  shape recovery from correlation 0.994 to 0.895 and triples the rms. They are
+  also the galaxies whose stored apertures do not match the projection table.
+  One boolean, already in the data, separates them.
+- **A curve of growth's covariance is not a modelling choice.** It is a
+  cumulative sum, so `Cov(M_i, M_j) = Var(M_min(i,j))` exactly: the variance
+  vector determines the whole matrix. Treating the 24 radii as independent
+  shrinks the uncertainty by about a factor of five and is simply wrong, not
+  conservative.
+- **The term we assumed was uncalibratable was already measured.** The C17
+  discussion recorded the projection/orientation term as the one ingredient
+  with no calibration path. The aperture table has the same galaxies in three
+  sky projections: the term is measurable at z=0.4, and it turns out to be the
+  LARGEST of the three error terms at every radius — larger than the
+  statistical error the objective has been implicitly weighting by. Check what
+  the data contains before declaring a quantity unmeasurable.
+- **Guard raw-drop readers against per-galaxy structural variants.** Three
+  radial-grid families, a reduced column set on some galaxies, a missing `prof`
+  table, and a scalar-valued `aper` entry each crashed the build in turn. A
+  loader over a heterogeneous drop needs an explicit flag per variant, not an
+  assumption plus a traceback.
