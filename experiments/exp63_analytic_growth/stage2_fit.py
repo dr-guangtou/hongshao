@@ -504,7 +504,8 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     print(f"  saved {out.relative_to(ROOT)}")
 
 
-def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_rel=False):
+def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_rel=False, qadir=None):
+    QADIR = FIGDIR / (qadir or "qa")               # `--qadir NAME` keeps a product's battery in its own folder
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
@@ -741,4 +742,5 @@ if __name__ == "__main__":
                 compact_in_kpc=compact_kpc, epoch=epoch, joint=joint, start_from=start_from,
                 set_values=set_values)
     if "--fit-only" not in args:
-        run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel)
+        run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel,
+                 qadir=(args[args.index("--qadir") + 1] if "--qadir" in args else None))

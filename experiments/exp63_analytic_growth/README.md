@@ -975,7 +975,7 @@ shallow at $z=0.7$–1.5, as the per-epoch fits were.
 
 The joint fits are the closing product of the single-epoch round:
 `outputs/stage2_fit_joint_kpc{,_free}.npz` (merged from the parallel starts),
-their batteries in `figures/qa/qa_*_exp63_stage2_stage2_joint_kpc{,_free}.png`
+their batteries in **`figures/qa_joint/`** (the two joint models' standard battery, kept apart from `figures/qa/`; the other Stage 5 batteries are in `figures/qa_stage5/`; `stage2_fit.py --eval-only --qadir NAME` writes a product's battery to its own folder)
 and `figures/exp63_stage2_{predictions,c8,residuals,gates,channels}_joint_kpc{,_free}.png`.
 
 ## What exp63 delivered, and what it did not (2026-08-28)
