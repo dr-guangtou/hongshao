@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from dataclasses import dataclass
@@ -43,11 +44,20 @@ plt.rcParams["text.usetex"] = False
 
 FIGDIR = HERE / "figures" / "discovery_comparative_qa"
 OUTDIR = HERE / "outputs" / "discovery_comparative_qa"
-EXPRESSION_DIR = HERE / "outputs" / "discovery_round_a" / "expressions"
-EXP62_OUTDIR = Path(
-    "/Users/shuang/Dropbox/work/project/massive/hongshao_exp62_cog_fit_atlas/"
-    "experiments/exp62_cog_fit_atlas/outputs"
+EXP67_ROOT = Path(os.environ.get("HONGSHAO_EXP67_ROOT", ROOT))
+EXPRESSION_DIR = (
+    EXP67_ROOT
+    / "experiments"
+    / "exp67_squared_slope_symbolic_density"
+    / "outputs"
+    / "discovery_round_a"
+    / "expressions"
 )
+DEFAULT_EXP62_ROOT = Path(
+    "/Users/shuang/Dropbox/work/project/massive/hongshao_exp62_cog_fit_atlas"
+)
+EXP62_ROOT = Path(os.environ.get("HONGSHAO_EXP62_ROOT", DEFAULT_EXP62_ROOT))
+EXP62_OUTDIR = EXP62_ROOT / "experiments" / "exp62_cog_fit_atlas" / "outputs"
 DOUBLE_SERSIC_PATH = EXP62_OUTDIR / "full" / "variants" / "double_sersic_free.npz"
 REDSHIFTS = np.asarray((0.4, 0.7, 1.0, 1.5, 2.0))
 EPOCH_COLORS = (OKABE_ITO[0], OKABE_ITO[1], OKABE_ITO[2], OKABE_ITO[5], OKABE_ITO[6])
@@ -115,6 +125,16 @@ MODELS = {
 
 def _candidate_path(name: str) -> Path:
     return EXPRESSION_DIR / f"{name}.npz"
+
+
+def discovery_artifacts_available() -> bool:
+    """Return whether the gitignored discovery archives are available."""
+    candidate_paths = (
+        _candidate_path(name) for name in MODELS if name != "double_sersic_free"
+    )
+    return DOUBLE_SERSIC_PATH.exists() and all(
+        path.exists() for path in candidate_paths
+    )
 
 
 def _select_complete_galaxies(

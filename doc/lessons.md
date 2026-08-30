@@ -2,6 +2,13 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **Artifact-dependent checks must remain portable across worktrees (Exp67
+  closeout).** The comparative-QA loader check initially assumed its gitignored
+  discovery archives lived under the current worktree, so it passed in the
+  experiment worktree and failed after merging into a clean `master` worktree.
+  Accept an explicit artifact-root environment variable and skip only the
+  archive-dependent check with a clear reason when regenerable outputs are
+  absent; keep mathematical and source-only checks active everywhere.
 - **Use a reference-family teacher gate before searching measured profiles
   when the candidate grammar may be structurally too narrow (Exp65).** All 13
   hard-constrained expressions were mathematically valid, and damped

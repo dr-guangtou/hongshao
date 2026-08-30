@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 import exp67_qa
 
@@ -27,6 +28,10 @@ def test_mass_quantities_match_direct_aperture_and_positive_shells() -> None:
     assert all(np.isfinite(value[0]) for value in quantities.values())
 
 
+@pytest.mark.skipif(
+    not exp67_qa.discovery_artifacts_available(),
+    reason="gitignored Exp67 discovery archives are not present in this worktree",
+)
 def test_discovery_loader_keeps_stored_predictions_aligned() -> None:
     data = exp67_qa.load_discovery_data(limit_galaxies=2)
     assert data["truth_log"].shape == (10, len(exp67_qa.RADII_KPC))
