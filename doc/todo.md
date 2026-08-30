@@ -2454,3 +2454,53 @@ tier 2e says is missing.
   0.401 dex. **Decision:** promote the family for aperture-normalized,
   finite-resolution projected CoGs; reject its unresolved central and extreme
   infinite-total extrapolations as physical predictions.
+
+## exp64 — centrally finite analytic projected profiles
+
+- [x] **Predeclare the search before implementation.** In an isolated
+  `exp64-no-central-hole` worktree, define a one-break control and a five-
+  coordinate two-break projected-density family whose allowed parameters
+  guarantee finite positive central density, non-increasing projected density,
+  monotonic cumulative mass, and finite infinite total. Freeze the reference
+  models, fitting objectives, degeneracy tests, numerical decision gates, and
+  complete 90-profile sub-minute development path in the experiment README
+  before writing its driver.
+- [x] **Write mechanics checks before the driver.** Check central and radial
+  limits, aperture normalization, quadrature convergence, nonnegative Abel
+  deprojection, synthetic recovery, ordered coordinates, and exact metric
+  behavior.
+- [x] **Run the 90-profile development gate.** Screen the declared global
+  transition-sharpness grid with fold-clean selection, refit the selected
+  family under log-CoG, absolute-CoG, and log-shell objectives, compare paired
+  unrestricted-double-Sersic, cubic-logit, and PCA(3) references, and generate
+  direct fit figures in less than 60 measured seconds.
+- [x] **Run validation only after the measured gate passes.** The monotone-
+  density envelope was the sole family to reach full validation. Its three-
+  objective calculation fitted all 16,900 profiles, while the decision
+  excluded the 90 development pairs. It failed the accuracy, boundary, and
+  near-solution gates, so the predeclared full promising-model QA battery was
+  not triggered and Exp64 closes as a measured null.
+- [x] **Measure the first development gate.** The complete 90-profile path
+  passed in 30.35 seconds. The fold-selected fixed-sharpness two-break density
+  has 0.00216--0.00501 dex median full-CoG RMS across epochs, compared with
+  0.00181--0.00342 dex for unrestricted double Sersic, and its median scaled-
+  Jacobian ratio is 0.000123--0.00251, compared with 0.00168--0.01336 for
+  cubic-logit. The free-sharpness stress test is more accurate but places a
+  coordinate within 1% of a bound at four of five epoch medians. This means
+  the first family does not meet the declared accuracy-and-conditioning goal.
+- [x] **Predeclare one mechanically distinct follow-up before implementation.**
+  Define the least non-increasing radial majorant of the cubic-logit projected
+  density, retaining five coordinates and aperture normalization while
+  guaranteeing a finite positive center and nonnegative spherical Abel
+  deprojection. Freeze its objectives, numerical construction checks,
+  degeneracy tests, paired references, unchanged success gates, and separate
+  90-profile sub-minute path before writing its evaluator or driver.
+- [x] **Implement and measure the monotone-density envelope.** All 37 focused
+  Exp64 checks pass; the complete 90-profile path passed in 9.43 seconds, and
+  the full three-objective path took 712.96 seconds. On 16,810 validation
+  profiles, the log-CoG envelope retains cubic-logit conditioning at every
+  epoch but has 4.94% boundary incidence, exceeds the double-Sersic allowance
+  in multiple accuracy cells, and has a 0.00171 dex decoded discrepancy among
+  near-optimal starts in its worst case. The central repair adds a median
+  0.718% of the mass inside 148 kpc but as much as 24.1%. **Decision:** do not
+  promote either Exp64 family and do not add another post-result candidate.

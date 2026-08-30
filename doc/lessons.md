@@ -2,6 +2,38 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **Integrate positive annular masses before forming a numerical CoG (Exp64).**
+  Evaluating each cumulative aperture with an independent quadrature can make
+  two nearly equal outer integrals cross at roundoff level during optimization,
+  producing a formally negative shell even when the analytic projected density
+  is everywhere positive. Integrate each radial interval, assert its positive
+  mass, and cumulatively sum the intervals; this preserves the model's exact
+  monotonicity in its numerical representation. Separately, a valid measured
+  CoG may contain an exactly flat adjacent pair; allow that zero measured shell
+  and apply the declared 1 Msun logarithmic floor, but never hide a negative
+  model shell with the same floor. Numerical references such as PCA can also
+  reconstruct a negative shell because they do not enforce monotonicity; keep
+  their common diagnostic floor separate from the strict candidate-family
+  fitting path.
+- **Fixing an unresolved derivative defect need not improve the resolved
+  representation (Exp64).** Replacing cubic-logit's projected density by its
+  least non-increasing radial majorant guarantees a finite positive center and
+  preserves cubic-logit-level local conditioning. For the median galaxy it
+  changes no sampled density point from 2--148 kpc and adds only 0.718% of the
+  model mass inside 148 kpc. It consequently preserves, rather than improves,
+  the resolved accuracy trade space: the full validation still fails the
+  double-Sersic density/size allowance and the boundary gate. Rare cases add
+  as much as 24.1% of the aperture mass. Treat a central extrapolation repair
+  and a better finite-resolution profile coordinate system as two separate
+  problems.
+- **Run experiments with same-named local modules in separate pytest processes
+  (Exp64).** Exp62 and Exp64 both place an experiment directory on `sys.path`
+  and import a top-level `families.py`. Collecting both suites in one Python
+  process lets the first imported module satisfy the second import, producing
+  a false collection error. Keep each focused experiment suite in its own
+  pytest invocation unless the experiment modules are packaged with unique
+  import names.
+
 ## Data handling (TNG300 drop)
 
 - **DiffMAH was fit to SubhaloMass, not M200c (exp28 refines exp27).** Per-halo,
