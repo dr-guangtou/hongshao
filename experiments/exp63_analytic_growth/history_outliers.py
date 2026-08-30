@@ -59,41 +59,12 @@ OUTDIR, FIGDIR = HERE / "outputs", HERE / "figures"
 R = F.R_GRID
 Z = E.ANCHOR_Z
 I30 = int(np.argmin(np.abs(R - 30.0)))
-SHMR_TOL, JUMP_DEX, DROP_DEX = 0.5, 1.0, 0.3
+import selection as SEL                                  # noqa: E402  (the shared rule lives there)
+
+SHMR_TOL, JUMP_DEX, DROP_DEX = SEL.SHMR_TOL_DEX, SEL.JUMP_DEX, SEL.DROP_DEX
 SHMR_TOL_STRICT = 0.75
-SHMR_BIN_MIN = 30                                        # galaxies per halo-mass bin for the running median
-
-
-def running_median_relation(logmh, logms, n_bins=12):
-    """Median log M* in equal-count halo-mass bins, interpolated back to each galaxy."""
-    ok = np.isfinite(logmh) & np.isfinite(logms)
-    q = np.quantile(logmh[ok], np.linspace(0, 1, n_bins + 1))
-    centres, medians = [], []
-    for a, b in zip(q[:-1], q[1:]):
-        s = ok & (logmh >= a) & (logmh <= b)
-        if s.sum() >= SHMR_BIN_MIN:
-            centres.append(np.median(logmh[s])); medians.append(np.median(logms[s]))
-    rel = np.full(len(logmh), np.nan)
-    rel[ok] = np.interp(logmh[ok], centres, medians)
-    return rel, np.array(centres), np.array(medians)
-
-
-def flags(data, lmh):
-    """Three (n, 5) boolean flag arrays and the SHMR residuals (n, 5)."""
-    L = np.log10(np.clip(data, 1.0, None))
-    n = len(data)
-    A = np.zeros((n, 5), bool); B = np.zeros((n, 5), bool); C = np.zeros((n, 5), bool)
-    resid = np.full((n, 5), np.nan)
-    for k in range(5):
-        rel, _, _ = running_median_relation(lmh[:, k], L[:, k, F.I100])
-        resid[:, k] = L[:, k, F.I100] - rel
-        A[:, k] = np.abs(resid[:, k]) > SHMR_TOL
-    for k in range(4):                                   # k = later epoch, k+1 = earlier
-        d100 = L[:, k, F.I100] - L[:, k + 1, F.I100]
-        d30 = L[:, k, I30] - L[:, k + 1, I30]
-        B[:, k + 1] |= d100 > JUMP_DEX                    # the earlier epoch is the suspect one
-        C[:, k] |= d30 < -DROP_DEX                       # the later epoch lost the mass: suspect
-    return A, B, C, resid
+running_median_relation = SEL.running_median_relation
+flags = SEL.stellar_history_flags
 
 
 def candidate_figure(rows, data, lmh, curves, resid, why, name):

@@ -147,6 +147,85 @@ def catalog_masses(snap):
     return np.asarray(m, float)
 
 
+#: THE FITTING SAMPLE (repo-wide rule, the user, 2026-08-30; see CLAUDE.md):
+#: every galaxy selected at z=0.4 whose halo history and stellar history are
+#: sane, at ALL epochs. Halo-mass completeness is NOT a fitting criterion; the
+#: mh-complete subset is an after-fit reporting check with theta frozen (which
+#: is what this module's section 3 always said; Stage 3.7's `build` handed the
+#: subset to later experiments as the fit mask, and exp57/exp63 inherited it).
+#: A galaxy-epoch is a stellar-history outlier when its M*(<100 kpc) is more
+#: than SHMR_TOL_DEX from the population's running-median M*-Mh relation at
+#: that epoch (16-84 half-width 0.12-0.15 dex, so a ~4-sigma outlier: a minor
+#: or wrong progenitor), or when M*(<100) jumps by more than JUMP_DEX between
+#: adjacent epochs, or M*(<30) drops by more than DROP_DEX. One flagged epoch
+#: removes the galaxy from every epoch: a history is sane or it is not.
+SHMR_TOL_DEX, JUMP_DEX, DROP_DEX = 0.5, 1.0, 0.3
+SHMR_BIN_MIN, SHMR_N_BINS = 30, 12
+
+
+def running_median_relation(logmh, logms, n_bins=SHMR_N_BINS):
+    """Median log M* in equal-count halo-mass bins, interpolated back to each galaxy."""
+    ok = np.isfinite(logmh) & np.isfinite(logms)
+    q = np.quantile(logmh[ok], np.linspace(0, 1, n_bins + 1))
+    bin_min = max(5, min(SHMR_BIN_MIN, ok.sum() // n_bins))   # small (smoke) samples keep their bins
+    centres, medians = [], []
+    for a, b in zip(q[:-1], q[1:]):
+        sel = ok & (logmh >= a) & (logmh <= b)
+        if sel.sum() >= bin_min:
+            centres.append(np.median(logmh[sel])); medians.append(np.median(logms[sel]))
+    rel = np.full(len(logmh), np.nan)
+    rel[ok] = np.interp(logmh[ok], centres, medians)
+    return rel, np.array(centres), np.array(medians)
+
+
+def stellar_history_flags(data, logmh):
+    """(A, B, C, resid): three (n, 5) galaxy-epoch flags and the M*-Mh residuals.
+
+    `data` (n, 5, 24) measured CoGs in Msun; `logmh` (n, 5) log halo mass at
+    the five epochs (the DiffMAH curve's value, finite for every galaxy).
+    """
+    data = np.asarray(data, float); logmh = np.asarray(logmh, float)
+    L = np.log10(np.clip(data, 1.0, None))
+    n = len(data)
+    A = np.zeros((n, 5), bool); B = np.zeros((n, 5), bool); C = np.zeros((n, 5), bool)
+    resid = np.full((n, 5), np.nan)
+    i30 = int(np.argmin(np.abs(F.R_GRID - 30.0)))
+    for k in range(5):
+        rel, _, _ = running_median_relation(logmh[:, k], L[:, k, F.I100])
+        resid[:, k] = L[:, k, F.I100] - rel
+        A[:, k] = np.abs(resid[:, k]) > SHMR_TOL_DEX
+    for k in range(4):                                   # k = later epoch, k+1 = earlier
+        B[:, k + 1] |= (L[:, k, F.I100] - L[:, k + 1, F.I100]) > JUMP_DEX
+        C[:, k] |= (L[:, k, i30] - L[:, k + 1, i30]) < -DROP_DEX
+    return A, B, C, resid
+
+
+def fitting_sample_mask(data, logmh, verbose=True):
+    """(n,) bool — THE FITTING SAMPLE: sane halo history and sane stellar
+    history at every epoch; no halo-mass completeness.
+
+    Sane halo history: a finite DiffMAH halo mass at every epoch (the curve
+    exists for every galaxy; this guards the input). Sane stellar history:
+    finite positive CoGs at every epoch, the 3 dex backward rule
+    (`sane_history_mask`) at every epoch, and no stellar-history flag
+    (`stellar_history_flags`) at any epoch. Galaxy-level: a galaxy is in or
+    out at all five epochs.
+    """
+    data = np.asarray(data, float); logmh = np.asarray(logmh, float)
+    finite = np.isfinite(data).all(axis=(1, 2)) & (data > 0).all(axis=(1, 2)) & np.isfinite(logmh).all(1)
+    backward = sane_history_mask(data).all(1)
+    A, B, C, _ = stellar_history_flags(data, logmh)
+    outlier = (A | B | C).any(1)
+    keep = finite & backward & ~outlier
+    if verbose:
+        print(f"  FITTING SAMPLE: {keep.sum()} of {len(data)} galaxies at all five epochs "
+              f"(dropped: {(~finite).sum()} non-finite, {(finite & ~backward).sum()} by the 3 dex rule, "
+              f"{(finite & backward & outlier).sum()} stellar-history outliers: "
+              f"{A.any(1).sum()} off the M*-Mh relation by > {SHMR_TOL_DEX} dex, {B.any(1).sum()} jumps, {C.any(1).sum()} drops); "
+              f"halo-mass completeness is NOT applied (an after-fit check)")
+    return keep
+
+
 def sane_history_mask(data, epochs=(0, 1, 2, 3, 4)):
     """(n_galaxies, n_epochs) bool: is this galaxy's MEASURED history physical?
 

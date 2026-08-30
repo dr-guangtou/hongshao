@@ -1957,3 +1957,20 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
 - **A median in the objective is piecewise-smooth**: the binned fits' three
   starts spread 3.29-3.48 where the production-loss fits agreed to 1e-6. Report
   the spread and the best; consider a smooth (mean-log) proxy if the term stays.
+
+## 2026-08-30: the fitting sample is not the reporting sample
+
+- **Halo-mass completeness is an after-fit check, never a fitting criterion.**
+  exp54 designed the mh-complete subset as a re-score with theta frozen
+  (`selection.py` section 3), but Stage 3.7's `build` returned that subset as
+  the mask, and exp57 and exp63 fitted on it for four days: the z=2 fits saw
+  839 of 2397 galaxies. The user's rule, now in the repo `CLAUDE.md` and
+  `selection.fitting_sample_mask`: fit on every z=0.4-selected galaxy with a
+  sane halo and stellar history; report the mh-complete subset afterwards.
+  Print the sample and what each criterion removed in every fit log, so the
+  next reader sees it.
+- **Check the stellar history against the halo, not against itself.** The
+  3 dex backward rule caught one broken cross-match; a 0.5 dex offset from the
+  M*-Mh running median at the epoch catches 41 (a minor or wrong progenitor
+  early — never an over-massive one). A galaxy is sane or it is not: one
+  flagged epoch removes it from every epoch.

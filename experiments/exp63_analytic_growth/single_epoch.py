@@ -26,8 +26,11 @@ Two entry points:
                     stellar mass, the model's integral truncated at that epoch.
                     The gate's QA sample is the galaxies with finite, positive
                     data at that epoch (the fit used the sane + mh-complete mask).
-  --physical        (with --gate or --qa) drop the history-outlier candidates of
-                    `history_outliers.py` from the QA sample (whole-sample view).
+  --sample sane|legacy  the sample rule (CLAUDE.md): "sane" (default) is the
+                    fitting sample — every z=0.4-selected galaxy with a sane halo
+                    and stellar history (2356); the gate then also prints the
+                    mh-complete subset as the AFTER-FIT check. "legacy" is the
+                    pre-2026-08-30 per-epoch mh-complete mask.
   --sweep [TAG]     the LEVER SWEEP: every candidate lever moved one at a time
                     from the base solution (Stage 2, or the fit at TAG) with no
                     refit, read by the same table. Standing method: sweep a
@@ -83,8 +86,9 @@ COLORS = ("#999999", "#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56
 class Sample:
     """Everything the gate needs, at ONE epoch (default z=0.4)."""
 
-    def __init__(self, smoke=False, epoch=0, physical=False):
+    def __init__(self, smoke=False, epoch=0, physical=False, sample="sane"):
         recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
+        fitmask, mask = S2.fit_masks(data, mask, lmh, sample)   # `mask` = the mh-complete after-fit check
         self.curves = E.build_curves(recs, verbose=False)
         self.data = data                                  # (n, 5, 24)
         self.mask = np.asarray(mask, bool)
@@ -93,13 +97,9 @@ class Sample:
         self.lmh = lmh[:, epoch]
         self.th_inc = th_inc
         self.good = np.isfinite(data[:, epoch]).all(1) & (data[:, epoch] > 0).all(1) & np.isfinite(self.lmh)
-        if physical:                                     # drop the history-outlier candidates from the QA sample
-            ho = np.load(OUTDIR / "history_outliers.npz")
-            cand = np.asarray(ho["candidate"], bool)
-            print(f"  --physical: {cand.sum()} history-outlier candidates dropped from the QA sample "
-                  f"(history_outliers.py; the fit masks already exclude their flagged epochs)")
-            self.good &= ~cand
-        self.fit_rows = np.where(self.mask[:, epoch] & self.good)[0]
+        self.good &= fitmask[:, epoch]                    # the QA sample is the fitting sample
+        self.fit_rows = np.where(fitmask[:, epoch] & self.good)[0]
+        self.check_rows = np.where(self.mask[:, epoch] & self.good)[0]
         self.d0 = data[:, epoch]
         self.logms = np.log10(np.clip(data[:, epoch, -1], 1.0, None))
         self._problem = {}
@@ -248,8 +248,8 @@ def load_fit(tag):
     return spec2, np.asarray(fz["theta_best"], float), fz
 
 
-def run_gate(tags, name, smoke, epoch=0, physical=False):
-    sample = Sample(smoke, epoch, physical)
+def run_gate(tags, name, smoke, epoch=0, physical=False, sample_rule="sane"):
+    sample = Sample(smoke, epoch, physical, sample_rule)
     s2 = M2.Spec2()
     products, rows = {}, []
     th_nested = M2.nested_theta(sample.th_inc)
@@ -262,13 +262,13 @@ def run_gate(tags, name, smoke, epoch=0, physical=False):
         print(f"  {pname:<20} " + "  ".join(f"{n}={v:+.3f}" for n, v in zip(spec2.theta_names, theta))
               + (f"  [compact in kpc]" if spec2.compact_in_kpc else "") + f"  [{spec2.extended_family}]")
     print_table(rows, f"THE z={sample.z} GATE — median (model-data)/data [%] by halo-mass tercile, raw and amplitude-pinned"
-                f" (QA sample {int(sample.good.sum())} galaxies; fit mask {len(sample.fit_rows)})")
-    if len(sample.fit_rows) < int(sample.good.sum()):
-        # D5: both samples. The fit mask (sane + mh-complete at this epoch) is what any
-        # fit at this epoch saw; its terciles are re-drawn on the mask.
-        fm = np.zeros(len(sample.good), bool); fm[sample.fit_rows] = True
+                f" (the fitting sample, {int(sample.good.sum())} galaxies)")
+    if len(sample.check_rows) < int(sample.good.sum()):
+        # D5: both samples. The mh-complete subset is the AFTER-FIT check (never the
+        # fit sample, CLAUDE.md); its terciles are re-drawn on the subset.
+        fm = np.zeros(len(sample.good), bool); fm[sample.check_rows] = True
         rows_fm = [(nm, gate_row(sample, products[nm], good=fm), None) for nm, _, _ in rows]
-        print_table(rows_fm, f"THE SAME GATE ON THE FIT MASK at z={sample.z} ({len(sample.fit_rows)} galaxies; terciles re-drawn on the mask)")
+        print_table(rows_fm, f"THE SAME GATE ON THE MH-COMPLETE SUBSET at z={sample.z} ({len(sample.check_rows)} galaxies; the after-fit check; terciles re-drawn)")
     path = gate_figure(sample, products, name, f"exp63 single-epoch round — the z={sample.z} visual gate "
                        "(each product fitted at ONE epoch; the baseline is the incumbent on the exact engine, fitted at five epochs)")
     print(f"\n  wrote {path.relative_to(ROOT)}")
@@ -333,9 +333,9 @@ def run_sweep(base_tag, smoke):
              pin_h=np.array([r[1]["pin_h"] for r in rows]), loss=np.array([r[2] for r in rows]))
 
 
-def run_qa(tags, smoke, epoch=0, physical=False):
+def run_qa(tags, smoke, epoch=0, physical=False, sample_rule="sane"):
     """The standard battery at ONE epoch, one product per tag."""
-    sample = Sample(smoke, epoch, physical)
+    sample = Sample(smoke, epoch, physical, sample_rule)
     g = sample.good
     QADIR = FIGDIR / "qa"
     QADIR.mkdir(parents=True, exist_ok=True)
@@ -361,9 +361,10 @@ if __name__ == "__main__":
         run_sweep(base, smoke)
     epoch = int(args[args.index("--epoch") + 1]) if "--epoch" in args else 0
     physical = "--physical" in args
+    sample_rule = args[args.index("--sample") + 1] if "--sample" in args else "sane"
     if "--qa" in args:
-        run_qa(args[args.index("--qa") + 1].split(","), smoke, epoch, physical)
+        run_qa(args[args.index("--qa") + 1].split(","), smoke, epoch, physical, sample_rule)
     if "--gate" in args:
         tags = [t for t in args[args.index("--gate") + 1].split(",") if t]
         name = args[args.index("--name") + 1] if "--name" in args else ""
-        run_gate(tags, name + ("_smoke" if smoke else ""), smoke, epoch, physical)
+        run_gate(tags, name + ("_smoke" if smoke else ""), smoke, epoch, physical, sample_rule)

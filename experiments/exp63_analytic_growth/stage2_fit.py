@@ -64,6 +64,12 @@ with that epoch's SIGMA_A and halo-mass terciles; the model is the same integral
 truncated at that epoch's anchor, so the fit sees only the MAH before it. The
 evaluation then predicts all five epochs as before ("fitted at one epoch, four
 predicted"). Recorded in the fit file as `fit_epoch`.
+THE FITTING SAMPLE (repo rule, CLAUDE.md, 2026-08-30): every fit uses
+`selection.fitting_sample_mask` — all z=0.4-selected galaxies with a sane halo
+and stellar history at every epoch (2356 of 2397), with NO halo-mass
+completeness cut; the mh-complete subset is reported afterwards as a check
+with theta frozen. `--sample legacy` reproduces the pre-2026-08-30 per-epoch
+masks (2397 / 1780 / 1435 / 1144 / 839) for comparison only.
 `--joint` fits ALL FIVE EPOCHS with one theta: the loss is the sum over epochs
 of that epoch's (A^2 + F^2 + S^2 [+ B^2]), each on its own sane + mh-complete
 mask with its own sigma_A, halo-mass terciles and null references (so every
@@ -365,6 +371,18 @@ def spec_from_fit(fz):
                                 compact_in_kpc=kpc)
 
 
+def fit_masks(data, mask_legacy, lmh, sample):
+    """(n, 5) bool fit masks under the named sample rule, and the mh-complete
+    after-fit check mask (the legacy per-epoch masks)."""
+    import selection as SEL
+    legacy = np.asarray(mask_legacy, bool)
+    if sample == "legacy":
+        print("  SAMPLE: legacy per-epoch mh-complete masks (pre-2026-08-30 behaviour; comparison only)")
+        return legacy, legacy
+    keep = SEL.fitting_sample_mask(data, lmh, verbose=True)
+    return np.repeat(keep[:, None], legacy.shape[1], axis=1), legacy & keep[:, None]
+
+
 def parse_freeze(arg):
     """'a_z=0.505,b_c=0' -> {'a_z': 0.505, 'b_c': 0.0}."""
     if not arg:
@@ -374,7 +392,8 @@ def parse_freeze(arg):
 
 def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, growth_rel=False,
             freeze=None, levers=(), extended_family=M2.EXTENDED_FAMILY, objective="production",
-            compact_in_kpc=False, epoch=0, joint=False, start_from=None, set_values=None):
+            compact_in_kpc=False, epoch=0, joint=False, start_from=None, set_values=None,
+            sample="sane"):
     freeze = freeze or {}
     set_values = set_values or {}
     if epoch:
@@ -382,6 +401,7 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
               f"is truncated at its anchor (the MAH before it)")
     outer, binned = objective == "outer", objective == "binned"
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
+    mask, _ = fit_masks(data, mask, lmh, sample)
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
     spec2 = _spec(delay, growth, growth_rel, levers, extended_family, compact_in_kpc)
@@ -403,7 +423,7 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
         print(f"  {nm} FROZEN at {val:+.4f} (not fitted)")
     fit_rows = np.where(np.asarray(mask, bool)[:, epoch] & np.isfinite(data[:, epoch]).all(1)
                         & (data[:, epoch] > 0).all(1))[0]
-    print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies (sane + mh-complete at z={ANCHOR_Z[epoch]})")
+    print(f"  fit sample: {len(fit_rows)} of {len(curves)} galaxies at z={ANCHOR_Z[epoch]} (sample rule: {sample})")
     if joint:
         pr = JointProblem2(spec2, curves, data, mask, lmh, R, th_inc, outer=outer, binned=binned)
         print(f"  JOINT FIT at all five epochs: masks " + " / ".join(f"{len(pr.rows[k])}" for k in pr.epochs)
@@ -493,7 +513,8 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     np.savez(out, theta_best=best["theta"], loss_best=best["loss"], best_name=best["name"], **extra,
              frozen_names=np.array(list(freeze)), frozen_values=np.array(list(freeze.values())),
              bounds=np.array(bounds), extended_family=spec2.extended_family, objective=objective,
-             compact_in_kpc=spec2.compact_in_kpc, fit_epoch=(-1 if joint else epoch),
+             compact_in_kpc=spec2.compact_in_kpc, fit_epoch=(-1 if joint else epoch), fit_sample=sample,
+             n_fit=(np.array([len(pr.rows[k]) for k in pr.epochs]) if joint else len(fit_rows)),
              l_o_ref=(pr.l_o_ref if outer else np.nan), l_b_ref=(pr.l_b_ref if binned else np.nan),
              names=np.array([q["name"] for q in results]),
              thetas=np.array([q["theta"] for q in results]),
@@ -505,13 +526,16 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
 
 
 def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_rel=False, qadir=None,
-             physical=False):
+             physical=False, sample="sane"):
     QADIR = FIGDIR / (qadir or "qa")               # `--qadir NAME` keeps a product's battery in its own folder
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
+    fitmask, mask = fit_masks(data, mask, lmh, sample)   # `mask` is now the mh-complete AFTER-FIT check
     curves = E.build_curves(recs, verbose=False)
     R = F.R_GRID
     fz = np.load(OUTDIR / f"stage2_fit{tag}.npz", allow_pickle=True)
     spec2 = spec_from_fit(fz)
+    print(f"  the fit used sample rule '{str(fz['fit_sample']) if 'fit_sample' in fz.files else 'legacy'}'; "
+          f"this evaluation reports the '{sample}' sample and the mh-complete subset as the after-fit check")
     fit_epoch = int(fz["fit_epoch"]) if "fit_epoch" in fz.files else 0
     FIT_EPOCH["k"] = fit_epoch
     print("  fitted at ALL FIVE EPOCHS jointly (nothing is a prediction)" if fit_epoch < 0 else
@@ -528,21 +552,17 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
     good = np.isfinite(data).all(axis=(1, 2)) & (data > 0).all(axis=(1, 2))
     for m in cogs.values():
         good &= np.isfinite(m).all(axis=(1, 2)) & (m > 0).all(axis=(1, 2))
-    if physical:                                     # `--physical`: drop the history-outlier candidates
-        cand = np.asarray(np.load(OUTDIR / "history_outliers.npz")["candidate"], bool)
-        print(f"  --physical: {cand.sum()} history-outlier candidates dropped from the whole-sample QA "
-              f"(history_outliers.py; the fit masks already exclude their flagged epochs)")
-        good &= ~cand
+    good &= fitmask.all(1)                           # the QA "all" sample is the fitting sample
     msk = np.asarray(mask, bool)[good]
     logms = np.log10(np.clip(data[good][:, 0, -1], 1.0, None))
-    print(f"  QA sample {int(good.sum())} galaxies; fit mask keeps "
+    print(f"  QA sample {int(good.sum())} galaxies; the mh-complete after-fit check keeps "
           + "/".join(f"{int(msk[:, j].sum())}" for j in range(5)) + " per epoch")
 
     g_null = gates("baseline (nested incumbent, exact engine)", cogs["baseline"], data, lmh, good, spec2, th_nested, curves)
     g_fit = gates("stage2 two-channel fit", cogs["stage2"], data, lmh, good, spec2, theta, curves,
                   bounds=(fz["bounds"] if "bounds" in fz.files else None))
 
-    print(f"\n{RULE}\nPREDICTIONS at z=0.7-2.0 (never fitted) — median relative bias [%], all / fit mask\n{RULE}")
+    print(f"\n{RULE}\nPREDICTIONS at z=0.7-2.0 — median relative bias [%], all / mh-complete (after-fit check)\n{RULE}")
     out = {}
     QADIR.mkdir(parents=True, exist_ok=True)
     for m in cogs:
@@ -558,7 +578,7 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
             t, mm = out[m]["truth"][key], out[m]["model"][key]
             print(f"  {m:<12}{'all':<16}" + "".join(
                 f"{100 * np.nanmedian(qa.relerr(mm[:, j], t[:, j])):>9.1f}%" for j in range(5)))
-            print(f"  {'':<12}{'fit mask':<16}" + "".join(
+            print(f"  {'':<12}{'mh-complete':<16}" + "".join(
                 f"{100 * np.nanmedian(qa.relerr(mm[msk[:, j], j], t[msk[:, j], j])):>9.1f}%" for j in range(5)))
     print("\n  tier 3, profile max|rel| beyond 5 kpc (median)")
     for m in cogs:
@@ -729,6 +749,7 @@ if __name__ == "__main__":
     levers = tuple(args[args.index("--levers") + 1].split(",")) if "--levers" in args else ()
     ext_fam = args[args.index("--extended-family") + 1] if "--extended-family" in args else M2.EXTENDED_FAMILY
     objective = args[args.index("--objective") + 1] if "--objective" in args else "production"
+    sample = args[args.index("--sample") + 1] if "--sample" in args else "sane"
     compact_kpc = "--compact-kpc" in args
     epoch = int(args[args.index("--epoch") + 1]) if "--epoch" in args else 0
     joint = "--joint" in args
@@ -746,8 +767,8 @@ if __name__ == "__main__":
         run_fit(smoke, sel, tag, delay=delay, tau_fixed=tau_fixed, growth=growth, growth_rel=growth_rel,
                 freeze=freeze, levers=levers, extended_family=ext_fam, objective=objective,
                 compact_in_kpc=compact_kpc, epoch=epoch, joint=joint, start_from=start_from,
-                set_values=set_values)
+                set_values=set_values, sample=sample)
     if "--fit-only" not in args:
         run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel,
                  qadir=(args[args.index("--qadir") + 1] if "--qadir" in args else None),
-                 physical="--physical" in args)
+                 physical="--physical" in args, sample=sample)
