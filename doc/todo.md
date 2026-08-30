@@ -9,6 +9,78 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
+## Current experiment — population-wide damped cosine
+
+- [x] **Exp70 predeclaration.** Freeze the original six-coordinate free
+  reference, four shared damping values from 0.75 to 1.50, five-coordinate
+  candidate accounting, unchanged Exp67 discovery/selection/validation roles,
+  three objectives, eight-start scientific fits, synthetic recovery, direct
+  multi-start and weakest-direction diagnostics, continuity, numerical and
+  visual gates, full production QA, checkpointing, and the complete sub-minute
+  operational path before writing Exp70 code.
+- [x] Write the focused family-grid, archive-isolation, mechanics, stage-gate,
+  ranking, and serialization checks first and observe their expected failure.
+- [x] Pass the complete 25-galaxy operational path in less than one measured
+  minute without inspecting Exp67 selection or validation profiles.
+  **Result:** the all-in path passed in 20.88 seconds; all twenty synthetic
+  recovery cases and seven focused checks pass.
+- [x] Fit the free reference and all four fixed values to all 6,000 discovery
+  profiles with eight starts, render the minimum population visual gate, and
+  freeze at most one eligible shared damping value.
+  **Result:** the 1,200-galaxy calculation took 1,284.26 seconds. Every fixed
+  value made the weakest Jacobian 17.9--20.0 times stronger than newly refit
+  free damping in its weakest epoch, but the best worst-epoch full-CoG RMS was
+  still 20.9% worse than free against a 10% allowance, maximum near-optimal CoG
+  spread was 0.00682--0.01275 dex against a 0.003 dex limit, and no continuity
+  p95 ratio reached the required 0.75. No value was frozen.
+- [x] If discovery passes, fit the frozen value and free reference to all 5,000
+  untouched selection profiles, apply the stricter gates, and render the full
+  standard QA without retuning damping.
+  **Not triggered:** no discovery candidate was eligible.
+- [x] If selection passes, fit both families to all 5,900 untouched validation
+  profiles under all three objectives, render cross-epoch growth diagnostics,
+  and decide whether the five-coordinate family is production-ready.
+  **Not triggered:** selection was not run. **Decision:** do not pursue the
+  free damped-cosine family for production through a global fixed damping
+  constant; it removes the local damping direction by sacrificing required
+  population accuracy and does not control the near-solution or continuity
+  tails.
+
+### Review
+
+Exp70 answered the narrow production question without reopening a symbolic
+search. One shared damping constant does remove the fitted free-damping
+direction locally, but none of the four frozen values retains the required CoG
+and shell-density accuracy or controls the multi-start and continuity tails.
+The experiment therefore stops at discovery; no result-dependent grid
+refinement, selection fit, validation fit, or library promotion is warranted.
+
+## Current experiment — damped-cosine reparameterization
+
+- [x] **Exp69 predeclaration.** Freeze the original free damped cosine, four
+  global fixed-damping cases, finite-window pivot coordinates, finite-window
+  orthogonalization, deterministic conditioned-branch rule, paired references,
+  all three objectives, synthetic recovery, weakest-direction and two-dimensional
+  scans, multi-start overlays, coordinate-continuity tests, blind sample roles,
+  numerical thresholds, and the complete sub-minute operational path before
+  writing evaluator or driver code.
+- [x] Write the focused mechanics, archive-isolation, coordinate-mapping,
+  recovery, degeneracy-diagnostic, continuity, and operational checks first and
+  observe their expected failure.
+- [x] Run the complete 25-galaxy, 125-profile operational path without
+  inspecting Exp67 selection or validation profiles. **Result:** all mechanics,
+  fits, stored multi-start solutions, scans, continuity measurements, and five
+  PNG/PDF figure pairs completed in 61.39 seconds, above the frozen 60-second
+  limit, so the experiment stopped.
+- [x] If the operational gate passes, fit every declared system to the 6,000
+  Exp67 discovery profiles with eight starts and freeze at most two eligible
+  systems under the predeclared gates. **Not triggered:** the operational gate
+  failed; no discovery profile was fit by Exp69.
+- [x] Load the 5,000 selection profiles only if discovery produces an eligible
+  system. **Not triggered:** selection remains untouched.
+- [x] Load the 5,900 untouched validation profiles only for the frozen finalist.
+  **Not triggered:** validation remains untouched and no family is promoted.
+
 ## Current experiment — squared-slope symbolic-density search
 
 - [x] **Exp67 predeclaration.** Freeze the positive squared-slope construction,

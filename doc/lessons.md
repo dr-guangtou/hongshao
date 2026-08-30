@@ -2,6 +2,51 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **A globally fixed nuisance coordinate can improve local conditioning while
+  making the population representation worse (Exp70).** Fixing damped-cosine
+  damping to one of four predeclared population-wide values made the weakest
+  scaled Jacobian 17.9--20.0 times stronger than the newly refit free family in
+  the weakest epoch, and every one of 6,000 fits converged. Nevertheless, the
+  best fixed value was 20.9% worse in its worst-epoch median full-CoG RMS
+  against a 10% allowance, near-optimal CoGs still differed by at least
+  0.00682 dex against a 0.003 dex limit, and no 95th-percentile continuity
+  ratio reached the required 0.75. Treat local Jacobian strength, multi-start
+  uniqueness, coordinate continuity, and population accuracy as separate
+  requirements; removing a coordinate is not a reparameterization cure when
+  the population needs that flexibility.
+- **Use declared descriptor ranges in continuity diagnostics (Exp70).** The
+  first operational figure draft normalized common physical descriptors with
+  hand-written approximate scales. Visual review caught this before discovery.
+  Replace such scales with the Cartesian descriptor bounds derived from the
+  frozen native parameter box, rerun the complete timed gate, and base all
+  scientific continuity ratios on the corrected normalization.
+- **Match provenance helpers to their existing interface before the all-in
+  gate (Exp70).** The first operational command completed its timed science
+  path but then failed because the manifest helper received unsupported keyword
+  arguments. Correct the bookkeeping call and rerun the full gate rather than
+  treating the partial command as a pass; the final complete gate took 20.88
+  seconds.
+- **Enumerate branch-selected outputs separately from optimizer systems
+  (Exp69).** The first operational summary correctly stored every multi-start
+  solution and canonical-solution index, but its score table listed only the
+  seven optimizer coordinate systems, omitting the canonical original and
+  pivot outputs as distinct reported results. Correct the report from stored
+  fits without refitting or retiming, and make future summary schemas distinguish
+  the systems that were optimized from the outputs selected by a deterministic
+  branch rule. Here the corrected canonical original output changed median
+  scaled minimum-Jacobian strength from 0.02335 to 0.02547 of cubic-logit's
+  paired value, only a factor of 1.091, while leaving the measured-CoG RMS
+  unchanged; surfacing it explicitly made clear that the branch rule did not
+  remove the damping degeneracy.
+- **A frozen all-in operational gate is a stop condition even when the miss is
+  small (Exp69).** The full 25-galaxy path, including 42 synthetic recoveries,
+  3,500 measured-profile optimizations, profiled two-dimensional scans,
+  serialization, and five figure classes, took 61.39 seconds against its
+  declared 60-second limit. It serialized the negative result before raising.
+  Do not remove a scan, start, candidate, or figure after seeing a 1.39-second
+  miss, and do not let an operational-only hint about fixed damping become a
+  discovery claim.
+
 - **Artifact-dependent checks must remain portable across worktrees (Exp67
   closeout).** The comparative-QA loader check initially assumed its gitignored
   discovery archives lived under the current worktree, so it passed in the
