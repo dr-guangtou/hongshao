@@ -375,7 +375,66 @@ downstream — it must be calibrated against something measurable (particle coun
 per shell, split-half or multi-axis projections) before it is trusted, and the
 covariance between radii is the part most likely to be got wrong.
 
+### C19. The model's halo history knows the halo's final mass
+**Raised 2026-08-31 by exp71 part 2, which was not looking for it.** The model
+reads the halo through its DiffMAH curve, a four-parameter fit to the WHOLE
+assembly history. One of those four parameters, `logmp`, is the halo's peak
+mass, and it enters the curve at every time — so the curve "before z = 2" is not
+a past. Measured (`channel_origin.py` §2, cross-validated, out-of-fold): future
+growth at fixed `log10 M200c(z_k)` is predicted with R² = **0.00** from the
+MEASURED pre-z_k halo history (raw snapshots, and a smooth polynomial through
+every usable pre-z_k snapshot — both zero to three decimals at all four epochs)
+and with R² = **0.50 / 0.69 / 0.66 / 0.52** from the DiffMAH curve read at
+exactly the same times. `logmp` alone reaches **0.79** at z = 2.
+
+The consequence, measured: TNG300's own `M*(<103 kpc)` at fixed halo mass has
+essentially no dependence on future growth (+0.003 dex per dex at z = 2), the
+model's has +0.125, and the residual inherits the difference. That leakage is
+what makes the z = 2 halo-mass tilt sensitive to the progenitor selection
+(C18 — resolved with it, and resolved the same way whatever its origin).
+
+The question: feed the model a halo history built only from data before z_k —
+the measured MAH, or a DiffMAH refitted on pre-z_k points — and does `dy/dG`
+fall from +0.12 toward the truth's +0.003, taking the spurious tilt with it?
+This one DOES need a fit, and it touches every high-redshift number in the
+programme, because every model in it walks the same curve. Two smaller items
+ride along: whether `sigma_A`-scale conclusions about high-z bias change, and
+whether `halo-history-knows-a-little-about-the-core` (partial |ρ| ≤ 0.23 with
+DiffMAH `early`/`late`/`t50` at fixed halo mass) survives being redone with
+measured-history variables. Nothing is withdrawn on the strength of this yet.
+
 ### C18. At z = 2, do the massive progenitors and the rest want different models?
+**RESOLVED 2026-08-31 (exp71). It is the selection, from 10 kpc outwards; the
+centre is a separate, older problem.** Details and every table in
+`experiments/exp71_c18_selection_leakage/README.md`; the answer is unchanged for
+the exp63 joint mean and for the nested incumbent, so it belongs to the sample
+and the model class, not to one fit.
+
+- **The phenomenon.** Halo-mass tilt of `M*(<103 kpc)` at z = 2: −0.122
+  [−0.142, −0.101] on the fitting sample, **+0.061** [+0.022, +0.097] on the
+  mh-complete subset — opposite signs. At z ≤ 1.5 the fitting-sample tilt is at
+  most 0.017.
+- **The channel is real.** Partial ρ of the residual with future growth at fixed
+  halo mass: +0.180 / +0.198 / +0.207 / +0.191 at z = 0.7–2.0, every one outside
+  a null that reshuffles growth inside equal-count halo-mass bins.
+- **The size is right.** The completeness curve and the measured `dy/dG`
+  together predict a spurious full-sample tilt of −0.063 … −0.180 at z = 2 with
+  no reference to the observed tilt. The observed −0.122 sits inside it, and
+  subtracting it leaves +0.058 … −0.059, which brackets the mh-complete +0.061.
+  The same holds at 10, 52, 103 and 148 kpc and for the 52–103 kpc shell.
+- **The exception.** At `M*(<2 kpc)` the observed shift is −0.092 and the
+  selection predicts at most −0.026. The centre's mass dependence is the
+  standing central defect, not the selection.
+- **So: report it, do not fit it.** A second high-redshift variable is not
+  required by this evidence. The model is still wrong at z = 2 on the
+  mh-complete subset (−0.045 dex at 103 kpc, −0.148 dex in the 52–103 kpc
+  shell) — that is a real error at fixed halo mass, just not a tilt the
+  selection failed to explain.
+- **What C18 did not ask, and exp71 measured anyway:** the leakage is
+  manufactured by the model, not present in TNG300. See C19.
+
+*The question as it was originally written, kept verbatim:*
+
 Raised 2026-08-30 (exp63 Stage 5i, the after-fit check doing its job). Fitted on
 the whole fitting sample the joint mean is within 3 per cent of the tercile
 medians at z = 2 and 5 per cent off on the mh-complete subset; fitted on that

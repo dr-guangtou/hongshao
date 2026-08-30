@@ -2435,3 +2435,39 @@ session should not rediscover them:
   away, letting the model absorb the common mode in its normalisation. The full
   covariance tests the fine radial structure, which is the stringent and correct
   test, and it is 10-200x larger.
+- **A fit to the whole history is not a history.** DiffMAH is four parameters
+  fitted to a halo's entire assembly, and one of them (`logmp`) is the peak
+  mass, so the curve "before z = 2" carries the halo's final mass. Measured:
+  future growth at fixed halo mass is predicted with R^2 = 0.00 from the
+  MEASURED pre-z_k history -- raw snapshots and a smooth polynomial through
+  every usable one alike -- and R^2 = 0.50-0.69 from the DiffMAH curve read at
+  the same times, 0.79 from `logmp` alone at z = 2. Any model integrating that
+  curve is reading the future, whatever the equations say. If a model must be
+  epoch-local, its inputs have to be built from data before the epoch, and that
+  is a property of the INPUT, not of the model's form.
+- **Ask whether the truth does it too, before crediting the model with a
+  physical dependence.** The residual's dependence on future growth looked like
+  a model failing to capture something real. TNG300's own stellar mass at fixed
+  halo mass has no such dependence (+0.003 dex per dex at z = 2 against the
+  model's +0.125), so the "something real" did not exist and the model was
+  inventing it. One extra column -- the same statistic on the measurement -- is
+  what separates "we cannot reproduce this" from "we manufacture this".
+- **Give the control the same advantage the candidate has.** Three raw catalog
+  snapshots carry halo-finder noise that a smooth four-parameter curve does not,
+  so the DiffMAH set could have won on smoothing alone. Fitting a polynomial of
+  the same order to every usable pre-epoch snapshot -- same predictor count,
+  same smoothness, strictly no future data -- left the R^2 at zero and killed
+  that objection before it was raised.
+- **A partial correlation on a near-determined variable is not a test.** Once a
+  control explains 85 per cent of the variable being partialled out, the
+  remaining slope is measured on a thin remainder and is free to move either
+  way, so a LARGER conditional slope is not evidence against the mechanism.
+  Print the control's own R^2 in the same cell, and put the weight on a
+  comparison of two predictor sets against the same target instead.
+- **Predict the bias, do not just observe that it shrinks.** Restricting a
+  sample to the complete part changes the mass range, and a slope measured over
+  a narrower range moves for reasons that have nothing to do with selection.
+  Predicting the shift from the completeness curve and the measured dy/dG --
+  neither of which knows the observed tilt -- removes that objection, and it is
+  the step that turned "the z = 2 tilt looks like selection" into "the z = 2
+  tilt IS selection, at every radius from 10 kpc out".
