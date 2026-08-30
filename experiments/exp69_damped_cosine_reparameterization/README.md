@@ -1,7 +1,9 @@
 # Exp69 — Damped-cosine reparameterization
 
-Status: PREDECLARED. No evaluator or driver exists yet. Exp67 selection and
-validation artifacts have not been loaded.
+Status: STOPPED AT THE PREDECLARED OPERATIONAL GATE. The complete gate took
+61.39 seconds, above the frozen 60-second limit. Discovery, selection, and
+validation were not entered; Exp67 selection and validation fits remain
+untouched.
 
 ## Narrow question
 
@@ -278,16 +280,105 @@ annular, outskirt, density, size, cumulative-residual, and common best/typical/
 worst individual-object QA battery. A validation-stage finalist also receives
 the five-epoch stellar-growth diagnostics.
 
+## Result
+
+The analytic and synthetic mechanics passed for all seven declared optimizer
+systems and six synthetic cases per system. The standalone mechanics path took
+11.04 measured seconds. Every synthetic full-CoG recovery RMS was below the
+predeclared `3e-5 dex` reference limit, and every common physical-descriptor
+recovery error was below 0.03 of its declared coordinate range. Thus the
+coordinate maps and exact elementary density integrals work as intended.
+
+The complete operational path then fit all seven optimizer systems to 125
+discovery-only profiles from 25 galaxies, using four starts per fit; stored all
+solutions; ran the synthetic recovery, weakest-direction, profiled two-
+dimensional scan, and continuity diagnostics; serialized every result; and
+rendered all five declared PNG/PDF figure pairs. It took 61.39 seconds, which is
+1.39 seconds slower than the frozen 60-second operational target. The declared
+rule says an over-time gate stops the experiment without reducing the candidate
+set, number of starts, profiled scans, or figure set. Therefore the 6,000-
+profile discovery stage was not entered, and none of the following operational
+measurements may be used for model selection.
+
+On this operational-only sample, the newly refit original free damping had a
+median full-CoG RMS of 0.002040 dex relative to the measured CoGs, a median
+shell-density RMS of 0.06645 dex relative to the measured annular densities,
+98.4% optimizer convergence, 17.6% of fits within 1% of a finite coordinate
+bound, and median scaled minimum-Jacobian strength equal to 0.02335 of the
+paired cubic-logit value. Its maximum CoG separation among solutions within 1%
+of the best loss was 0.001193 dex.
+
+Fixing `lambda=0.75` exposed the clearest accuracy--conditioning trade on the
+same 125 profiles. Its median scaled minimum-Jacobian strength was 0.4482 of
+the paired cubic-logit value, 19.19 times the original free-damping reference;
+its nearest-profile and adjacent-epoch 95th-percentile coordinate separations
+were respectively 0.597 and 0.630 times the original-family values, so both
+were smaller than the declared 0.75 continuity target. However, its median
+full-CoG RMS was 0.002267 dex, 11.12% worse than the original's 0.002040 dex and
+outside the 10% discovery accuracy allowance, and only 99.2% of its fits
+converged compared with the required 99.9%. This small sample therefore shows
+that fixed damping can remove much of the local null direction, but it does not
+establish an acceptable population coordinate system.
+
+Fixing `lambda=0.25` reached 100% convergence and median scaled minimum-
+Jacobian strength equal to 0.4226 of cubic-logit's paired value, 18.10 times the
+original free-family strength. Its median full-CoG RMS was 0.002491 dex, 22.10%
+worse than the original measured-CoG error, and its median shell-density RMS
+was 0.08831 dex, 32.91% worse than the original measured-annulus error. Fixing
+`lambda=1.5` kept the median full-CoG RMS to 0.002182 dex, 6.93% worse than the
+original, and the median shell-density RMS to 0.06877 dex, 3.50% worse than the
+original, but 10.4% of fits lay within 1% of a finite bound compared with the
+5% discovery limit; its nearest-profile and adjacent-epoch 95th-percentile
+coordinate separations were 0.852 and 0.810 times the original values, both
+larger than the 0.75 continuity target. The undamped `lambda=0` limit was worse
+than the original in median full-CoG RMS, shell-density RMS, convergence, and
+near-optimal CoG spread. No fixed value cleared all operational analogues of
+the frozen discovery gates.
+
+The exact finite-window pivot coordinates preserved raw reconstruction: their
+median full-CoG RMS was 0.002046 dex, only 0.28% worse than the original's
+0.002040 dex. They did not remove the degeneracy: their median scaled minimum-
+Jacobian strength was 0.01483 of cubic-logit's paired value, only 0.635 times
+the already weak original coordinate strength, and only 96.8% of fits
+converged. Finite-window orthogonalization was worse still, with median scaled
+minimum-Jacobian strength equal to 0.00540 of cubic-logit's paired value, 70.4%
+convergence, and 39.2% of fits within 1% of a finite bound. The mechanically
+motivated free-coordinate changes therefore give no operational evidence that
+relabeling damping removes the null direction.
+
+The canonical conditioned-branch rule left the original-family median full-
+CoG RMS effectively unchanged at 0.0020404 dex versus 0.0020402 dex for the
+minimum-loss reference. Its median scaled minimum-Jacobian strength increased
+only from 0.02335 to 0.02547 of cubic-logit's paired value, a factor of 1.091,
+while its nearest-profile and adjacent-epoch 95th-percentile coordinate
+separations remained 0.941 and 0.971 times the minimum-loss original values.
+Those reductions are much smaller than the required factor of 0.75. A branch
+tie-breaker alone does not remove the measured local degeneracy in this sample.
+
+### Decision
+
+Stop before discovery because the complete operational path missed its frozen
+runtime gate. The operational figures suggest that globally fixing damping is
+the only declared mechanism that materially strengthens the coordinates, but
+the tested fixed values trade that gain against accuracy, convergence,
+boundary incidence, or continuity. The exact pivot coordinates,
+orthogonalization, and canonical branch rule do not remove the weak direction.
+Because the test stopped at 25 galaxies, the population question remains
+unresolved and no coordinate system is promoted or sent to Exp67 selection or
+validation.
+
 ## Review checklist
 
 - [x] Predeclare the narrow family, exact references, blind population roles,
   coordinate systems, objectives, synthetic recovery, Jacobian scans,
   multi-start overlays, continuity tests, thresholds, and sub-minute gate
   before writing evaluator or driver code.
-- [ ] Write focused checks and observe them fail because the evaluator and
+- [x] Write focused checks and observe them fail because the evaluator and
   driver do not yet exist.
-- [ ] Pass the complete 25-galaxy operational path in under one measured minute.
-- [ ] Enter discovery only if the operational gate passes without alteration.
-- [ ] Keep Exp67 selection and validation unseen until their declared gates.
-- [ ] Display and inspect every generated figure in its generating turn.
-- [ ] Record the final measured result without adding a post-result family.
+- [x] Run the complete 25-galaxy operational path. **Result:** 61.39 seconds,
+  so it failed the frozen 60-second gate and stopped the experiment.
+- [x] Enter discovery only if the operational gate passes without alteration.
+  **Not triggered:** the operational gate failed.
+- [x] Keep Exp67 selection and validation unseen until their declared gates.
+- [x] Display and inspect every generated figure in its generating turn.
+- [x] Record the final measured result without adding a post-result family.
