@@ -2389,6 +2389,9 @@ quoted until z=0.4 passes the gate.
   ceiling (exp61's lesson again, gap measured). C8 whole-population span 0.013.
   z=2 fails in amplitude (-7..-11% at every radius on the fit mask): the
   efficiency law's time dependence is the next thing the class needs.
+- [x] 5g history outliers: 41 candidates (0.5 dex off the M*-Mh relation), all
+  strict ones already outside the fit masks; `--physical` for the QA sample.
+- [x] 5h exp62 families assessed: not a kernel change; a candidate objective.
 - [ ] Owed by the user: adopt the joint kpc mean (`stage2_fit_joint_kpc_free.npz`)
   as the exp63 five-epoch mean? Merge/push. P10. Whether to pursue the
   efficiency time law / an epoch-dependent n_c and split (what the per-epoch

@@ -26,6 +26,8 @@ Two entry points:
                     stellar mass, the model's integral truncated at that epoch.
                     The gate's QA sample is the galaxies with finite, positive
                     data at that epoch (the fit used the sane + mh-complete mask).
+  --physical        (with --gate or --qa) drop the history-outlier candidates of
+                    `history_outliers.py` from the QA sample (whole-sample view).
   --sweep [TAG]     the LEVER SWEEP: every candidate lever moved one at a time
                     from the base solution (Stage 2, or the fit at TAG) with no
                     refit, read by the same table. Standing method: sweep a
@@ -81,7 +83,7 @@ COLORS = ("#999999", "#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56
 class Sample:
     """Everything the gate needs, at ONE epoch (default z=0.4)."""
 
-    def __init__(self, smoke=False, epoch=0):
+    def __init__(self, smoke=False, epoch=0, physical=False):
         recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
         self.curves = E.build_curves(recs, verbose=False)
         self.data = data                                  # (n, 5, 24)
@@ -91,6 +93,12 @@ class Sample:
         self.lmh = lmh[:, epoch]
         self.th_inc = th_inc
         self.good = np.isfinite(data[:, epoch]).all(1) & (data[:, epoch] > 0).all(1) & np.isfinite(self.lmh)
+        if physical:                                     # drop the history-outlier candidates from the QA sample
+            ho = np.load(OUTDIR / "history_outliers.npz")
+            cand = np.asarray(ho["candidate"], bool)
+            print(f"  --physical: {cand.sum()} history-outlier candidates dropped from the QA sample "
+                  f"(history_outliers.py; the fit masks already exclude their flagged epochs)")
+            self.good &= ~cand
         self.fit_rows = np.where(self.mask[:, epoch] & self.good)[0]
         self.d0 = data[:, epoch]
         self.logms = np.log10(np.clip(data[:, epoch, -1], 1.0, None))
@@ -240,8 +248,8 @@ def load_fit(tag):
     return spec2, np.asarray(fz["theta_best"], float), fz
 
 
-def run_gate(tags, name, smoke, epoch=0):
-    sample = Sample(smoke, epoch)
+def run_gate(tags, name, smoke, epoch=0, physical=False):
+    sample = Sample(smoke, epoch, physical)
     s2 = M2.Spec2()
     products, rows = {}, []
     th_nested = M2.nested_theta(sample.th_inc)
@@ -325,9 +333,9 @@ def run_sweep(base_tag, smoke):
              pin_h=np.array([r[1]["pin_h"] for r in rows]), loss=np.array([r[2] for r in rows]))
 
 
-def run_qa(tags, smoke, epoch=0):
+def run_qa(tags, smoke, epoch=0, physical=False):
     """The standard battery at ONE epoch, one product per tag."""
-    sample = Sample(smoke, epoch)
+    sample = Sample(smoke, epoch, physical)
     g = sample.good
     QADIR = FIGDIR / "qa"
     QADIR.mkdir(parents=True, exist_ok=True)
@@ -352,9 +360,10 @@ if __name__ == "__main__":
         base = args[i] if i < len(args) and not args[i].startswith("--") else ""
         run_sweep(base, smoke)
     epoch = int(args[args.index("--epoch") + 1]) if "--epoch" in args else 0
+    physical = "--physical" in args
     if "--qa" in args:
-        run_qa(args[args.index("--qa") + 1].split(","), smoke, epoch)
+        run_qa(args[args.index("--qa") + 1].split(","), smoke, epoch, physical)
     if "--gate" in args:
         tags = [t for t in args[args.index("--gate") + 1].split(",") if t]
         name = args[args.index("--name") + 1] if "--name" in args else ""
-        run_gate(tags, name + ("_smoke" if smoke else ""), smoke, epoch)
+        run_gate(tags, name + ("_smoke" if smoke else ""), smoke, epoch, physical)

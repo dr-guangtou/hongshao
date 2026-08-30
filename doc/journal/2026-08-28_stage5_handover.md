@@ -78,8 +78,21 @@ objective), each judged by the binned CoGs. No z > 0.4 number until z=0.4 is rig
   radius on the fit mask). Joint starts rail n_c at 0.5; the four-exponent
   fits are a flat valley (same loss, different a_z/b_e). Fit files
   `stage2_fit_joint_kpc{,_free}.npz` (merged from `_s0.._s2`), batteries run.
+- **5g history outliers** (`history_outliers.py`, README 5g): 41 galaxies
+  (0.5 dex off the M*-Mh relation at some epoch; 8 strict) — a wrong/minor
+  progenitor early, never over-massive; ALL strict candidates already outside
+  the fit masks at their flagged epochs; joint loss 15.63 -> 15.54 without
+  them. `--physical` drops them from the QA sample (`single_epoch.py`,
+  `stage2_fit.py --eval-only`). Recommendation: add the 0.5 dex rule to
+  `selection` (user decision).
+- **5h exp62 families read** (README 5h): cubic-logit / double Sersic do not
+  change the deposition model's design (the kernel is not what is short; a
+  central hole is unphysical for a deposit); usable as a size-and-shape
+  OBJECTIVE (R20/R50/R80 + warp coordinates) — a single-epoch leverage test,
+  not started.
 - **Owed by the user**: adopt `_joint_kpc_free` as the exp63 five-epoch mean?
   pursue the efficiency law's time dependence / epoch-dependent n_c and split?
+  add the 0.5 dex M*-Mh rule to `selection`? test the cubic-logit objective?
 - Fit files added: `stage2_fit_frozen_binned_{kpc,levers}_e{1,2,3,4}.npz`; eval
   logs `stage2_eval_frozen_binned_{levers,kpc}.log` (+ their figures).
 

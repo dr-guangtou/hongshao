@@ -978,6 +978,99 @@ The joint fits are the closing product of the single-epoch round:
 their batteries in **`figures/qa_joint/`** (the two joint models' standard battery, kept apart from `figures/qa/`; the other Stage 5 batteries are in `figures/qa_stage5/`; `stage2_fit.py --eval-only --qadir NAME` writes a product's battery to its own folder)
 and `figures/exp63_stage2_{predictions,c8,residuals,gates,channels}_joint_kpc{,_free}.png`.
 
+### 5g — galaxies whose measured history is not physical (2026-08-30)
+
+The user's reading of the joint fit's worst cases (`figures/qa_joint/qa_cases_*`):
+objects with a dramatic, very likely unphysical CoG evolution, which the
+existing filter does not catch. `selection.sane_history_mask` drops an epoch
+only when $M_*(<100)$ is more than 3 dex below the galaxy's own $z=0.4$ value
+(row 181, the broken cross-match); row 2372 grows 3 dex in the centre from
+$z=2$ to 0.4 and passes it. `history_outliers.py` compares each epoch's
+stellar mass with the halo instead — three galaxy-epoch flags: **A** more than
+0.5 dex off the population's $M_*(<100)$–$M_h$ running median at that epoch
+(the population's 16–84 half-width is 0.12–0.15 dex, so a 4σ outlier; a strict
+0.75 dex set is kept too), **B** an adjacent-epoch jump of more than 1 dex in
+$M_*(<100)$ (the sample's 99th percentile is 0.68), **C** an adjacent-epoch drop
+of more than 0.3 dex in $M_*(<30)$ (1st percentile −0.06). Log
+`outputs/history_outliers.log`; flags `outputs/history_outliers.npz`; the
+candidates' CoGs, halo growth curves and $M_*$–$M_h$ tracks in
+`figures/exp63_history_outliers.png`.
+
+| rule | galaxy-epochs | galaxies | flagged galaxy-epochs *inside* the fit mask at that epoch (z=0.4 … 2) |
+|---|---|---|---|
+| A at 0.5 dex | 59 (47 below the relation) | 41 | 2 / 1 / 5 / 3 / 4 |
+| A at 0.75 dex (strict) | 14 (all below) | 7 | 0 / 0 / 0 / 0 / 0 |
+| B (jump > 1 dex) | 2 | 2 | 0 |
+| C (drop > 0.3 dex) | 0 | 0 | 0 |
+
+What the candidates look like (figure): haloes of $10^{12.7-13.4}$ whose DiffMAH
+curve grows smoothly by ~1 dex while the measured stellar mass grows 1.5–2 dex
+from 0.8–1.5 dex *below* the relation at $z\ge1$ — a minor or wrong progenitor
+in the cross-match at the early epochs, not evolution; their CoG *shapes* at
+those epochs are unremarkable, only the mass is wrong. Adjacent-epoch drops do
+not occur at all: the "dramatic" cases are all under-massive early, never
+over-massive.
+
+**Impact.** The fits are already clean: the sane + mh-complete masks exclude
+every strict candidate at every flagged epoch, and only 15 flagged
+galaxy-epochs (of ~7,600) are inside any mask under the 0.5 dex rule; dropping
+them changes the joint fit's loss from 15.630 to 15.537 with no per-epoch term
+moving by more than 0.015. Where they do count is the **whole-sample QA**
+(D5's "all" column and the worst-case panels), which still contains row 181
+with a 771,137 per cent residual. `single_epoch.py --gate/--qa --physical` and
+`stage2_fit.py --eval-only --physical` now drop the 41 candidates from the QA
+sample; the fit masks are unchanged. Recommendation: make the 0.5 dex
+$M_*$–$M_h$ rule part of `selection` alongside the 3 dex rule (a user
+decision — it touches every experiment's sample).
+
+### 5h — what exp62's profile families offer this model (2026-08-30, reading only)
+
+exp62 (merged to `master`, worktree `hongshao_exp62_cog_fit_atlas`) fitted
+every galaxy at every epoch with one- and two-component CoG families: the
+unrestricted double Sérsic (6 parameters, median full-CoG rms 0.00263 dex) is
+the accuracy ceiling with degenerate parameters; the **cubic-logit profile**
+(5 parameters, `hongshao/cubic_logit.py`, `doc/cubic_logit_profile.md`) —
+the enclosed fraction $F=\sigma(ax+bx^2+cx^3)$, $x=\ln R/R_{50}$, monotone by
+construction — reaches 0.00249 dex with twelve times better conditioning; its
+one caveat is a formal central density hole ($\Sigma\to0$ as $R\to0$; exp64
+is searching for a family without it). exp62's halo-information stages found
+that the concurrent halo mass reproduces the *average* normalised CoG, DiffMAH
+explains 2–7 per cent of the diversity about it, concentration nothing, and
+more than 90 per cent of the individual diversity is unexplained — the same
+picture as exp63's Stage 1 and memory `halo-history-knows-a-little-about-the-core`.
+
+Three ways the families could enter here, assessed:
+
+1. **As the deposit kernel.** The kernel is the profile of *one deposit*, not of
+   the galaxy; the galaxy is the kernel convolved with the deposit-size
+   distribution (tech note 04). A more flexible kernel is not what the model
+   is short of — Stage 1 showed the incumbent's own kernel represents every
+   $z=0.4$ curve to 0.0036 dex once the size distribution is free, and 5f
+   showed the shared law's failure is in the *time dependence* of sizes,
+   shares and the efficiency amplitude, not in the kernel's shape. A cubic-logit
+   kernel would add two shape parameters and the central hole (a deposit with
+   $\Sigma(0)=0$ is unphysical for in-situ stars, and every deposit's hole
+   would sit inside 2 kpc at every epoch). Not recommended.
+2. **As the extended kernel only.** The extended deposit is an ex-situ envelope,
+   where a cored, sharply bounded shape is plausible; 5b showed the gate does
+   not care about the extended family (gompertz vs Sérsic identical under the
+   binned objective). No leverage to gain.
+3. **As the target representation of the data**, replacing the 24-radius CoG in
+   the objective by each galaxy's five cubic-logit coordinates (or the model's
+   decoded coordinates against the data's). This is where exp62's result is
+   usable: the coordinates are well conditioned and $R_{50}$, $R_{20}$, $R_{80}$
+   are exact, so a *size-and-shape* objective — the model's and the data's
+   $R_{20}/R_{50}/R_{80}$ and warp coordinates compared directly — would price
+   the 2–5 kpc curvature and the outskirts in a low-dimensional, interpretable
+   way, and could replace the per-galaxy shells term that 5b showed is blind
+   to the binned offset. Worth a single-epoch test under the standing method
+   (evaluate the leverage on the gate before fitting); not started.
+
+So: the families do not change the deposition model's design; exp62's
+conditioning result makes the cubic-logit coordinates a candidate *objective*,
+and its halo-information result independently confirms that the mean is
+already at the limit of what the halo history determines.
+
 ## What exp63 delivered, and what it did not (2026-08-28)
 
 Against the science plan's three requests:

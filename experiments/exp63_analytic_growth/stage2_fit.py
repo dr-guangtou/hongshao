@@ -504,7 +504,8 @@ def run_fit(smoke, starts_sel, tag, delay=False, tau_fixed=None, growth=False, g
     print(f"  saved {out.relative_to(ROOT)}")
 
 
-def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_rel=False, qadir=None):
+def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_rel=False, qadir=None,
+             physical=False):
     QADIR = FIGDIR / (qadir or "qa")               # `--qadir NAME` keeps a product's battery in its own folder
     recs, data, mask, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     curves = E.build_curves(recs, verbose=False)
@@ -527,6 +528,11 @@ def run_eval(smoke, tag, tables_only=False, delay=False, growth=False, growth_re
     good = np.isfinite(data).all(axis=(1, 2)) & (data > 0).all(axis=(1, 2))
     for m in cogs.values():
         good &= np.isfinite(m).all(axis=(1, 2)) & (m > 0).all(axis=(1, 2))
+    if physical:                                     # `--physical`: drop the history-outlier candidates
+        cand = np.asarray(np.load(OUTDIR / "history_outliers.npz")["candidate"], bool)
+        print(f"  --physical: {cand.sum()} history-outlier candidates dropped from the whole-sample QA "
+              f"(history_outliers.py; the fit masks already exclude their flagged epochs)")
+        good &= ~cand
     msk = np.asarray(mask, bool)[good]
     logms = np.log10(np.clip(data[good][:, 0, -1], 1.0, None))
     print(f"  QA sample {int(good.sum())} galaxies; fit mask keeps "
@@ -743,4 +749,5 @@ if __name__ == "__main__":
                 set_values=set_values)
     if "--fit-only" not in args:
         run_eval(smoke, tag, tables_only="--tables-only" in args, delay=delay, growth=growth, growth_rel=growth_rel,
-                 qadir=(args[args.index("--qadir") + 1] if "--qadir" in args else None))
+                 qadir=(args[args.index("--qadir") + 1] if "--qadir" in args else None),
+                 physical="--physical" in args)
