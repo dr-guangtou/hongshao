@@ -2051,3 +2051,25 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   halo-mass stratification implied by the predeclaration. Future profile-only
   searches should declare a separate missing-mass stratum before selecting any
   galaxy.
+
+# 2026-08-30 — Exp67 squared-slope symbolic-density search
+
+- **Removing an artificial amplitude ceiling can reveal a real family without
+  producing a usable coordinate system.** Replacing Exp66's bounded-linear
+  slope modulation by an algebraically positive square lets fitted damped
+  harmonics beat double Sersic's median full-CoG RMS at every epoch. Their
+  scaled-Jacobian strength is nevertheless only 1.38--3.60% of cubic-logit's
+  paired value, and 17.83--21.35% of fits approach a coordinate bound. Separate
+  representational accuracy from parameter identifiability.
+- **Localized trigonometric packets occupy a different accuracy--conditioning
+  regime from free damped harmonics.** A fixed frequency-0.5, width-0.5 sine
+  packet is at most 14.78% worse than double Sersic in epoch-median CoG RMS,
+  while retaining 46.87--62.80% of cubic-logit's Jacobian strength and only
+  2.72% boundary incidence. Its failure is rare but real: 12 of 6,000 profiles
+  have near-equal two-start solutions separated by more than 0.003 dex in CoG.
+  Report both the population incidence and the predeclared worst-case failure.
+- **More galaxies can reverse which symbolic atom looks best.** Exp66's
+  bounded-linear wrapper favored log-periodic atoms on 250 galaxies. Exp67's
+  squared-slope search over 1,200 galaxies favors low-frequency localized
+  packets for conditioning and fitted damped harmonics for accuracy. Do not
+  generalize an atom ranking across constraint wrappers or from a demo sample.

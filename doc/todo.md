@@ -9,6 +9,32 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
+## Current experiment — squared-slope symbolic-density search
+
+- [x] **Exp67 predeclaration.** Freeze the positive squared-slope construction,
+  explicit finite- and missing-halo-mass strata, 1,200/1,000/1,180 galaxy
+  split, complete relaxed Exp66 atom library, analytic-integral audit,
+  degeneracy tests, replacement criteria, and sub-minute operational gate
+  before writing the evaluator or driver.
+- [x] Write the focused mathematical, split, exact-integral, recovery, and
+  checkpoint checks first and observe their expected failure.
+- [x] Pass the complete 125-profile operational path in under one measured
+  minute. **Result:** all mechanics, fits, metrics, serialization, and figures
+  completed in 42.88 seconds.
+- [x] Fit every Round-A expression directly to all 6,000 discovery profiles;
+  generate Round B only from the frozen eligible survivors. **Result:** all 88
+  expressions and two starts per profile completed in 3,905.30 seconds; none
+  passed every frozen gate, so Round B was not generated.
+- [x] Fit the best six eligible families to 5,000 separate selection profiles.
+  **Not triggered:** the eligible discovery list is empty.
+- [x] Fit the finalist under all three objectives on 5,900 untouched validation
+  profiles. **Not triggered:** no finalist exists; all selection and validation
+  galaxies remain untouched.
+- [x] Complete the Exp67 review without changing a gate after seeing results.
+  **Decision:** retain the fixed low-frequency packet as the most interesting
+  conditioned new family and the free damped squared harmonic as the most
+  interesting analytic but non-identifiable family; promote neither.
+
 ## Current experiment — expanded constrained symbolic-density search
 
 - [x] **Exp66 predeclaration.** Freeze a 3,380-galaxy discovery/selection/final
