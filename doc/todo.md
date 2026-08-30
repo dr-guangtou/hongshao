@@ -2803,6 +2803,20 @@ Infrastructure, not an experiment. Prepares the inputs for open questions C17
 - [x] **Write the data model and the notes.** `doc/tng300_profile_data.md`
   sections 7 and 8, with the "do not" list.
 
+Data model settled with the user 2026-08-31 (interview; `doc/tng300_profile_data.md`
+section 10). v2 built: shared 32-radius grid, isophote density fiducial,
+zero-fill + flat outskirts, semi-major primary with `r_circ`, two shape routes
+with an agreement certificate, annulus form co-primary, projection term raw only.
+
+- [x] **Correct the two claims the user challenged.** `test` does not gate the
+  ellipticity profile (35 per cent of `test=False` epochs carry good profiles);
+  density availability is not the shape-certification count (all 2356 have a
+  density from 2-50 kpc at every epoch, the limit is outer truncation at high z).
+- [x] **Answer the three-projection question.** All 3388 galaxies have all six
+  aperture masses in all three projections, but ONLY at z=0.4 and ONLY as
+  apertures: zero 24-point CoGs and zero density profiles in xz/yz.
+- [x] **Build v2 and verify it.** Eight selftest claims pass, F-H new.
+
 Owed to the user, and NOT decided here:
 - [ ] **The stellar mass map file is unreadable** (`map_tng100_hist_stellar.hdf5`:
   no HDF5 signature, first 201 MB zeros, float64 data beyond). Re-supplying it
@@ -2810,6 +2824,13 @@ Owed to the user, and NOT decided here:
   and would give the projection error term at every epoch, not just z=0.4.
 - [ ] **Whether the projection term enters the C17 likelihood**, given it is
   measured only at z=0.4 and from only three projections.
-- [ ] **Whether any fit ever switches target** from `cog_provided` to a
-  reconstruction. The default recommendation is no; the reconstructions exist to
-  carry the error model, not to replace the measurement.
+- [ ] **Whether any fit ever switches target** from `cog_provided` to the
+  isophote density. Settled for the data model (`cog_provided` stays the
+  target), NOT settled as science: the isophote density is sigma-clipped and so
+  excludes the satellites and intracluster light the aperture counts, which
+  arguably makes it the cleaner target for a model that never deposits them.
+  The two differ by up to 0.64 dex at z=2 in the outskirts.
+- [ ] **What to do about the z=2 shape.** Only 46 per cent of galaxies have the
+  two independent shape routes agreeing within 0.05 at z=2, against 85 per cent
+  at z=0.4. The constant isophotal shape is genuinely less well determined at
+  the epoch where the model already fails.

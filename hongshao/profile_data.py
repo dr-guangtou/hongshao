@@ -103,7 +103,9 @@ DEFAULT_DATA_DIR = Path(
     os.environ.get("HONGSHAO_DATA_DIR", "/Users/shuang/Desktop/tng300_mah_mprof")
 )
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUT = REPO_ROOT / "data" / "processed" / "tng300_072_profiles_v1.npz"
+PROCESSED = REPO_ROOT / "data" / "processed"
+DEFAULT_OUT = PROCESSED / "tng300_072_profiles_v1.npz"
+V2_OUT = PROCESSED / "tng300_072_profiles_v2.npz"
 
 APER_TABLE_NAME = "galaxies_tng300_072_hmc_13_aperture_mass.txt"
 PROF_SUBDIR = "save_tng300_072_hist_prof"
@@ -121,6 +123,25 @@ N_EPOCH = len(EPOCHS)
 
 # --- radial grids (from the drop's own save_tng300_072_file_structure.md) -----
 COG_RAD_KPC = np.arange(2 ** 0.25, 150 ** 0.25, 0.1) ** 4   # 24 radii, kpc
+
+# --- the v2 SHARED radial grid (one grid for every galaxy and every epoch) ----
+# This is the dominant NATIVE isophote ladder, not an invented grid: 76 per cent
+# of galaxy-epochs already sit exactly on it, so most galaxies are stored with no
+# interpolation at all, and the rest move by at most a 4.2 per cent rescaling.
+# It reaches further in (0.56 kpc) and further out (159.7 kpc) than the 24-radius
+# CoG grid, which is why the density product uses it.
+SHARED_R0 = 0.5607832739230758
+SHARED_GRID = SHARED_R0 * 1.2 ** np.arange(32)          # 0.5608 -> 159.74 kpc
+
+# Radial range over which an unweighted mean of the measured ellipticity profile
+# best reproduces the constant isophotal shape the stored CoG was built with
+# (correlation 0.985, rms 0.025 at z=0.4). Flat beats intensity-weighted because
+# intensity weighting piles onto the centre, where the isophotes are unresolved.
+ELLIP_PROFILE_RANGE_KPC = (5.0, 30.0)
+
+# photutils' minimum sampling of an ellipse. An isophote sitting at this value
+# was not independently resolved: it is interpolation across a couple of pixels.
+NDATA_FLOOR = 13
 APER_SMA_KPC = np.array([10, 30, 50, 75, 100, 120, 150], dtype=float)
 # the six radii the projection table stores (it has no 120 kpc column) and
 # where they sit inside the seven-radius `aper` array of the history files
@@ -637,13 +658,194 @@ def build(data_dir: Path = DEFAULT_DATA_DIR, out_path: Path = DEFAULT_OUT,
     return d
 
 
-def load_profiles(path: Path = DEFAULT_OUT) -> dict:
-    """Read the consolidated dataset back as a plain dict of arrays."""
+# =============================================================================
+# 3b. version 2 — the shared-grid density product
+# =============================================================================
+# WHAT CHANGED FROM v1 AND WHY (the user's decisions, 2026-08-31)
+#
+# 1. `cog_provided` REMAINS the fitting target. Nothing here replaces it.
+# 2. The fiducial density is the measured isophote `intensity` -- NOT the
+#    derivative of the curve of growth. They are different measurements: the
+#    CoG derivative is the mean density in a fixed elliptical annulus and counts
+#    everything in the aperture, while the isophote value is sigma-clipped and
+#    therefore excludes satellites and intracluster light. In the outskirts they
+#    differ by 0.05 dex at 110 kpc at z=0.4 and 0.64 dex at z=2, and that gap IS
+#    the clipped material. The isophote density is the closer thing to "the
+#    galaxy"; the CoG-derivative view is kept as `annulus_mass`.
+# 3. ONE shared radial grid for every galaxy and epoch (`SHARED_GRID`), as
+#    extended as the data allow. Past a galaxy's own outer cutoff the density is
+#    set to EXACTLY ZERO, which makes the reconstructed curve of growth stay
+#    flat there by construction rather than by a special case. Measured against
+#    the stored CoG this costs at most 0.010 dex at 148 kpc, and -- the point
+#    that matters -- truncated and untruncated galaxies behave identically
+#    (median -0.010 vs -0.009 dex at z=2), so the flat prescription is not
+#    where the residual comes from. It is the smooth-model reconstruction bias
+#    of section 5 of doc/tng300_profile_data.md.
+# 4. Semi-major axis stays primary; `r_circ` is carried alongside.
+# 5. Inner isophotes are kept in full with a `resolved` flag and their errors
+#    UNTOUCHED: the data model records what was measured, and the decision about
+#    how to weight an unresolved point belongs to whoever builds a likelihood.
+
+
+def _shared_grid_density(r, sigma, sigma_err):
+    """One galaxy-epoch's density resampled onto ``SHARED_GRID``.
+
+    Returns ``(sigma, sigma_err, measured)``. Inside the measured radial range
+    the profile is interpolated log-log, which is what a galaxy profile locally
+    is. OUTSIDE it both arrays are exactly zero and ``measured`` is False --
+    never NaN, because a zero density is what makes the reconstructed curve of
+    growth stay flat beyond the cutoff without a special case. Every consumer
+    must gate on ``measured``; a zero here means "not measured", not "empty".
+    """
+    n = SHARED_GRID.size
+    out = np.zeros(n), np.zeros(n), np.zeros(n, bool)
+    ok = np.isfinite(r) & np.isfinite(sigma) & (sigma > 0) & (r > 0)
+    if ok.sum() < 6:
+        return out
+    rr, ss = r[ok], sigma[ok]
+    order = np.argsort(rr, kind="stable")
+    rr, ss = rr[order], ss[order]
+    ee = sigma_err[ok][order]
+    # A relative tolerance is REQUIRED, not cosmetic: SHARED_GRID is rebuilt as
+    # R0 * 1.2**k while the native ladder was accumulated multiplicatively, so
+    # the two differ by ~1e-13 at the outermost radius. Without the tolerance
+    # the last point of the dominant grid falls outside its own range and every
+    # galaxy is misreported as truncated at 133 kpc.
+    tol = 1.0 + 1e-9
+    inside = (SHARED_GRID >= rr[0] / tol) & (SHARED_GRID <= rr[-1] * tol)
+    sig = np.zeros(n)
+    err = np.zeros(n)
+    lg = np.log(SHARED_GRID[inside])
+    sig[inside] = np.exp(np.interp(lg, np.log(rr), np.log(ss)))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        rel = np.where(ss > 0, ee / ss, np.nan)
+    good = np.isfinite(rel)
+    if good.sum() >= 2:
+        err[inside] = sig[inside] * np.interp(lg, np.log(rr[good]), rel[good])
+    return sig, err, inside
+
+
+def _ellip_from_profile(r, ellip, lo_hi=ELLIP_PROFILE_RANGE_KPC):
+    """The constant isophotal shape read off the measured ellipticity PROFILE.
+
+    An UNWEIGHTED mean over ``lo_hi``. This is a second, independent estimate of
+    the same quantity `recover_constant_ellipticity` gets from the CoG ratio,
+    and the two agreeing is a certificate that needs no recorded reference --
+    which is what makes it usable above z=0.4, where nothing is recorded.
+    """
+    m = (np.isfinite(r) & np.isfinite(ellip)
+         & (r >= lo_hi[0]) & (r <= lo_hi[1]))
+    return float(np.mean(ellip[m])) if m.sum() >= 3 else np.nan
+
+
+def derive_v2(d: dict, verbose: bool = True) -> dict:
+    """Build the v2 product from a loaded v1 dict.
+
+    Every v2 array is a function of v1's arrays, so this needs no access to the
+    raw drop and runs in seconds. v1 stays on disk and readable.
+    """
+    t0 = time.time()
+    ng, ne = d["n_iso"].shape
+    ns, nr = SHARED_GRID.size, len(COG_RAD_KPC)
+    v = dict(d)                                   # v2 is a SUPERSET of v1
+    v["schema_version"] = np.array(2)
+    v["shared_grid_kpc"] = SHARED_GRID
+    v["ellip_profile_range_kpc"] = np.array(ELLIP_PROFILE_RANGE_KPC)
+
+    v["sigma_shared"] = np.zeros((ng, ne, ns))
+    v["sigma_err_shared"] = np.zeros((ng, ne, ns))
+    v["sigma_measured"] = np.zeros((ng, ne, ns), bool)
+    v["sigma_resolved"] = np.zeros((ng, ne, ns), bool)
+    v["r_inner_valid"] = np.full((ng, ne), np.nan)
+    v["r_outer_valid"] = np.full((ng, ne), np.nan)
+    v["cog_from_density"] = np.full((ng, ne, nr), np.nan)
+    v["cog_from_density_shared"] = np.full((ng, ne, ns), np.nan)
+    v["r_circ"] = np.full((ng, ne, nr), np.nan)
+    v["ellip_const_prof"] = np.full((ng, ne), np.nan)
+    v["ellip_const_agree"] = np.full((ng, ne), np.nan)
+
+    r, sg, se = d["iso_r_kpc"], d["iso_sigma"], d["iso_sigma_err"]
+    el, nd = d["iso_ellipticity"], d["iso_ndata"]
+    ec = d["ellip_const"]
+
+    for i in range(ng):
+        for k in range(ne):
+            sig, err, meas = _shared_grid_density(r[i, k], sg[i, k], se[i, k])
+            v["sigma_shared"][i, k] = sig
+            v["sigma_err_shared"][i, k] = err
+            v["sigma_measured"][i, k] = meas
+            if meas.any():
+                v["r_inner_valid"][i, k] = SHARED_GRID[meas][0]
+                v["r_outer_valid"][i, k] = SHARED_GRID[meas][-1]
+            # an isophote at photutils' floor was not independently resolved
+            okn = np.isfinite(r[i, k]) & (r[i, k] > 0) & (nd[i, k] > 0)
+            if okn.sum() >= 2:
+                ndi = np.interp(np.log(SHARED_GRID), np.log(r[i, k][okn]),
+                                nd[i, k][okn].astype(float))
+                v["sigma_resolved"][i, k] = meas & (ndi > NDATA_FLOOR)
+            v["ellip_const_prof"][i, k] = _ellip_from_profile(r[i, k], el[i, k])
+
+            if np.isfinite(ec[i, k]):
+                # zero outside the measured range => the CoG stays FLAT there
+                a = np.concatenate([[0.0], SHARED_GRID])
+                sa = np.concatenate([[sig[0]], sig])
+                f = 2.0 * np.pi * a * (1.0 - ec[i, k]) * sa
+                M = np.concatenate([[0.0], np.cumsum(
+                    np.diff(a) * 0.5 * (f[1:] + f[:-1]))])
+                v["cog_from_density_shared"][i, k] = np.interp(SHARED_GRID, a, M)
+                v["cog_from_density"][i, k] = np.interp(COG_RAD_KPC, a, M)
+                v["r_circ"][i, k] = COG_RAD_KPC * np.sqrt(
+                    max(1.0 - ec[i, k], 0.0))
+        if verbose and (i + 1) % 1000 == 0:
+            print(f"  v2: {i + 1}/{ng}  ({time.time() - t0:.0f} s)", flush=True)
+
+    v["ellip_const_agree"] = np.abs(ec - v["ellip_const_prof"])
+
+    # --- the annulus form: the SAME information as the CoG, whitened ---------
+    # M(<R_1) together with the 23 annulus masses. Exactly invertible, and its
+    # covariance is exactly DIAGONAL because a CoG is a cumulative sum of
+    # independent increments. Negative annuli are NOT repaired: the stored CoG
+    # is not radially monotone for 1.9 per cent of z=2 annuli, that is a real
+    # property of the measurement, and repairing it would break invertibility.
+    cog = d["cog_provided"]
+    v["annulus_mass"] = np.concatenate(
+        [cog[:, :, :1], np.diff(cog, axis=2)], axis=2)
+    v["annulus_negative"] = v["annulus_mass"] < 0
+    var = d["sigma_iso_abs"] ** 2
+    v["annulus_sigma_abs"] = np.sqrt(np.clip(
+        np.concatenate([var[:, :, :1], np.diff(var, axis=2)], axis=2), 0, None))
+
+    if verbose:
+        print(f"v2 derived in {time.time() - t0:.0f} s")
+    return v
+
+
+def build_v2(v1_path: Path = DEFAULT_OUT, out_path: Path = V2_OUT,
+             verbose: bool = True) -> dict:
+    v = derive_v2(load_profiles(v1_path), verbose=verbose)
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(out_path, **v)
+    if verbose:
+        print(f"wrote {out_path}  ({out_path.stat().st_size / 1e6:.1f} MB)")
+    return v
+
+
+def load_profiles(path: Path | None = None, version: int = 2) -> dict:
+    """Read the consolidated dataset back as a plain dict of arrays.
+
+    ``version=2`` (the default) is the shared-grid density product; ``version=1``
+    is the first build, kept readable as a reference point. v2 is a strict
+    superset of v1, so any v1 key resolves in either.
+    """
+    if path is None:
+        path = V2_OUT if version == 2 else DEFAULT_OUT
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(
             f"{path} not found -- build it with\n"
-            f"  HONGSHAO_DATA_DIR=... uv run python -m hongshao.profile_data --build")
+            f"  HONGSHAO_DATA_DIR=... uv run python -m hongshao.profile_data "
+            f"--build{' --build-v2' if version == 2 else ''}")
     with np.load(path, allow_pickle=False) as z:
         return {k: z[k] for k in z.files}
 
@@ -769,6 +971,73 @@ def summary(d: dict) -> str:
     return "\n".join(L)
 
 
+def summary_v2(v: dict) -> str:
+    """The v2 report: the shared grid, the flat-outskirt cost, the two shape
+    routes and their agreement, and what the annulus form buys."""
+    A = []
+    P = A.append
+    ng = int(v["n_galaxies"])
+    P(f"PROFILE DATASET v2 — shared-grid density product, {ng} galaxies")
+    P(f"shared grid: {SHARED_GRID.size} radii, {SHARED_GRID[0]:.4f} -> "
+      f"{SHARED_GRID[-1]:.2f} kpc, ratio 1.2 (the dominant NATIVE ladder)")
+    P("")
+    P("1. COVERAGE ON THE SHARED GRID (median outermost measured radius, kpc)")
+    P(f"   {'':22}" + "".join(f"{e:>9}" for e in EPOCHS))
+    P(f"   {'r_outer_valid':<22}" + "".join(
+        f"{np.nanmedian(v['r_outer_valid'][:, k]):9.1f}" for k in range(N_EPOCH)))
+    P(f"   {'r_inner_valid':<22}" + "".join(
+        f"{np.nanmedian(v['r_inner_valid'][:, k]):9.2f}" for k in range(N_EPOCH)))
+    with np.errstate(invalid="ignore"):
+        frac = (v["sigma_resolved"].sum(axis=2)
+                / np.maximum(v["sigma_measured"].sum(axis=2), 1))
+    P(f"   {'frac measured resolved':<22}" + "".join(
+        f"{np.nanmedian(frac[:, k]):9.3f}" for k in range(N_EPOCH)))
+    P("   Past r_outer_valid the density is EXACTLY ZERO and `sigma_measured` is")
+    P("   False. A zero there means NOT MEASURED, never 'empty'. Gate on the flag.")
+    P("")
+    P("2. WHAT THE FLAT-OUTSKIRT RECONSTRUCTION COSTS")
+    P("   median log10(CoG rebuilt from the density / stored CoG), dex")
+    P(f"   {'r [kpc]':>9} " + " ".join(f"{e:>8}" for e in EPOCHS))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        dl = np.log10(v["cog_from_density"] / v["cog_provided"])
+    for j in (0, 6, 15, 20, 23):
+        P(f"   {COG_RAD_KPC[j]:9.1f} " + " ".join(
+            f"{np.nanmedian(dl[:, k, j]):8.3f}" for k in range(N_EPOCH)))
+    trunc = v["r_outer_valid"] < COG_RAD_KPC[-1]
+    P("")
+    P("   the same number split by whether the density truncates inside 148 kpc")
+    P(f"   {'':9} " + " ".join(f"{e:>8}" for e in EPOCHS))
+    for lab, g in (("truncated", trunc), ("full", ~trunc)):
+        P(f"   {lab:>9} " + " ".join(
+            f"{np.nanmedian(np.where(g[:, k], dl[:, k, 23], np.nan)):8.3f}"
+            for k in range(N_EPOCH)))
+    P(f"   {'n trunc':>9} " + " ".join(
+        f"{int(trunc[:, k].sum()):8d}" for k in range(N_EPOCH)))
+    P("   The two rows agreeing is the point: the residual is the smooth-model")
+    P("   reconstruction bias, NOT the flat prescription.")
+    P("")
+    P("3. THE TWO INDEPENDENT ROUTES TO THE CONSTANT SHAPE")
+    P(f"   {'':30}" + "".join(f"{e:>9}" for e in EPOCHS))
+    P(f"   {'CoG-ratio route (adopted)':<30}" + "".join(
+        f"{int(np.isfinite(v['ellip_const'][:, k]).sum()):9d}" for k in range(N_EPOCH)))
+    P(f"   {'profile route (5-30 kpc mean)':<30}" + "".join(
+        f"{int(np.isfinite(v['ellip_const_prof'][:, k]).sum()):9d}" for k in range(N_EPOCH)))
+    P(f"   {'median |difference|':<30}" + "".join(
+        f"{np.nanmedian(v['ellip_const_agree'][:, k]):9.4f}" for k in range(N_EPOCH)))
+    P(f"   {'frac agreeing within 0.05':<30}" + "".join(
+        f"{np.nanmean(v['ellip_const_agree'][:, k] < 0.05):9.3f}" for k in range(N_EPOCH)))
+    P("   The difference IS the certificate: it needs no recorded reference, so")
+    P("   unlike the z=0.4-only comparison it works at every epoch.")
+    P("")
+    P("4. THE ANNULUS FORM (the same information as the CoG, whitened)")
+    neg = v["annulus_negative"]
+    P(f"   {'frac annuli negative':<30}" + "".join(
+        f"{np.nanmean(neg[:, k, 1:]):9.4f}" for k in range(N_EPOCH)))
+    P("   Negative annuli are the stored CoG failing to increase with radius.")
+    P("   They are kept, not repaired: the transform must stay invertible.")
+    return "\n".join(A)
+
+
 # =============================================================================
 # 5. self-test — every structural claim in the docstring, asserted
 # =============================================================================
@@ -881,12 +1150,76 @@ def selftest(data_dir: Path = DEFAULT_DATA_DIR, n_check: int = 25) -> None:
     print(f"   max |M(N=3000)/M(N=8000) - 1| = {dev:.2e}")
     assert dev < 1e-3
     print("   OK")
+    # ---- v2 claims, if the v2 product has been built ----------------------
+    if V2_OUT.exists():
+        v = load_profiles(version=2)
+        print("\nF. the annulus form is EXACTLY invertible")
+        back = np.cumsum(v["annulus_mass"], axis=2)
+        fin = np.isfinite(back) & np.isfinite(v["cog_provided"])
+        err = np.abs(back[fin] - v["cog_provided"][fin]) / np.maximum(
+            np.abs(v["cog_provided"][fin]), 1.0)
+        print(f"   max relative error of cumsum(annuli) vs the stored CoG: "
+              f"{err.max():.2e}")
+        assert err.max() < 1e-12
+        print("   OK — the whitened form loses nothing")
+
+        print("\nG. the reconstructed CoG stays FLAT past the density cutoff")
+        worst = 0.0
+        n_checked = 0
+        for i in range(0, v["n_iso"].shape[0], 37):
+            for k in range(N_EPOCH):
+                ro = v["r_outer_valid"][i, k]
+                M = v["cog_from_density_shared"][i, k]
+                if not np.isfinite(ro) or not np.isfinite(M).all():
+                    continue
+                past = SHARED_GRID > ro
+                if past.sum() < 2 or M[past][0] <= 0:
+                    continue
+                worst = max(worst, float(np.max(np.abs(
+                    M[past] / M[past][0] - 1.0))))
+                n_checked += 1
+        print(f"   max relative rise beyond r_outer_valid over {n_checked} "
+              f"galaxy-epochs: {worst:.2e}")
+        assert worst < 1e-12
+        print("   OK — zero density outside the measured range makes it flat "
+              "by construction")
+
+        print("\nH. the shared grid needs NO interpolation for the dominant "
+              "native ladder")
+        # The claim is that SHARED_GRID[j] IS the galaxy's own radius r[j+1],
+        # so the stored density is the measured value and not an interpolant.
+        r, sg = v["iso_r_kpc"], v["iso_sigma"]
+        dom = np.isclose(r[:, :, 1], SHARED_R0, rtol=1e-12)
+        gi, ei = np.where(dom)
+        dr, ds = [], []
+        for i, k in list(zip(gi, ei))[:400]:
+            m = v["sigma_measured"][i, k]
+            j = np.where(m)[0]
+            native_r = r[i, k][j + 1]
+            native_s = sg[i, k][j + 1]
+            ok = np.isfinite(native_s) & (native_s > 0)
+            dr.append(np.max(np.abs(SHARED_GRID[j][ok] / native_r[ok] - 1)))
+            ds.append(np.max(np.abs(v["sigma_shared"][i, k][j][ok]
+                                    / native_s[ok] - 1)))
+        print(f"   {100 * dom.mean():.1f}% of galaxy-epochs are on it")
+        print(f"   max |SHARED_GRID / native radius - 1| : {max(dr):.2e}")
+        print(f"   max |stored density / measured  - 1|  : {max(ds):.2e}")
+        assert max(dr) < 1e-12 and max(ds) < 1e-9
+        print("   OK — for these galaxies the product stores the measurement "
+              "itself")
+
+    else:
+        print("\n(v2 not built; skipping F-H. Run --build-v2.)")
+
     print("\nall structural claims verified")
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--build", action="store_true", help="build the dataset")
+    ap.add_argument("--build", action="store_true",
+                    help="build v1 from the raw drop (slow: reads 3388 files)")
+    ap.add_argument("--build-v2", action="store_true",
+                    help="derive v2 from v1 (seconds; no raw-drop access)")
     ap.add_argument("--selftest", action="store_true",
                     help="verify every structural claim on a random subset")
     ap.add_argument("--report", action="store_true",
@@ -896,8 +1229,8 @@ def main(argv=None):
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     a = ap.parse_args(argv)
-    if not (a.build or a.selftest or a.report):
-        ap.error("give --build, --selftest or --report")
+    if not (a.build or a.build_v2 or a.selftest or a.report):
+        ap.error("give --build, --build-v2, --selftest or --report")
     if a.selftest:
         selftest(a.data_dir)
     if a.build:
@@ -907,7 +1240,11 @@ def main(argv=None):
         d = build(a.data_dir, out, n_gal=a.n)
         print()
         print(summary(d))
-    if a.report and not a.build:
+    if a.build_v2:
+        v = build_v2()
+        print()
+        print(summary_v2(v))
+    if a.report and not (a.build or a.build_v2):
         print(summary(load_profiles(a.out)))
     return 0
 

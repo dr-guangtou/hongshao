@@ -1,10 +1,15 @@
 # The 1-D profile data: what is in it, what it means, and how to use it
 
-*Written 2026-08-30 on branch `exp68-profile-data`. Code:
-`hongshao/profile_data.py`. Figure: `figures/profile_data_qa.png`
-(`scripts/profile_data_qa.py`). Product:
-`data/processed/tng300_072_profiles_v1.npz` (gitignored, rebuildable in
-about four minutes).*
+*Written 2026-08-30, design settled with the user 2026-08-31, on branch
+`exp68-profile-data`. Code: `hongshao/profile_data.py`. Figure:
+`figures/profile_data_qa.png` (`scripts/profile_data_qa.py`). Products:
+`data/processed/tng300_072_profiles_v2.npz` (the current product) and
+`..._v1.npz` (kept readable as a reference point). Both gitignored; v1 rebuilds
+from the raw drop in about ten minutes and v2 derives from v1 in one second.*
+
+**Sections 0-6 describe what was measured and are version-independent.
+Section 7 is the v1 data model. Section 10 is the v2 data model, the settled
+design, and the changelog — read that one if you are writing new code.**
 
 This note is the reference for the second half of the raw data drop. Everything
 this project has fitted so far came from one of its two directories; this note
@@ -370,3 +375,141 @@ what section 3 established by inference, would give the exact aperture geometry
 rather than a recovered one, and would allow the projection term of section 6(c)
 to be measured at every epoch instead of only at z = 0.4. **A re-supplied map
 file is the single highest-value addition to this dataset.**
+
+---
+
+## 10. Version 2 — the settled data model (2026-08-31)
+
+Section 7 describes v1. This section describes **v2**, the product to write new
+code against. v2 is a strict **superset** of v1: every v1 key resolves in it.
+
+```python
+from hongshao.profile_data import load_profiles
+d = load_profiles()             # v2
+d = load_profiles(version=1)    # the v1 reference build
+```
+
+### 10.1 The decisions, and who made them
+
+Settled with the user on 2026-08-31 after the measurements in sections 2–6.
+
+| decision | choice | why |
+|---|---|---|
+| fitting target | **`cog_provided`, unchanged** | it is the measurement every prior result was scored against; nothing here replaces it |
+| fiducial density | **the isophote `intensity`** — the measured 1-D stellar mass density | it is the actual measurement, always positive, has its own error bar, and reaches inside 2 kpc |
+| secondary density | the CoG derivative, stored as `annulus_mass` | a *different* measurement, not a rival estimate — see 10.2 |
+| radial grid | **one shared grid for every galaxy and epoch** | 76% of galaxy-epochs already sit exactly on it, so most are stored unmodified |
+| beyond a galaxy's cutoff | density **exactly zero**, `sigma_measured = False` | makes the reconstructed CoG stay flat by construction, not by a special case |
+| radius coordinate | semi-major primary, `r_circ` alongside | keeps every prior result valid while making the 6.1% epoch effect visible |
+| average ellipticity | CoG-ratio route adopted; profile route as an independent cross-check | their difference is a certificate that works at every epoch |
+| inner isophotes | kept in full, flagged `sigma_resolved`, **errors untouched** | the product records what was measured; weighting an unresolved point is the likelihood's decision, not the data model's |
+| projection term | raw only — z=0.4, 6 radii, **no extrapolation** | any use inside 10 kpc or above z=0.4 must be an explicit assumption in the experiment that makes it |
+| negative annuli | kept, flagged, **not repaired** | the transform must stay exactly invertible; a non-monotone CoG is a real property of the measurement |
+
+### 10.2 The two densities are different measurements
+
+This is the single most important thing to understand before using the density.
+
+- **`sigma_shared`** — the isophote density. Measured *along* the best-fit
+  ellipse, and **sigma-clipped**, so it excludes satellites and intracluster
+  light. It is the closer thing to *the galaxy*.
+- **`annulus_mass`** — the CoG derivative. The mass in a fixed elliptical
+  annulus, counting **everything** in the aperture.
+
+They differ by 0.05 dex at 110 kpc at z = 0.4 and **0.64 dex at z = 2**, and
+that gap *is* the clipped material. Neither is wrong. They answer different
+questions, and a result fitted to one is not comparable to a result fitted to
+the other.
+
+In *cumulative* terms the difference is far smaller, because the outer annuli
+hold little mass: rebuilding the CoG from the isophote density lands within
+**0.010 dex** of the stored CoG at 148 kpc.
+
+### 10.3 What the flat-outskirt prescription costs
+
+Median `log10(CoG rebuilt from the density / stored CoG)`, dex:
+
+| r [kpc] | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| 2.0 | −0.011 | −0.011 | −0.009 | −0.008 | −0.006 |
+| 10.2 | +0.003 | +0.004 | +0.005 | +0.006 | +0.008 |
+| 52.3 | +0.001 | +0.001 | +0.001 | −0.000 | −0.002 |
+| 148.2 | −0.004 | −0.005 | −0.007 | −0.009 | −0.010 |
+
+Split at 148 kpc by whether the density truncates inside the CoG grid:
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| truncated | −0.010 | −0.010 | −0.010 | −0.010 | −0.010 |
+| full | −0.003 | −0.005 | −0.006 | −0.008 | −0.009 |
+| n truncated (of 3388) | 100 | 360 | 734 | 1550 | 2404 |
+
+**The two rows agreeing is the result.** At z = 2, where 71% of galaxies
+truncate, truncated and untruncated galaxies land at −0.010 and −0.009 dex. The
+residual is the smooth-model reconstruction bias of section 5, *not* the flat
+prescription. Zero-filling costs essentially nothing.
+
+### 10.4 The two routes to the constant shape, and the certificate
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| CoG-ratio route (`ellip_const`, adopted) | 3380 | 3379 | 3379 | 3378 | 3374 |
+| profile route (`ellip_const_prof`, 5–30 kpc unweighted mean) | 3312 | 3201 | 3096 | 2878 | 2430 |
+| median \|difference\| | 0.020 | 0.023 | 0.026 | 0.030 | 0.035 |
+| fraction agreeing within 0.05 | 0.851 | 0.767 | 0.709 | 0.612 | **0.461** |
+
+The two routes are independent: one uses only the stored CoG and the intensity
+profile, the other only the measured ellipticity profile. **Their agreement is a
+certificate that needs no recorded reference**, so unlike the z = 0.4 comparison
+of section 4 it works at every epoch. The expected spread if both were unbiased
+is about 0.031, so z = 0.4's 85% is what agreement looks like; z = 2's 46% says
+the shape is genuinely less well determined there.
+
+### 10.5 New keys in v2
+
+| key | shape | meaning |
+|---|---|---|
+| `schema_version` | scalar | 2 |
+| `shared_grid_kpc` | (32,) | 0.5608 → 159.74 kpc, ratio 1.2 |
+| `sigma_shared` | (3388, 5, 32) | **the fiducial density**, Msun/kpc²; exactly 0 outside the measured range |
+| `sigma_err_shared` | (3388, 5, 32) | its error; 0 outside |
+| `sigma_measured` | (3388, 5, 32) | **gate on this.** A zero density means *not measured*, never *empty* |
+| `sigma_resolved` | (3388, 5, 32) | False where the isophote sat at photutils' 13-point floor |
+| `r_inner_valid`, `r_outer_valid` | (3388, 5) | the measured radial range |
+| `cog_from_density` | (3388, 5, 24) | CoG rebuilt from the density, on `cog_radius_kpc` |
+| `cog_from_density_shared` | (3388, 5, 32) | the same, on the shared grid |
+| `r_circ` | (3388, 5, 24) | `cog_radius_kpc × sqrt(1 − e_const)` |
+| `ellip_const_prof` | (3388, 5) | the profile route, 5–30 kpc unweighted mean |
+| `ellip_const_agree` | (3388, 5) | \|difference\| between the two routes — the certificate |
+| `annulus_mass` | (3388, 5, 24) | `(M*(<2 kpc), ΔM₂ … ΔM₂₄)`; exactly invertible |
+| `annulus_sigma_abs` | (3388, 5, 24) | its error — **diagonal**, no covariance needed |
+| `annulus_negative` | (3388, 5, 24) | where the stored CoG fails to increase (0.8% of z=2 annuli) |
+
+### 10.6 Verified, not asserted
+
+`--selftest` checks eight structural claims; F–H are v2:
+
+- **F** `cumsum(annulus_mass)` reproduces `cog_provided` to 1.2e-16 relative — the whitened form loses nothing.
+- **G** the reconstructed CoG rises by exactly 0.0 beyond `r_outer_valid` — flat by construction.
+- **H** for the 75.6% of galaxy-epochs on the dominant native ladder, `shared_grid_kpc` equals their own radii to 4e-16 and `sigma_shared` equals their measured density to 5e-15 — the product stores the measurement itself, not an interpolant.
+
+### 10.7 Changelog, v1 → v2
+
+- **Added** the shared 32-radius grid and everything on it (`sigma_shared` and
+  friends). v1's `sigma_on_cog_grid` is retained but superseded: it was on the
+  24-radius CoG grid, so it could not reach inside 2 kpc.
+- **Added** `annulus_mass` / `annulus_sigma_abs` / `annulus_negative`,
+  `r_circ`, `ellip_const_prof`, `ellip_const_agree`, `sigma_resolved`,
+  `r_inner_valid` / `r_outer_valid`.
+- **Changed** nothing that v1 already contained. `cog_provided` is untouched.
+- **Corrected a claim in this document, not a number**: section 4 said to use
+  the `test` flag as the quality cut for anything shape-related. That was an
+  inference and it was wrong. `test` gates the *fit's convergence*, not the
+  *ellipticity profile*: 35% of `test=False` galaxy-epochs carry full
+  ellipticity and PA profiles, and where present those profiles are not
+  degenerate (median e = 0.265, no zeros, no negatives, radial scatter 0.079
+  against 0.0855 for `test=True`) and reproduce the recorded constant shape as
+  well as `test=True` ones do. The correct gate for the profile is
+  `has_shape_cols`; the correct certificate for the constant shape is
+  `ellip_const_agree`. `test` remains a good cut for the CoG-ratio *recovery*
+  outliers, which is a different thing.

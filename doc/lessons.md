@@ -2338,3 +2338,37 @@ session should not rediscover them:
   table, and a scalar-valued `aper` entry each crashed the build in turn. A
   loader over a heterogeneous drop needs an explicit flag per variant, not an
   assumption plus a traceback.
+- **A flag's name is not its meaning; check what it gates.** `test` was read as
+  "the ellipticity profile is usable" and used to quote a 43 per cent coverage
+  figure. It gates the isophote fit's CONVERGENCE. 35 per cent of `test=False`
+  galaxy-epochs carry full ellipticity and PA profiles, those profiles are not
+  degenerate, and they reproduce the recorded constant shape as well as
+  `test=True` ones. The user asked "have you checked the profiles themselves?"
+  and the answer was no.
+- **Distinguish "needs a quantity" from "needs a quantity to be certified".**
+  Density-profile availability was quoted as 1908 galaxies, which was the
+  SHAPE-certification count. A density profile needs only the surface density
+  and its error and needs no shape at all: all 2356 fitting-sample galaxies have
+  one from 2 to 50 kpc at every epoch. The real limit is a different thing
+  entirely — the profile truncates in the outskirts at high z.
+- **A second, independent estimate beats a self-consistency check.** The radial
+  spread of the CoG-to-circular ratio looked like a quality test and certifies
+  nothing: the fallback galaxies are smooth but wrongly normalised, and 87 per
+  cent of them pass it. Two independent routes to the same constant shape — the
+  CoG ratio and a 5-30 kpc mean of the measured ellipticity profile — disagree
+  when either is wrong, and that works at every epoch, where no recorded
+  reference exists.
+- **Let the convention do the work instead of special-casing.** Setting the
+  density to exactly zero outside its measured range makes a reconstructed curve
+  of growth stay flat there by construction; no branch, no clamp, and the
+  selftest measures a rise of exactly 0.0. Verified to cost at most 0.010 dex at
+  148 kpc, with truncated and untruncated galaxies indistinguishable.
+- **A rebuilt grid is not the grid it was rebuilt from.** `R0 * 1.2**k` differs
+  from the accumulated native ladder by 1e-13 at the outermost radius, which
+  silently dropped the last point and reported 2977 of 3388 galaxies as
+  truncated at z=0.4 instead of 100. Compare float grids with a relative
+  tolerance, and sanity-check a coverage number against an independent estimate.
+- **The programme's radii are semi-major axes and the model has none.** A 10 kpc
+  semi-major aperture is 8.08 kpc circularized at z=0.4 and 8.58 kpc at z=2: a
+  6.1 per cent epoch differential that would read as size evolution if the two
+  conventions were ever mixed. Recorded as `r_circ`, not silently adopted.
