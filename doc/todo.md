@@ -2557,3 +2557,167 @@ tier 2e says is missing.
   retains a rare, directly visible multi-start branch failure; the log-periodic
   sine is less accurate and has the largest branch ambiguity. The binned CoGs
   and z=0.4 stellar-mass planes do not overturn those conclusions.
+## exp63 — the analytic, two-scale, stochastic deposition model (planned 2026-08-28)
+
+Plan: `doc/plans/2026-08-28-exp63-analytic-growth-model.md`; derivation:
+`doc/tech_note/04_analytic_deposition_integral.md` (probe script
+`doc/tech_note/scripts/04_analytic_check.py`, figure
+`doc/tech_note/figures/04_analytic_check.png`). Branch `exp63-analytic-growth`.
+Plan APPROVED and decisions D1–D5 taken by the user on 2026-08-28 (plan §4); Stage 0 may start.
+
+- [x] Stage 0 — the exact-integral engine, gated on reproducing `exp54/model.forward`
+  on the 72-step grid (2.4e-6 dex, the stored curve's float32 floor); the incumbent
+  re-measured on the exact integral through the standard battery.
+
+  Review (2026-08-28): all four gates pass; the integral is the limit of the sum
+  (Richardson 1.4e-5 dex); 2397 galaxies x 5 epochs in 0.32 s. D3 measured: 3.16%
+  of the stellar mass beyond 3 R200c untruncated -> truncation KEPT. Result 0: the
+  exact integral raises the frozen incumbent by 0.01-0.03 dex (z=0.4 M(<10) -2.4%
+  -> +3.6%; z=2 -12.5% -> -8.9%) but the amplitude-pinned SHAPE defect (dip at
+  3-5 kpc, excess at 10-30 kpc) is unchanged — the numerics were a level the fit
+  absorbed, not the shape. Inner slope 2-6.4 kpc: data 0.94 (0.74-1.13), exact
+  0.83 (0.72-0.92). Baseline for exp63 = `exact-analytic` at the incumbent's theta.
+  README section written.
+- [x] Stage 1 — per-galaxy non-negative deconvolution of the z=0.4 CoG into the
+  deposit-size distribution; quantile-matched size-versus-time law; G1 decides
+  whether a two-scale law is warranted BEFORE any population fit.
+
+  Review (2026-08-28): representation floor with per-object W — incumbent
+  kernel 0.0036 dex (exp55's form 0.0044), Sersic n=1 0.0020 (better than
+  PCA-3), Sersic n=4 0.0133 (cuspy deposits REJECTED by the data); W is
+  bimodal in 92% (gompertz) / 99.6% (n=1): a compact mode at a FIXED ~6 kpc
+  (4.3 kpc for n=1) at every halo mass and an extended mode at 43 -> 74 kpc
+  whose share rises 0.35 -> 0.57 with halo mass (r=+0.53), almost nothing at
+  10-30 kpc. Required s*/R200c: 0.04-0.07 early, 0.14-0.28 late (incumbent's
+  law 0.034 -> 0.10: too small late). G1: TWO SCALES WARRANTED (two-mode
+  rule; the trend rule, +0.31 dex, alone would not have fired). 1c: c200c
+  |rho| <= 0.09 -> NOT offered (D2 resolved); late/f_form/logtc/t50/early
+  pass 0.1 but are functions of the curve already integrated. README written.
+- [x] Stage 2 — the two-channel mean (compact Sersic n~0.75 / extended cored), fitted
+  at z=0.4 only; z=0.7-2.0 PREDICTED by truncating the integral, both samples,
+  decliners split.
+
+  Review (2026-08-28): seven starts -> one optimum (2.76396, null 3.1665). z=0.4:
+  inner-slope median 1.018 (data 1.015; baseline 0.858), M(<10) -1.9%, tier 3
+  0.268; width and top-tercile centre still fail. Predictions: non-decliners'
+  central error flat across five epochs (span 0.016 dex) — the one-epoch-fitted
+  claim holds for the describable 58%; but the extended channel arrives too
+  early (M(50-100) +16-28% on the fit mask at z>=0.7) and the model's
+  compact-share/assembly correlations have the WRONG sign against Stage 1.
+- [x] Stage 2b — the accretion-to-deposition delay tau_d: REJECTED. Not
+  identifiable at z=0.4 (railed at 0 / worse basin); fixed at 0.3 it lowers the
+  z=0.4 loss (2.675) only by pushing extended deposits to R200c, and the
+  predicted epochs collapse (M(50-100) -40% at z=0.7, -97% at z=2). The
+  twelve-parameter Stage 2 mean is carried into Stage 3. PROBLEMS P9: the
+  wrong-signed assembly correlations of the mass-only split (a growth-rate
+  split is the untried candidate).
+- [x] Stage 2c/2d — splits on the halo's growth rate (absolute; relative to the
+  population's typical rate at that time). Both reproduce the z=0.4 assembly
+  correlations (late +0.29/+0.35 vs data +0.25; logtc -0.16/-0.33 vs -0.18) and
+  both wreck the predicted epochs (outskirts +24-93% / +21-79% on the fit mask;
+  non-decliner span 0.115 / 0.080 vs Stage 2's 0.016). A (M, Mdot) split cannot
+  satisfy both; the Stage 2 mass-only split is the exp63 mean. P9 open with this
+  as its content.
+- [x] Stage 3 — noise inside the process: leverage sweep (all four sources have
+  leverage), held-out fit (n_eff 5.2, sigma_eta 0.148 dex, ell 0.33, sigma_sc 0.17,
+  sigma_se 0.13; the two calibrations agree to a few per cent), G3a PASS
+  (kpc planes 1.20-1.28x floor; mean alone 2.6-2.9; exp60 1.69-2.17), G3b PASS
+  (tier-2e widths from draws 0.94-1.02 at z=0.4 — C16 closed), widths hold
+  0.95-1.09 at every predicted epoch, tier-2c persistence +0.68 (truth +0.33,
+  exp60 +0.97), declining fraction 0 by construction (P8).
+- [x] Stage 4 — the standard battery on three products (baseline / Stage 2 mean /
+  mean + process), tier 2e from draws per epoch.
+
+  Review (2026-08-28): widths from draws 0.96-1.09 at every epoch (mean alone
+  0.82-0.99); full-sample kpc-plane E/floor 1.5-1.7 at z=0.4 (mean 3.7-5.5),
+  growing with z where the mean is wrong; the draws' medians sit 4-5% below the
+  mean's (P10, mean- vs median-preserving noise — a reporting decision for the
+  user). README closing section "What exp63 delivered" written. Branch NOT
+  pushed; nothing merged.
+
+### exp63 Stage 5 — the single-epoch round (2026-08-28, the user's direction)
+
+Focus on z=0.4 ONLY; judge by the average CoGs in halo- and stellar-mass
+terciles and the planes (`single_epoch.py --gate`); targets: the top halo-mass
+tercile (Stage 2: -12% at 2-4 kpc) and the outskirts. Every fit freezes the time
+exponents (a_z, a_Mz, b_e at the incumbent's; b_c = 0). No z > 0.4 number is
+quoted until z=0.4 passes the gate.
+
+- [x] `stage2_fit.py --freeze`, `--levers`, `--extended-family`, `--objective outer`,
+  `--tag`; `model2.py` levers g_c / g_e / w_min and a Sersic extended kernel,
+  nested at zero (self-check (9)).
+- [x] `single_epoch.py`: the z=0.4 gate table + overlay figure; the lever sweep
+  by evaluation. Sweep verdict: `w_min` and a Sersic extended kernel promoted;
+  a compact size fixed in kpc (g_c = -1/3) DISQUALIFIED (top tercile -20%);
+  g_e, c_e, m_half, d_split not levers.
+- [x] Fits (frozen exponents): `_frozen` (7/7 agree, rms(h) 4.52 — worse than
+  Stage 2's 3.89: freezing costs the top tercile), `_frozen_sersic` (3.76),
+  `_frozen_wmin` (w_min railed at 0), `_frozen_outer` (4.37, no help),
+  `_frozen_binned` (3.16; the objective that reads the gate).
+- [x] The structural lever: the compact size in PHYSICAL kpc (`--compact-kpc`):
+  `_frozen_binned_kpc` rms 1.50, every tercile within +-3%; the size levers on
+  the R200c form (`_frozen_binned_levers`, g_c = -0.45) rms 1.16, plane slope
+  1.44 (truth 1.42), D4 loss 2.796 (best of any frozen fit).
+- [x] `_frozen_binned_kpc_levers`: rms 1.41, slope 1.42 (= truth); g_c -0.07,
+  w_min 0.02 once the compact size is in kpc. User read the z=0.4 QA: Option 2
+  (`_frozen_binned_levers`) for performance, Option 1 (`_frozen_binned_kpc`) as
+  the simple back-up.
+- [x] 5d the extrapolation of both (`--eval-only`): both beat the incumbent at
+  M(<10) at every epoch; Option 2's outskirts collapse at z>=1.5 (M(50-100) -58%
+  at z=2, plane slope 2.7); Option 1 keeps outskirts and plane slopes, tilts at
+  the centre. Both qualify for per-epoch fits by the user's rule.
+- [x] 5e each epoch fitted alone (`--epoch k`, 8 fits): the kpc form reaches gate
+  rms 1.05-1.50 at EVERY epoch on its fit mask (incumbent 5-10); parameters move
+  smoothly: s_c 2.64 -> 1.75 kpc (b_c ~ -0.5), log f_e -0.72 -> -0.39 (b_e ~ +0.1,
+  not the frozen -0.9), split flattens (d -> bound) at z>=1.5. Option 2 agrees
+  (g_c -0.32..-0.40 at every epoch). Plane slope too steep at z>=1.5 even when
+  fitted there (1.40 vs 1.00 at z=2).
+- [x] 5f the joint five-epoch fit (`--joint`, user-approved): one theta, b_c/b_e
+  free -> gate rms 3.44/2.66/3.90/4.03/10.42; four exponents free -> 3.33/2.04/
+  3.77/3.72/7.59 (incumbent 4.98/6.54/7.67/5.60/10.48; per-epoch 1.50/1.05/1.48/
+  1.17/1.36). Better than the incumbent at every epoch; NOT at the per-epoch
+  ceiling (exp61's lesson again, gap measured). C8 whole-population span 0.013.
+  z=2 fails in amplitude (-7..-11% at every radius on the fit mask): the
+  efficiency law's time dependence is the next thing the class needs.
+- [x] 5g history outliers: 41 candidates (0.5 dex off the M*-Mh relation), all
+  strict ones already outside the fit masks; `--physical` for the QA sample.
+- [x] 5h exp62 families assessed: not a kernel change; a candidate objective.
+- [x] 5i THE FITTING SAMPLE rule (user): `selection.fitting_sample_mask`, repo
+  CLAUDE.md; refits on 2356 galaxies at every epoch — per-epoch 1.42/1.17/1.37/
+  1.23/2.86, joint 3.33/2.36/3.57/3.28/6.88 on the fitting sample; the
+  mh-complete check is worse than the old tuned fits (z=2 mass dependence).
+- [x] At merge: the fitting-sample rule added to `docs/SPEC.md` (new first section).
+- [x] BRANCH PRODUCT (user, 2026-08-30): `stage2_fit_joint_kpc_free_sane.npz` is
+  the exp63 mean; NOT proposed as hongshao's adopted model (README "The branch's
+  product decision"). Lessons of the single-epoch runs recorded in
+  `doc/lessons.md`.
+- [ ] LEFT OPEN for future experiments (the user): the cubic-logit size-and-shape
+  objective test (exp63 README 5h), P9 (the mean's split predicts the wrong sign
+  of every assembly correlation), P10 (mean- vs median-preserving noise).
+- [ ] NEXT SESSION — DISCUSS FIRST, do not start a new experiment (the user):
+  (a) open question C17, a likelihood with a mock CoG error model (Poisson from
+  particle counts, a softening floor at the inner radii, projection/orientation,
+  and the radius-to-radius correlation a cumulative profile has) instead of a
+  bare distance — would the fits be better behaved, would parameters rail less;
+  (b) open question C18, the z=2 halo-mass dependence, settled by the
+  future-growth leakage test at fixed Mh(z=2), no fit required;
+  (c) whether the efficiency law's time dependence is the next model step
+  (exp63 5f: z=2 fails in amplitude, not shape).
+- [ ] Owed by the user: (superseded — the mean is chosen above)
+  as the exp63 five-epoch mean? Merge/push. P10. Whether to pursue the
+  efficiency time law / an epoch-dependent n_c and split (what the per-epoch
+  sequence asked for).
+
+### Bookkeeping found by the 2026-08-28 probe (not yet acted on)
+
+- [ ] The z=0.4-anchored `diffmah_*` columns of
+  `experiments/exp27_tng_api_crossmatch/outputs/diffmah_combined.fits` disagree
+  with the official DiffMAH fit curve (`official_mah.npz[diffmah_log_mah_fit]`)
+  by up to 0.45 dex at z > 8 for galaxies whose source is `official`; the official
+  z=0-anchored columns reproduce the curve to 3e-6 dex. Everything downstream uses
+  the curve, not those columns, so no result is affected — but the columns should
+  not be used as DiffMAH parameters until the re-anchoring is checked.
+- [ ] `exp54/model.forward` silently drops any deposit whose snapshot has no
+  catalog R200c: the first 1-5 steps (z >~ 10) of every galaxy, and mid-history
+  gaps in ~10% of galaxies (up to 5.5% of a galaxy's deposited stellar mass).
+  The exact engine (exp63 Stage 0) has neither issue.

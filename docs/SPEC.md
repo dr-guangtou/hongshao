@@ -3,6 +3,35 @@
 This file records stable library interfaces. Scientific experiment decisions
 remain in the corresponding `experiments/expNN_slug/README.md`.
 
+## The fitting sample
+
+**Every model fit uses all galaxies selected at z = 0.4 whose halo history and
+stellar-mass history are sane, at every epoch. Halo-mass completeness is not a
+fitting criterion.** The mh-complete subset — the progenitors above the
+per-epoch completeness cut — is an after-fit reporting check, scored with the
+fitted parameters frozen. This is the user's rule of 2026-08-30 and it applies
+to every experiment.
+
+The rule is implemented once, in
+`experiments/exp54_unpinned_amplitude/selection.py::fitting_sample_mask`, and
+must not be re-implemented per experiment:
+
+- finite, positive curves of growth and a finite DiffMAH halo mass at all five
+  epochs;
+- the backward-growth rule (`sane_history_mask`): no epoch whose measured
+  `M*(<100 kpc)` is more than `MAX_BACKWARD_DEX` below the galaxy's own z = 0.4
+  value;
+- no stellar-history outlier at any epoch (`stellar_history_flags`): more than
+  `SHMR_TOL_DEX` from the population's running-median `M*(<100 kpc)`--`Mh`
+  relation at that epoch, an adjacent-epoch rise of `M*(<100 kpc)` larger than
+  `JUMP_DEX`, or an adjacent-epoch fall of `M*(<30 kpc)` larger than
+  `DROP_DEX`.
+
+One flagged epoch removes the galaxy at every epoch: a history is sane or it is
+not. A fitting script must print the sample it used and the count removed by
+each criterion. Where an older stage passed a per-epoch mh-complete mask into a
+fit, that is the superseded path and must be corrected rather than reproduced.
+
 ## Analytic projected profiles
 
 Reusable analytic profile families live in `hongshao/`. A promoted family must

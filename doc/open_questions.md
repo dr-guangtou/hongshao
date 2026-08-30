@@ -347,6 +347,51 @@ quoted for hongshao v1 in this programme currently describes the mean alone,
 and reads as a population failure that the delivered model may not have.
 Cheap to answer: `evaluate` already measures the draws for the plane figure.
 
+### C17. Would a likelihood with a measured error model make the fits better behaved?
+Raised 2026-08-30 (the user, closing exp63). Every objective in this programme
+is a bare distance — fractional or log residuals, root-mean-squared over radii
+and averaged over galaxies, with one epoch-level scale (`fit.SIGMA_A`) and no
+per-radius, per-galaxy or per-epoch uncertainty at all. The measured curves of
+growth are not error-free even though they come from a hydrodynamic simulation:
+the innermost apertures hold few star particles and depend on the softening
+scale, the outer apertures depend on where the central ends and the intracluster
+light or a satellite begins, the profiles are one projection of a triaxial
+object along one box axis (memory `decliner-physics-user-interpretation`), and
+the cross-match to the halo catalogue has its own failures (five of which
+Stage 5g caught). A distance treats all of that as signal.
+
+The question: define a mock error model for `M*(<R)` — Poisson from the particle
+count inside R, a softening-scale floor at the first radii, a projection or
+orientation term, and the correlation between radii that a cumulative profile
+necessarily has — and fit a likelihood instead of a distance. What it might buy,
+in the language of what went wrong in exp63 Stage 5: an objective that knows the
+2 kpc aperture is noisy would not have to be told (by `--objective binned`) that
+the tercile-median offset matters more than the per-galaxy scatter; parameters
+would rail less often, because a bound is usually the optimiser buying an
+over-weighted radius; and the per-galaxy weights would stop being uniform over
+objects whose profiles are measured to very different precision. What it costs:
+an error model is a modelling assumption, and a wrong one biases everything
+downstream — it must be calibrated against something measurable (particle counts
+per shell, split-half or multi-axis projections) before it is trusted, and the
+covariance between radii is the part most likely to be got wrong.
+
+### C18. At z = 2, do the massive progenitors and the rest want different models?
+Raised 2026-08-30 (exp63 Stage 5i, the after-fit check doing its job). Fitted on
+the whole fitting sample the joint mean is within 3 per cent of the tercile
+medians at z = 2 and 5 per cent off on the mh-complete subset; fitted on that
+subset alone it reached 1.6 per cent there. One θ cannot do both. The low-mass
+z = 2 progenitors are, by construction of the z = 0.4 selection, the fast-growing
+minority of their mass — which is exactly the variable a model reading only the
+MAH before z = 2 cannot see.
+
+The question, and the cheap diagnostic that settles it: is the residual at z = 2
+correlated with FUTURE growth `G = log Mh(z=0.4) − log Mh(z=2)` at fixed
+`log Mh(z=2)` (exp54 `selection.py`'s leakage test)? If it is, the mass
+dependence is the progenitor selection speaking and the honest response is to
+report it, not to fit it. If it is not, the split genuinely needs a second
+variable at high redshift and that is a modelling step. No fit is required for
+either answer.
+
 ## D. Resolved
 
 ### D1. Is exp48's density-plus-log objective the repair for the outer blindness?

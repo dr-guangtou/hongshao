@@ -2080,3 +2080,186 @@ Mistakes, gotchas, and decisions worth remembering. Review at session start.
   squared-slope search over 1,200 galaxies favors low-frequency localized
   packets for conditioning and fitted damped harmonics for accuracy. Do not
   generalize an atom ranking across constraint wrappers or from a demo sample.
+## Analytic forms (2026-08-28, tech note 04)
+
+- **A sum over history steps is a quadrature; check its discretisation error
+  before reading its residuals as physics.** The incumbent's 72-step deposition
+  sum is a first-order Riemann approximation of an integral along the analytic
+  DiffMAH curve, biased −0.027 dex at 2 kpc and −0.007 dex at 148 kpc
+  (`doc/tech_note/figures/04_analytic_check.png`, panel a) — about half of the
+  "7–13 per cent low inside a few kpc" that three experiments attributed to the
+  model class. Splitting each step 2/4/8× converges to the integral as 1/n. When
+  every ingredient of a step-wise model is already a closed-form function of
+  time, write the integral and integrate it with Gauss–Legendre; the sum's error
+  is radius-dependent precisely where the model was being judged.
+- **Change variables to the quantity the data see.** In the deposit-size
+  variable the deposition model is a convolution in log radius of the
+  deposit-size distribution with the kernel, and a power-law history is a
+  power-law galaxy with an explicit slope (tech note 04, Eqs. 3–5). Ten stages
+  of exp54 argued about this class's central deficit without that form; the
+  form says in one line why a cored kernel with one size law makes the inner
+  slope a property of the size law's small end alone, and it makes the size law
+  something to READ from the data (non-negative deconvolution plus quantile
+  matching) instead of assume.
+- **Verify a re-implementation on the cases that share every convention first,
+  then explain the rest.** The first sum-versus-integral check disagreed by
+  0.17 dex, all of it two convention differences (the DiffMAH anchor and the
+  deposits `forward` drops where the catalog has no R200c). Splitting the
+  galaxies by "has a mid-history gap" turned a 0.026 dex residual into 2e-6 dex
+  on the clean cases and an explained 5.5 per cent mass drop on the others.
+- **The measured curve-of-growth grid is `(2^0.25 + 0.1 k)^4`, not
+  `geomspace(2, 148, 24)` (2026-08-28, tech note 04 probe).** The first version
+  of the probe evaluated the DATA on a geometric grid: the two grids share
+  their end points and count, so nothing crashed, but grid point 4 is 4.2 kpc
+  on one and 6.4 kpc on the other, and "the data rise as R^1.45 over 2-5 kpc"
+  was an artefact of dividing a 2-6.4 kpc log-mass ratio by a 2-4.2 kpc
+  log-radius ratio. The true number is 1.00. It was caught only because the
+  Stage 0 script used `fit.R_GRID` and printed a different data median. Read
+  the radius grid from `fit.R_GRID` / `tng_data.COG_RAD_KPC`; never rebuild it
+  from its end points; and treat a headline that appears in one probe and not
+  in the gated script as suspect until both agree.
+
+## exp63 (2026-08-28, one session: engine, deconvolution, two-channel mean, process)
+
+- **Let the predicted epochs judge a single-epoch fit; the z=0.4 loss cannot see
+  time labels.** Three mean-model variants (an accretion delay, an absolute and a
+  relative growth-rate split) each improved or matched the z=0.4 loss and each
+  wrecked the never-fitted epochs (outskirts +40 to +93 per cent, z=2 centres -30
+  to -35 per cent), while the plain mass split kept the non-declining 58 per cent
+  within 0.016 dex of a constant central error across five epochs. A one-epoch
+  objective has no purchase on when stars arrived; the earlier epochs are the
+  test, and a variant must be run through them before its z=0.4 gain is believed.
+- **A physics-set parameter must be applied WITHOUT refitting before it is
+  fitted with.** The delay with the other twelve parameters refitted at z=0.4
+  reached a better loss by pushing the extended deposit size to the bound and
+  hiding late-accreted mass outside the aperture. Applying the delay to the
+  frozen Stage 2 solution (a one-minute table) showed that even a tenth of a
+  Hubble time removes a quarter of the z=2 outskirts and moves every correlation
+  the wrong way. The no-refit table is the honest test of a mechanism; the refit
+  tests the mechanism plus everything the optimiser can do with it.
+- **Sweep a candidate's leverage by evaluation before spending a two-hour fit —
+  it worked both ways.** The growth-rate split's probe (seven values of g, no fit,
+  five minutes) showed every assembly-correlation sign flipping to the data's at
+  g = -0.5 to -1, which justified the fit; the fit then showed the cost in the
+  predicted epochs that no z=0.4 probe could show. Both facts are now on record
+  for the price of one fit instead of a guess.
+- **A boundary solution that beats the interior optimum is a signal about the
+  bound, not a better model.** The fixed-delay fit's "better" loss (2.675 against
+  2.764) came with log f_e at its upper bound (deposits as large as the halo).
+  G2f (railed parameters) is a gate for exactly this reason; do not evaluate a
+  railed solution as if it were the model's answer without saying so.
+- **Noise in the history is coherent across epochs for free; noise on the output
+  is not.** The process fitted at z=0.4 held its tier-2e widths to within 9 per
+  cent at every predicted epoch and halved the excess size persistence of the
+  per-epoch layer (exp60: +0.97; process: +0.68; truth: +0.33) with no coherence
+  parameter at all. When a model has a history, put the randomness there.
+- **Provisional evaluation from a checkpoint saves hours.** Three starts agreeing
+  to six decimals is enough to evaluate a solution's predictions while the other
+  four starts run; twice that early read decided the next step (the delay's
+  failure; the growth split's trade) before the fit finished.
+- **The user's reading of exp63 Stage 2 (2026-08-28): judged by the average curves
+  of growth in halo- and stellar-mass bins, the two-channel mean is not a clear
+  improvement — and at the predicted epochs it shows a GLOBAL slope difference
+  rather than the incumbent's central-region defect, so it is worse there.** Two
+  lessons. (1) The summary was written from the bias tables and the gate
+  numbers; the average-CoG figures were looked at but described selectively.
+  AGENTS.md's minimum visual gate exists for this: inspect the binned average
+  CoGs and the planes and describe what they show BEFORE any claim of
+  improvement, and quote the failure mode the figure shows, not the metric that
+  improved. (2) A single-epoch fit leaves every time exponent unconstrained —
+  the efficiency law's redshift terms (a_z, a_Mz) and the size laws' (b_c, b_e)
+  are degenerate at one epoch with each other and with the amplitude — so the
+  fit chose a_z = +0.93 and a_Mz = +0.75 (incumbent +0.51, +0.32) to shape z=0.4
+  and those extrapolate to a 21 per cent amplitude deficit and a tilted CoG at
+  z=2. When fitting one epoch, FREEZE the time exponents (at the incumbent's or
+  at physically set values) and fit only what that epoch can see; the
+  extrapolation then tests the frozen physics, not the optimiser's freedom.
+  (3) Say plainly, every time, which epochs entered the loss: exp63's fits used
+  z=0.4 ONLY; every z > 0.4 number is an extrapolation of the same integral, and
+  the incumbent it is compared with was fitted at all five epochs.
+
+## 2026-08-28 (exp63 Stage 5, the single-epoch round): the loss can be blind to the gate
+
+- **A per-galaxy loss is nearly blind to a binned offset when the intrinsic
+  scatter dominates.** In the top halo-mass tercile the 2-5 kpc log residual has
+  a per-galaxy rms of 0.18 dex and a median offset of 0.065 dex; the production
+  loss (a mean over galaxies) trades the offset away for gains elsewhere, so a
+  lever that improves the binned average CoGs by evaluation (`w_min`) is railed
+  at zero by the fit, and every fit under that loss leaves the top tercile 11-17
+  per cent low. When the user's judgement is a binned average, put that
+  statistic in the objective (`--objective binned`) and say what it costs in the
+  production loss (1 per cent). Do not argue from the loss about what the gate
+  should show.
+- **A slice from the wrong optimum can mislead in both directions.** The lever
+  sweep (one parameter moved from Stage 2's optimum) said a fixed-kpc compact
+  size is disqualified; but the sweep held the deposit-weighted size fixed
+  through a mass pivot, and the R200c-tied size is the one structural feature
+  every product shares. A slice may disqualify a *lever*; it cannot disqualify a
+  *reparameterisation* whose other parameters would all move. Refit before
+  concluding (`--compact-kpc`).
+- **Guard every early return of a scoring function.** `scores()` returned a
+  4-tuple when fewer than ten galaxies evaluated; the loss indexed a fifth
+  element and the job died 20 minutes in, unnoticed until the process list was
+  checked. Check `ps` for every launched job, not only its log.
+- **A median in the objective is piecewise-smooth**: the binned fits' three
+  starts spread 3.29-3.48 where the production-loss fits agreed to 1e-6. Report
+  the spread and the best; consider a smooth (mean-log) proxy if the term stays.
+
+## 2026-08-30: the fitting sample is not the reporting sample
+
+- **Halo-mass completeness is an after-fit check, never a fitting criterion.**
+  exp54 designed the mh-complete subset as a re-score with theta frozen
+  (`selection.py` section 3), but Stage 3.7's `build` returned that subset as
+  the mask, and exp57 and exp63 fitted on it for four days: the z=2 fits saw
+  839 of 2397 galaxies. The user's rule, now in the repo `CLAUDE.md` and
+  `selection.fitting_sample_mask`: fit on every z=0.4-selected galaxy with a
+  sane halo and stellar history; report the mh-complete subset afterwards.
+  Print the sample and what each criterion removed in every fit log, so the
+  next reader sees it.
+- **Check the stellar history against the halo, not against itself.** The
+  3 dex backward rule caught one broken cross-match; a 0.5 dex offset from the
+  M*-Mh running median at the epoch catches 41 (a minor or wrong progenitor
+  early — never an over-massive one). A galaxy is sane or it is not: one
+  flagged epoch removes it from every epoch.
+
+## 2026-08-30: what the single-epoch runs taught (exp63 Stage 5, closing)
+
+The round fitted one epoch at a time — z=0.4 first, then each of the five alone
+— and finally all five jointly. Recorded because the next model-building
+session should not rediscover them:
+
+- **A single epoch cannot constrain a time exponent; freeze them and say so.**
+  Stage 2's free `a_z`, `a_Mz`, `b_c`, `b_e` bought z=0.4 accuracy and tilted
+  every extrapolated epoch. Frozen at the incumbent's values the same form is
+  worse at z=0.4 (gate rms 4.52 against 3.89) and honest about it.
+- **Fit each epoch alone before fitting them together.** The five separate fits
+  cost minutes and gave three things a joint fit cannot: the per-epoch ceiling
+  (1.2–1.4 gate rms) to measure the shared law against; the direction and size
+  of every parameter's motion with redshift, which is the time law the shared
+  form must carry; and the diagnosis of what the shared form is missing when it
+  cannot follow (here: the compact index, the split's width, the efficiency
+  amplitude at z=2).
+- **Read a parameter sequence only after the sample is right.** The Stage 5e
+  sequence — compact size shrinking, split flattening toward z=2 — was measured
+  on the per-epoch mh-complete masks; on the corrected fitting sample the split
+  moves the other way (`m_half` 11.5 → 13.1 instead of flattening). Part of what
+  looked like a time law was a mass-selection law. A "trend with redshift"
+  measured across samples of different composition is not a trend.
+- **A railed parameter is a symptom; diagnose it by measuring what the component
+  became.** Every joint start pushed the compact Sérsic index to its lower bound
+  (0.5, a Gaussian). The useful step was not widening the bound but measuring
+  the channel: mass-weighted sizes showed the shared law had turned a 2–3 kpc
+  in-situ core into 1.4–8 kpc blobs (or emptied it to 6 per cent of the stars and
+  built the centre from the extended kernel). The bound was where the model was
+  paying for a time dependence it could not write.
+- **The gate and the loss can disagree, and the gate is what the user reads.**
+  Documented in the 2026-08-28 entry; the single-epoch round's whole shape
+  followed from it, including `--objective binned`, which prices the statistic
+  the visual gate shows. State the production loss for every product anyway, so
+  the two are always visible together.
+- **A product decision is not an adoption decision.** `stage2_fit_joint_kpc_free_sane`
+  is the branch's mean and beats the five-epoch incumbent at every epoch; it is
+  explicitly not proposed as hongshao's adopted model, and the README says why
+  (per-epoch ceiling, railed compact channel, z=2 amplitude, the z=2 mass
+  dependence). Recording the gap between "best so far" and "good enough to
+  adopt" is part of delivering the result.
