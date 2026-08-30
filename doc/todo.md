@@ -9,6 +9,37 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
+## Current experiment — constrained symbolic projected-density search
+
+- [x] **Exp65 predeclaration.** Freeze a hard-constrained density-slope wrapper,
+  finite expression grammar, bounded damped sine/cosine atoms, paired Exp62
+  references, three fitting objectives, degeneracy tests, held-out expression
+  selection, strict replacement gates, and the measured sub-minute path before
+  writing evaluator or driver code.
+- [x] Write the mechanics and synthetic-recovery checks first and observe their
+  expected failure before implementing the symbolic density evaluator.
+- [x] Run the 15-profile unrestricted-double-Sersic teacher feasibility gate.
+  **Result:** all 13 expressions fit successfully, but none passes both the
+  0.003 dex median and 0.010 dex 90th-percentile candidate-to-teacher CoG RMS
+  limits. The best joint compromise is a damped sine with damping 0.5 and
+  frequency 2: its 0.00321 dex median misses the median limit while its 0.00973
+  dex 90th percentile passes. Four-start, finer-grid refits confirm the null.
+- [x] Run the complete 90-profile expression search and three-objective finalist
+  path only if the teacher gate passes. **Not triggered:** the declared teacher
+  stop occurred after 7.565 measured seconds, including mechanics, fits,
+  serialization, and the PNG+PDF teacher diagnostic.
+- [x] If and only if the development gates pass, exclude the 90 development
+  pairs and run the 16,810-profile population validation. **Not authorized.**
+- [x] If the population candidate passes numerically, inspect average CoGs in
+  halo- and stellar-mass bins and the stellar-mass planes before calling it
+  promising; otherwise close Exp65 without expanding the grammar. **Closed at
+  the teacher gate; no model is called promising.**
+- [x] **Exp65 review:** report the complete searched grammar, measured timings,
+  accuracy/conditioning/boundary/robustness results, direct visual judgment,
+  and whether the analytic-family search should stop. **Decision:** damped
+  trigonometric atoms improve the restricted frontier but do not pass the
+  teacher gate; stop the present analytic-family search.
+
 ## Phase 1 — exploratory diagnostics
 - [x] **exp01_aperture_mah_corr** — partial-correlation map of stellar aperture
   mass vs `Mpeak(z)` at fixed `M0` (directions A + F). **Result:** at fixed M0,

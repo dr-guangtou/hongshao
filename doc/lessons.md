@@ -2,6 +2,25 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **Use a reference-family teacher gate before searching measured profiles
+  when the candidate grammar may be structurally too narrow (Exp65).** All 13
+  hard-constrained expressions were mathematically valid, and damped
+  sine/cosine atoms improved substantially over sigmoid and rational controls.
+  None could reproduce both the typical and 90th-percentile unrestricted-
+  double-Sersic teacher CoGs at the predeclared accuracy. The 7.565-second gate
+  prevented a larger structure-selection exercise from turning inadequate
+  basis capacity into a misleading galaxy-data result.
+- **Serialize a terminal gate failure before returning or raising (Exp65).**
+  The first teacher-screen implementation raised immediately, leaving the
+  decisive per-expression measurements only in memory. A failed gate is a
+  scientific result: write its summary, predictions, manifest, and diagnostic
+  figure before stopping so the negative remains inspectable and reproducible.
+- **Do not launch a spawn-based process pool from a Python standard-input
+  script (Exp65).** macOS multiprocessing tried to reload the parent from the
+  nonexistent path `<stdin>` and broke the pool. Run parallel diagnostics from
+  a real script guarded by `if __name__ == "__main__"`, or use a serial loop for
+  a small interactive audit.
+
 ## Data handling (TNG300 drop)
 
 - **DiffMAH was fit to SubhaloMass, not M200c (exp28 refines exp27).** Per-halo,
