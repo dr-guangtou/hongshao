@@ -2499,3 +2499,23 @@ session should not rediscover them:
   on z = 2 shape may be answering the question it was asked. Check what an
   objective charges for the thing you want fixed before concluding the model
   class cannot deliver it.
+- **"Shape" is not one quantity, and an objective can improve the one it
+  measures while worsening the one you care about.** A generalised-least-squares
+  refit weighted by the measured curve-of-growth errors improved the shape ITS
+  basis measures and made the z = 2 pinned-profile residual WORSE than exp63's
+  (0.0311 against 0.0246 dex) and worse than a model that was never fitted. The
+  error model's information sits in the inner annuli -- 19-25 per cent of the
+  weight on the innermost, 0.3 per cent at 148 kpc -- so weighting by the
+  measured errors is a CENTRE-weighting whatever it is called. Name the radial
+  weighting a metric implies before calling it a shape metric.
+- **A transfer matrix is the honest way to compare two objectives' products.**
+  Each fit under each objective, with a common null at 1: the diagonal is what
+  each optimised and must win, the off-diagonal is what it gave up. Here the
+  refit won its own objective by 7 per cent and lost the incumbent's by 21,
+  landing barely better than the UNFITTED incumbent -- it bought a preference,
+  not a better model. A single-objective comparison could not have said that.
+- **An error-weighted objective de-emphasises the epoch that fails.** The
+  measurement error grows with redshift faster than the model error does, so the
+  misspecification ratio falls from 12.9 to 6.7 at 148 kpc between z = 0.4 and
+  z = 2 and a chi-square values z = 2 LESS than a uniform distance does. If the
+  failing epoch is the noisiest one, a likelihood is pointed the wrong way.

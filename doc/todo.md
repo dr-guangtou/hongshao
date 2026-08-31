@@ -2906,3 +2906,41 @@ Owed to the user, and NOT decided here:
   two independent shape routes agreeing within 0.05 at z=2, against 85 per cent
   at z=0.4. The constant isophotal shape is genuinely less well determined at
   the epoch where the model already fails.
+
+## 2026-08-31 — exp71 (C18) and exp72 (C17), on `exp71-c18-selection-leakage`
+
+### C18 — CLOSED
+- [x] **Is the z=2 halo-mass dependence the z=0.4 progenitor selection?** Yes,
+  from 10 kpc outwards, with no fit. `experiments/exp71_c18_selection_leakage/`.
+  The observed z=2 tilt of `M*(<103 kpc)` on the fitting sample (-0.122) lies
+  inside the -0.063..-0.180 the completeness curve and the measured `dy/dG`
+  predict from selection alone; subtracting it leaves +0.058..-0.059, which
+  brackets the mh-complete +0.061. Report it, do not fit it.
+- [x] **The exception is the centre.** At `M*(<2 kpc)` the shift is -0.092 and
+  selection predicts at most -0.026 — the standing central defect, not C18.
+- [x] **The channel is the model's, not TNG300's** (part 2, `channel_origin.py`).
+  Raised as **C19**, which needs a fit and is NOT done here.
+
+### C17 — Step 1 done, Step 2 running
+- [x] **Step 1: sweep the objectives by evaluation before fitting.**
+  `experiments/exp72_error_objective/errors.py`, six selftest claims.
+  Disqualified `chi2_gls` unfloored (one galaxy carried 100 per cent of the
+  loss), `chi2_diag` and `frac_sigw`. Cleared `chi2_gls_amp` floored at
+  f = 0.03-0.1.
+- [ ] **Step 2: the refit under `chi2_gls_amp`** (`fit_gls.py`, ~2.3 h, 8 starts)
+  and its judgement (`eval_gls.py`). RUNNING at the time of writing.
+
+Owed to the user, and NOT decided here:
+- [ ] **C19: does an epoch-local halo history close the leak?** DiffMAH's
+  `logmp` is the halo's peak mass and enters the curve at every time, so the
+  model's "past" carries the halo's final mass: future growth at fixed halo mass
+  is predicted with R^2 = 0.00 from the MEASURED pre-z_k history and 0.50-0.69
+  from the DiffMAH curve read at the same times. Refitting the halo history on
+  pre-z_k data only is a fit, and it touches every high-redshift number in the
+  programme.
+- [ ] **The floor `f` on the annulus error is a modelling choice.** Step 1 swept
+  it (0.03-0.10 work, 0.30 over-smooths) and Step 2 uses 0.1. Whether a floor is
+  the right repair at all — rather than, say, excluding the unmeasured outskirts
+  entirely — is not settled.
+- [ ] **Does `halo-history-knows-a-little-about-the-core` survive C19?** It used
+  DiffMAH `early`/`late`/`t50` at fixed halo mass. Not withdrawn, not rechecked.
