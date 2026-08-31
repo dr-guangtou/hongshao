@@ -375,6 +375,44 @@ downstream — it must be calibrated against something measurable (particle coun
 per shell, split-half or multi-axis projections) before it is trusted, and the
 covariance between radii is the part most likely to be got wrong.
 
+### C21. The objective scores the galaxy where the galaxy is not
+**Raised 2026-09-01 by the user; measured the same day in exp72
+`radial_evidence.py`.** The programme scores every epoch on the same fixed
+physical radial grid, with a relative residual. Both choices misallocate
+attention at high redshift, and the size of it is larger than the argument
+suggested.
+
+- **The galaxy shrinks by 3.9x and the grid does not move.** Median R50 runs
+  11.6 / 9.1 / 7.1 / 4.4 / 3.0 kpc from z=0.4 to z=2, so 148 kpc is 13 R50 at
+  z=0.4 and **49 R50** at z=2.
+- **At z=2, 96.7 per cent of the galaxy is already inside 52 kpc**, and the
+  outer two shells hold **3.3 per cent** of its stellar mass.
+- **The production objective spends 27.8 per cent of its attention there** — an
+  eight-fold over-weighting — while the 2-5 kpc shell holds 27.2 per cent of the
+  mass and gets 17.7 per cent.
+- **The relative residual amplifies exactly there.** The chi-square refit at
+  z=2 is +81.1 per cent wrong at 103-148 kpc while misplacing 0.53 per cent of
+  the galaxy's mass, and +32.2 per cent wrong at 10-23 kpc while misplacing
+  **3.00 per cent** — the smallest relative error misplaces six times more mass
+  than the largest. At z=2, 3.9 per cent of galaxies have no positive measured
+  mass in the outermost shell at all.
+- **In R50 units the galaxy is very nearly self-similar**: shell mass fractions
+  vary by 0.8-3.7 percentage points across the five epochs, against up to 12.4
+  in fixed kpc. Almost all the evolution is in R50 itself and in the total mass.
+
+**The finding that decides what to do:** the INCUMBENT objective already
+delivers the mass-size relation to 5 per cent at every epoch (R50 error +0 / +1
+/ -1 / +3 / +5 per cent), and the error-weighted chi-square breaks it, making
+z=2 galaxies **27 per cent too big**. So a re-weighting of the chi-square is not
+the answer; the coordinate underneath it is the thing in question.
+
+Plan, and the decisions owed by the user:
+`doc/plans/2026-09-01-exp73-size-relative-objective.md`. **The named risk, to be
+tested FIRST:** the z=0.4 centre is already solved by fitting a single epoch
+(-0.1 per cent inside 2 kpc), so the real limit may be the shared five-epoch law
+rather than the coordinate ([[shared-law-is-a-close-compromise]]) — in which
+case a better coordinate will not raise the ceiling either.
+
 ### C20. A weighted chi-square: the z=0.4 central defect was nearly solved once
 **Raised 2026-09-01 by the user, reading exp72's binned-CoG figure.** Fitted
 under a generalised-least-squares chi-square built on the measured curve-of-growth

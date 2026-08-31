@@ -2548,3 +2548,25 @@ session should not rediscover them:
   wearing a new objective's name. The control was free (the fit already existed)
   and it cost one command; without it the claim would have gone into the record
   backwards.
+- **Score the galaxy where the galaxy is.** Every epoch here is scored on the
+  same fixed physical radial grid, but the median half-mass radius runs 11.6 kpc
+  at z = 0.4 down to 3.0 kpc at z = 2, so 148 kpc is 13 R50 at one end and 49 R50
+  at the other. At z = 2, 96.7 per cent of the galaxy sits inside 52 kpc and the
+  outer two shells hold 3.3 per cent of its mass -- yet the production objective
+  spends 27.8 per cent of its attention on them. In units of R50 the mass
+  distribution is nearly self-similar across all five epochs (shell fractions
+  vary by 0.8-3.7 percentage points against up to 12.4 in fixed kpc). A fixed
+  physical grid is not a neutral choice; it is a redshift-dependent weighting
+  nobody chose.
+- **A relative residual is an attention multiplier where there is nothing to
+  measure.** At z = 2 the chi-square refit is 81 per cent wrong in the outermost
+  shell while misplacing 0.53 per cent of the galaxy's mass, and 32 per cent
+  wrong at 10-23 kpc while misplacing 3.00 per cent -- the smallest relative
+  error moves six times more mass than the largest. Report the error as a
+  fraction of the galaxy's TOTAL mass beside the relative one; they rank the
+  failures in opposite orders.
+- **Check the mass-size relation before believing any profile verdict.** The
+  incumbent objective gets R50 right to 5 per cent at every epoch; the
+  error-weighted chi-square makes z = 2 galaxies 27 per cent too big, which is
+  the single physical statement of everything else it got wrong. One derived
+  number said in one line what five tables of per-radius residuals did not.
