@@ -2435,3 +2435,138 @@ session should not rediscover them:
   away, letting the model absorb the common mode in its normalisation. The full
   covariance tests the fine radial structure, which is the stringent and correct
   test, and it is 10-200x larger.
+- **A fit to the whole history is not a history.** DiffMAH is four parameters
+  fitted to a halo's entire assembly, and one of them (`logmp`) is the peak
+  mass, so the curve "before z = 2" carries the halo's final mass. Measured:
+  future growth at fixed halo mass is predicted with R^2 = 0.00 from the
+  MEASURED pre-z_k history -- raw snapshots and a smooth polynomial through
+  every usable one alike -- and R^2 = 0.50-0.69 from the DiffMAH curve read at
+  the same times, 0.79 from `logmp` alone at z = 2. Any model integrating that
+  curve is reading the future, whatever the equations say. If a model must be
+  epoch-local, its inputs have to be built from data before the epoch, and that
+  is a property of the INPUT, not of the model's form.
+- **Ask whether the truth does it too, before crediting the model with a
+  physical dependence.** The residual's dependence on future growth looked like
+  a model failing to capture something real. TNG300's own stellar mass at fixed
+  halo mass has no such dependence (+0.003 dex per dex at z = 2 against the
+  model's +0.125), so the "something real" did not exist and the model was
+  inventing it. One extra column -- the same statistic on the measurement -- is
+  what separates "we cannot reproduce this" from "we manufacture this".
+- **Give the control the same advantage the candidate has.** Three raw catalog
+  snapshots carry halo-finder noise that a smooth four-parameter curve does not,
+  so the DiffMAH set could have won on smoothing alone. Fitting a polynomial of
+  the same order to every usable pre-epoch snapshot -- same predictor count,
+  same smoothness, strictly no future data -- left the R^2 at zero and killed
+  that objection before it was raised.
+- **A partial correlation on a near-determined variable is not a test.** Once a
+  control explains 85 per cent of the variable being partialled out, the
+  remaining slope is measured on a thin remainder and is free to move either
+  way, so a LARGER conditional slope is not evidence against the mechanism.
+  Print the control's own R^2 in the same cell, and put the weight on a
+  comparison of two predictor sets against the same target instead.
+- **Predict the bias, do not just observe that it shrinks.** Restricting a
+  sample to the complete part changes the mass range, and a slope measured over
+  a narrower range moves for reasons that have nothing to do with selection.
+  Predicting the shift from the completeness curve and the measured dy/dG --
+  neither of which knows the observed tilt -- removes that objection, and it is
+  the step that turned "the z = 2 tilt looks like selection" into "the z = 2
+  tilt IS selection, at every radius from 10 kpc out".
+- **An error bar with an eight-decade dynamic range is a trap, not a weighting.**
+  A generalised-least-squares chi-square built straight from the measured
+  annulus errors put 100 per cent of the population's loss on ONE galaxy at
+  z = 0.4: past a galaxy's last isophote the curve of growth stops rising and
+  its variance stops rising with it, so the smallest positive annulus error is
+  2 Msun against a median of 3e8. Before fitting anything under a new
+  weighting, measure the participation ratio (sum L)^2 / sum L^2 -- the
+  effective number of objects carrying the loss -- and refuse any objective
+  that concentrates more than the one it replaces.
+- **Probe an objective with a perturbation whose character you chose, in BOTH
+  directions.** Scaling every annulus by one factor is a pure amplitude error;
+  tilting the annuli in log radius and renormalising is a pure shape error. One
+  sided, the shape probe moved the model TOWARDS the truth and three objectives
+  scored BETTER, which is a gradient and says nothing about sensitivity.
+  Averaging the two signs measures curvature and cannot be gamed that way.
+- **Weighting by the error made the known problem worse.** The obvious
+  conservative repair -- keep the production objective, replace uniform radial
+  weights by 1/sigma^2 -- pushed the amplitude-to-shape sensitivity ratio from
+  26 to 41 at z = 2, i.e. further from shape, because the cumulative error is
+  relatively smallest in the outskirts where the profile is flattest. An
+  error-informed objective is not automatically a better-balanced one; measure
+  what it charges for each kind of error before adopting it.
+- **The incumbent objective barely asks for shape at high redshift.** Its cost
+  for a 0.05 dex pure shape error falls from 1.5 per cent at z = 0.4 to 0.2 per
+  cent at z = 2, while the amplitude cost stays at 5-8 per cent. A model failing
+  on z = 2 shape may be answering the question it was asked. Check what an
+  objective charges for the thing you want fixed before concluding the model
+  class cannot deliver it.
+- **"Shape" is not one quantity, and an objective can improve the one it
+  measures while worsening the one you care about.** A generalised-least-squares
+  refit weighted by the measured curve-of-growth errors improved the shape ITS
+  basis measures and made the z = 2 pinned-profile residual WORSE than exp63's
+  (0.0311 against 0.0246 dex) and worse than a model that was never fitted. The
+  error model's information sits in the inner annuli -- 19-25 per cent of the
+  weight on the innermost, 0.3 per cent at 148 kpc -- so weighting by the
+  measured errors is a CENTRE-weighting whatever it is called. Name the radial
+  weighting a metric implies before calling it a shape metric.
+- **A transfer matrix is the honest way to compare two objectives' products.**
+  Each fit under each objective, with a common null at 1: the diagonal is what
+  each optimised and must win, the off-diagonal is what it gave up. Here the
+  refit won its own objective by 7 per cent and lost the incumbent's by 21,
+  landing barely better than the UNFITTED incumbent -- it bought a preference,
+  not a better model. A single-objective comparison could not have said that.
+- **An error-weighted objective de-emphasises the epoch that fails.** The
+  measurement error grows with redshift faster than the model error does, so the
+  misspecification ratio falls from 12.9 to 6.7 at 148 kpc between z = 0.4 and
+  z = 2 and a chi-square values z = 2 LESS than a uniform distance does. If the
+  failing epoch is the noisiest one, a likelihood is pointed the wrong way.
+- **Quote the cumulative profile before a shell.** A shell is the difference of
+  two large cumulative masses, so it amplifies: a model 12 per cent light at
+  52 kpc and 6 per cent light at 103 kpc reads as tens of per cent wrong in the
+  shell between them. Leading with `M*(50-100 kpc)` at +42 per cent made a fit
+  look as if it had wrecked the outskirts when the cumulative profile there was
+  within 1.3 points of the incumbent's. Quote a shell only alongside the two
+  apertures it is built from.
+- **Compare numbers, not the flatness of a figure.** Two QA panels of the same
+  quantity were drawn on +/-40 and +/-20 per cent axes, which made the worse
+  model look calmer. Check the axis range before reading a residual panel, and
+  put the numbers in the text.
+- **An objective that fails on average can still be the only thing that ever
+  solved one piece.** The error-weighted chi-square loses to the incumbent
+  objective summed over five epochs, and it is also the first objective in this
+  programme to put the z = 0.4 centre right (2.1 per cent too little inside
+  2 kpc against 5.8 per cent too much). A single summary number would have
+  buried that. Report the per-epoch, per-radius breakdown before calling a
+  direction closed -- and when the trade is epoch against epoch at fixed radius,
+  the weights are the lever, not the model class.
+- **Before crediting a new objective with a win, refit the OLD objective with
+  the same freedom.** The error-weighted chi-square put the z = 0.4 centre right
+  (2.1 per cent too little inside 2 kpc against the incumbent's 5.8 per cent too
+  much) and it looked like the first thing ever to move the central defect. It
+  was not: exp63's own objective fitted at z = 0.4 ALONE reaches -0.1 per cent,
+  better, with no error bars involved. The chi-square had simply reallocated
+  attention toward the epoch its weights favoured -- a partial single-epoch fit
+  wearing a new objective's name. The control was free (the fit already existed)
+  and it cost one command; without it the claim would have gone into the record
+  backwards.
+- **Score the galaxy where the galaxy is.** Every epoch here is scored on the
+  same fixed physical radial grid, but the median half-mass radius runs 11.6 kpc
+  at z = 0.4 down to 3.0 kpc at z = 2, so 148 kpc is 13 R50 at one end and 49 R50
+  at the other. At z = 2, 96.7 per cent of the galaxy sits inside 52 kpc and the
+  outer two shells hold 3.3 per cent of its mass -- yet the production objective
+  spends 27.8 per cent of its attention on them. In units of R50 the mass
+  distribution is nearly self-similar across all five epochs (shell fractions
+  vary by 0.8-3.7 percentage points against up to 12.4 in fixed kpc). A fixed
+  physical grid is not a neutral choice; it is a redshift-dependent weighting
+  nobody chose.
+- **A relative residual is an attention multiplier where there is nothing to
+  measure.** At z = 2 the chi-square refit is 81 per cent wrong in the outermost
+  shell while misplacing 0.53 per cent of the galaxy's mass, and 32 per cent
+  wrong at 10-23 kpc while misplacing 3.00 per cent -- the smallest relative
+  error moves six times more mass than the largest. Report the error as a
+  fraction of the galaxy's TOTAL mass beside the relative one; they rank the
+  failures in opposite orders.
+- **Check the mass-size relation before believing any profile verdict.** The
+  incumbent objective gets R50 right to 5 per cent at every epoch; the
+  error-weighted chi-square makes z = 2 galaxies 27 per cent too big, which is
+  the single physical statement of everything else it got wrong. One derived
+  number said in one line what five tables of per-radius residuals did not.

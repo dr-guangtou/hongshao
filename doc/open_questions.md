@@ -375,7 +375,156 @@ downstream — it must be calibrated against something measurable (particle coun
 per shell, split-half or multi-axis projections) before it is trusted, and the
 covariance between radii is the part most likely to be got wrong.
 
+### C21. The objective scores the galaxy where the galaxy is not
+**Raised 2026-09-01 by the user; measured the same day in exp72
+`radial_evidence.py`.** The programme scores every epoch on the same fixed
+physical radial grid, with a relative residual. Both choices misallocate
+attention at high redshift, and the size of it is larger than the argument
+suggested.
+
+- **The galaxy shrinks by 3.9x and the grid does not move.** Median R50 runs
+  11.6 / 9.1 / 7.1 / 4.4 / 3.0 kpc from z=0.4 to z=2, so 148 kpc is 13 R50 at
+  z=0.4 and **49 R50** at z=2.
+- **At z=2, 96.7 per cent of the galaxy is already inside 52 kpc**, and the
+  outer two shells hold **3.3 per cent** of its stellar mass.
+- **The production objective spends 27.8 per cent of its attention there** — an
+  eight-fold over-weighting — while the 2-5 kpc shell holds 27.2 per cent of the
+  mass and gets 17.7 per cent.
+- **The relative residual amplifies exactly there.** The chi-square refit at
+  z=2 is +81.1 per cent wrong at 103-148 kpc while misplacing 0.53 per cent of
+  the galaxy's mass, and +32.2 per cent wrong at 10-23 kpc while misplacing
+  **3.00 per cent** — the smallest relative error misplaces six times more mass
+  than the largest. At z=2, 3.9 per cent of galaxies have no positive measured
+  mass in the outermost shell at all.
+- **In R50 units the galaxy is very nearly self-similar**: shell mass fractions
+  vary by 0.8-3.7 percentage points across the five epochs, against up to 12.4
+  in fixed kpc. Almost all the evolution is in R50 itself and in the total mass.
+
+**The finding that decides what to do:** the INCUMBENT objective already
+delivers the mass-size relation to 5 per cent at every epoch (R50 error +0 / +1
+/ -1 / +3 / +5 per cent), and the error-weighted chi-square breaks it, making
+z=2 galaxies **27 per cent too big**. So a re-weighting of the chi-square is not
+the answer; the coordinate underneath it is the thing in question.
+
+Plan, and the decisions owed by the user:
+`doc/plans/2026-09-01-exp73-size-relative-objective.md`. **The named risk, to be
+tested FIRST:** the z=0.4 centre is already solved by fitting a single epoch
+(-0.1 per cent inside 2 kpc), so the real limit may be the shared five-epoch law
+rather than the coordinate ([[shared-law-is-a-close-compromise]]) — in which
+case a better coordinate will not raise the ceiling either.
+
+### C20. A weighted chi-square: the z=0.4 central defect was nearly solved once
+**Raised 2026-09-01 by the user, reading exp72's binned-CoG figure.** Fitted
+under a generalised-least-squares chi-square built on the measured curve-of-growth
+errors, the exp63 model leaves **2.1 per cent too little** stellar mass inside
+2 kpc at z = 0.4, where the incumbent objective leaves **5.8 per cent too much**,
+and holds within +/-2.4 per cent at every radius from 2 to 148 kpc. The central
+defect is the model class's standing failure ([[central-defect-is-outside-the-model-class]])
+and nothing in this programme had moved it before. **It was moved by changing
+what the objective asked for, not by changing the model.**
+
+The cost was the HIGH-REDSHIFT centre (z = 2 inside 2 kpc: -27.4 per cent against
+the incumbent's -11.0), not the outskirts (-5.9 against -4.6 per cent at 103 kpc).
+
+Why, measured in exp72 Step 1: the error model concentrates 19-25 per cent of the
+objective's weight on the innermost annulus and 0.3 per cent at 148 kpc, AND the
+measurement error grows with redshift (the misspecification ratio falls from 12.9
+to 6.7), so a chi-square asks about the z = 0.4 centre and stops asking about
+z = 2. One shared theta then spends that attention where it is cheapest: the
+final per-epoch losses were 0.812 / 0.812 / 0.820 / 0.894 / 0.934, a 19 per cent
+gain at z = 0.4 against 7 per cent at z = 2.
+
+The question: **the chi-square family has been fitted once, with the weights the
+measurement happens to imply, and those weights are demonstrably misallocated.**
+Two knobs, neither tried: per-epoch weights (to stop the fit abandoning z = 2)
+and per-radius weights (to stop the objective being a centre-detector wearing a
+shape-detector's name). Does a balanced weighting keep the z = 0.4 central
+result while holding the high-redshift epochs?
+
+**THE CONTROL WAS RUN, SAME DAY, AND IT REMOVES THE HEADLINE.** exp63's own
+objective fitted at z = 0.4 alone (`stage2_fit_frozen_binned_kpc_sane_e0.npz`,
+which already existed) leaves **-0.1 per cent** inside 2 kpc and stays within
++/-0.7 per cent at every radius — better than the chi-square joint fit's -2.1 per
+cent, with no error bars involved. So the chi-square's z = 0.4 gain is NOT the
+error model finding something new: it is the chi-square reallocating attention
+toward z = 0.4, behaving like a partial single-epoch fit, exactly as its measured
+weights imply.
+
+**What survives.** The real tension is not the objective, it is that one shared
+theta cannot serve five epochs ([[shared-law-is-a-close-compromise]]; exp63
+Stage 5i: gate rms 1.2-1.4 per epoch alone against 3.3 joint). Explicit
+per-epoch and per-radius weights would let that compromise be CHOSEN rather than
+inherited from the measurement's error budget — every epoch already normalises to
+1.000 at the null, yet the fit extracted 19 per cent at z = 0.4 and 7 per cent at
+z = 2 because that is where the gradient was cheapest. That is a useful dial and
+nobody has built it. **It is not new capability and will not beat the per-epoch
+ceiling.**
+
+**So the question worth compute is a science question, not a numerical one:**
+what should a shared five-epoch law be asked to PRESERVE, given it demonstrably
+cannot preserve everything? A weighting sweep answers it by evaluation at frozen
+theta before any fit, and it needs a decision from the user about what matters.
+
+### C19. The model's halo history knows the halo's final mass
+**Raised 2026-08-31 by exp71 part 2, which was not looking for it.** The model
+reads the halo through its DiffMAH curve, a four-parameter fit to the WHOLE
+assembly history. One of those four parameters, `logmp`, is the halo's peak
+mass, and it enters the curve at every time — so the curve "before z = 2" is not
+a past. Measured (`channel_origin.py` §2, cross-validated, out-of-fold): future
+growth at fixed `log10 M200c(z_k)` is predicted with R² = **0.00** from the
+MEASURED pre-z_k halo history (raw snapshots, and a smooth polynomial through
+every usable pre-z_k snapshot — both zero to three decimals at all four epochs)
+and with R² = **0.50 / 0.69 / 0.66 / 0.52** from the DiffMAH curve read at
+exactly the same times. `logmp` alone reaches **0.79** at z = 2.
+
+The consequence, measured: TNG300's own `M*(<103 kpc)` at fixed halo mass has
+essentially no dependence on future growth (+0.003 dex per dex at z = 2), the
+model's has +0.125, and the residual inherits the difference. That leakage is
+what makes the z = 2 halo-mass tilt sensitive to the progenitor selection
+(C18 — resolved with it, and resolved the same way whatever its origin).
+
+The question: feed the model a halo history built only from data before z_k —
+the measured MAH, or a DiffMAH refitted on pre-z_k points — and does `dy/dG`
+fall from +0.12 toward the truth's +0.003, taking the spurious tilt with it?
+This one DOES need a fit, and it touches every high-redshift number in the
+programme, because every model in it walks the same curve. Two smaller items
+ride along: whether `sigma_A`-scale conclusions about high-z bias change, and
+whether `halo-history-knows-a-little-about-the-core` (partial |ρ| ≤ 0.23 with
+DiffMAH `early`/`late`/`t50` at fixed halo mass) survives being redone with
+measured-history variables. Nothing is withdrawn on the strength of this yet.
+
 ### C18. At z = 2, do the massive progenitors and the rest want different models?
+**RESOLVED 2026-08-31 (exp71). It is the selection, from 10 kpc outwards; the
+centre is a separate, older problem.** Details and every table in
+`experiments/exp71_c18_selection_leakage/README.md`; the answer is unchanged for
+the exp63 joint mean and for the nested incumbent, so it belongs to the sample
+and the model class, not to one fit.
+
+- **The phenomenon.** Halo-mass tilt of `M*(<103 kpc)` at z = 2: −0.122
+  [−0.142, −0.101] on the fitting sample, **+0.061** [+0.022, +0.097] on the
+  mh-complete subset — opposite signs. At z ≤ 1.5 the fitting-sample tilt is at
+  most 0.017.
+- **The channel is real.** Partial ρ of the residual with future growth at fixed
+  halo mass: +0.180 / +0.198 / +0.207 / +0.191 at z = 0.7–2.0, every one outside
+  a null that reshuffles growth inside equal-count halo-mass bins.
+- **The size is right.** The completeness curve and the measured `dy/dG`
+  together predict a spurious full-sample tilt of −0.063 … −0.180 at z = 2 with
+  no reference to the observed tilt. The observed −0.122 sits inside it, and
+  subtracting it leaves +0.058 … −0.059, which brackets the mh-complete +0.061.
+  The same holds at 10, 52, 103 and 148 kpc and for the 52–103 kpc shell.
+- **The exception.** At `M*(<2 kpc)` the observed shift is −0.092 and the
+  selection predicts at most −0.026. The centre's mass dependence is the
+  standing central defect, not the selection.
+- **So: report it, do not fit it.** A second high-redshift variable is not
+  required by this evidence. The model is still wrong at z = 2 on the
+  mh-complete subset (−0.045 dex at 103 kpc, −0.148 dex in the 52–103 kpc
+  shell) — that is a real error at fixed halo mass, just not a tilt the
+  selection failed to explain.
+- **What C18 did not ask, and exp71 measured anyway:** the leakage is
+  manufactured by the model, not present in TNG300. See C19.
+
+*The question as it was originally written, kept verbatim:*
+
 Raised 2026-08-30 (exp63 Stage 5i, the after-fit check doing its job). Fitted on
 the whole fitting sample the joint mean is within 3 per cent of the tercile
 medians at z = 2 and 5 per cent off on the mh-complete subset; fitted on that
