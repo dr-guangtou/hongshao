@@ -403,13 +403,29 @@ and per-radius weights (to stop the objective being a centre-detector wearing a
 shape-detector's name). Does a balanced weighting keep the z = 0.4 central
 result while holding the high-redshift epochs?
 
-**The control owed FIRST, and it is cheap.** exp63 Stage 5i measured
-single-epoch fits reaching gate rms 1.42 at z = 0.4 against the joint fit's 3.33.
-Part of the z = 0.4 gain here may be the chi-square quietly abandoning the other
-four epochs rather than the chi-square itself. Fit exp63's OWN objective at
-z = 0.4 alone: if it also solves the centre, the credit belongs to single-epoch
-freedom, not to the error model. Minutes, no new machinery, and it decides
-whether the weighted-chi-square family earns a new experiment.
+**THE CONTROL WAS RUN, SAME DAY, AND IT REMOVES THE HEADLINE.** exp63's own
+objective fitted at z = 0.4 alone (`stage2_fit_frozen_binned_kpc_sane_e0.npz`,
+which already existed) leaves **-0.1 per cent** inside 2 kpc and stays within
++/-0.7 per cent at every radius — better than the chi-square joint fit's -2.1 per
+cent, with no error bars involved. So the chi-square's z = 0.4 gain is NOT the
+error model finding something new: it is the chi-square reallocating attention
+toward z = 0.4, behaving like a partial single-epoch fit, exactly as its measured
+weights imply.
+
+**What survives.** The real tension is not the objective, it is that one shared
+theta cannot serve five epochs ([[shared-law-is-a-close-compromise]]; exp63
+Stage 5i: gate rms 1.2-1.4 per epoch alone against 3.3 joint). Explicit
+per-epoch and per-radius weights would let that compromise be CHOSEN rather than
+inherited from the measurement's error budget — every epoch already normalises to
+1.000 at the null, yet the fit extracted 19 per cent at z = 0.4 and 7 per cent at
+z = 2 because that is where the gradient was cheapest. That is a useful dial and
+nobody has built it. **It is not new capability and will not beat the per-epoch
+ceiling.**
+
+**So the question worth compute is a science question, not a numerical one:**
+what should a shared five-epoch law be asked to PRESERVE, given it demonstrably
+cannot preserve everything? A weighting sweep answers it by evaluation at frozen
+theta before any fit, and it needs a decision from the user about what matters.
 
 ### C19. The model's halo history knows the halo's final mass
 **Raised 2026-08-31 by exp71 part 2, which was not looking for it.** The model

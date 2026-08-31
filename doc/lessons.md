@@ -2538,3 +2538,13 @@ session should not rediscover them:
   buried that. Report the per-epoch, per-radius breakdown before calling a
   direction closed -- and when the trade is epoch against epoch at fixed radius,
   the weights are the lever, not the model class.
+- **Before crediting a new objective with a win, refit the OLD objective with
+  the same freedom.** The error-weighted chi-square put the z = 0.4 centre right
+  (2.1 per cent too little inside 2 kpc against the incumbent's 5.8 per cent too
+  much) and it looked like the first thing ever to move the central defect. It
+  was not: exp63's own objective fitted at z = 0.4 ALONE reaches -0.1 per cent,
+  better, with no error bars involved. The chi-square had simply reallocated
+  attention toward the epoch its weights favoured -- a partial single-epoch fit
+  wearing a new objective's name. The control was free (the fit already existed)
+  and it cost one command; without it the claim would have gone into the record
+  backwards.

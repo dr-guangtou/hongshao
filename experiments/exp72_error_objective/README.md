@@ -400,27 +400,30 @@ a modelling choice rather than a measurement; the error model is knowingly too
 small (isophotal only, reduced χ² 3.4 not 1.1); and at z = 2 only 67 per cent of
 galaxies constrain anything beyond 103 kpc.
 
-## What to do next — the weighting is a lever nobody has pulled
+## What to do next
 
-The χ² family has been fitted **once**, with the weights the measurement happens
-to imply. Those weights are not sacred, and Step 1 measured exactly how they are
-misallocated. Two explicit knobs follow, and neither has been tried:
+**Not** a new experiment on the weighted chi-square for its own sake. The control
+above removes its headline claim: the z = 0.4 centre is reachable with the
+ordinary objective by dropping the shared law, and the chi-square is a worse
+route to the same place.
 
-- **Per-epoch weights.** Every epoch already normalises to 1.000 at the null, so
-  they start equal — but the *achievable* gain is not equal, and the optimiser
-  went where it was cheapest (final per-epoch losses 0.812 / 0.812 / 0.820 /
-  0.894 / 0.934: it extracted 19 per cent at z = 0.4 and 7 per cent at z = 2).
-  Up-weighting the high-redshift epochs is the direct counter.
-- **Per-radius weights.** Flattening the 19–25 per cent that lands on the
-  innermost annulus would stop the objective from being a centre-detector
-  wearing a shape-detector's name.
+What survives, and it is worth having:
 
-**The control that is owed first, and it is cheap.** exp63 Stage 5i measured
-single-epoch fits reaching gate rms 1.42 at z = 0.4 against the joint fit's
-3.33. So part of the z = 0.4 gain here may come from the χ² quietly abandoning
-the other four epochs rather than from the χ² itself. **Fit exp63's own
-objective at z = 0.4 alone and see whether it also solves the centre.** If it
-does, the credit belongs to single-epoch freedom and not to the error model; if
-it does not, the χ² has found something real. Minutes, no new machinery, and it
-decides whether the weighted-χ² family is worth a new experiment.
+- **Per-epoch and per-radius weights are a real dial, on a real compromise.**
+  Every epoch already normalises to 1.000 at the null, yet the fit extracted 19
+  per cent at z = 0.4 and 7 per cent at z = 2 (final per-epoch losses 0.812 /
+  0.812 / 0.820 / 0.894 / 0.934), because that is where the gradient was
+  cheapest. Explicit weights would let the compromise be CHOSEN rather than
+  inherited from the measurement's error budget.
+- **But a dial is not a ceiling.** It reallocates between epochs; it will not
+  beat the per-epoch fits, and it should not be sold as new capability.
+
+**The question actually worth compute** is the one behind both results, and it is
+a science question rather than a numerical one: *what should a shared five-epoch
+law be asked to preserve, given that it demonstrably cannot preserve
+everything?* A weighting sweep answers it directly and cheaply — by evaluation
+at frozen theta before any fit, the way Step 1 did — and it needs a decision
+from the user about what matters, not more optimiser time.
+
+Recorded as open question **C20**.
 
