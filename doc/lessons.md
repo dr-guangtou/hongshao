@@ -2519,3 +2519,22 @@ session should not rediscover them:
   misspecification ratio falls from 12.9 to 6.7 at 148 kpc between z = 0.4 and
   z = 2 and a chi-square values z = 2 LESS than a uniform distance does. If the
   failing epoch is the noisiest one, a likelihood is pointed the wrong way.
+- **Quote the cumulative profile before a shell.** A shell is the difference of
+  two large cumulative masses, so it amplifies: a model 12 per cent light at
+  52 kpc and 6 per cent light at 103 kpc reads as tens of per cent wrong in the
+  shell between them. Leading with `M*(50-100 kpc)` at +42 per cent made a fit
+  look as if it had wrecked the outskirts when the cumulative profile there was
+  within 1.3 points of the incumbent's. Quote a shell only alongside the two
+  apertures it is built from.
+- **Compare numbers, not the flatness of a figure.** Two QA panels of the same
+  quantity were drawn on +/-40 and +/-20 per cent axes, which made the worse
+  model look calmer. Check the axis range before reading a residual panel, and
+  put the numbers in the text.
+- **An objective that fails on average can still be the only thing that ever
+  solved one piece.** The error-weighted chi-square loses to the incumbent
+  objective summed over five epochs, and it is also the first objective in this
+  programme to put the z = 0.4 centre right (2.1 per cent too little inside
+  2 kpc against 5.8 per cent too much). A single summary number would have
+  buried that. Report the per-epoch, per-radius breakdown before calling a
+  direction closed -- and when the trade is epoch against epoch at fixed radius,
+  the weights are the lever, not the model class.

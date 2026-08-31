@@ -271,7 +271,51 @@ loss and far worse at z = 1.5 and z = 2.0 (5.11 and 4.44 against 2.95 and 2.95)
 — the direction Step 1 predicted, because the measurement error grows with
 redshift and an error-weighted objective therefore stops asking about z = 2.
 
-## The question the objective was chosen for: did the shape improve? **No**
+## What it did to the profiles — read this before the summary tables
+
+Median (model − data)/data in per cent, on the fitting sample, 2354 galaxies.
+Figures: `figures/qa/qa_bins_exp72_gls_refit.png` against
+`..._exp72_exp63_joint.png` (note the two panels use different y-axis ranges,
+±40 and ±20 per cent — compare the numbers, not the flatness).
+
+| | 2 kpc | 5 kpc | 10 kpc | 52 kpc | 103 kpc | 148 kpc |
+|---|---|---|---|---|---|---|
+| z=0.4 gls refit | **−2.1** | +1.9 | +1.8 | −2.4 | −2.0 | −1.9 |
+| z=0.4 exp63 | **+5.8** | −0.7 | −1.7 | −2.7 | −2.6 | −2.6 |
+| z=0.7 gls refit | −6.4 | −0.6 | +1.2 | +1.1 | +1.9 | +2.1 |
+| z=0.7 exp63 | +1.9 | −0.4 | +1.2 | +1.5 | +1.6 | +1.3 |
+| z=1.0 gls refit | −11.5 | −2.5 | +0.0 | +2.1 | +2.7 | +2.8 |
+| z=1.0 exp63 | −1.2 | +1.5 | +4.2 | +3.1 | +2.0 | +1.6 |
+| z=1.5 gls refit | −22.4 | −8.6 | −6.6 | −1.1 | −0.2 | +0.1 |
+| z=1.5 exp63 | −9.0 | +0.5 | +1.7 | +0.9 | +0.2 | −0.1 |
+| z=2.0 gls refit | **−27.4** | −14.6 | −11.9 | −6.8 | −5.9 | −5.5 |
+| z=2.0 exp63 | **−11.0** | −1.6 | −1.8 | −3.8 | −4.6 | −4.7 |
+
+**THE DISCOVERY: at z = 0.4 the chi-square fit very nearly solves the central
+defect.** It leaves **2.1 per cent** too little stellar mass inside 2 kpc where
+the incumbent objective leaves **5.8 per cent too much**, and it holds within
+±2.4 per cent at *every* radius from 2 to 148 kpc. The centre has been this
+model class's standing failure
+(memory `central-defect-is-outside-the-model-class`), and no objective tried in
+this programme has done that before. It is the first evidence that the defect is
+partly a property of what the objective ASKED FOR rather than of the deposition
+class itself.
+
+**What it cost is the high-redshift CENTRE, not the outskirts.** At z = 2 the
+refit leaves 27.4 per cent too little mass inside 2 kpc against exp63's 11.0.
+In the outskirts the two are close: −5.9 against −4.6 per cent at 103 kpc, a
+1.3-point difference. The trade is *centre at low redshift against centre at
+high redshift*, at fixed radius across epochs.
+
+> **A reporting correction, recorded because it changed the reading.** An
+> earlier version of this file led with `M*(50–100 kpc)` at +41.9 per cent at
+> z = 2 and called the outskirts badly damaged. The number is right and the
+> emphasis was wrong: a shell is the difference of two large cumulative masses,
+> so a −12 per cent error at 52 kpc against −6 per cent at 103 kpc turns into
+> tens of per cent in the shell between them. Quote the cumulative profile
+> first; quote a shell only alongside the two apertures it is built from.
+
+## The question the objective was chosen for: did the shape improve? Not as the battery measures it
 
 Median over galaxies of the mean |log10(model/truth)| of the profile pinned at
 `M*(<103 kpc)`, in dex — lower is a better shape:
@@ -282,46 +326,19 @@ Median over galaxies of the mean |log10(model/truth)| of the profile pinned at
 | exp63 joint | 0.0358 | 0.0349 | 0.0338 | **0.0305** | **0.0246** |
 | nested incumbent | 0.0366 | 0.0363 | 0.0356 | 0.0336 | 0.0297 |
 
-Tier 3 (profile max|relative| beyond 5 kpc, median) agrees: 0.3080 at z = 2 for
-the refit against exp63's 0.2966.
+The refit wins the shape at z = 0.4 and loses it from z = 1.0 upward; tier 3
+agrees (0.3080 at z = 2 against exp63's 0.2966). Averaged over five epochs the
+incumbent objective still wins, which is the sense in which Step 2 is a negative
+— but it is an epoch-by-epoch trade, not a uniform loss.
 
-**The refit's z = 2 shape is worse than exp63's, and worse than the unfitted
-incumbent's.** The objective was adopted precisely because Step 1 measured it
-charging 0.7 per cent for a shape error at z = 2 where the production objective
-charges 0.1–0.2. It charged more and the shape got worse.
-
-**Why, and Step 1 had already said it.** The share table showed `chi2_gls` putting
-**19–25 per cent** of its weight on the innermost annulus and **0.3 per cent** at
-148 kpc. The measured error is smallest, relative to the mass it describes, in
-the inner annuli — so *weighting by the measured errors means weighting the
-centre*, not weighting the shape. The objective improves the shape **it**
-measures, which is centre-dominated, and the battery measures shape with equal
-weight per radius. Both are called "shape" and they are not the same quantity.
-Step 1 measured the mechanism and Step 2 shows it decides the outcome.
-
-## What it cost, and the one place it wins
-
-Median relative bias, fitting sample (mh-complete after-fit check beneath):
-
-| | z=0.4 | z=1.0 | z=1.5 | z=2.0 |
-|---|---|---|---|---|
-| `M*(<10)` gls refit | +1.9% | +0.1% | −6.7% | **−12.0%** |
-| `M*(<10)` exp63 | −1.7% | +4.2% | +1.7% | **−1.7%** |
-| `M*(<100)` gls refit | −2.0% | +2.7% | −0.2% | −5.9% |
-| `M*(<100)` exp63 | −2.5% | +2.1% | +0.2% | −4.6% |
-| `M*(50–100)` gls refit, fitting sample | +4.3% | +18.2% | +28.6% | **+41.9%** |
-| `M*(50–100)` gls refit, mh-complete | +4.3% | +5.7% | +6.3% | **+6.6%** |
-| `M*(50–100)` exp63, fitting sample | +1.1% | +1.2% | −1.4% | −1.6% |
-| `M*(50–100)` exp63, mh-complete | +1.1% | −12.3% | −20.8% | **−28.4%** |
-
-The refit is clearly worse on `M*(<10)` at high redshift and slightly worse on
-`M*(<100)`. Its one real win is the **52–100 kpc shell on the mh-complete
-subset**: +6.6 per cent at z = 2 against exp63's −28.4. But the *nested
-incumbent* reaches −9.5 per cent there without being fitted at all, so this is
-not a virtue of the error weighting: it is exp63's binned tercile-median term
-specifically tuning the outskirts **of the fitting sample**, at the cost of the
-mh-complete subset. The two objectives disagree about which sample to be right
-on, which is exp71's C18 showing up inside the loss function.
+**Why, and Step 1 had already measured it.** The share table showed `chi2_gls`
+putting **19–25 per cent** of its weight on the innermost annulus and **0.3 per
+cent** at 148 kpc, and section 1 showed the measurement error growing with
+redshift so that the misspecification ratio falls from 12.9 to 6.7. The
+objective therefore concentrates on **the centre** and on **low redshift**, and
+one shared θ across five epochs spends that attention where it is cheapest. That
+is a statement about the WEIGHTS, and weights can be changed — see "What to do
+next".
 
 ## exp71's diagnostics are unmoved, as they should be
 
@@ -340,31 +357,70 @@ prediction exp71 made and this is the independent test of it.
 
 ## The answer to C17
 
-**Having a measured error bar does not make the fits better behaved on the
-measures this programme uses.** Stated as three findings, in decreasing order of
-how much they should change what is done next:
+**Does taking the measurement error into account make the model behave better,
+or find a new solution?** It finds a genuinely different solution, that solution
+is better at z ≤ 0.7 and worse at z ≥ 1.0, and the reason is now measured rather
+than guessed.
 
-1. **The error model, used as a weighting, is a centre-weighting.** Its
-   information lives in the inner annuli (19–25 per cent of the weight on the
-   innermost, 0.3 per cent at 148 kpc). Any objective built from it will ask
-   about the centre, whatever it is called. A programme that wants the z = 2
-   *outer* shape fixed cannot get there from this error model.
-2. **An error-weighted objective de-emphasises the epoch that fails.** The
-   measurement error grows with redshift faster than the model error does
-   (Step 1: the misspecification ratio falls from 12.9 to 6.7 at 148 kpc), so
-   z = 2 is worth *less* under a χ², not more. The refit is better than exp63 at
-   z ≤ 0.7 under exp63's own loss and much worse at z ≥ 1.5.
-3. **The incumbent objective's shape sensitivity at z = 2 was the right thing to
-   notice and the wrong thing to fix this way.** Step 1's finding stands — the
-   production objective charges 0.2 per cent for a z = 2 shape error — but the
-   repair has to come from a weighting that is not the measurement error, because
-   the measurement error does not live where the problem is.
+**It is a different solution, not a nudge.** Eleven of the twelve parameters
+moved, and they moved to a different account of how the galaxy was built:
 
-**Not established here**, and worth saying plainly: the floor `f = 0.1` is a
-modelling choice, not a measurement, and the whole Step 2 result is conditional
-on it; a different floor changes how much of the profile the objective can see.
-The error model is also knowingly too small (isophotal only, reduced χ² 3.4 not
-1.1), and at z = 2 only 67 per cent of galaxies constrain anything beyond
-103 kpc. None of those three would reverse the shape result — the refit is worse
-at z = 2 than a model that was never fitted — but they bound how far it
-generalises.
+| what it says physically | exp63 (fitted on distances) | fitted with the error bars |
+|---|---|---|
+| fraction of new stars landing in the **compact** component, at a typical halo | 0–2% at every epoch | **16–27%**, rising toward early times |
+| how sharply that split switches with halo mass | a near-switch, over **0.5 dex** | a gradual blend, over **1.9 dex** |
+| size of the **extended** building blocks at z = 2 | 9.8 kpc | **18.2 kpc** |
+| size of the extended blocks at z = 0.4 | 69 kpc | 64 kpc |
+| size of the **compact** building blocks, z = 0.4 → 2 | 6.7 → 3.7 kpc | 7.5 → 3.1 kpc |
+
+**What it buys and what it costs**, in stellar mass the model gets wrong: the
+z = 0.4 centre improves from +5.8 to −2.1 per cent inside 2 kpc, and the z = 2
+centre degrades from −11.0 to −27.4 per cent. Everything outside 50 kpc is
+within about 1–3 points at every epoch.
+
+**Three things this settles.**
+
+1. **The error model is a centre-weighting and a low-redshift weighting.** Its
+   information sits in the inner annuli (19–25 per cent of the weight on the
+   innermost, 0.3 per cent at 148 kpc) and its errors grow with redshift, so a
+   χ² asks about the z = 0.4 centre and stops asking about z = 2. That is a
+   property of the measurement, not a choice anyone made.
+2. **The central defect is partly an objective artefact.** The z = 0.4 result is
+   the first time anything in this programme has put the centre right, and it
+   was done by changing what was asked for, not by changing the model class.
+3. **C17's three original hopes are not delivered as stated.** The binned
+   tercile term is still needed (without it the halo-mass-binned outskirts drift);
+   `n_c` still rails at its bound in all eight starts, exactly as under exp63's
+   objective; and the per-galaxy weighting did stop being uniform, but so
+   violently that one galaxy carried the whole loss until a floor was imposed by
+   hand.
+
+**Not established here**, and it bounds everything above: the floor `f = 0.1` is
+a modelling choice rather than a measurement; the error model is knowingly too
+small (isophotal only, reduced χ² 3.4 not 1.1); and at z = 2 only 67 per cent of
+galaxies constrain anything beyond 103 kpc.
+
+## What to do next — the weighting is a lever nobody has pulled
+
+The χ² family has been fitted **once**, with the weights the measurement happens
+to imply. Those weights are not sacred, and Step 1 measured exactly how they are
+misallocated. Two explicit knobs follow, and neither has been tried:
+
+- **Per-epoch weights.** Every epoch already normalises to 1.000 at the null, so
+  they start equal — but the *achievable* gain is not equal, and the optimiser
+  went where it was cheapest (final per-epoch losses 0.812 / 0.812 / 0.820 /
+  0.894 / 0.934: it extracted 19 per cent at z = 0.4 and 7 per cent at z = 2).
+  Up-weighting the high-redshift epochs is the direct counter.
+- **Per-radius weights.** Flattening the 19–25 per cent that lands on the
+  innermost annulus would stop the objective from being a centre-detector
+  wearing a shape-detector's name.
+
+**The control that is owed first, and it is cheap.** exp63 Stage 5i measured
+single-epoch fits reaching gate rms 1.42 at z = 0.4 against the joint fit's
+3.33. So part of the z = 0.4 gain here may come from the χ² quietly abandoning
+the other four epochs rather than from the χ² itself. **Fit exp63's own
+objective at z = 0.4 alone and see whether it also solves the centre.** If it
+does, the credit belongs to single-epoch freedom and not to the error model; if
+it does not, the χ² has found something real. Minutes, no new machinery, and it
+decides whether the weighted-χ² family is worth a new experiment.
+

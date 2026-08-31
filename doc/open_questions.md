@@ -375,6 +375,42 @@ downstream — it must be calibrated against something measurable (particle coun
 per shell, split-half or multi-axis projections) before it is trusted, and the
 covariance between radii is the part most likely to be got wrong.
 
+### C20. A weighted chi-square: the z=0.4 central defect was nearly solved once
+**Raised 2026-09-01 by the user, reading exp72's binned-CoG figure.** Fitted
+under a generalised-least-squares chi-square built on the measured curve-of-growth
+errors, the exp63 model leaves **2.1 per cent too little** stellar mass inside
+2 kpc at z = 0.4, where the incumbent objective leaves **5.8 per cent too much**,
+and holds within +/-2.4 per cent at every radius from 2 to 148 kpc. The central
+defect is the model class's standing failure ([[central-defect-is-outside-the-model-class]])
+and nothing in this programme had moved it before. **It was moved by changing
+what the objective asked for, not by changing the model.**
+
+The cost was the HIGH-REDSHIFT centre (z = 2 inside 2 kpc: -27.4 per cent against
+the incumbent's -11.0), not the outskirts (-5.9 against -4.6 per cent at 103 kpc).
+
+Why, measured in exp72 Step 1: the error model concentrates 19-25 per cent of the
+objective's weight on the innermost annulus and 0.3 per cent at 148 kpc, AND the
+measurement error grows with redshift (the misspecification ratio falls from 12.9
+to 6.7), so a chi-square asks about the z = 0.4 centre and stops asking about
+z = 2. One shared theta then spends that attention where it is cheapest: the
+final per-epoch losses were 0.812 / 0.812 / 0.820 / 0.894 / 0.934, a 19 per cent
+gain at z = 0.4 against 7 per cent at z = 2.
+
+The question: **the chi-square family has been fitted once, with the weights the
+measurement happens to imply, and those weights are demonstrably misallocated.**
+Two knobs, neither tried: per-epoch weights (to stop the fit abandoning z = 2)
+and per-radius weights (to stop the objective being a centre-detector wearing a
+shape-detector's name). Does a balanced weighting keep the z = 0.4 central
+result while holding the high-redshift epochs?
+
+**The control owed FIRST, and it is cheap.** exp63 Stage 5i measured
+single-epoch fits reaching gate rms 1.42 at z = 0.4 against the joint fit's 3.33.
+Part of the z = 0.4 gain here may be the chi-square quietly abandoning the other
+four epochs rather than the chi-square itself. Fit exp63's OWN objective at
+z = 0.4 alone: if it also solves the centre, the credit belongs to single-epoch
+freedom, not to the error model. Minutes, no new machinery, and it decides
+whether the weighted-chi-square family earns a new experiment.
+
 ### C19. The model's halo history knows the halo's final mass
 **Raised 2026-08-31 by exp71 part 2, which was not looking for it.** The model
 reads the halo through its DiffMAH curve, a four-parameter fit to the WHOLE
