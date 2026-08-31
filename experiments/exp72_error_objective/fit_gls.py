@@ -83,8 +83,8 @@ import model2 as M2                                      # noqa: E402
 import stage0_cost as S0                                 # noqa: E402
 import stage2_fit as S2F                                 # noqa: E402
 from hongshao.fitting import minimize_loss               # noqa: E402
-from errors import (FLOOR_DEFAULT, RULE, THIN, I_AMP, load_matched,  # noqa: E402
-                    per_galaxy, pin_at, terms, to_annuli)
+from errors import (FLOOR_DEFAULT, RULE, load_matched,  # noqa: E402
+                    per_galaxy, pin_at, terms)
 
 OUTDIR = HERE / "outputs"
 ANCHOR_Z = E.ANCHOR_Z
