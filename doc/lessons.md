@@ -2471,3 +2471,31 @@ session should not rediscover them:
   neither of which knows the observed tilt -- removes that objection, and it is
   the step that turned "the z = 2 tilt looks like selection" into "the z = 2
   tilt IS selection, at every radius from 10 kpc out".
+- **An error bar with an eight-decade dynamic range is a trap, not a weighting.**
+  A generalised-least-squares chi-square built straight from the measured
+  annulus errors put 100 per cent of the population's loss on ONE galaxy at
+  z = 0.4: past a galaxy's last isophote the curve of growth stops rising and
+  its variance stops rising with it, so the smallest positive annulus error is
+  2 Msun against a median of 3e8. Before fitting anything under a new
+  weighting, measure the participation ratio (sum L)^2 / sum L^2 -- the
+  effective number of objects carrying the loss -- and refuse any objective
+  that concentrates more than the one it replaces.
+- **Probe an objective with a perturbation whose character you chose, in BOTH
+  directions.** Scaling every annulus by one factor is a pure amplitude error;
+  tilting the annuli in log radius and renormalising is a pure shape error. One
+  sided, the shape probe moved the model TOWARDS the truth and three objectives
+  scored BETTER, which is a gradient and says nothing about sensitivity.
+  Averaging the two signs measures curvature and cannot be gamed that way.
+- **Weighting by the error made the known problem worse.** The obvious
+  conservative repair -- keep the production objective, replace uniform radial
+  weights by 1/sigma^2 -- pushed the amplitude-to-shape sensitivity ratio from
+  26 to 41 at z = 2, i.e. further from shape, because the cumulative error is
+  relatively smallest in the outskirts where the profile is flattest. An
+  error-informed objective is not automatically a better-balanced one; measure
+  what it charges for each kind of error before adopting it.
+- **The incumbent objective barely asks for shape at high redshift.** Its cost
+  for a 0.05 dex pure shape error falls from 1.5 per cent at z = 0.4 to 0.2 per
+  cent at z = 2, while the amplitude cost stays at 5-8 per cent. A model failing
+  on z = 2 shape may be answering the question it was asked. Check what an
+  objective charges for the thing you want fixed before concluding the model
+  class cannot deliver it.
