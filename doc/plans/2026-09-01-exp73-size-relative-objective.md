@@ -180,13 +180,111 @@ cheap checks belong in Stage 1, before anything else:
 exp72 measured points the same way: the objective has been re-weighted twice now
 and each time it moved the compromise without raising the ceiling.
 
-## The decision owed by the user
+## The user's decisions (2026-09-01)
 
-1. **Is the mass–size relation the primary target at z ≥ 1**, with the profile
-   shape secondary, as the user's message implies? If so it should be scored
-   explicitly rather than inherited from the profile fit.
-2. **Should the outskirts be down-weighted by mass, or gated by a threshold?**
-   The user suggested both. Down-weighting by mass is smooth and has no free
-   parameter; a threshold is sharper and needs a number.
-3. **Is exp73 worth a new branch**, or does the per-epoch/shared-law question
-   (the risk above) come first?
+### D1 — the fitting target does NOT change; the SIZES become a validation target
+
+> *"I still think the CoGs themselves should be the main fitting target, but
+> mass-size relation or the difference of the R20, R50, R80 fractional sizes'
+> distributions at fixed stellar mass (or halo mass) should be a major target
+> during the model validation phase and the QA process."*
+
+exp73 keeps `cog_provided` as the thing minimised. The coordinate work is about
+WHERE the curve of growth is scored, not about scoring something else.
+
+What changes is QA. `hongshao/qa.py` already computes sizes at
+`SIZE_FRACTIONS = (0.5, 0.8, 0.9)` and plots the mass-size plane (tier 2d).
+Three concrete additions are owed:
+
+1. **Add R20.** The user named R20/R50/R80; the module has R50/R80/R90. R20
+   probes the inner region the central defect lives in, which is exactly where
+   the objectives disagree.
+2. **Score the DISTRIBUTION, not just the median.** The requirement is the
+   *difference of the fractional sizes' distributions at fixed stellar mass (or
+   halo mass)*, so at fixed mass compare the model's and the truth's SPREAD of
+   R20/R50/R80, not their medians alone. This bears directly on
+   [[fitting-harder-narrows-the-population]]: harder fitting narrows the
+   predicted population, and a distribution comparison is what detects it.
+3. **Promote it to a first-class tier** with a numbered gate and a threshold,
+   reported for every product, rather than a figure that has to be read.
+
+The measurement that motivates this is already in hand: the incumbent objective
+holds R50 to 5 per cent at every epoch while the error-weighted chi-square makes
+z = 2 galaxies 27 per cent too big — a difference invisible in the loss and
+obvious in one size number.
+
+### D2 — test both down-weighting schemes against each other
+
+> *"Honestly, I don't know which is better. Can you devise a plan to test both
+> and let the results speak for themselves?"*
+
+Both enter Stage 1's sweep as siblings, on identical ground, with the production
+objective as the common reference:
+
+| scheme | definition | free parameters | what it risks |
+|---|---|---|---|
+| **A, smooth** | each shell's residual weighted by that shell's median mass fraction at that epoch | **none** — measured from the data | may leave a long tail of near-zero weights contributing noise |
+| **B, gated** | shells whose median mass fraction falls below a threshold `t` are dropped outright | **one**, `t` | a threshold is a cliff; the result may hinge on where it sits |
+
+Judged on four things, all already built in exp72:
+
+1. **Allocation** — share of the loss against share of the mass, per shell per
+   epoch. The target is proportionality; the production objective is off by 8x
+   at z = 2.
+2. **Usability** — the participation ratio. Neither scheme may concentrate the
+   loss on fewer galaxies than the production objective does.
+3. **Sensitivity probes** — amplitude, shape, and a NEW size probe (perturb R50
+   at fixed total mass), so the two are compared on what they charge for the
+   failure modes that matter.
+4. **Threshold sensitivity for B** — sweep `t` over 0.5, 1, 2 and 4 per cent.
+   **If B's verdict moves materially with `t`, B is disqualified in favour of A**,
+   because a conclusion resting on an arbitrary cliff is not a conclusion. That
+   rule is fixed here, before any number is seen.
+
+Only the winner is fitted, and only if it also clears the Stage 1 gate.
+
+### D3 — the shared law: KEEP it, and stop treating z = 2 per-epoch as a target
+
+**Recommendation, from measurements already in the record.**
+
+The gap to close was joint 3.33 / 2.36 / 3.57 / 3.28 / 6.88 against per-epoch
+1.42 / 1.17 / 1.37 / 1.23 / 2.86 (exp63 Stage 5i, gate rms). Three things say
+the z = 2 half of that gap is not a legitimate target:
+
+- **exp63's own reading of its per-epoch sequence** (Stage 5i point 3): the
+  parameter sequence BREAKS at z = 2 — the split moves *up* in mass instead of
+  flattening, `n_c` jumps 1.25 → 2.1, `c_e` 1.2 → 1.6 — and exp63 concluded "the
+  z = 2 fit is describing a different population, and the time law was partly a
+  **mass-selection law**".
+- **exp71 (C18) then proved that reading right**: the z = 2 halo-mass dependence
+  IS the z = 0.4 progenitor selection, predicted quantitatively from the
+  completeness curve with no free parameter.
+- **exp61**: single-epoch fits erase the z = 2 bias on the mask they are fitted
+  on and then OVERSHOOT the population to +12.4 per cent at 100 kpc
+  ([[per-epoch-ceiling-does-not-transfer]]), and fitting harder narrows the
+  predicted population ([[fitting-harder-narrows-the-population]]).
+
+So chasing the z = 2 per-epoch number means fitting a selection artefact and
+narrowing the population while doing it. **Drop it as a target and report it as
+scope**, which is what C18 concluded independently.
+
+**But the low-redshift half of the gap is real and unexplained.** At z = 0.4 the
+completeness is at its plateau, so no selection acts, and the joint fit is still
+2.3x worse than the single-epoch fit (3.33 against 1.42). That is the shared law
+genuinely costing something, and it has NOT been explained away.
+
+**What is untested there.** `D2` in the register closed "a richer time dependence
+for the EFFICIENCY law" — but that was the pre-exp63 seven-parameter incumbent,
+with no compact channel and no size-law time dependence. exp63 gave the sizes
+their own time law, one power of (1+z) each (`b_c`, `b_e`), and **nobody has
+asked whether a richer time law for the SIZES closes the z <= 1 gap.** Below
+z = 2 exp63 found the per-epoch size parameters moving smoothly, which is exactly
+the condition under which a better time parametrisation should be able to reach
+them.
+
+**So the recommendation is:** keep one shared theta; drop the z = 2 per-epoch
+ceiling as a target; and make "a richer time law for the two size parameters,
+judged at z <= 1.0 only" the next model question after the coordinate work — it
+is cheap, it is nested (both reduce to the current form), and it is the one part
+of the joint-versus-per-epoch gap that neither selection nor overfitting
+explains.
