@@ -61,7 +61,22 @@ RE_ENV = [2.0, 4.0]                            # M*(>k R_half)
 PLANES = [("kpc:M(<30)", "kpc:M(30-50)"), ("kpc:M(<30)", "kpc:M(50-100)"),
           ("Re:M(<2Re)", "Re:M(2-4Re)")]
 GROWTH_QUANTITIES = ("R_half", "Mtot")         # tier 2c, cross-epoch
-SIZE_FRACTIONS = (0.5, 0.8, 0.9)               # tier 2d: R50 / R80 / R90
+SIZE_FRACTIONS = (0.2, 0.5, 0.8, 0.9)          # tier 2d: R20 / R50 / R80 / R90
+# tier 2d GATE (the user's D1, 2026-09-01): the R20/R50/R80 fractional sizes'
+# DISTRIBUTIONS at fixed stellar mass and at fixed halo mass are a first-class
+# validation target, not a figure to be read. Two thresholds, both stated as
+# choices with the measurement that motivated them:
+#   SIZE_GATE_OFFSET  |median dlog R| in dex. 0.05 dex is 12% in size. exp63's
+#                     joint mean holds R50 to 0.02 dex at every epoch and the
+#                     exp72 chi-square refit missed by 0.10 at z=2, so 0.05 sits
+#                     between a fit that has the mass-size relation and one that
+#                     has lost it.
+#   SIZE_GATE_WIDTH   the model's scatter at fixed mass over the truth's. exp61
+#                     measured harder fitting NARROWING the predicted population
+#                     to 0.46 of the truth's width where 0.54 was honest
+#                     (memory `fitting-harder-narrows-the-population`); a 20%
+#                     tolerance catches that regime and not less.
+SIZE_GATE_OFFSET, SIZE_GATE_WIDTH = 0.05, 0.20
 # tier 2e: the masses whose POPULATION DISTRIBUTION is reported. A subset,
 # not every key -- one inner aperture, one mid and one outer annulus, and
 # the two Re-relative quantities -- so the table and figure stay readable.
@@ -386,9 +401,17 @@ def growth_planes(model_cogs, data_cogs, R, ref=0,
     return out
 
 
-def size_planes(model_cogs, data_cogs, R, fractions=SIZE_FRACTIONS):
+def size_planes(model_cogs, data_cogs, R, fractions=SIZE_FRACTIONS, cond_x=None):
     """Tier 2d — the MASS-SIZE plane per epoch: log M*(<R_max) vs
-    log R_half. Returns {j: stats}.
+    log R_half. Returns {(key, j): (truth_stats, model_stats)}.
+
+    ``cond_x`` (n, nz) optionally replaces the x-axis for BOTH sides with an
+    external variable — halo mass, in ``evaluate`` — so the size distribution
+    can be scored at fixed halo mass as well as at fixed stellar mass (the
+    user's D1: "at fixed stellar mass (or halo mass)"). With an external x the
+    plane is no longer self-consistent on that axis, which is the point: at
+    fixed HALO mass the model's size scatter is a prediction from an input the
+    model does not control.
 
     The mass-size relation is one of the two planes any population claim
     about this model rests on, and it was NOT in ``PLANES``: that set pairs
@@ -413,8 +436,11 @@ def size_planes(model_cogs, data_cogs, R, fractions=SIZE_FRACTIONS):
         rh_t = _safe_rhalf(data_cogs, R, frac)
         rh_m = _safe_rhalf(model_cogs, R, frac)
         for j in range(nz):
-            tx = np.log10(np.clip(data_cogs[:, j, -1], 1.0, None))
-            mx = np.log10(np.clip(model_cogs[:, j, -1], 1.0, None))
+            if cond_x is None:
+                tx = np.log10(np.clip(data_cogs[:, j, -1], 1.0, None))
+                mx = np.log10(np.clip(model_cogs[:, j, -1], 1.0, None))
+            else:
+                tx = mx = np.asarray(cond_x, float)[:, j]
             ty, my = np.log10(rh_t[:, j]), np.log10(rh_m[:, j])
             st = plane_stats(tx, ty)
             sm = plane_stats(mx, my)
@@ -423,20 +449,90 @@ def size_planes(model_cogs, data_cogs, R, fractions=SIZE_FRACTIONS):
             sm["median_logR_truth"] = float(np.nanmedian(ty))
             sm["median_logR_model"] = float(np.nanmedian(my))
             sm["median_dlogR"] = float(np.nanmedian(my - ty))
+            # an R20 for a compact high-z galaxy can fall INSIDE the innermost
+            # measured radius, where `enclosed_radius` extrapolates; report how
+            # often, because a gate on an extrapolated size is a weaker gate
+            sm["frac_below_grid_truth"] = float(np.nanmean(rh_t[:, j] < R[0]))
+            sm["width_ratio"] = (float(sm["scatter"] / st["scatter"])
+                                 if st["scatter"] > 0 else np.nan)
             out[(key, j)] = (st, sm)
     return out
+
+
+def size_gate(sizes, anchor_z, fractions=(0.2, 0.5, 0.8),
+              tol_offset=SIZE_GATE_OFFSET, tol_width=SIZE_GATE_WIDTH):
+    """Tier 2d as a GATE: per fractional size and epoch, does the model's size
+    DISTRIBUTION at fixed mass match the truth's?
+
+    Two conditions, both must hold:
+      offset   |median dlog R| <= tol_offset  -- the relation sits in the right place
+      width    model scatter / truth scatter within 1 +/- tol_width -- and it
+               is as WIDE as the truth's, which a conditional-mean model fitted
+               harder tends to lose (`fitting-harder-narrows-the-population`)
+
+    Returns {(key, j): dict(offset, width_ratio, pass_offset, pass_width, ok,
+    frac_below_grid)} and a summary count. The width is the vertical scatter
+    about an OLS line in the log-log plane, i.e. the spread of sizes at fixed
+    mass, so "narrowed by 20%" means the model's galaxies of a given mass are
+    20% too alike in size.
+    """
+    out = {}
+    for frac in fractions:
+        key = f"R{int(round(100 * frac))}"
+        for j in range(len(anchor_z)):
+            if (key, j) not in sizes:
+                continue
+            st, sm = sizes[(key, j)]
+            off, wr = sm["median_dlogR"], sm["width_ratio"]
+            po = bool(np.isfinite(off) and abs(off) <= tol_offset)
+            pw = bool(np.isfinite(wr) and abs(wr - 1.0) <= tol_width)
+            out[(key, j)] = dict(offset=off, width_ratio=wr, pass_offset=po,
+                                 pass_width=pw, ok=po and pw,
+                                 frac_below_grid=sm.get("frac_below_grid_truth", np.nan))
+    n_ok = sum(v["ok"] for v in out.values())
+    return out, n_ok, len(out)
+
+
+def print_size_gate(gate, anchor_z, label):
+    """One table per conditioning variable: offset | width ratio | verdict."""
+    res, n_ok, n = gate
+    print(f"\n  tier 2d GATE — fractional-size DISTRIBUTIONS at fixed {label}: "
+          f"{n_ok} of {n} pass\n    (offset |median dlog R| <= {SIZE_GATE_OFFSET} dex "
+          f"AND width within {int(100 * SIZE_GATE_WIDTH)}% of the truth's)")
+    keys = sorted({k for k, _ in res}, key=lambda k: int(k[1:]))
+    print(f"    {'size':<5}" + "".join(f"{f'z={z}':>22}" for z in anchor_z))
+    for key in keys:
+        row = []
+        for j in range(len(anchor_z)):
+            v = res.get((key, j))
+            if v is None:
+                row.append(f"{'—':>22}")
+                continue
+            tag = "ok" if v["ok"] else ("OFF" if not v["pass_offset"] else "WID")
+            row.append(f"{v['offset']:>+7.3f} {v['width_ratio']:>5.2f} {tag:>4} ".rjust(22))
+        print(f"    {key:<5}" + "".join(row))
+    ext = [v["frac_below_grid"] for (k, _), v in res.items() if k == keys[0]]
+    if ext and np.nanmax(ext) > 0.01:
+        print(f"    note: the truth's {keys[0]} falls inside the innermost measured "
+              f"radius for up to {100 * np.nanmax(ext):.0f}% of galaxies at some "
+              f"epoch, where it is extrapolated — that row is a weaker gate")
 
 
 # --- the standard entry point --------------------------------------------------
 def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
              verbose=True, figures=True, bin_by=None, bin_label=None,
-             draw_cogs=None, bin_by_ms=None, ms_label=None):
+             draw_cogs=None, bin_by_ms=None, ms_label=None, halo_mass_epochs=None):
     """Tiered QA for one model. Prints the report, writes the standard figures
     (mass tables per bin set, observational planes, profile visual QA), and
     returns a dict with all measurements for programmatic comparison.
     ``draw_cogs`` (S, n, nz, nr): sampled CoG populations from the generative
     layer; the first is overlaid on the plane figure (the mean prediction is
     under-dispersed there by construction).
+    ``halo_mass_epochs`` (n, nz): log halo mass at EACH epoch. When given, the
+    tier 2d size gate is also scored at fixed HALO mass (the user's D1). It is
+    separate from ``bin_by`` because that is a single z=0.4 column used for the
+    binned figures, and the size distribution at z_k must be conditioned on the
+    halo at z_k.
 
     **Two binned-profile figures are always written**, because the two views
     answer different questions and can disagree in SIGN (exp53):
@@ -481,6 +577,11 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
         planes[(kx, ky)] = per_epoch
     growth = growth_planes(model_cogs, data_cogs, R)
     sizes = size_planes(model_cogs, data_cogs, R)
+    # the same distributions at fixed HALO mass, when the caller supplies it
+    sizes_mh = (size_planes(model_cogs, data_cogs, R, cond_x=np.asarray(halo_mass_epochs, float))
+                if halo_mass_epochs is not None else None)
+    gate_ms = size_gate(sizes, anchor_z)
+    gate_mh = size_gate(sizes_mh, anchor_z) if sizes_mh is not None else None
     cdfs = mass_cdf_distance(model_cogs, data_cogs, R, quantities=CDF_KEYS,
                              truth=truth, model=model)
 
@@ -533,6 +634,9 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                       f"median dlogR {mo['median_dlogR']:+.3f} | E/floor "
                       f"{mo['energy_ratio']:.1f} "
                       f"(centered {mo['energy_ratio_centered']:.1f})")
+        print_size_gate(gate_ms, anchor_z, "STELLAR mass")
+        if gate_mh is not None:
+            print_size_gate(gate_mh, anchor_z, "HALO mass")
         print("\n  tier 2e — mass DISTRIBUTIONS per epoch (log10 mass CDFs, "
               "population-level):\n    KS / W1[dex], each as a ratio to the "
               "truth's split-half floor (~1 = indistinguishable)")
@@ -584,7 +688,8 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
 
     return dict(truth=truth, model=model, rhalf=rhalf, keys=keys,
                 mr_all=mr_all, mr_out=mr_out, planes=planes,
-                growth=growth, sizes=sizes, cdfs=cdfs)
+                growth=growth, sizes=sizes, sizes_mh=sizes_mh,
+                size_gate_ms=gate_ms, size_gate_mh=gate_mh, cdfs=cdfs)
 
 
 def _cdf_figure(truth, model, anchor_z, name, figdir):
@@ -1274,9 +1379,42 @@ def demo():
     assert d50 - d90 > 0.004, f"inner deficit must open an R50-R90 gap: {d50-d90}"
     # enclosed_radius is monotone in the fraction, and R50 is half_mass_radius
     c0 = truth_g[0, 0]
-    rr = [enclosed_radius(c0, Rg, f) for f in (0.5, 0.8, 0.9)]
-    assert rr[0] < rr[1] < rr[2], rr
-    assert abs(rr[0] - half_mass_radius(c0, Rg)) < 1e-12
+    rr = [enclosed_radius(c0, Rg, f) for f in (0.2, 0.5, 0.8, 0.9)]
+    assert rr[0] < rr[1] < rr[2] < rr[3], rr
+    assert abs(rr[1] - half_mass_radius(c0, Rg)) < 1e-12
+    # --- tier 2d GATE (the user's D1): R20 is scored, and the gate reads the
+    # DISTRIBUTION at fixed mass, not just its median
+    assert ("R20", 0) in sp_id, "R20 must be in the size planes"
+    g_id, n_ok, n_all = size_gate(sp_id, [0.0] * nzg)
+    assert n_ok == n_all, f"the identity must pass every size gate: {n_ok}/{n_all}"
+    g_off, n_ok_off, _ = size_gate(sp_off, [0.0] * nzg)
+    assert n_ok_off == 0 and all(not v["pass_offset"] for v in g_off.values()), \
+        "a 1.6x size offset must fail every gate ON OFFSET"
+    # a model with the RIGHT median size but sizes 40% too alike at fixed mass:
+    # shrink each galaxy's log-size residual about the population's size-mass
+    # line, at fixed total mass -- the failure `fitting-harder-narrows-the-
+    # population` describes. It must fail on WIDTH and pass on offset.
+    # NOT via `_assign`: that rank-maps onto FIXED marginals and so erases any
+    # width change by construction (a first draft did, and measured a width
+    # ratio of 1.0001 for a 40% narrowing).
+    s_narrow = np.empty_like(s_inc)
+    for j in range(nzg):
+        lt_m = np.log10(truth_g[:, j, -1])
+        ls = np.log10(s_inc[:, j])
+        bline = np.polyfit(lt_m, ls, 1)
+        s_narrow[:, j] = 10.0 ** (np.polyval(bline, lt_m) + 0.6 * (ls - np.polyval(bline, lt_m)))
+    model_narrow = _cog_from_size(s_narrow)
+    sp_nar = size_planes(model_narrow, truth_g, Rg)
+    g_nar, _, _ = size_gate(sp_nar, [0.0] * nzg, fractions=(0.5,))
+    v = g_nar[("R50", 0)]
+    assert v["pass_offset"], f"narrowing must not move the median: {v['offset']}"
+    assert not v["pass_width"] and v["width_ratio"] < 0.8, \
+        f"a 40% narrowing at fixed mass must fail the WIDTH gate: {v['width_ratio']}"
+    # conditioning on an external variable changes the x-axis and nothing else
+    ext = np.log10(truth_g[:, :, -1])
+    sp_ext = size_planes(truth_g, truth_g, Rg, cond_x=ext)
+    assert abs(sp_ext[("R50", 0)][1]["median_dlogR"]) < 1e-9
+    assert sp_ext[("R50", 0)][1]["width_ratio"] == 1.0
 
     # --- tier 2e: the mass DISTRIBUTIONS -----------------------------------
     rg2 = np.random.default_rng(5)
