@@ -490,15 +490,32 @@ def size_gate(sizes, anchor_z, fractions=(0.2, 0.5, 0.8),
                                  pass_width=pw, ok=po and pw,
                                  frac_below_grid=sm.get("frac_below_grid_truth", np.nan))
     n_ok = sum(v["ok"] for v in out.values())
-    return out, n_ok, len(out)
+    n_off = sum(v["pass_offset"] for v in out.values())
+    n_wid = sum(v["pass_width"] for v in out.values())
+    return out, n_ok, len(out), n_off, n_wid
 
 
 def print_size_gate(gate, anchor_z, label):
-    """One table per conditioning variable: offset | width ratio | verdict."""
-    res, n_ok, n = gate
+    """One table per conditioning variable: offset | width ratio | verdict.
+
+    The two sub-gates are counted SEPARATELY, because they fail for different
+    reasons. OFFSET asks whether the mass-size relation sits in the right place,
+    which a conditional-mean model can get right (exp63's joint mean does).
+    WIDTH asks whether the model's galaxies of a given mass are as diverse in
+    size as the truth's, which a conditional-mean model CANNOT get right on its
+    own: its scatter at fixed mass is the truth's times 0.2-0.6 (measured on
+    every mean model this programme has, worsening with redshift), and that
+    diversity is what the stochastic layer exists to supply (open question C16:
+    tier 2e scores the mean, never the layer's draws). A width failure on a
+    mean model is therefore the expected reading, not a verdict on the mean;
+    it becomes a verdict when the layer's draws are scored instead.
+    """
+    res, n_ok, n, n_off, n_wid = gate
     print(f"\n  tier 2d GATE — fractional-size DISTRIBUTIONS at fixed {label}: "
-          f"{n_ok} of {n} pass\n    (offset |median dlog R| <= {SIZE_GATE_OFFSET} dex "
-          f"AND width within {int(100 * SIZE_GATE_WIDTH)}% of the truth's)")
+          f"OFFSET {n_off} of {n} pass | WIDTH {n_wid} of {n} pass | both {n_ok}"
+          f"\n    (offset |median dlog R| <= {SIZE_GATE_OFFSET} dex; width = model "
+          f"scatter at fixed mass / truth's, within {int(100 * SIZE_GATE_WIDTH)}%;"
+          f"\n     a MEAN model is expected to fail width — see the docstring / C16)")
     keys = sorted({k for k, _ in res}, key=lambda k: int(k[1:]))
     print(f"    {'size':<5}" + "".join(f"{f'z={z}':>22}" for z in anchor_z))
     for key in keys:
@@ -1385,9 +1402,10 @@ def demo():
     # --- tier 2d GATE (the user's D1): R20 is scored, and the gate reads the
     # DISTRIBUTION at fixed mass, not just its median
     assert ("R20", 0) in sp_id, "R20 must be in the size planes"
-    g_id, n_ok, n_all = size_gate(sp_id, [0.0] * nzg)
+    g_id, n_ok, n_all, _, _ = size_gate(sp_id, [0.0] * nzg)
     assert n_ok == n_all, f"the identity must pass every size gate: {n_ok}/{n_all}"
-    g_off, n_ok_off, _ = size_gate(sp_off, [0.0] * nzg)
+    g_off, n_ok_off, _, n_off_off, _ = size_gate(sp_off, [0.0] * nzg)
+    assert n_off_off == 0, "the offset sub-count must be zero for a 1.6x offset"
     assert n_ok_off == 0 and all(not v["pass_offset"] for v in g_off.values()), \
         "a 1.6x size offset must fail every gate ON OFFSET"
     # a model with the RIGHT median size but sizes 40% too alike at fixed mass:
@@ -1405,7 +1423,9 @@ def demo():
         s_narrow[:, j] = 10.0 ** (np.polyval(bline, lt_m) + 0.6 * (ls - np.polyval(bline, lt_m)))
     model_narrow = _cog_from_size(s_narrow)
     sp_nar = size_planes(model_narrow, truth_g, Rg)
-    g_nar, _, _ = size_gate(sp_nar, [0.0] * nzg, fractions=(0.5,))
+    g_nar, _, _, n_off_nar, n_wid_nar = size_gate(sp_nar, [0.0] * nzg, fractions=(0.5,))
+    assert n_off_nar == nzg and n_wid_nar == 0, \
+        f"narrowing must pass every offset and fail every width: {n_off_nar}, {n_wid_nar}"
     v = g_nar[("R50", 0)]
     assert v["pass_offset"], f"narrowing must not move the median: {v['offset']}"
     assert not v["pass_width"] and v["width_ratio"] < 0.8, \
