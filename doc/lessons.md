@@ -2570,3 +2570,18 @@ session should not rediscover them:
   error-weighted chi-square makes z = 2 galaxies 27 per cent too big, which is
   the single physical statement of everything else it got wrong. One derived
   number said in one line what five tables of per-radius residuals did not.
+- **A coverage-limited statistic reports on whoever survived the cut.** The
+  claim "in R50 units the galaxy is nearly self-similar" was computed where the
+  stored 2 kpc curve of growth could reach, which at z = 2 is the largest 26 per
+  cent of galaxies in the 0.5-1 R50 shell -- and those are precisely the ones
+  that most resemble low-redshift galaxies. Measured on all of them the shell
+  holds 26.4 per cent of the galaxy at z = 2 against 17.1 at z = 0.4, a 9.3-point
+  spread rather than 1.7. Print the coverage in the same table as the number, and
+  distrust any trend whose sample shrinks along it.
+- **Ask what else is in the data product before concluding the data cannot
+  answer.** The 24-radius curve of growth starts at 2 kpc, which at z = 2 is
+  0.66 R50, and that looked like a hard limit on any size-relative coordinate.
+  The same product's isophote DENSITY reaches 0.673 kpc for 100 per cent of
+  galaxies at every epoch, and the curve of growth rebuilt from it extends the
+  usable window from 1 R50 down to 0.5 R50 at full coverage. The two agree to
+  about 2 per cent where they overlap, so splicing costs nothing.

@@ -57,29 +57,35 @@ RULE = "=" * 100
 THIN = "-" * 100
 
 #: THE SIZE-RELATIVE SHELL EDGES, in units of the galaxy's own R50, and they are
-#: MEASURED rather than chosen. The measured grid runs 2 to 148.22 kpc, so an
-#: edge is usable only where `edge * R50` falls inside it for most galaxies.
-#: Coverage on the 2354-galaxy fitting sample (fraction of galaxy-epochs inside
-#: the grid), worst epoch in brackets:
+#: MEASURED rather than chosen. An edge is usable only where `edge * R50` falls
+#: inside the measured radial range. Which range that is depends on which
+#: measurement is used, and the difference is decisive (the user, 2026-09-01):
 #:
-#:     0.25 R50  78 / 59 / 40 / 14 /  3 %   (3 %)   unusable
-#:     0.50 R50  97 / 92 / 84 / 57 / 26 %  (26 %)   unusable
-#:     0.75 R50  99 / 98 / 96 / 84 / 62 %  (62 %)   marginal
-#:     1.00 R50 100 /100 /100 / 97 / 87 %  (87 %)   usable
-#:     2.00 R50 100 /100 /100 /100 / 99 %  (99 %)
-#:     4.00 R50 100 /100 /100 /100 /100 %  (100 %)
-#:     6.00 R50  95 / 98 / 99 /100 /100 %  (95 %)   usable
-#:     8.00 R50  84 / 93 / 97 /100 /100 %  (84 %)   marginal
+#:                        stored CoG grid      density-rebuilt CoG
+#:                          2 - 148.22 kpc       0.673 - 159.74 kpc
+#:     0.125 R50                     0 %                      8 %
+#:     0.25  R50                     3 %                     56 %
+#:     0.50  R50                    26 %                    100 %
+#:     0.75  R50                    62 %                    100 %
+#:     1.00  R50                    87 %                    100 %
+#:     4.00  R50                   100 %                    100 %
+#:     8.00  R50                    84 %                     87 %
+#:   (worst epoch, on the 2354-galaxy fitting sample)
 #:
-#: **So the usable window is about 1 to 6 R50, and it EXCLUDES the inner half of
-#: the galaxy at high redshift.** The innermost aperture is a fixed 2 kpc, which
-#: is 0.17 R50 at the median z = 0.4 galaxy but 0.66 R50 at the median z = 2 one,
-#: so below 1 R50 the coordinate fails at z = 2 -- and it fails preferentially
-#: for the SMALL galaxies, which is a mass-dependent selection and worse than a
-#: uniform loss. A size-relative coordinate can therefore describe the outskirts,
-#: where the galaxy's own size sets the scale, but not the centre, where the
-#: measurement's fixed resolution does. Anything inside 1 R50 stays in kpc.
-RE_EDGES = (1.0, 2.0, 4.0, 6.0)
+#: The stored 24-radius curve of growth starts at a fixed 2 kpc, which is
+#: 0.17 R50 at the median z = 0.4 galaxy but 0.66 R50 at the median z = 2 one, so
+#: on it alone nothing below 1 R50 is usable and the failure is worse than a
+#: uniform loss -- it drops the SMALL galaxies preferentially, a mass-dependent
+#: selection. **But the isophote density reaches 0.673 kpc for 100 per cent of
+#: galaxies at every epoch**, so the curve of growth rebuilt from it extends the
+#: window to 0.5 R50 at full coverage. That is what `extended_cog` supplies.
+#:
+#: THE QUALITY CAVEAT, which travels with every inner shell: `sigma_resolved` is
+#: False inside about 2.4 kpc, where photutils' ellipse fit sat at its 13-point
+#: floor -- at z = 2, 0 per cent resolved below 1.4 kpc, 60 per cent at 2.0 kpc.
+#: The density is real there but not INDEPENDENT: it is the fitted ellipse family
+#: evaluated inward over the same pixels. Carry it as a flag, not a blocker.
+RE_EDGES = (0.5, 1.0, 2.0, 4.0, 6.0)
 #: the fractional sizes reported. The user (D1) named R20 / R50 / R80; R90 is
 #: carried because `hongshao.qa` already uses it and dropping it would break the
 #: comparison with every product scored so far.
@@ -155,6 +161,35 @@ def cum_at(cog, R, radii):
         else:
             out[i] = float(np.interp(r, R, c))           # fallback if any zero
     return out.reshape(cog.shape[:-1])
+
+
+def extended_cog(cog_provided, cog_density, R_cog, R_shared, r_splice=2.0):
+    """Splice the density-rebuilt curve of growth INSIDE `r_splice` onto the
+    stored one outside it, so the target reaches 0.673 kpc without changing
+    anything the programme has ever fitted.
+
+    The user's D1 keeps `cog_provided` as the fitting target. This does not
+    replace it: outside `r_splice` the returned curve IS `cog_provided`,
+    unchanged and on its own radii. Inside, it is the density-rebuilt curve
+    RESCALED so the two agree exactly at the splice, which removes the smooth
+    2 per cent reconstruction offset between them (measured: median log ratio
+    -0.008 to +0.009 dex over 2-103 kpc, `doc/tng300_profile_data.md` section
+    10.3) rather than letting it appear as a step.
+
+    Returns (radii, cog) on a merged grid: the shared-grid radii below
+    `r_splice`, then the stored CoG radii.
+    """
+    cp = np.asarray(cog_provided, float)
+    cd = np.asarray(cog_density, float)
+    Rc, Rs = np.asarray(R_cog, float), np.asarray(R_shared, float)
+    inner = Rs < r_splice
+    # the density curve evaluated AT the splice, per galaxy-epoch
+    at_splice = cum_at(cd, Rs, np.full(cd.shape[:2], r_splice))
+    j0 = int(np.argmin(np.abs(Rc - r_splice)))
+    scale = np.where(at_splice > 0, cp[..., j0] / np.where(at_splice > 0, at_splice, 1.0), np.nan)
+    merged_R = np.concatenate([Rs[inner], Rc])
+    merged = np.concatenate([cd[..., inner] * scale[..., None], cp], axis=-1)
+    return merged_R, merged
 
 
 class SizeGrid:
@@ -353,7 +388,9 @@ def selftest():
     unc = 100 * (~g.covered).mean(axis=(0, 2))
     print(f"  B3 uncovered shell fraction per epoch: "
           + " / ".join(f"{v:.0f}%" for v in unc)
-          + "  — see RE_EDGES for why nothing below 1 R50 is usable")
+          + "  — on the STORED 2-148 kpc grid, which is what this synthetic "
+            "uses;\n     `extended_cog` is what removes it on real data (see "
+            "RE_EDGES)")
 
     # C. THE IDENTITY THAT IS THE USER'S CLAIM 2. For a shell holding a
     #    fraction phi of the galaxy, the mass-weighted residual is exactly phi
@@ -367,11 +404,11 @@ def selftest():
     b_res = g.residual(mod, "rel")
     phi = np.where(g.covered, g.truth_shells / g.total_re[..., None], np.nan)
     dev = np.nanmax(np.abs(a_res - b_res * phi))
-    scale = np.nanmax(np.abs(a_res))
-    assert dev < 1e-12 * max(scale, 1e-30), (dev, scale)
+    typ = np.nanmax(np.abs(a_res))
+    assert dev < 1e-12 * max(typ, 1e-30), (dev, typ)
     print(f"  C  mass-weighted residual == relative residual x the shell's mass "
           f"share, exactly (max deviation {dev:.1e} against a typical "
-          f"{scale:.2f})  OK")
+          f"{typ:.2f})  OK")
 
     # D. the weight schemes are normalised and the gate is a subset of smooth
     wa, wb = weights_smooth(g), weights_gated(g, 0.02)
@@ -389,6 +426,26 @@ def selftest():
     assert np.isnan(r[~g3.covered]).all()
     print(f"  E  uncovered shells return NaN and are dropped, never charged "
           f"({100 * (~g3.covered).mean():.1f}% uncovered in the flattened case)  OK")
+
+    # F. the splice is continuous and leaves the outside untouched
+    Rs = np.geomspace(0.5608, 159.74, 32)
+    dens = np.empty((n, ne, len(Rs)))
+    for j in range(ne):
+        dens[:, j, :] = (1.021e11 * mass[j]                 # a 2.1% offset,
+                         * shape(Rs[None, :] / (r_e[:, None] * scale[j])))
+    Rm, merged = extended_cog(truth, dens, R, Rs)
+    n_in = int((Rs < 2.0).sum())
+    assert np.allclose(merged[..., n_in:], truth), "the outside was modified"
+    step = np.abs(merged[..., n_in - 1] / merged[..., n_in]
+                  * (Rm[n_in] / Rm[n_in - 1]) ** 0 - 1.0)
+    ratio_in = merged[..., n_in - 1] / merged[..., n_in]
+    assert (ratio_in < 1.0).all() and (ratio_in > 0.5).all(), ratio_in.min()
+    at_splice = cum_at(dens, Rs, np.full(dens.shape[:2], 2.0)) * (
+        truth[..., 0] / cum_at(dens, Rs, np.full(dens.shape[:2], 2.0)))
+    assert np.allclose(at_splice, truth[..., 0]), "the splice is not continuous"
+    print(f"  F  `extended_cog` leaves everything outside 2 kpc bit-identical, "
+          f"matches exactly at the splice, and adds {n_in} inner radii reaching "
+          f"{Rm[0]:.3f} kpc  OK")
 
     print("\nall selftest claims pass")
 

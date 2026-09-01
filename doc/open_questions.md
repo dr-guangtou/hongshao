@@ -396,9 +396,21 @@ suggested.
   **3.00 per cent** — the smallest relative error misplaces six times more mass
   than the largest. At z=2, 3.9 per cent of galaxies have no positive measured
   mass in the outermost shell at all.
-- **In R50 units the galaxy is very nearly self-similar**: shell mass fractions
-  vary by 0.8-3.7 percentage points across the five epochs, against up to 12.4
-  in fixed kpc. Almost all the evolution is in R50 itself and in the total mass.
+- **In R50 units the OUTER galaxy is very nearly self-similar**: the 1-2, 2-4 and
+  4-8 R50 shells vary by 3.0 / 3.4 / 3.7 percentage points across the five
+  epochs, against up to 12.4 in fixed kpc.
+- **CORRECTED 2026-09-01 (exp73 Block A1): the INNER galaxy is not.** The first
+  version of this entry reported the 0.5-1 R50 shell varying by only 1.7 points,
+  computed on the stored 2-148 kpc curve of growth where that shell is measured
+  for just **26 per cent** of galaxies at z=2 — and the survivors are the largest,
+  which most resemble low-redshift galaxies. The isophote density reaches
+  0.673 kpc for **100 per cent** of galaxies at every epoch (the user), and on
+  the curve of growth rebuilt from it the shell holds 17.1 per cent at z=0.4 and
+  **26.4** at z=2, a **9.3**-point spread. Massive galaxies were genuinely more
+  centrally concentrated at z=2 in units of their own half-mass radius. That is
+  physics for the model to reproduce, not geometry to normalise away — and it
+  means a size-relative coordinate helps in the outskirts and cannot help in the
+  centre.
 
 **The finding that decides what to do:** the INCUMBENT objective already
 delivers the mass-size relation to 5 per cent at every epoch (R50 error +0 / +1
