@@ -347,6 +347,19 @@ quoted for hongshao v1 in this programme currently describes the mean alone,
 and reads as a population failure that the delivered model may not have.
 Cheap to answer: `evaluate` already measures the draws for the plane figure.
 
+**Sharpened 2026-09-02 (exp73 Block D, `size_gate_check.py`, 2354 galaxies).**
+The narrowing is now measured as a function of redshift and radius, on the new
+`hongshao.qa.size_gate`. The model's size scatter at fixed stellar mass over the
+truth's, exp63's joint mean: R50 **0.63 / 0.51 / 0.41 / 0.31 / 0.30** from z=0.4
+to z=2, R80 down to **0.16**; at fixed HALO mass narrower still (R50 0.52 -> 0.29).
+Every conditional-mean model fails the width sub-gate 0 of 15, everywhere. So a
+mean model is EXPECTED to fail width and that becomes a verdict only when the
+layer's draws are scored — which is this question, and the reason the gate now
+counts offset and width separately. The stochastic layer's job at z=2 is to
+supply 70 per cent of the size diversity at fixed mass, 84 per cent in R80: far
+larger than at z=0.4, and the z=2 outskirts are where the mean is furthest from
+the population it describes. Unchanged: nothing here changes an adopted decision.
+
 ### C17. Would a likelihood with a measured error model make the fits better behaved?
 Raised 2026-08-30 (the user, closing exp63). Every objective in this programme
 is a bare distance — fractional or log residuals, root-mean-squared over radii
@@ -476,6 +489,31 @@ ceiling.**
 what should a shared five-epoch law be asked to PRESERVE, given it demonstrably
 cannot preserve everything? A weighting sweep answers it by evaluation at frozen
 theta before any fit, and it needs a decision from the user about what matters.
+
+**Measured 2026-09-02 (exp73 Block A2, `risk_test.py`, no fit).** Two results,
+and a caveat that limits the first.
+
+- **The per-epoch size optima below z=2 lie on a straight line in log10(1+z)**:
+  a line leaves 0.023 dex (6 per cent) on the compact size and 0.012 dex (3 per
+  cent) on the extended one. Because `b_c` is frozen at 0 in those fits, `log_f_c`
+  IS the compact size in log10 kpc, so this is non-parametric. **One power of
+  (1+z) already describes the size evolution below z=2; D3's "richer size-time
+  law" lever is small**, of the same order as the 0.2-point budget D2 found for
+  the efficiency law. Block E was evaluated and not fitted on that basis.
+- **The joint-versus-per-epoch gap narrows under the size-relative coordinate**,
+  but only on a binned tercile-median gate — a per-galaxy metric puts the shared
+  theta and the five per-epoch thetas within 2 per cent of each other and cannot
+  see the gap at all ([[loss-is-blind-to-the-binned-gate]]). On the binned gate at
+  z<=1.5: relative residual 1.28 -> 1.07, mass-weighted 1.46 -> 1.14, where 1.00 is
+  "sharing is free". Read as the COST of sharing that is 0.28 -> 0.07, a 75 per
+  cent reduction.
+- **The caveat**: the per-epoch fits were optimised under exp63's fixed-kpc
+  objective, so they are not the per-epoch optimum under an R50 one — the R50
+  gap falls BELOW 1 at z>=1.0 (0.91/0.70/0.57), the shared theta beating the
+  epoch-specialised models. Part of the narrowing is a mis-specialised
+  comparator. **Owed: five single-epoch refits under the R50 objective** (~75 min
+  at 0.53 s per evaluation) for a true ceiling. Not spent this session; Block C's
+  transfer matrix answers "is this coordinate better" more directly.
 
 ### C19. The model's halo history knows the halo's final mass
 **Raised 2026-08-31 by exp71 part 2, which was not looking for it.** The model

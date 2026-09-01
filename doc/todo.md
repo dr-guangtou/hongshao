@@ -2944,3 +2944,33 @@ Owed to the user, and NOT decided here:
   entirely — is not settled.
 - [ ] **Does `halo-history-knows-a-little-about-the-core` survive C19?** It used
   DiffMAH `early`/`late`/`t50` at fixed halo mass. Not withdrawn, not rechecked.
+
+## 2026-09-02 — exp73 (C20/C21), on `exp73-size-relative-objective`
+
+- [x] **A1 the coordinate.** R50 shells, mass-weighted residual, coverage gate;
+  seven selftest claims. Usable window 0.5-6 R50 ONLY with the density-rebuilt
+  inner curve (the user); the stored 2 kpc grid gives 1-6 and drops small
+  galaxies preferentially. exp72's self-similarity claim corrected: outside 1 R50
+  yes (3.0-3.7 pts), inside 1 R50 no (9.3 pts, real evolution).
+- [x] **A2 the risk test.** Gap narrows 1.28 -> 1.07 on the binned gate (cost of
+  sharing -75%); per-galaxy metrics cannot see it at all; per-epoch size optima
+  within 3-6% of one power of (1+z) below z=2 — D3's lever is small.
+- [x] **B the weighting sweep (D2).** B disqualified by the pre-stated rule (136% /
+  215% variation with t); A barely helps; the mass-weighted residual wins on
+  allocation and usability. Two galaxies carry 78% of the z=2 loss on fixed kpc.
+- [ ] **C the refit** — `fit_re.py` RUNNING (4 starts, ~18-27 min each);
+  `eval_re.py` judges it. exp63's theta already scores 7.94 vs the null's 10.00.
+- [x] **D the size gate (D1).** R20 added; offset and width counted separately;
+  first use on the full sample: catches the chi-square's 27%-too-big on OFFSET,
+  exp63 passes 15/15 on the merged grid, width fails 0/15 for every mean model
+  and collapses with z (C16 sharpened).
+- [x] **E the richer size-time law (D3).** Evaluated in A2, not fitted: not
+  demanded by the evidence.
+
+Owed to the user, NOT decided here:
+- [ ] Five single-epoch refits under the R50 objective, for a true ceiling (A2's
+  caveat); ~75 min.
+- [ ] Whether the stochastic layer is re-scored on the new size gate — C16 is
+  now quantitative in z and R, and the layer's job at z=2 is 70% of the size
+  diversity at fixed mass.
+- [ ] C19 (DiffMAH's logmp carries the future) — deliberately not started.
