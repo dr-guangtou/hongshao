@@ -140,30 +140,33 @@ def cum_at(cog, R, radii):
     over a grid interval, so log-log interpolation is both the natural choice
     and, measured on a self-similar synthetic, about 30x more accurate
     (`selftest` claim B).
+
+    VECTORISED over galaxies and epochs. The query radii differ per galaxy but
+    the grid does not, so one `searchsorted` on the shared grid serves all of
+    them. The loop version this replaces took about a second per call on 2354
+    galaxies, which would have made any fit under this coordinate impossible;
+    `selftest` claim G checks the two agree to floating-point.
     """
     cog = np.asarray(cog, float)
     R = np.asarray(R, float)
-    lR = np.log10(R)
-    flat = cog.reshape(-1, cog.shape[-1])
-    rr = np.asarray(radii, float).reshape(-1)
-    out = np.full(len(flat), np.nan)
-    for i in range(len(flat)):
-        c = flat[i]
-        if not np.isfinite(rr[i]) or not np.isfinite(c).all():
-            continue
-        r = rr[i]
-        if r <= R[0]:
-            out[i] = c[0] * r / R[0]                     # linear inside R[0]
-        elif r >= R[-1]:
-            out[i] = c[-1]
-        elif (c > 0).all():
-            out[i] = 10.0 ** np.interp(np.log10(r), lR, np.log10(c))
-        else:
-            out[i] = float(np.interp(r, R, c))           # fallback if any zero
-    return out.reshape(cog.shape[:-1])
+    rr = np.asarray(radii, float)[..., None]              # (..., 1) to align
+    lR, lC = np.log10(R), np.log10(np.where(cog > 0, cog, np.nan))
+    lq = np.log10(np.clip(rr, 1e-30, None))
+    j = np.clip(np.searchsorted(lR, lq) - 1, 0, len(R) - 2)
+    lo = np.take_along_axis(lC, j, axis=-1)
+    hi = np.take_along_axis(lC, j + 1, axis=-1)
+    x0 = lR[j]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        t = (lq - x0) / (lR[j + 1] - x0)
+        out = 10.0 ** (lo + t * (hi - lo))
+    # outside the grid: linear inside R[0], flat beyond R[-1]
+    out = np.where(rr <= R[0], cog[..., :1] * rr / R[0], out)
+    out = np.where(rr >= R[-1], cog[..., -1:], out)
+    return np.where(np.isfinite(rr), out, np.nan)[..., 0]
 
 
-def extended_cog(cog_provided, cog_density, R_cog, R_shared, r_splice=2.0):
+def extended_cog(cog_provided, cog_density, R_cog, R_shared, r_splice=2.0,
+                 r_min=0.6729):
     """Splice the density-rebuilt curve of growth INSIDE `r_splice` onto the
     stored one outside it, so the target reaches 0.673 kpc without changing
     anything the programme has ever fitted.
@@ -176,13 +179,18 @@ def extended_cog(cog_provided, cog_density, R_cog, R_shared, r_splice=2.0):
     -0.008 to +0.009 dex over 2-103 kpc, `doc/tng300_profile_data.md` section
     10.3) rather than letting it appear as a step.
 
-    Returns (radii, cog) on a merged grid: the shared-grid radii below
-    `r_splice`, then the stored CoG radii.
+    Returns (radii, cog) on a merged grid: the shared-grid radii in
+    [`r_min`, `r_splice`), then the stored CoG radii.
     """
     cp = np.asarray(cog_provided, float)
     cd = np.asarray(cog_density, float)
     Rc, Rs = np.asarray(R_cog, float), np.asarray(R_shared, float)
-    inner = Rs < r_splice
+    # `r_min` defaults to the SECOND shared-grid radius, 0.6729 kpc, because the
+    # first (0.5608) is measured for only 88 per cent of galaxies while 0.6729 is
+    # measured for 100 per cent at every epoch. Including a radius a tenth of the
+    # sample lacks would drop those galaxies from every downstream statistic for
+    # a reason that has nothing to do with the model.
+    inner = (Rs < r_splice) & (Rs >= r_min)
     # the density curve evaluated AT the splice, per galaxy-epoch
     at_splice = cum_at(cd, Rs, np.full(cd.shape[:2], r_splice))
     j0 = int(np.argmin(np.abs(Rc - r_splice)))
@@ -434,10 +442,8 @@ def selftest():
         dens[:, j, :] = (1.021e11 * mass[j]                 # a 2.1% offset,
                          * shape(Rs[None, :] / (r_e[:, None] * scale[j])))
     Rm, merged = extended_cog(truth, dens, R, Rs)
-    n_in = int((Rs < 2.0).sum())
+    n_in = int(((Rs < 2.0) & (Rs >= 0.6729)).sum())
     assert np.allclose(merged[..., n_in:], truth), "the outside was modified"
-    step = np.abs(merged[..., n_in - 1] / merged[..., n_in]
-                  * (Rm[n_in] / Rm[n_in - 1]) ** 0 - 1.0)
     ratio_in = merged[..., n_in - 1] / merged[..., n_in]
     assert (ratio_in < 1.0).all() and (ratio_in > 0.5).all(), ratio_in.min()
     at_splice = cum_at(dens, Rs, np.full(dens.shape[:2], 2.0)) * (
@@ -446,6 +452,28 @@ def selftest():
     print(f"  F  `extended_cog` leaves everything outside 2 kpc bit-identical, "
           f"matches exactly at the splice, and adds {n_in} inner radii reaching "
           f"{Rm[0]:.3f} kpc  OK")
+
+    # G. the vectorised interpolation reproduces an explicit per-galaxy loop
+    q = g.radii[:20]
+    ref = np.full(q.shape, np.nan)
+    for i in range(q.shape[0]):
+        for jj in range(q.shape[1]):
+            for kk in range(q.shape[2]):
+                r = q[i, jj, kk]
+                c = truth[i, jj]
+                if r <= R[0]:
+                    ref[i, jj, kk] = c[0] * r / R[0]
+                elif r >= R[-1]:
+                    ref[i, jj, kk] = c[-1]
+                else:
+                    ref[i, jj, kk] = 10.0 ** np.interp(np.log10(r), np.log10(R),
+                                                       np.log10(c))
+    got = np.stack([cum_at(truth[:20], R, q[..., kk]) for kk in range(q.shape[2])],
+                   axis=-1)
+    dev = float(np.nanmax(np.abs(got / ref - 1.0)))
+    assert dev < 1e-12, dev
+    print(f"  G  the vectorised interpolation reproduces an explicit per-galaxy "
+          f"loop to {dev:.1e} relative  OK")
 
     print("\nall selftest claims pass")
 
