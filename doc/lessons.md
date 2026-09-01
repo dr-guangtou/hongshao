@@ -2600,3 +2600,11 @@ session should not rediscover them:
   R20 is measured, the same model passes at +0.004. Print the extrapolated
   fraction next to any gate that can be extrapolated, and check what the rest
   of the product can supply before calling the number a failure.
+- **Write a gate in the units it will be read in.** Gate A said "the gap narrows
+  by less than 25 per cent" without saying of WHAT. The gap is a ratio whose
+  neutral value is 1.00, so 1.28 -> 1.07 is -16.6 per cent as a ratio and -75 per
+  cent as the excess over 1 -- and the two readings put the gate on opposite
+  sides of its threshold. A number with a natural zero must be gated on its
+  distance from that zero. Fixed for the next session's gates; this one was
+  resolved by the plan's own rule for ambiguity (take the conservative branch
+  and say so).
