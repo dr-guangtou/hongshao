@@ -259,26 +259,54 @@ fixed mass passes offset and fails width. (A first draft built the narrowed
 model through `_assign`, which rank-maps onto fixed marginals and erases any
 width change by construction — it measured a width ratio of 1.0001.)
 
-### The first use found the two sub-gates fail for different reasons
+### The first use: the gate catches what it was built to catch, on the right sub-gate
 
-On the smoke sample, **every model failed 0 of 15 — including exp63, which holds
-R50 to 5 per cent.** Every failure was on **width**, none on offset:
+Three models whose size behaviour was already known, 2354 galaxies, scored on
+the merged grid (where R20 is measured) and on the standard grid (where the
+truth's R20 falls inside the innermost 2 kpc aperture for **up to 93 per cent**
+of galaxies at high z and is extrapolated):
 
-| exp63 joint, fixed stellar mass | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+| OFFSET sub-gate, passes of 15 | standard grid | merged grid | where it fails |
+|---|---|---|---|
+| exp63 joint | 14 | **15** | only R20 at z=2 on the standard grid (+0.063 dex, extrapolated); measured, +0.004 |
+| chi² refit (exp72) | 8 | 8 | R50 at z≥1.5: **+0.087, +0.104 dex** (22%, 27% too big); R80 likewise; R20 from z≥1.0 |
+| nested incumbent | 10 | 10 | z≥1.5: R50 +0.077 / +0.072, R80 +0.058 / +0.140 — the incumbent's high-z sizes are 18–38% too big, which exp63's fit repaired and the χ² undid |
+
+**Three things this settles.** The gate discriminates on the sub-gate it was
+designed to: the χ² refit's known failure — z = 2 galaxies 27 per cent too big —
+appears as an OFFSET failure at exactly the epochs and sizes where it should,
+and exp63's fit, which holds R50 to 5 per cent, passes every offset. **The
+density-rebuilt inner curve turned R20 from an unreliable row into a passing
+one**: on the standard grid exp63's R20 fails at z = 2 by +0.063 dex where it is
+extrapolated; measured on the merged grid it passes at +0.004. And at fixed
+**halo** mass the offsets are the same to three decimals (the size–mass relation
+is not what moves), so the halo-mass conditioning adds nothing on offset and is
+kept for width, where it does.
+
+**The WIDTH sub-gate fails 0 of 15 for every model, everywhere** — and the
+redshift trend seen on the smoke sample holds on the full one:
+
+| width ratio, model / truth, fixed stellar mass | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
 |---|---|---|---|---|---|
-| R50 offset [dex] | −0.023 | +0.014 | −0.021 | +0.021 | −0.007 |
-| R50 width ratio (model / truth) | 0.60 | 0.45 | 0.40 | 0.28 | **0.26** |
+| exp63 joint, R20 (merged) | 0.76 | 0.71 | 0.67 | 0.63 | 0.59 |
+| exp63 joint, R50 | 0.63 | 0.51 | 0.41 | 0.31 | **0.30** |
+| exp63 joint, R80 | 0.52 | 0.41 | 0.30 | 0.21 | **0.16** |
+| chi² refit, R50 | 0.40 | 0.33 | 0.28 | 0.24 | 0.24 |
+| nested incumbent, R50 | 0.48 | 0.39 | 0.32 | 0.24 | 0.21 |
 
 A conditional-mean model cannot be as diverse at fixed mass as the population it
-was fitted to — that is C16, and the diversity is what the stochastic layer
-exists to supply. **What is new is the redshift trend**: the narrowing steepens
-from 0.60 at z = 0.4 to 0.26 at z = 2, on every mean model. So the gate now
-counts offset and width **separately**: offset discriminates between mean
-models; width is the expected reading for any mean model and becomes a verdict
-only when the layer's draws are scored. *Full-sample tables from
-`size_gate_check.py` pending.*
-
----
+was fitted to — C16, and the diversity the stochastic layer exists to supply.
+**What is new**: the narrowing is a strong function of both redshift and radius.
+At fixed stellar mass exp63's galaxies of a given mass are 63 per cent as diverse
+in R50 as the truth's at z = 0.4 and **30 per cent** at z = 2; in R80, 16 per cent
+at z = 2. At fixed **halo** mass it is narrower still (R50 0.52 → 0.29), which is
+what a deterministic model of halo mass should show — at fixed input its only
+scatter is what the assembly history's shape supplies. So the gate counts the
+two sub-gates separately: offset discriminates between mean models; width is the
+expected reading for any mean model and becomes a verdict only when the layer's
+draws are scored. exp61 measured the narrowing at one epoch; this is its
+redshift dependence, and the z = 2 outskirts are where the mean is furthest from
+the population it describes.
 
 ## Block E — the richer size-time law (D3): evaluated, not fitted
 

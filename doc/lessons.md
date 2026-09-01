@@ -2585,3 +2585,18 @@ session should not rediscover them:
   galaxies at every epoch, and the curve of growth rebuilt from it extends the
   usable window from 1 R50 down to 0.5 R50 at full coverage. The two agree to
   about 2 per cent where they overlap, so splicing costs nothing.
+- **Count sub-gates separately when they fail for different reasons.** A new
+  size gate scored offset AND width with one pass/fail, and on first use every
+  model failed 0 of 15 -- including the one known to hold R50 to 5 per cent.
+  Every failure was on width, which a conditional-mean model fails by
+  construction (its size scatter at fixed mass is 0.2-0.6 of the truth's), and
+  the combined verdict hid the offset result -- the one that actually
+  discriminates between mean models. Report each criterion's count on its own
+  line, with the reason a class of model is expected to fail it.
+- **A gate on an extrapolated quantity is a weaker gate, and the fix may already
+  be in the data product.** On the stored 2 kpc grid the truth's R20 is
+  extrapolated for up to 93 per cent of high-z galaxies, and exp63's R20 failed
+  the offset gate at z = 2 by +0.063 dex; on the density-rebuilt curve, where
+  R20 is measured, the same model passes at +0.004. Print the extrapolated
+  fraction next to any gate that can be extrapolated, and check what the rest
+  of the product can supply before calling the number a failure.
