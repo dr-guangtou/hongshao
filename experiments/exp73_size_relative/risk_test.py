@@ -113,9 +113,82 @@ def binned_loss(grid, resid, lmh0, n_bin=3):
     return out
 
 
+
+class FixedGrid(C.SizeGrid):
+    """`SizeGrid` with the shells pinned to FIXED kpc instead of multiples of
+    R50. Same machinery, same residuals, same coverage rule -- so a comparison
+    between the two isolates the coordinate and nothing else."""
+
+    def __init__(self, truth, R, edges):
+        self.R = np.asarray(R, float)
+        self.edges = tuple(edges)
+        t = np.asarray(truth, float)
+        self.r50 = np.ones(t.shape[:2])
+        self.radii = np.broadcast_to(np.asarray(edges, float),
+                                     t.shape[:2] + (len(edges),)).copy()
+        self.total = t[..., -1]
+        self.truth_shells = self.shells(t)
+        self.total_re = self.cum(t)[..., -1]
+        inside = ((self.radii[..., :-1] >= self.R[0])
+                  & (self.radii[..., 1:] <= self.R[-1]))
+        self.covered = inside & (self.truth_shells > 0)
+
+
+def build_grids(smoke=False, n_edge=21, lo=0.5, hi=6.0, verbose=True):
+    """The shared setup: the merged curve of growth, the models, and the two
+    coordinates with MATCHED shell counts.
+
+    Returns (grids, cogs, good, lmh0, Rm, names). `grids` has the same shells in
+    both coordinates, the fixed-kpc edges being the median R50 at z = 0.4 times
+    the same multiples, so the two agree at the anchor epoch and differ only in
+    whether they follow each galaxy's size.
+    """
+    (recs, data, lmh, curves, sel, spec2, th_inc, th_nested, fz63,
+     keep, sig_cog, sig_ann, ann_ok) = G.build(smoke)
+    good = keep.all(1)
+    thetas = {"exp63 joint": np.asarray(fz63["theta_best"], float)}
+    specs = {"exp63 joint": spec2}
+    for k in EPOCHS:
+        fz = np.load(E63 / f"stage2_fit_frozen_binned_kpc_sane_e{k}.npz",
+                     allow_pickle=True)
+        thetas[f"e{k}"] = np.asarray(fz["theta_best"], float)
+        specs[f"e{k}"] = S2F.spec_from_fit(fz)
+    names = list(thetas)
+
+    pop = np.load(POP, allow_pickle=True)
+    # `pop['index']` maps a POPULATION row to its profile-table row, and `sel`
+    # maps our records to population rows, so the profile rows are idx[sel];
+    # composing these wrong mismatches galaxies silently rather than raising
+    idx = np.asarray(pop["index"], int)[sel]
+    d = load_profiles()
+    Rm, truth_all = C.extended_cog(data, d["cog_from_density_shared"][idx],
+                                   F.R_GRID, d["shared_grid_kpc"])
+    # the model is analytic, so evaluate it ON the merged radii rather than
+    # interpolating a 24-radius prediction onto a 30-radius grid
+    cogs = {n: M2.predict2(specs[n], thetas[n], curves, Rm, nodes=M2.FULL_NODES)
+            for n in names}
+    for m in cogs.values():
+        good &= np.isfinite(m).all(axis=(1, 2)) & (m > 0).all(axis=(1, 2))
+    good &= np.isfinite(truth_all).all(axis=(1, 2)) & (truth_all > 0).all(axis=(1, 2))
+    truth_m = truth_all[good]
+    cogs = {n: v[good] for n, v in cogs.items()}
+
+    edges = tuple(np.geomspace(lo, hi, n_edge))
+    g_re = C.SizeGrid(truth_m, Rm, edges=edges)
+    r50_z0 = float(np.nanmedian(g_re.r50[:, 0]))
+    g_kpc = FixedGrid(truth_m, Rm, tuple(r50_z0 * np.array(edges)))
+    if verbose:
+        print(f"  {int(good.sum())} galaxies on a merged {len(Rm)}-radius grid, "
+              f"{Rm[0]:.3f} to {Rm[-1]:.2f} kpc; {n_edge - 1} shells over "
+              f"{lo}-{hi} R50,\n  the fixed-kpc arm at {r50_z0:.2f} kpc x the "
+              f"same multiples so the two agree at z = 0.4")
+    return ({"R50 shells": g_re, "fixed kpc": g_kpc}, cogs, good,
+            lmh[good][:, 0], Rm, names)
+
+
 def gap_table(losses):
     """losses[model][k] -> the ratio joint / that-epoch's-own-theta."""
-    return np.array([losses["joint"][k] / losses[f"e{k}"][k] for k in EPOCHS])
+    return np.array([losses["exp63 joint"][k] / losses[f"e{k}"][k] for k in EPOCHS])
 
 
 def trend(par, z, epochs=TREND_EPOCHS):
@@ -135,60 +208,13 @@ def trend(par, z, epochs=TREND_EPOCHS):
 def main(smoke=False):
     print(f"{RULE}\nexp73 Block A2 — THE RISK TEST: the coordinate, or the "
           f"shared law?\n{RULE}\n")
-    (recs, data, lmh, curves, sel, spec2, th_inc, th_nested, fz63,
-     keep, sig_cog, sig_ann, ann_ok) = G.build(smoke)
-    good = keep.all(1)
-
-    # ---- the models: one joint theta, and each epoch's own ---------------- #
-    thetas = {"joint": np.asarray(fz63["theta_best"], float)}
-    specs = {"joint": spec2}
-    for k in EPOCHS:
-        fz = np.load(E63 / f"stage2_fit_frozen_binned_kpc_sane_e{k}.npz", allow_pickle=True)
-        thetas[f"e{k}"] = np.asarray(fz["theta_best"], float)
-        specs[f"e{k}"] = S2F.spec_from_fit(fz)
-    names = list(thetas)
+    grids, cogs, good, lmh0, Rm, names = build_grids(smoke)
+    g_re, g_kpc = grids["R50 shells"], grids["fixed kpc"]
+    n_edge = len(g_re.edges)
+    re_edges, kpc_edges = g_re.edges, g_kpc.edges
+    r50_z0 = float(np.nanmedian(g_re.r50[:, 0]))
     print(f"  one joint theta and five per-epoch thetas, all from exp63, none "
           f"refitted here")
-
-    # ---- the two coordinates, differing in one respect only --------------- #
-    pop = np.load(POP, allow_pickle=True)
-    # `pop['index']` maps a POPULATION row to its row in the profile table, and
-    # `sel` maps our records to population rows -- so the profile rows for these
-    # galaxies are idx[sel], and getting that composition wrong silently
-    # mismatches galaxies rather than raising
-    idx = np.asarray(pop["index"], int)[sel]
-    d = load_profiles()
-    Rm, truth_all = C.extended_cog(data, d["cog_from_density_shared"][idx],
-                                   F.R_GRID, d["shared_grid_kpc"])
-    # the model is analytic, so evaluate it ON THE MERGED RADII rather than
-    # interpolating a 24-radius prediction onto a 31-radius grid -- an
-    # interpolated model would carry its own inner error into the comparison
-    cogs = {n: M2.predict2(specs[n], thetas[n], curves, Rm, nodes=M2.FULL_NODES)
-            for n in names}
-    for m in cogs.values():
-        good &= np.isfinite(m).all(axis=(1, 2)) & (m > 0).all(axis=(1, 2))
-    good &= np.isfinite(truth_all).all(axis=(1, 2)) & (truth_all > 0).all(axis=(1, 2))
-    truth_m = truth_all[good]
-    print(f"  {int(good.sum())} galaxies on a merged {len(Rm)}-radius grid, "
-          f"{Rm[0]:.3f} to {Rm[-1]:.2f} kpc")
-    g_re = C.SizeGrid(truth_m, Rm)                        # R50 shells
-
-    class FixedGrid(C.SizeGrid):
-        """The same machinery with the shells pinned to fixed kpc."""
-        def __init__(self, truth, R, edges):
-            self.R = np.asarray(R, float)
-            self.edges = tuple(edges)
-            t = np.asarray(truth, float)
-            self.r50 = np.ones(t.shape[:2])
-            self.radii = np.broadcast_to(np.asarray(edges, float),
-                                         t.shape[:2] + (len(edges),)).copy()
-            self.total = t[..., -1]
-            self.truth_shells = self.shells(t)
-            self.total_re = self.cum(t)[..., -1]
-            inside = ((self.radii[..., :-1] >= self.R[0])
-                      & (self.radii[..., 1:] <= self.R[-1]))
-            self.covered = inside & (self.truth_shells > 0)
-
 
     # ---- 1. the gap: a 2x2 of coordinate against residual form ----------- #
     #
@@ -197,12 +223,6 @@ def main(smoke=False):
     # residual put every model within 5 per cent of every other, while exp63's
     # own gate separates them by 2.3-2.7x. A metric that cannot see the gap
     # cannot report whether the coordinate closes it.
-    n_edge = 21
-    re_edges = tuple(np.geomspace(0.5, 6.0, n_edge))
-    r50_z0 = float(np.nanmedian(g_re.r50[:, 0]))
-    kpc_edges = tuple(r50_z0 * np.array(re_edges))
-    grids = {"R50 shells": C.SizeGrid(truth_m, Rm, edges=re_edges),
-             "fixed kpc": FixedGrid(truth_m, Rm, kpc_edges)}
     print(f"\n{RULE}\n1. DOES THE GAP NARROW? — a 2x2. Rows are the coordinate "
           f"(shells at fixed multiples\n   of the galaxy's OWN R50, or at fixed "
           f"kpc); columns are the residual form\n   (relative to the shell's own "
@@ -220,12 +240,12 @@ def main(smoke=False):
                 tag = f"{cname:<11} | {kind:<4} | {how}"
                 losses = {}
                 for n in names:
-                    r = grid.residual(cogs[n][good], kind)
+                    r = grid.residual(cogs[n], kind)
                     if how == "per-galaxy":
                         per = C.apply_weights(r, w)
                         losses[n] = np.array([np.nanmean(per[:, k]) for k in EPOCHS])
                     else:
-                        losses[n] = binned_loss(grid, r, lmh[good][:, 0])
+                        losses[n] = binned_loss(grid, r, lmh0)
                 res[tag] = losses
                 gaps[tag] = gap_table(losses)
     print(f"\n  {'coordinate | residual | how':<34}"
@@ -263,6 +283,9 @@ def main(smoke=False):
           f"a straight line as a fraction of the span the\n   parameter covers: "
           f"small means one power of (1+z) already describes it.\n{RULE}")
     fz0 = np.load(E63 / "stage2_fit_frozen_binned_kpc_sane_e0.npz", allow_pickle=True)
+    thetas = {f"e{k}": np.asarray(np.load(
+        E63 / f"stage2_fit_frozen_binned_kpc_sane_e{k}.npz", allow_pickle=True)["theta_best"], float)
+        for k in EPOCHS}
     pnames = [str(x) for x in fz0["theta_names"]]
     frozen = {str(a): float(b) for a, b in zip(fz0["frozen_names"], fz0["frozen_values"])}
     free = [p for p in pnames if p not in frozen]
