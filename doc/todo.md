@@ -2974,3 +2974,6 @@ Owed to the user, NOT decided here:
   now quantitative in z and R, and the layer's job at z=2 is 70% of the size
   diversity at fixed mass.
 - [ ] C19 (DiffMAH's logmp carries the future) — deliberately not started.
+- [x] **C the refit — NEGATIVE.** The coordinate dropped the inner aperture and
+  the fit put +100% inside 2 kpc (R50 −22..−26%, exp63's loss 178 vs 15.3).
+  Repaired (aperture = bin 0, selftest H). NOT re-run — the user's call.
