@@ -502,10 +502,16 @@ def selftest():
     r0, r1 = g.residual(m0, "mass"), g.residual(m1, "mass")
     d_in = np.nanmax(np.abs(r1[..., 0] - r0[..., 0]))
     d_bins = np.nanmax(np.abs(r1[..., 1:] - r0[..., 1:]))
-    assert d_in > 0.1 and d_bins < 1e-12, (d_in, d_bins)
+    # the bins are NOT exactly untouched: the coordinate interpolates in
+    # log-log, and log10(c + const) between grid points is not log10(c) plus a
+    # constant, so a shift leaks into the bins at the 1e-3 level. That leak is
+    # the 0.2 per cent sensitivity the diff-only objective showed in Block C --
+    # the numbers cohere. What is asserted is the RATIO: the aperture must see
+    # the shift more than a hundred times as strongly as the bins do.
+    assert d_in > 0.1 and d_bins < 0.01 * d_in, (d_in, d_bins)
     print(f"  H  mass added inside the first edge moves the aperture residual by "
-          f"{d_in:.3f} and the bins by {d_bins:.1e} — the centre is seen, and only "
-          f"by the aperture term  OK")
+          f"{d_in:.3f} and the bins by {d_bins:.1e} ({d_in / d_bins:.0f}x less; the "
+          f"residue is log-log interpolation) — the centre is seen  OK")
 
     print("\nall selftest claims pass")
 
