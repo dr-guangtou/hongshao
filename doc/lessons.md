@@ -2608,3 +2608,18 @@ session should not rediscover them:
   distance from that zero. Fixed for the next session's gates; this one was
   resolved by the plan's own rule for ambiguity (take the conservative branch
   and say so).
+- **A recorded lesson is only as good as the check that it is consulted.** exp73
+  Block C fitted an objective whose R50 shells were a bare `np.diff` over the
+  bin edges -- no inner aperture -- and the fit put +100 to +170 per cent extra
+  mass inside 2 kpc, a third of the galaxy at z = 0.4, for a 0.2 per cent change
+  in loss. Memory `density-objective-cannot-see-the-centre` and open question
+  D1 record exactly that mechanism and its fix (`hongshao.objective`'s "shells"
+  convention: M*(<R_first) is the first bin). The 1.5-hour fit was spent before
+  the coordinate module's selftest ever asked "does mass inside the first edge
+  change the residual?". Any new objective that differences a cumulative
+  profile gets that assertion BEFORE its first fit, not after.
+- **A fit that wins its own objective and loses everyone else's by 10x has found
+  a blind spot, not a solution.** -23 per cent on its own loss, +1063 per cent on
+  the incumbent's, R50 a quarter too small at every epoch: the transfer matrix
+  said it in one row. Run the judge's transfer matrix before believing any loss
+  number, and read the physical quantity (here R50) before the loss.

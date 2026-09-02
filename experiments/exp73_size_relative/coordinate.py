@@ -231,16 +231,19 @@ class SizeGrid:
         self.total_re = self.cum(t)[..., -1]
         #: a shell is COVERED when the truth puts positive mass in it and both
         #: its edges lie inside the measured grid
-        inside = (self.radii[..., :-1] >= self.R[0]) & (self.radii[..., 1:] <= self.R[-1])
+        inside_bins = (self.radii[..., :-1] >= self.R[0]) & (self.radii[..., 1:] <= self.R[-1])
+        inside_ap = (self.radii[..., :1] >= self.R[0])
+        inside = np.concatenate([inside_ap, inside_bins], axis=-1)
         self.covered = inside & (self.truth_shells > 0)
 
     @property
     def n_shell(self):
-        return len(self.edges) - 1
+        return len(self.edges)                     # inner aperture + the bins
 
     @property
     def labels(self):
-        return [f"{self.edges[j]:g}-{self.edges[j+1]:g}Re" for j in range(self.n_shell)]
+        return [f"<{self.edges[0]:g}Re"] + [f"{self.edges[j]:g}-{self.edges[j+1]:g}Re"
+                                          for j in range(len(self.edges) - 1)]
 
     def cum(self, cog):
         """(n, n_epoch, n_edge) M*(< each edge) for any profile."""
@@ -249,8 +252,23 @@ class SizeGrid:
                          for j in range(len(self.edges))], axis=-1)
 
     def shells(self, cog):
-        """(n, n_epoch, n_shell) mass between consecutive size-relative edges."""
-        return np.diff(self.cum(cog), axis=-1)
+        """(n, n_epoch, n_shell) mass in each size-relative bin, INCLUDING the
+        inner aperture M*(< the first edge) as bin 0.
+
+        This is the `hongshao.objective` "shells" convention, and the reason it
+        exists is recorded in memory `density-objective-cannot-see-the-centre`:
+        differencing a cumulative profile between edges gives one fewer value
+        than there are edges, and mass added inside the FIRST edge shifts every
+        later cumulative value by the same constant, leaving every difference
+        unchanged -- the objective is not merely insensitive there, it is
+        exactly blind. exp73 Block C fitted a coordinate that dropped the inner
+        aperture, and the fit dumped +100 to +170 per cent extra mass inside
+        2 kpc, where a third of the galaxy's mass lives at z = 0.4, for a loss
+        change of 0.2 per cent. `selftest` claim H asserts the aperture is now
+        seen. Callers that want the old bins-only view use `shells(cog)[..., 1:]`.
+        """
+        c = self.cum(cog)
+        return np.concatenate([c[..., :1], np.diff(c, axis=-1)], axis=-1)
 
     # ------------------------------------------------------------- residuals #
     def residual(self, model, kind="mass"):
@@ -474,6 +492,20 @@ def selftest():
     assert dev < 1e-12, dev
     print(f"  G  the vectorised interpolation reproduces an explicit per-galaxy "
           f"loop to {dev:.1e} relative  OK")
+
+    # H. the inner aperture is SEEN: adding a constant to every cumulative value
+    #    (mass inside the first edge) must change the residual. This is the
+    #    memory `density-objective-cannot-see-the-centre` test in reverse; a
+    #    diff-only coordinate returns 0.0 here, and did in exp73 Block C.
+    m0 = truth * 1.02
+    m1 = m0 + 0.5 * g.cum(truth)[..., :1]                # +50% inside edge 0
+    r0, r1 = g.residual(m0, "mass"), g.residual(m1, "mass")
+    d_in = np.nanmax(np.abs(r1[..., 0] - r0[..., 0]))
+    d_bins = np.nanmax(np.abs(r1[..., 1:] - r0[..., 1:]))
+    assert d_in > 0.1 and d_bins < 1e-12, (d_in, d_bins)
+    print(f"  H  mass added inside the first edge moves the aperture residual by "
+          f"{d_in:.3f} and the bins by {d_bins:.1e} — the centre is seen, and only "
+          f"by the aperture term  OK")
 
     print("\nall selftest claims pass")
 

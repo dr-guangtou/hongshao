@@ -223,27 +223,72 @@ gate judge it.
 
 ---
 
-## Block C — the refit *(fit running; this section is filled when it lands)*
+## Block C — the refit: a negative, caused by a design error the record had already warned about
 
-`fit_re.py`: 20 R50 shells at 0.5–6 R50 (truth-only), mass-weighted residual,
-**plus exp63's binned tercile-median term** translated to the coordinate (A2:
-without it the objective cannot see the epoch tension), each normalised at the
-nested incumbent so every epoch starts at 2.000 and the null is 10.000. Same
-twelve parameters, bounds, starts, sample, engine and five epochs as exp63 and
-exp72; the objective is the only change. Four starts: nested, exp63's θ,
-default, jitter0.
+`fit_re.py`: 20 R50 shells at 0.5–6 R50, mass-weighted residual plus exp63's
+binned term, normalised at the nested incumbent (null = 10.000). Four starts.
 
-Before any start ran: the nested start normalises to 2.000 per epoch to
-**0.0e+00**, and **exp63's own θ already scores 7.94 against the null's 10.00**
-under this objective (2.15 / 1.62 / 1.44 / 1.33 / 1.40 per epoch) — it is already
-21 per cent better than the incumbent by this measure, so the two objectives are
-far from orthogonal.
+| start | loss | | start | loss |
+|---|---|---|---|---|
+| nested | 6.639 | | default | 6.335 |
+| **exp63** | **6.106** | | jitter0 | 6.312 |
 
-*Pending: the fitted θ; the transfer matrix in both coordinates against exp63,
-the chi² refit and the null; the mass–size relation; the size gate; the profiles
-in per cent on the merged grid; the battery; exp71's diagnostics.*
+Not a single basin (exp63 and exp72 had 8 of 8 agree). The best, from exp63's
+own θ, is 39 per cent below the null with the five epochs *balanced* — 1.31 /
+1.15 / 1.19 / 1.14 / 1.31 — and `n_c` = 0.97, off the bound it railed against in
+every previous fit. Under this objective it beats exp63 by 23 per cent.
 
----
+**And it is a bad model.** The judge (`eval_re.py`) and the basin comparison:
+
+| | z=0.4 | z=1.0 | z=2.0 |
+|---|---|---|---|
+| R50, model / truth − 1 | **−22%** | **−26%** | **−24%** |
+| mass inside 2 kpc, (model − data)/data | **+102%** | +82% | +53% |
+| mass inside 103 kpc | +14% | +16% | +17% |
+| exp63's four-term loss | 56.2 | 27.6 | 21.3 (exp63 itself: 3.5 / 3.0 / 3.0) |
+
+Under exp63's loss the refit scores **178 against exp63's 15.3** — eleven times
+worse. Every one of the four optima shows the same pattern (2 kpc +97 to
++173 per cent; R50 −15 to −36 per cent), so it is the objective, not a start.
+
+### The cause, proven rather than argued
+
+`SizeGrid.shells()` was `np.diff(cum)` over the edges 0.5 … 6 R50: **twenty bins
+and no inner aperture.** Mass added inside the first edge shifts every
+cumulative value by the same constant and leaves every difference unchanged —
+the objective is not insensitive there, it is exactly blind. Measured on the
+refit's own prediction:
+
+| perturbation | loss | change |
+|---|---|---|
+| as fitted | 6.1061 | — |
+| **+100 per cent of the mass inside 0.5 R50** | 6.1194 | **+0.013 (0.2 per cent)** |
+
+A third of the galaxy's mass at z = 0.4 (33 / 33 / 32 / 28 / 24 per cent from
+z = 0.4 to 2) sits inside 0.5 R50, and doubling it costs the objective 0.2 per
+cent. The fit put it there. Excess central mass pulls the half-mass radius
+inward, which is the −22 to −26 per cent in R50; the +14 to +17 per cent at
+103 kpc is consistent with a matching blindness beyond 6 R50 (8–12 per cent of
+the mass), but my probe of that edge was confounded by interpolation and does
+not prove it, so it is stated as consistent, not shown.
+
+**This is a repeat of a recorded mistake.** Memory
+`density-objective-cannot-see-the-centre` and open question D1 record exactly
+this mechanism, verified to 1e-13 in `hongshao/objective.py`, and the fix — the
+`shells` convention that includes M*(<R_first) as the first bin. I built
+`shells()` as a bare `np.diff` without consulting it. The coordinate now includes
+the inner aperture as bin 0 (selftest claim H: mass added inside the first edge
+moves the aperture residual and nothing else), and the fit has **not** been
+re-run — that costs ~1.5 h and is the user's call.
+
+### What Block C does and does not say
+
+It does **not** say the size-relative coordinate is wrong: Blocks A and B stand,
+and exp63's own θ scored 21 per cent better than the incumbent under this
+objective *before* any fitting. It says a fit will find any blind spot an
+objective has, and that this one had a third of the galaxy in it. The repaired
+objective (aperture + 20 bins, optionally an outer envelope) is what a refit
+should use.
 
 ## Block D — R20, and the fractional-size distributions as a numbered gate (D1)
 
