@@ -118,6 +118,11 @@ class HaloCurve:
     r200c_steps: np.ndarray
     ok_steps: np.ndarray
     epoch_mask_steps: np.ndarray   # (5, n_steps)
+    # the curve's anchor: log10 t at which log M = logmp. The official fit
+    # anchors at z = 0; a curve fitted only to the history BEFORE an epoch
+    # (exp74, C19) anchors at that epoch. Default keeps every earlier result
+    # bit-identical.
+    logt0: float = LOGT0
 
 
 def build_curves(recs, verbose=True):
@@ -161,7 +166,7 @@ def log_mah(lt, hc):
     lt = np.asarray(lt, float)
     s = expit(MAH_K * (lt - hc.logtc))
     alpha = hc.early + (hc.late - hc.early) * s
-    return hc.logmp + alpha * (lt - LOGT0)
+    return hc.logmp + alpha * (lt - hc.logt0)
 
 
 def dm_dlnt(lt, hc):
@@ -170,7 +175,7 @@ def dm_dlnt(lt, hc):
     s = expit(MAH_K * (lt - hc.logtc))
     alpha = hc.early + (hc.late - hc.early) * s
     dalpha = (hc.late - hc.early) * MAH_K * s * (1.0 - s)
-    return 10.0 ** (hc.logmp + alpha * (lt - LOGT0)) * (alpha + dalpha * (lt - LOGT0))
+    return 10.0 ** (hc.logmp + alpha * (lt - hc.logt0)) * (alpha + dalpha * (lt - hc.logt0))
 
 
 def r200c_of(hc, lt, mode="analytic"):
