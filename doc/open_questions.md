@@ -347,6 +347,29 @@ quoted for hongshao v1 in this programme currently describes the mean alone,
 and reads as a population failure that the delivered model may not have.
 Cheap to answer: `evaluate` already measures the draws for the plane figure.
 
+**Sharpened 2026-09-02 (exp73 Block D, `size_gate_check.py`, 2354 galaxies).**
+The narrowing is now measured as a function of redshift and radius, on the new
+`hongshao.qa.size_gate`. The model's size scatter at fixed stellar mass over the
+truth's, exp63's joint mean: R50 **0.63 / 0.51 / 0.41 / 0.31 / 0.30** from z=0.4
+to z=2, R80 down to **0.16**; at fixed HALO mass narrower still (R50 0.52 -> 0.29).
+Every conditional-mean model fails the width sub-gate 0 of 15, everywhere. So a
+mean model is EXPECTED to fail width and that becomes a verdict only when the
+layer's draws are scored — which is this question, and the reason the gate now
+counts offset and width separately. The stochastic layer's job at z=2 is to
+supply 70 per cent of the size diversity at fixed mass, 84 per cent in R80: far
+larger than at z=0.4, and the z=2 outskirts are where the mean is furthest from
+the population it describes. Unchanged: nothing here changes an adopted decision.
+
+**Update 2026-09-02 night (exp73 `size_gate_layer.py`) — the layer's draws
+scored, the first time.** hongshao v1's Option A layer (around the incumbent
+mean), 8 draws, tier 2d gate: R50 width ratio 1.14 / 0.99 / 0.87 / 0.76 / 0.73
+at z = 0.4…2 (mean model 0.50 → 0.28) — passes at z ≤ 1.0; **R20 2.26 → 1.29
+(over-dispersed, core mixture too wide); R80 0.61 → 0.52 (half the truth's
+outer diversity at every epoch).** The truth's size diversity at fixed mass
+grows outward; the layer's is concentrated in the core. C16 is now a design
+statement: the next layer needs an outer size component, and a narrower core
+draw. The amplitude/decline statistics it was calibrated on cannot see this.
+
 ### C17. Would a likelihood with a measured error model make the fits better behaved?
 Raised 2026-08-30 (the user, closing exp63). Every objective in this programme
 is a bare distance — fractional or log residuals, root-mean-squared over radii
@@ -396,9 +419,21 @@ suggested.
   **3.00 per cent** — the smallest relative error misplaces six times more mass
   than the largest. At z=2, 3.9 per cent of galaxies have no positive measured
   mass in the outermost shell at all.
-- **In R50 units the galaxy is very nearly self-similar**: shell mass fractions
-  vary by 0.8-3.7 percentage points across the five epochs, against up to 12.4
-  in fixed kpc. Almost all the evolution is in R50 itself and in the total mass.
+- **In R50 units the OUTER galaxy is very nearly self-similar**: the 1-2, 2-4 and
+  4-8 R50 shells vary by 3.0 / 3.4 / 3.7 percentage points across the five
+  epochs, against up to 12.4 in fixed kpc.
+- **CORRECTED 2026-09-01 (exp73 Block A1): the INNER galaxy is not.** The first
+  version of this entry reported the 0.5-1 R50 shell varying by only 1.7 points,
+  computed on the stored 2-148 kpc curve of growth where that shell is measured
+  for just **26 per cent** of galaxies at z=2 — and the survivors are the largest,
+  which most resemble low-redshift galaxies. The isophote density reaches
+  0.673 kpc for **100 per cent** of galaxies at every epoch (the user), and on
+  the curve of growth rebuilt from it the shell holds 17.1 per cent at z=0.4 and
+  **26.4** at z=2, a **9.3**-point spread. Massive galaxies were genuinely more
+  centrally concentrated at z=2 in units of their own half-mass radius. That is
+  physics for the model to reproduce, not geometry to normalise away — and it
+  means a size-relative coordinate helps in the outskirts and cannot help in the
+  centre.
 
 **The finding that decides what to do:** the INCUMBENT objective already
 delivers the mass-size relation to 5 per cent at every epoch (R50 error +0 / +1
@@ -412,6 +447,24 @@ tested FIRST:** the z=0.4 centre is already solved by fitting a single epoch
 (-0.1 per cent inside 2 kpc), so the real limit may be the shared five-epoch law
 rather than the coordinate ([[shared-law-is-a-close-compromise]]) — in which
 case a better coordinate will not raise the ceiling either.
+
+**Update 2026-09-02 (exp73 Block C, repaired).** The size-relative,
+mass-weighted objective was fitted honestly (inner aperture as bin 0). It
+returns exp63's parameters within about 10 per cent, scores 8 per cent better
+on its own loss and 5 per cent worse on exp63's, and leaves the same residuals
+(1 kpc +46 vs +35 per cent at z = 0.4; R50 +11 vs +5 per cent at z = 2; every
+width ratio). C21's claim stands as a statement about weighting — fixed kpc
+IS a weighting, and two galaxies carry 78 per cent of the z = 2 loss under it
+— but changing the weighting does not change what the class can reach. The
+size-relative coordinate's lasting use is the QA gate (Block D), not the fit.
+
+**Update 2026-09-02 evening (the five single-epoch R50 refits).** Under the
+R50 objective the exp63 per-epoch sequence's z = 2 break in the extended size
+(log_f_e −0.49 → −0.16 at z = 1.5 → 2, exp63 Stage 5i's "partly a
+mass-selection law") is absent (−0.62 → −0.57): the break was the fixed-kpc
+weighting of z = 2's near-empty outskirts, confirmed from the parameter side.
+The true cost of sharing is +20 per cent under R50 against +28 under fixed kpc
+(A2's 1.07 was a comparator artefact).
 
 ### C20. A weighted chi-square: the z=0.4 central defect was nearly solved once
 **Raised 2026-09-01 by the user, reading exp72's binned-CoG figure.** Fitted
@@ -464,6 +517,40 @@ ceiling.**
 what should a shared five-epoch law be asked to PRESERVE, given it demonstrably
 cannot preserve everything? A weighting sweep answers it by evaluation at frozen
 theta before any fit, and it needs a decision from the user about what matters.
+
+**Measured 2026-09-02 (exp73 Block A2, `risk_test.py`, no fit).** Two results,
+and a caveat that limits the first.
+
+- **The per-epoch size optima below z=2 lie on a straight line in log10(1+z)**:
+  a line leaves 0.023 dex (6 per cent) on the compact size and 0.012 dex (3 per
+  cent) on the extended one. Because `b_c` is frozen at 0 in those fits, `log_f_c`
+  IS the compact size in log10 kpc, so this is non-parametric. **One power of
+  (1+z) already describes the size evolution below z=2; D3's "richer size-time
+  law" lever is small**, of the same order as the 0.2-point budget D2 found for
+  the efficiency law. Block E was evaluated and not fitted on that basis.
+- **The joint-versus-per-epoch gap narrows under the size-relative coordinate**,
+  but only on a binned tercile-median gate — a per-galaxy metric puts the shared
+  theta and the five per-epoch thetas within 2 per cent of each other and cannot
+  see the gap at all ([[loss-is-blind-to-the-binned-gate]]). On the binned gate at
+  z<=1.5: relative residual 1.28 -> 1.07, mass-weighted 1.46 -> 1.14, where 1.00 is
+  "sharing is free". Read as the COST of sharing that is 0.28 -> 0.07, a 75 per
+  cent reduction.
+- **The caveat**: the per-epoch fits were optimised under exp63's fixed-kpc
+  objective, so they are not the per-epoch optimum under an R50 one — the R50
+  gap falls BELOW 1 at z>=1.0 (0.91/0.70/0.57), the shared theta beating the
+  epoch-specialised models. Part of the narrowing is a mis-specialised
+  comparator. **Owed: five single-epoch refits under the R50 objective** (~75 min
+  at 0.53 s per evaluation) for a true ceiling. Not spent this session; Block C's
+  transfer matrix answers "is this coordinate better" more directly.
+
+**Update 2026-09-02 (exp73 Block C, repaired).** A second, very different
+objective (R50 shells, mass-weighted, binned) gives the same answer as the
+weighted chi-square did: a dial on the shared-law compromise. The refit is
+exp63 to within about 10 per cent on every parameter. Two objectives from
+opposite ends (error-weighted centre-heavy; size-relative mass-weighted) both
+return exp63's solution, so C20's "weights are a dial" is now established by
+two independent objectives, and exp63's solution is shown robust to the choice
+of loss.
 
 ### C19. The model's halo history knows the halo's final mass
 **Raised 2026-08-31 by exp71 part 2, which was not looking for it.** The model

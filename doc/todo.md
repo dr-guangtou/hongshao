@@ -2944,3 +2944,47 @@ Owed to the user, and NOT decided here:
   entirely — is not settled.
 - [ ] **Does `halo-history-knows-a-little-about-the-core` survive C19?** It used
   DiffMAH `early`/`late`/`t50` at fixed halo mass. Not withdrawn, not rechecked.
+
+## 2026-09-02 — exp73 (C20/C21), on `exp73-size-relative-objective`
+
+- [x] **A1 the coordinate.** R50 shells, mass-weighted residual, coverage gate;
+  seven selftest claims. Usable window 0.5-6 R50 ONLY with the density-rebuilt
+  inner curve (the user); the stored 2 kpc grid gives 1-6 and drops small
+  galaxies preferentially. exp72's self-similarity claim corrected: outside 1 R50
+  yes (3.0-3.7 pts), inside 1 R50 no (9.3 pts, real evolution).
+- [x] **A2 the risk test.** Gap narrows 1.28 -> 1.07 on the binned gate (cost of
+  sharing -75%); per-galaxy metrics cannot see it at all; per-epoch size optima
+  within 3-6% of one power of (1+z) below z=2 — D3's lever is small.
+- [x] **B the weighting sweep (D2).** B disqualified by the pre-stated rule (136% /
+  215% variation with t); A barely helps; the mass-weighted residual wins on
+  allocation and usability. Two galaxies carry 78% of the z=2 loss on fixed kpc.
+- [x] **C the refit, repaired objective (the user's decision 1, 2026-09-02 pm).**
+  NULL RESULT: best start is exp63's, every parameter within ~10% of exp63;
+  −8% on its own objective, +5.1% under exp63's (16.10 vs 15.33); R50 +11% at
+  z=2 vs +5%; 1 kpc +46% vs +35% at z=0.4. A dial on the shared-law compromise
+  (C20 again). Positive statement: exp63's solution is robust to the objective.
+  Blind-fit outputs preserved as `outputs/*_blockC_blind.*`.
+- [x] **D the size gate (D1).** R20 added; offset and width counted separately;
+  first use on the full sample: catches the chi-square's 27%-too-big on OFFSET,
+  exp63 passes 15/15 on the merged grid, width fails 0/15 for every mean model
+  and collapses with z (C16 sharpened).
+- [x] **E the richer size-time law (D3).** Evaluated in A2, not fitted: not
+  demanded by the evidence.
+
+Owed to the user, NOT decided here:
+- [x] Five single-epoch refits under the R50 objective (decision 2, 2026-09-02
+  pm): true cost of sharing +20% at every epoch vs +28% fixed kpc — A2's
+  "three-quarters cheaper" corrected to "a third"; per-epoch ceiling overshoots
+  the other way (R50 −3..−6%); the z=2 break in the extended size is a
+  fixed-kpc artefact (C21 confirmed from the parameter side). README "A2 closed".
+- [x] The stochastic layer re-scored on the size gate (decision 3, 2026-09-02
+  night, `size_gate_layer.py`): width passes 3/15 (R50 at z<=1.0: 1.14 /
+  0.99 / 0.87, then 0.76 / 0.73); R20 over-dispersed 2.3x at z=0.4, R80
+  under-dispersed by half at every epoch — the layer's diversity is in the
+  core, the truth's is in the outskirts. Next layer needs an OUTER size
+  component; the core draw is too wide.
+- [x] QA figures for the five per-epoch R50 fits (`ceiling_figures.py`).
+- [ ] C19 (DiffMAH's logmp carries the future) — deliberately not started.
+- [x] **C the refit — NEGATIVE.** The coordinate dropped the inner aperture and
+  the fit put +100% inside 2 kpc (R50 −22..−26%, exp63's loss 178 vs 15.3).
+  Repaired (aperture = bin 0, selftest H). NOT re-run — the user's call.

@@ -2570,3 +2570,94 @@ session should not rediscover them:
   error-weighted chi-square makes z = 2 galaxies 27 per cent too big, which is
   the single physical statement of everything else it got wrong. One derived
   number said in one line what five tables of per-radius residuals did not.
+- **A coverage-limited statistic reports on whoever survived the cut.** The
+  claim "in R50 units the galaxy is nearly self-similar" was computed where the
+  stored 2 kpc curve of growth could reach, which at z = 2 is the largest 26 per
+  cent of galaxies in the 0.5-1 R50 shell -- and those are precisely the ones
+  that most resemble low-redshift galaxies. Measured on all of them the shell
+  holds 26.4 per cent of the galaxy at z = 2 against 17.1 at z = 0.4, a 9.3-point
+  spread rather than 1.7. Print the coverage in the same table as the number, and
+  distrust any trend whose sample shrinks along it.
+- **Ask what else is in the data product before concluding the data cannot
+  answer.** The 24-radius curve of growth starts at 2 kpc, which at z = 2 is
+  0.66 R50, and that looked like a hard limit on any size-relative coordinate.
+  The same product's isophote DENSITY reaches 0.673 kpc for 100 per cent of
+  galaxies at every epoch, and the curve of growth rebuilt from it extends the
+  usable window from 1 R50 down to 0.5 R50 at full coverage. The two agree to
+  about 2 per cent where they overlap, so splicing costs nothing.
+- **Count sub-gates separately when they fail for different reasons.** A new
+  size gate scored offset AND width with one pass/fail, and on first use every
+  model failed 0 of 15 -- including the one known to hold R50 to 5 per cent.
+  Every failure was on width, which a conditional-mean model fails by
+  construction (its size scatter at fixed mass is 0.2-0.6 of the truth's), and
+  the combined verdict hid the offset result -- the one that actually
+  discriminates between mean models. Report each criterion's count on its own
+  line, with the reason a class of model is expected to fail it.
+- **A gate on an extrapolated quantity is a weaker gate, and the fix may already
+  be in the data product.** On the stored 2 kpc grid the truth's R20 is
+  extrapolated for up to 93 per cent of high-z galaxies, and exp63's R20 failed
+  the offset gate at z = 2 by +0.063 dex; on the density-rebuilt curve, where
+  R20 is measured, the same model passes at +0.004. Print the extrapolated
+  fraction next to any gate that can be extrapolated, and check what the rest
+  of the product can supply before calling the number a failure.
+- **Write a gate in the units it will be read in.** Gate A said "the gap narrows
+  by less than 25 per cent" without saying of WHAT. The gap is a ratio whose
+  neutral value is 1.00, so 1.28 -> 1.07 is -16.6 per cent as a ratio and -75 per
+  cent as the excess over 1 -- and the two readings put the gate on opposite
+  sides of its threshold. A number with a natural zero must be gated on its
+  distance from that zero. Fixed for the next session's gates; this one was
+  resolved by the plan's own rule for ambiguity (take the conservative branch
+  and say so).
+- **A recorded lesson is only as good as the check that it is consulted.** exp73
+  Block C fitted an objective whose R50 shells were a bare `np.diff` over the
+  bin edges -- no inner aperture -- and the fit put +100 to +170 per cent extra
+  mass inside 2 kpc, a third of the galaxy at z = 0.4, for a 0.2 per cent change
+  in loss. Memory `density-objective-cannot-see-the-centre` and open question
+  D1 record exactly that mechanism and its fix (`hongshao.objective`'s "shells"
+  convention: M*(<R_first) is the first bin). The 1.5-hour fit was spent before
+  the coordinate module's selftest ever asked "does mass inside the first edge
+  change the residual?". Any new objective that differences a cumulative
+  profile gets that assertion BEFORE its first fit, not after.
+- **A fit that wins its own objective and loses everyone else's by 10x has found
+  a blind spot, not a solution.** -23 per cent on its own loss, +1063 per cent on
+  the incumbent's, R50 a quarter too small at every epoch: the transfer matrix
+  said it in one row. Run the judge's transfer matrix before believing any loss
+  number, and read the physical quantity (here R50) before the loss.
+- **An honest objective that returns the incumbent's parameters has measured
+  the model class, not the loss.** exp73's repaired R50 refit, under an
+  objective that sees sizes directly and weights every galaxy by its own
+  scale, landed within about 10 per cent of exp63 on every parameter, 8 per
+  cent better on its own loss and 5 per cent worse on exp63's, with the same
+  centre, z = 2 and width residuals. That is C20 a second time: a change of
+  objective moves the shared-law compromise around; it does not create
+  capability. Before spending a fit on a new objective, ask what residual it
+  would be the FIRST to see; if the answer is none, its result is a
+  robustness check of the incumbent, and should be budgeted as one.
+- **`zip` truncates silently; assert the lengths.** Extending
+  `qa.SIZE_FRACTIONS` to four entries left `_size_figure`'s three-entry style
+  list one short, `dict(zip(...))` dropped R90 without a word, and the first
+  full judge run died on a `KeyError` after twenty minutes of figures. Any
+  `zip` that pairs a configurable list with a hand-written one gets a length
+  assertion.
+- **A gap measured against a comparator optimised under a different objective
+  is a comparator artefact, and it reads as a discovery.** A2 reported the
+  cost of sharing falling 1.28 -> 1.07 in R50 units and called it the
+  coordinate's main result; the five per-epoch comparators had been optimised
+  on fixed kpc, and refitting them under the R50 objective put the true number
+  at 1.20. The caveat was written into A2 the same day, which is what made the
+  correction cheap; the lesson is that the caveat should have been the gate --
+  a ratio whose denominator is not an optimum of the same objective is not a
+  ceiling and must not be quoted as one.
+- **Measure a process's memory while it is doing the work, not at its peak.**
+  The single-epoch fits peaked at 11.5 GB during the data build and ran at
+  0.4 GB; I serialised five 75-minute fits on the peak number and lost 25
+  minutes before checking. `ps -o rss` on the running process, then decide.
+- **A statistic that pools over radius cannot tell a core-heavy layer from an
+  outskirts-heavy one.** exp60's layer was calibrated on the amplitude
+  scatter at 100 kpc and the central-decline distribution, and passed both;
+  the first radius-resolved gate (R20/R50/R80 widths) shows it puts 2.3x too
+  much diversity in the inner fifth of the mass and half too little in the
+  outer fifth. Calibrate and gate a generative layer at more than one radius.
+- **A foreground shell call is capped at ten minutes; anything that might
+  take five goes through nohup.** The first layer re-score was killed at draw
+  6 of 8 and had to be rerun from scratch.
