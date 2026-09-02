@@ -2972,8 +2972,11 @@ Owed to the user, and NOT decided here:
   demanded by the evidence.
 
 Owed to the user, NOT decided here:
-- [ ] Five single-epoch refits under the R50 objective, for a true ceiling (A2's
-  caveat); ~75 min.
+- [x] Five single-epoch refits under the R50 objective (decision 2, 2026-09-02
+  pm): true cost of sharing +20% at every epoch vs +28% fixed kpc — A2's
+  "three-quarters cheaper" corrected to "a third"; per-epoch ceiling overshoots
+  the other way (R50 −3..−6%); the z=2 break in the extended size is a
+  fixed-kpc artefact (C21 confirmed from the parameter side). README "A2 closed".
 - [ ] Whether the stochastic layer is re-scored on the new size gate — C16 is
   now quantitative in z and R, and the layer's job at z=2 is 70% of the size
   diversity at fixed mass.

@@ -448,6 +448,14 @@ IS a weighting, and two galaxies carry 78 per cent of the z = 2 loss under it
 — but changing the weighting does not change what the class can reach. The
 size-relative coordinate's lasting use is the QA gate (Block D), not the fit.
 
+**Update 2026-09-02 evening (the five single-epoch R50 refits).** Under the
+R50 objective the exp63 per-epoch sequence's z = 2 break in the extended size
+(log_f_e −0.49 → −0.16 at z = 1.5 → 2, exp63 Stage 5i's "partly a
+mass-selection law") is absent (−0.62 → −0.57): the break was the fixed-kpc
+weighting of z = 2's near-empty outskirts, confirmed from the parameter side.
+The true cost of sharing is +20 per cent under R50 against +28 under fixed kpc
+(A2's 1.07 was a comparator artefact).
+
 ### C20. A weighted chi-square: the z=0.4 central defect was nearly solved once
 **Raised 2026-09-01 by the user, reading exp72's binned-CoG figure.** Fitted
 under a generalised-least-squares chi-square built on the measured curve-of-growth

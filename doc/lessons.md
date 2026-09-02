@@ -2639,3 +2639,16 @@ session should not rediscover them:
   full judge run died on a `KeyError` after twenty minutes of figures. Any
   `zip` that pairs a configurable list with a hand-written one gets a length
   assertion.
+- **A gap measured against a comparator optimised under a different objective
+  is a comparator artefact, and it reads as a discovery.** A2 reported the
+  cost of sharing falling 1.28 -> 1.07 in R50 units and called it the
+  coordinate's main result; the five per-epoch comparators had been optimised
+  on fixed kpc, and refitting them under the R50 objective put the true number
+  at 1.20. The caveat was written into A2 the same day, which is what made the
+  correction cheap; the lesson is that the caveat should have been the gate --
+  a ratio whose denominator is not an optimum of the same objective is not a
+  ceiling and must not be quoted as one.
+- **Measure a process's memory while it is doing the work, not at its peak.**
+  The single-epoch fits peaked at 11.5 GB during the data build and ran at
+  0.4 GB; I serialised five 75-minute fits on the peak number and lost 25
+  minutes before checking. `ps -o rss` on the running process, then decide.

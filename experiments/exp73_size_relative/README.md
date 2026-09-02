@@ -352,6 +352,71 @@ class and its stochastic layer (C13, C16), not to the loss. Block E's richer
 size-time law is doubly unmotivated: A2 measured its lever as small, and this
 fit, which can see sizes directly, returned exp63's exponents.
 
+## Block A2, closed — the true per-epoch ceiling under the R50 objective (the user's decision 2)
+
+A2's caveat was that its five per-epoch comparators had been optimised under
+exp63's fixed-kpc objective, so under the R50 objective they were
+mis-specialised and the shared θ beat them at z ≥ 0.7 — a "gap" below 1.
+`fit_re.py --epoch k` fits each epoch alone under the R50 objective with
+exactly the freedom exp63's per-epoch fits had (`a_z`, `a_Mz`, `b_e` frozen at
+the incumbent's values, `b_c` at 0), five starts each including exp63's own
+per-epoch optimum; `ceiling_re.py` judges (`outputs/ceiling_re.log`). Five fits
+in parallel, 75 min; 0.4 GB each while fitting.
+
+| own epoch | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| R50 per-epoch fit, own loss (null 2.000) | 1.397 | 1.179 | 1.174 | 1.217 | 1.175 |
+| exp63's per-epoch θ under the R50 objective | 1.740 | 1.710 | 1.543 | 1.480 | 1.780 |
+| R50 joint refit at that epoch | 1.639 | 1.397 | 1.439 | 1.463 | 1.401 |
+| **true gap, joint / own** | **1.17** | **1.19** | **1.23** | **1.20** | **1.19** |
+| A2's gap with the fixed-kpc comparator | 1.09 | 0.96 | 0.97 | 1.05 | 0.80 |
+
+Two of five starts agree within 0.01 at every epoch; the far starts stopped at
+the evaluation cap. `d_split` rails at z = 2 (3 of 5 starts), as it did in
+exp63's per-epoch fits.
+
+**The true cost of sharing under the R50 objective is +20 per cent at
+z ≤ 1.5, against +28 per cent under fixed kpc (A2's fixed-kpc row, whose
+comparators were correctly specialised).** A2 had reported the R50 gap as
+1.07–1.14 depending on the metric, i.e. sharing three-quarters cheaper in R50
+units; that was the comparator artefact. **The coordinate removes about a
+third of the cost of sharing, not three-quarters; the remaining fifth is the
+shared law's compromise, and it is the same size at every epoch including
+z = 2.** A2's headline is corrected accordingly.
+
+**A per-epoch ceiling still does not transfer, and this one overshoots the
+other way.** At its own epoch each R50 per-epoch fit makes galaxies 3–6 per
+cent too SMALL in R50 and 3–5 per cent too heavy inside 10 kpc (exp63's
+per-epoch fits: 3–7 per cent too BIG in R50, within 1 per cent inside
+10 kpc). Under exp63's four-term loss the R50 per-epoch fits are 10–28 per
+cent worse than exp63's at their own epoch and about equal to the joint fits.
+Two objectives, two directions of overshoot: the per-epoch optimum is a
+property of the objective, not a target for the shared law
+([[per-epoch-ceiling-does-not-transfer]], now shown for a second objective).
+
+**What the per-epoch fits say about the time law (D3), and one real finding.**
+With `b_c` = 0 the fitted `log_f_c` IS the compact deposit size in log10 kpc at
+each epoch:
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | slope vs log(1+z) | scatter / span |
+|---|---|---|---|---|---|---|---|
+| compact size, R50 per-epoch (log kpc) | 0.52 | 0.46 | 0.46 | 0.34 | 0.29 | −0.67 | 0.12 |
+| compact size, fixed-kpc per-epoch | 0.47 | 0.44 | 0.45 | 0.34 | 0.39 | −0.47 | 0.19 |
+| extended size, R50 per-epoch (log × halo scale) | −0.72 | −0.67 | −0.60 | −0.62 | −0.57 | +0.42 | 0.20 |
+| extended size, fixed-kpc per-epoch | −0.68 | −0.64 | −0.55 | −0.49 | **−0.16** | +0.80 | 0.06 |
+
+The compact size runs from 3.3 kpc at z = 0.4 to 2.0 kpc at z = 2 as one
+power of (1 + z) (exponent −0.67; exp63's joint `b_c` is −0.80) — one power
+is enough, D3's lever stays small. **The z = 2 break in the extended size that
+exp63 Stage 5i found (−0.49 → −0.16, the "partly a mass-selection law"
+reading) is absent under the R50 objective (−0.62 → −0.57, on the trend).**
+The break was the fixed-kpc objective weighting z = 2's near-empty outskirts
+(C21: two galaxies carry 78 per cent of that loss), not the population's
+extended component changing. That is C18/C21's account confirmed from the
+parameter side. The shape parameters (`n_c`, `c_e`, `d_split`) move
+freely between the two objectives and rail at z = 2; a single epoch does not
+constrain them, and their runs should not be read as time laws.
+
 ## Block D — R20, and the fractional-size distributions as a numbered gate (D1)
 
 `hongshao/qa.py`: `SIZE_FRACTIONS` gains 0.2; `size_gate()` scores, per
