@@ -2661,3 +2661,18 @@ session should not rediscover them:
 - **A foreground shell call is capped at ten minutes; anything that might
   take five goes through nohup.** The first layer re-score was killed at draw
   6 of 8 and had to be rerun from scratch.
+- **A smooth fit to a whole history is a channel for the future, and a fit
+  will drink from it.** Every fit in this programme read the halo through a
+  DiffMAH curve anchored at z = 0; the model's stellar mass at z = 2 depended
+  on the halo's growth to z = 0.4 at +0.12 dex per dex (TNG300: +0.003), the
+  efficiency's redshift exponent absorbed it, and the loss was 12.6 per cent
+  better for it. exp71 found this by accident. Any input built from data
+  after the prediction epoch must be gated with exp71's test (cv R² of future
+  growth at fixed mass from the input read before the epoch ≈ 0) before a fit
+  is trusted — and the official curve's own data cut (2 Gyr) meant 43 per
+  cent of the z = 2 deposits sat on extrapolation.
+- **A start that rails every parameter in 27 evaluations has fallen into the
+  failure penalty, not a minimum.** Two of five starts did under exp63's
+  objective on the new curves; the fix is a near start, not more far ones.
+- **A long fit on a laptop needs `caffeinate -i -w <pid>`.** Four hours of a
+  five-hour fit were the machine asleep.

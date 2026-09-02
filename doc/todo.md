@@ -2988,3 +2988,20 @@ Owed to the user, NOT decided here:
 - [x] **C the refit — NEGATIVE.** The coordinate dropped the inner aperture and
   the fit put +100% inside 2 kpc (R50 −22..−26%, exp63's loss 178 vs 15.3).
   Repaired (aperture = bin 0, selftest H). NOT re-run — the user's call.
+
+## 2026-09-02/03 — exp74 (C19), on `exp74-c19-history-leak`
+
+- [x] **Stage 0a** `history.py`: pre-epoch DiffMAH curves per galaxy per epoch,
+  anchored at the epoch; G1 OK (0.062 dex vs official's own 0.105 misfit); G2
+  OK (future R² 0.000 at every epoch vs official 0.50–0.69).
+- [x] **Stage 0b** `stage0_frozen.py`: at frozen θ the leak vanishes; 43% of z=2
+  deposits were on extrapolated curve; +11/+18% mass at z=2.
+- [x] **Stage 1** `stage1_refit.py` (+ `--merge`) and `stage1_eval.py`: one
+  parameter moves (a_z); +12.6% loss; leak zero; z=2 tilt −0.122→−0.046; z=2
+  mh-complete −9.7%→−2.5%; R50 width 0.27→0.40 at z=2. README verdict.
+- [ ] **Decision (user)**: adopt the pre-epoch curves as the standard input.
+- [ ] **Decision (user)**: merge.
+- [ ] Variant B (the measured history interpolated) — to separate the cost of
+  honesty from the cost of DiffMAH's form. Not built.
+- [ ] The incumbent and the v1 stochastic layer inherit the leak; re-baseline
+  when the input is adopted.

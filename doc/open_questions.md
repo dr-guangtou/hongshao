@@ -592,6 +592,20 @@ curve understates the anchor mass at z = 2 by 0.06 dex median and 43 per cent
 of the model's z = 2 deposits sit before the official fit's own 2 Gyr data
 cut. Stage 1 (the refit with the curves as the only change) is running.
 
+**ANSWERED 2026-09-03 (exp74 Stage 1, the refit; decision owed).** With the
+pre-epoch curves as the ONLY change, exp63's joint fit moves one parameter
+(`a_z` 0.348 → 0.286 — the future had been stored as a steeper redshift rise
+of the efficiency), costs 12.6 per cent of exp63's loss (15.35 → 17.28), and:
+the residual's future-growth dependence is zero at every epoch (−0.004 at
+z = 2 vs +0.120; the truth +0.003); the z = 2 fitting-sample tilt falls
+−0.122 → −0.046 (60 per cent was the leak; the mh-complete tilt +0.060 →
++0.083 is real); the z = 2 mh-complete total goes from −9.7 to −2.5 per cent;
+the R50 width ratio at z = 2 rises 0.27 → 0.40. Costs: mh-complete +5–9 per
+cent at z = 1–1.5, R50 +11 per cent at z = 2. **Recommendation: adopt the
+pre-epoch curves as the standard input** (`experiments/exp74_c19_history_leak`).
+The incumbent and the v1 stochastic layer inherit the leak. Variant B (the
+measured history) not built.
+
 ### C18. At z = 2, do the massive progenitors and the rest want different models?
 **RESOLVED 2026-08-31 (exp71). It is the selection, from 10 kpc outwards; the
 centre is a separate, older problem.** Details and every table in
