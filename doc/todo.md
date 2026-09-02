@@ -2958,8 +2958,12 @@ Owed to the user, and NOT decided here:
 - [x] **B the weighting sweep (D2).** B disqualified by the pre-stated rule (136% /
   215% variation with t); A barely helps; the mass-weighted residual wins on
   allocation and usability. Two galaxies carry 78% of the z=2 loss on fixed kpc.
-- [ ] **C the refit** — `fit_re.py` RUNNING (4 starts, ~18-27 min each);
-  `eval_re.py` judges it. exp63's theta already scores 7.94 vs the null's 10.00.
+- [x] **C the refit, repaired objective (the user's decision 1, 2026-09-02 pm).**
+  NULL RESULT: best start is exp63's, every parameter within ~10% of exp63;
+  −8% on its own objective, +5.1% under exp63's (16.10 vs 15.33); R50 +11% at
+  z=2 vs +5%; 1 kpc +46% vs +35% at z=0.4. A dial on the shared-law compromise
+  (C20 again). Positive statement: exp63's solution is robust to the objective.
+  Blind-fit outputs preserved as `outputs/*_blockC_blind.*`.
 - [x] **D the size gate (D1).** R20 added; offset and width counted separately;
   first use on the full sample: catches the chi-square's 27%-too-big on OFFSET,
   exp63 passes 15/15 on the merged grid, width fails 0/15 for every mean model

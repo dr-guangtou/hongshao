@@ -223,7 +223,7 @@ gate judge it.
 
 ---
 
-## Block C — the refit: a negative, caused by a design error the record had already warned about
+## Block C — the refit: first a negative caused by a recorded design error; then, repaired, a null result
 
 `fit_re.py`: 20 R50 shells at 0.5–6 R50, mass-weighted residual plus exp63's
 binned term, normalised at the nested incumbent (null = 10.000). Four starts.
@@ -289,6 +289,68 @@ objective *before* any fitting. It says a fit will find any blind spot an
 objective has, and that this one had a third of the galaxy in it. The repaired
 objective (aperture + 20 bins, optionally an outer envelope) is what a refit
 should use.
+
+### The refit under the repaired objective (2026-09-02 afternoon, the user's decision)
+
+Same script, same four starts, same evaluation cap; the only change is that the
+shells now include the mass inside 0.5 R50 as bin 0 (selftest claim H). Block C's
+blind-fit outputs are kept under `outputs/*_blockC_blind.*`.
+
+| start | loss | evals | note |
+|---|---|---|---|
+| nested | 8.478 | 1847 | `m_half` railed, as in every previous fit |
+| **exp63** | **7.339** | 1951 | converged |
+| default | 8.254 | 3004 | stopped at the cap |
+| jitter0 | 8.458 | 3134 | stopped at the cap |
+
+Null 10.000; exp63's own θ scores 7.997 under this objective. So the refit is
+**8 per cent under exp63 on its own objective** (Block C had claimed 39 per
+cent under the null; the difference between 39 and 27 was the blind spot). The
+far starts stopped at the evaluation cap 12–15 per cent above the best, so the
+basin is not proven global; it is the same basin the blind fit was not in.
+
+**The fit is a small perturbation of exp63.** Every parameter is within about
+10 per cent of exp63's value; only four moved by more than 0.05 — `m_half`
+11.757 → 11.664, `d_split` 0.236 → 0.141, `log_f_c` 0.946 → 1.040, `b_e`
+−1.195 → −1.261. The blind fit had moved five parameters far away (`a_z` 0.35 →
+0.05, `a_Mz` +0.12 → −0.08, `d_split` 0.24 → 0.97, `b_c` −0.80 → −1.37, `n_c`
+0.53 → 0.97). **An objective that sees sizes directly, and weights every galaxy
+by its own scale, lands on exp63's parameters** — including the size-time
+exponents `b_c`, `b_e` that Block E was going to enrich.
+
+**And it is not an improvement.** The judge (`eval_re.py`, `outputs/eval_re.log`,
+`figures/qa/*R50_refit*`):
+
+| | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | exp63 joint, same row |
+|---|---|---|---|---|---|---|
+| exp63's four-term loss | 3.27 | 3.24 | 3.31 | 3.24 | 3.05 | 3.47 / 3.00 / 2.96 / 2.95 / 2.95 (**16.10 vs 15.33, +5.1%**) |
+| median R50, model / truth − 1 | −1% | 0% | −1% | +6% | **+11%** | 0 / +1 / −1 / +3 / +5% |
+| size gate, OFFSET passes (of 15) | 14 | | | | | 14 (the R20 row at z = 2 fails for both, at +0.06 dex) |
+| M(<10 kpc) median bias, fitting sample | +0.7% | +3.7% | +6.5% | +3.6% | +0.2% | −1.7 / +1.2 / +4.2 / +1.7 / −1.7% |
+| M(<100 kpc) | −1.0% | +2.7% | +3.6% | +2.0% | −2.5% | −2.5 / +1.5 / +2.1 / +0.2 / −4.6% |
+| M(<1 kpc), density-rebuilt grid | **+46%** | +39% | +32% | +16% | +15% | +35 / +29 / +22 / +8 / +7% |
+| M(<148 kpc) | −1.1% | +2.5% | +2.9% | +1.7% | −3.0% | −2.6 / +1.3 / +1.6 / −0.1 / −4.7% |
+
+Read across: the R50 objective buys the total mass at z = 0.4 and z = 2 (about
+1.5 points each at 148 kpc) and pays for it inside 10 kpc at z = 0.7–1.5, at
+1 kpc everywhere (+46 against +35 per cent at z = 0.4), and in R50 at z ≥ 1.5
+(+11 against +5 per cent at z = 2). Nothing the objective could not see before
+becomes right; what was right becomes a little less so. The z = 2 halo-mass
+tilt of M*(<103 kpc) is −0.147 against exp63's −0.122 on the fitting sample
+and +0.036 against +0.061 on the mh-complete subset — a class property, and it
+did not move by more than the shared-law compromise moves it.
+
+**What Block C says, now that it is honest.** The size-relative, mass-weighted
+objective is C20's result a second time: **a change of objective is a dial on
+the shared-law compromise, not a new capability.** Its one positive statement
+is about exp63, not about itself — exp63's solution is robust to a very
+different way of scoring the same data, so it is not an artefact of exp63's
+objective. The residuals it leaves (a third too much mass at 1 kpc at z = 0.4,
+3–5 per cent too little total at z = 2, the high-z size offsets, and every
+width ratio) are the same ones every objective leaves; they belong to the model
+class and its stochastic layer (C13, C16), not to the loss. Block E's richer
+size-time law is doubly unmotivated: A2 measured its lever as small, and this
+fit, which can see sizes directly, returned exp63's exponents.
 
 ## Block D — R20, and the fractional-size distributions as a numbered gate (D1)
 

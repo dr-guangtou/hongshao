@@ -438,6 +438,16 @@ tested FIRST:** the z=0.4 centre is already solved by fitting a single epoch
 rather than the coordinate ([[shared-law-is-a-close-compromise]]) — in which
 case a better coordinate will not raise the ceiling either.
 
+**Update 2026-09-02 (exp73 Block C, repaired).** The size-relative,
+mass-weighted objective was fitted honestly (inner aperture as bin 0). It
+returns exp63's parameters within about 10 per cent, scores 8 per cent better
+on its own loss and 5 per cent worse on exp63's, and leaves the same residuals
+(1 kpc +46 vs +35 per cent at z = 0.4; R50 +11 vs +5 per cent at z = 2; every
+width ratio). C21's claim stands as a statement about weighting — fixed kpc
+IS a weighting, and two galaxies carry 78 per cent of the z = 2 loss under it
+— but changing the weighting does not change what the class can reach. The
+size-relative coordinate's lasting use is the QA gate (Block D), not the fit.
+
 ### C20. A weighted chi-square: the z=0.4 central defect was nearly solved once
 **Raised 2026-09-01 by the user, reading exp72's binned-CoG figure.** Fitted
 under a generalised-least-squares chi-square built on the measured curve-of-growth
@@ -514,6 +524,15 @@ and a caveat that limits the first.
   comparator. **Owed: five single-epoch refits under the R50 objective** (~75 min
   at 0.53 s per evaluation) for a true ceiling. Not spent this session; Block C's
   transfer matrix answers "is this coordinate better" more directly.
+
+**Update 2026-09-02 (exp73 Block C, repaired).** A second, very different
+objective (R50 shells, mass-weighted, binned) gives the same answer as the
+weighted chi-square did: a dial on the shared-law compromise. The refit is
+exp63 to within about 10 per cent on every parameter. Two objectives from
+opposite ends (error-weighted centre-heavy; size-relative mass-weighted) both
+return exp63's solution, so C20's "weights are a dial" is now established by
+two independent objectives, and exp63's solution is shown robust to the choice
+of loss.
 
 ### C19. The model's halo history knows the halo's final mass
 **Raised 2026-08-31 by exp71 part 2, which was not looking for it.** The model

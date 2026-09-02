@@ -2623,3 +2623,19 @@ session should not rediscover them:
   the incumbent's, R50 a quarter too small at every epoch: the transfer matrix
   said it in one row. Run the judge's transfer matrix before believing any loss
   number, and read the physical quantity (here R50) before the loss.
+- **An honest objective that returns the incumbent's parameters has measured
+  the model class, not the loss.** exp73's repaired R50 refit, under an
+  objective that sees sizes directly and weights every galaxy by its own
+  scale, landed within about 10 per cent of exp63 on every parameter, 8 per
+  cent better on its own loss and 5 per cent worse on exp63's, with the same
+  centre, z = 2 and width residuals. That is C20 a second time: a change of
+  objective moves the shared-law compromise around; it does not create
+  capability. Before spending a fit on a new objective, ask what residual it
+  would be the FIRST to see; if the answer is none, its result is a
+  robustness check of the incumbent, and should be budgeted as one.
+- **`zip` truncates silently; assert the lengths.** Extending
+  `qa.SIZE_FRACTIONS` to four entries left `_size_figure`'s three-entry style
+  list one short, `dict(zip(...))` dropped R90 without a word, and the first
+  full judge run died on a `KeyError` after twenty minutes of figures. Any
+  `zip` that pairs a configurable list with a hand-written one gets a length
+  assertion.
