@@ -1077,20 +1077,15 @@ def _bins_figure(model_cogs, data_cogs, R, anchor_z, name, figdir,
     fig.suptitle(f"QA [{name}] — CoGs by {bin_label} tercile "
                  "(data solid, model dashed)", fontsize=12)
     if caveat:
-        fig.text(0.5, 0.005,
-                 "Binned by TRUTH stellar mass: selecting on the noisy "
-                 "quantity tilts the residual by (slope$-$1) dex/dex, where "
-                 "slope $= r\\,\\sigma_{model}/\\sigma_{truth}$ "
-                 "(regression to the mean). RADIUS-DEPENDENT: strongest at "
-                 "small R where the model has predictive freedom (measured "
-                 "slope 0.79 at $M(<5)$, where this view and the halo-mass "
-                 "view disagree in SIGN), and negligible at large R where the "
-                 "$M(<500)$ normalization pins the total to the truth "
-                 "($r=0.997$). Check the halo-mass-binned figure before "
-                 "reading an inner-radius trend as a model defect.",
-                 ha="center", va="bottom", fontsize=7.0, style="italic",
+        fig.text(0.5, 0.006,
+                 "Binned by the TRUTH's stellar mass: a conditional-mean model "
+                 "reads high in the low bin and low in the high bin by the "
+                 "scatter it does not explain (regression to the mean); the "
+                 "dotted curves remove it. Read model defects from the "
+                 "halo-mass-binned figure.",
+                 ha="center", va="bottom", fontsize=7.5, style="italic",
                  color="0.35")
-        fig.tight_layout(rect=(0, 0.035, 1, 1))
+        fig.tight_layout(rect=(0, 0.03, 1, 1))
     else:
         fig.tight_layout()
     print("wrote", save_fig(fig, figdir / f"qa_{tag}_{name}")[0])

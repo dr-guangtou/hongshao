@@ -44,7 +44,7 @@ a pure size error relative to amplitude at z = 2) will show if it matters.
 Run (long; the MAIN shell, never a subagent; each start checkpoints):
     HONGSHAO_DATA_DIR=/Users/shuang/Desktop/tng300_mah_mprof OMP_NUM_THREADS=1 \\
     PYTHONPATH=. nohup uv run python -u \\
-        experiments/exp73_size_relative/fit_re.py [--smoke] [--starts 0:3] \\
+        experiments/exp73_size_relative/fit_re.py [--smoke] [--starts 0:3] [--epoch k] \\
         > experiments/exp73_size_relative/outputs/fit_re.log 2>&1 &
 """
 from __future__ import annotations
@@ -95,15 +95,21 @@ class ReProblem:
     """
 
     def __init__(self, spec2, curves, truth_m, Rm, lmh0, th_nested,
-                 edges=None):
+                 edges=None, epochs=EPOCHS):
         self.spec2, self.Rm = spec2, np.asarray(Rm, float)
         self.curves, self.lmh0 = curves, np.asarray(lmh0, float)
         self.n = len(curves)
+        # a single-epoch problem sees only that epoch's truth and predicts only
+        # that epoch (the model is the same integral truncated at its anchor)
+        self.epochs = tuple(int(k) for k in epochs)
+        self.anchor_z = [ANCHOR_Z[k] for k in self.epochs]
         edges = tuple(np.geomspace(RE_LO, RE_HI, N_EDGE)) if edges is None else edges
-        self.grid = C.SizeGrid(truth_m, self.Rm, edges=edges)   # truth-only
+        self.grid = C.SizeGrid(np.asarray(truth_m)[:, list(self.epochs), :],
+                               self.Rm, edges=edges)              # truth-only
         self.w = C.weights_uniform(self.grid)
         self.n_eval = 0
-        null = M2.predict2(spec2, th_nested, curves, self.Rm, nodes=M2.FULL_NODES)
+        null = M2.predict2(spec2, th_nested, curves, self.Rm, epochs=self.epochs,
+                           nodes=M2.FULL_NODES)
         pg, bn = self._parts(null)
         self.ref_pg, self.ref_bin = pg, bn
 
@@ -111,13 +117,14 @@ class ReProblem:
         """(per-galaxy term, binned term), each (5,), unnormalised."""
         r = self.grid.residual(cogs, "mass")                    # (n, 5, shells)
         per = C.apply_weights(r, self.w)                        # (n, 5)
-        pg = np.array([np.nanmean(per[:, k]) for k in EPOCHS])
+        pg = np.array([np.nanmean(per[:, j]) for j in range(len(self.epochs))])
         bn = binned_loss(self.grid, r, self.lmh0)
         return pg, bn
 
     def per_epoch(self, theta, nodes=M2.FIT_NODES):
         """(5,) each epoch's loss, exactly 2.000 at the nested incumbent."""
-        cogs = M2.predict2(self.spec2, theta, self.curves, self.Rm, nodes=nodes)
+        cogs = M2.predict2(self.spec2, theta, self.curves, self.Rm,
+                           epochs=self.epochs, nodes=nodes)
         bad = ~(np.isfinite(cogs).all(axis=(1, 2)) & (cogs > 0).all(axis=(1, 2)))
         if bad.any():
             cogs = np.where(bad[:, None, None], np.nan, cogs)
@@ -128,12 +135,12 @@ class ReProblem:
         self.n_eval += 1
         per, n_bad = self.per_epoch(theta)
         if not np.isfinite(per).all():
-            return F.FAIL * len(EPOCHS)
+            return F.FAIL * len(self.epochs)
         return float(per.sum()) + F.FAIL * n_bad / self.n
 
     def report(self, theta, label, nodes=M2.FULL_NODES):
         per, n_bad = self.per_epoch(theta, nodes=nodes)
-        print(f"  {label}: " + "  ".join(f"z={z}:{v:.4f}" for z, v in zip(ANCHOR_Z, per))
+        print(f"  {label}: " + "  ".join(f"z={z}:{v:.4f}" for z, v in zip(self.anchor_z, per))
               + f"  -> total {np.nansum(per):.4f}"
               + (f"  ({n_bad} unbuildable)" if n_bad else ""))
         return per
@@ -159,18 +166,42 @@ def build(smoke=False):
             truth_all[good], Rm, lmh[good][:, 0], rows, data, lmh, good)
 
 
-def main(smoke=False, starts_sel=None):
-    tag = "_smoke" if smoke else ""
+def main(smoke=False, starts_sel=None, epoch=None):
+    """``epoch=None`` fits the five epochs jointly (Block C); ``epoch=k`` fits
+    that epoch ALONE with the four time exponents frozen exactly as exp63's
+    per-epoch fits froze them (a single epoch cannot constrain them), so the
+    result is comparable with `stage2_fit_frozen_binned_kpc_sane_e{k}` — the
+    same freedom, the R50 objective instead of fixed kpc. That is A2's true
+    per-epoch comparator."""
+    tag = ("" if epoch is None else f"_e{epoch}") + ("_smoke" if smoke else "")
     print(f"{RULE}\nexp73 Block C — the exp63 model refitted on R50 shells with a "
-          f"mass-weighted residual\n{RULE}\n")
+          f"mass-weighted residual"
+          + ("" if epoch is None else f", at z={ANCHOR_Z[epoch]} ALONE")
+          + f"\n{RULE}\n")
     (spec2, th_inc, th_nested, fz63, curves, truth_m, Rm, lmh0,
      rows, data, lmh, good) = build(smoke)
-    pr = ReProblem(spec2, curves, truth_m, Rm, lmh0, th_nested)
+    frozen, th_e63 = {}, None
+    if epoch is not None:
+        fze = np.load(EXP63_NPZ.parent / f"stage2_fit_frozen_binned_kpc_sane_e{epoch}.npz",
+                      allow_pickle=True)
+        frozen = {str(a): float(b) for a, b in zip(fze["frozen_names"], fze["frozen_values"])}
+        th_e63 = np.asarray(fze["theta_best"], float)
+        print(f"  single epoch z={ANCHOR_Z[epoch]}: FROZEN "
+              + ", ".join(f"{k}={v:+.4f}" for k, v in frozen.items())
+              + " (as exp63's per-epoch fit froze them)")
+    pr = ReProblem(spec2, curves, truth_m, Rm, lmh0, th_nested,
+                   epochs=EPOCHS if epoch is None else (epoch,))
     print(f"  {pr.grid.n_shell} shells at {RE_LO}-{RE_HI} x each galaxy's own R50; "
           f"the coordinate is truth-only")
     print(f"  per-epoch normalisation (frozen): per-galaxy "
           + " ".join(f"{v:.3g}" for v in pr.ref_pg) + " | binned "
           + " ".join(f"{v:.3g}" for v in pr.ref_bin))
+
+    def with_frozen(th):
+        th = np.asarray(th, float).copy()
+        for nm, val in frozen.items():
+            th[spec2.index(nm)] = val
+        return th
 
     l_null = pr.loss(th_nested)
     per_null = pr.report(th_nested, "the null (nested incumbent)")
@@ -180,7 +211,9 @@ def main(smoke=False, starts_sel=None):
     th_exp63 = np.asarray(fz63["theta_best"], float)
     pr.report(th_exp63, "exp63's theta, scored under this objective")
 
-    bounds = np.asarray(fz63["bounds"], float).tolist()
+    bounds = [tuple(b) for b in np.asarray(fz63["bounds"], float).tolist()]
+    for nm, val in frozen.items():
+        bounds[spec2.index(nm)] = (val, val)          # an equal-bounds box freezes it
     rng = np.random.default_rng(73)
     starts = S2F.starts_for(spec2, th_inc, rng)
     starts.append(("exp63", th_exp63.copy()))
@@ -188,6 +221,12 @@ def main(smoke=False, starts_sel=None):
     # nested incumbent, exp63's own optimum, a default, and one jitter
     order = ["nested", "exp63", "default", "jitter0"]
     starts = [s for n in order for s in starts if s[0] == n]
+    if epoch is not None:
+        # a single-epoch fit also starts from exp63's own per-epoch optimum,
+        # the fixed-kpc comparator it is meant to replace
+        starts.insert(2, (f"exp63_e{epoch}", th_e63.copy()))
+        starts = [(n, with_frozen(th)) for n, th in starts]
+        pr.report(th_e63, f"exp63's per-epoch theta (e{epoch}), scored under this objective")
     if starts_sel is not None:
         starts = starts[starts_sel[0]:starts_sel[1] + 1]
     print(f"\n  {len(starts)} starts: " + ", ".join(n for n, _ in starts))
@@ -233,7 +272,9 @@ def main(smoke=False, starts_sel=None):
              theta_nested=th_nested, theta_exp63=th_exp63,
              theta_names=np.array(spec2.theta_names),
              extended_family=spec2.extended_family, objective="re_mass_binned",
-             compact_in_kpc=spec2.compact_in_kpc, fit_epoch=-1, fit_sample="sane",
+             compact_in_kpc=spec2.compact_in_kpc,
+             fit_epoch=-1 if epoch is None else int(epoch), fit_sample="sane",
+             frozen_names=np.array(list(frozen)), frozen_values=np.array(list(frozen.values())),
              n_fit=len(rows), fit_rows=rows,
              names=np.array([q["name"] for q in results]),
              thetas=np.array([q["theta"] for q in results]), losses=ls,
@@ -248,4 +289,5 @@ if __name__ == "__main__":
     if "--starts" in a:
         lo, hi = a[a.index("--starts") + 1].split(":")
         ss = (int(lo), int(hi))
-    main(smoke="--smoke" in a, starts_sel=ss)
+    ep = int(a[a.index("--epoch") + 1]) if "--epoch" in a else None
+    main(smoke="--smoke" in a, starts_sel=ss, epoch=ep)
