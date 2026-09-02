@@ -480,6 +480,53 @@ draws are scored. exp61 measured the narrowing at one epoch; this is its
 redshift dependence, and the z = 2 outskirts are where the mean is furthest from
 the population it describes.
 
+### Figures for the five single-epoch fits (`ceiling_figures.py`)
+
+`figures/qa/qa_*_exp73_R50_e{k}.*` is the standard battery for each per-epoch
+fit ("fitted at one epoch, four predicted"); `figures/exp73_ceiling_own_epoch.*`
+is the ceiling in one picture — at each epoch (columns), in each halo-mass
+tercile (rows), the median residual on the merged grid for that epoch's own
+R50 fit, exp63's own fixed-kpc fit, and the two joint fits. **Where the cost
+of sharing lives**: at z ≥ 1.5 in the most massive third of haloes both joint
+fits dip 13–18 per cent at 2 kpc; each epoch's own R50 fit sits at 3–5 per
+cent there. A single-epoch fit predicts the other epochs badly, as always
+(fitted at z = 1.0: M(<10 kpc) +8.8 per cent at z = 0.4 and −7.3 at z = 2;
+fitted at z = 2: +49.5 per cent at z = 0.4).
+
+## Block D, second use — hongshao v1's stochastic layer on the size gate (the user's decision 3)
+
+`size_gate_layer.py`: the adopted Option A layer (exp60, around the INCUMBENT
+mean — exp63's mean has no layer yet), regenerated from the frozen artifact
+with stage3d's seeds, eight drawn populations, the tier 2d gate on each, the
+offsets and width ratios averaged over draws (scatter across draws ≤ 0.03).
+`outputs/size_gate_layer.log`.
+
+| width ratio at fixed M*, mean → layer | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|---|
+| R20 | 0.69 → **2.26** | 0.63 → 2.13 | 0.57 → 1.98 | 0.45 → 1.56 | 0.41 → 1.29 |
+| R50 | 0.50 → **1.14** | 0.42 → **0.99** | 0.36 → 0.87 | 0.30 → 0.76 | 0.28 → 0.73 |
+| R80 | 0.44 → 0.61 | 0.35 → 0.53 | 0.27 → 0.48 | 0.19 → 0.48 | 0.17 → 0.52 |
+
+WIDTH passes (within 20 per cent): mean 0 of 15; **layer 3 of 15** — R50 at
+z = 0.4, 0.7, 1.0. Offsets are the incumbent mean's and the layer leaves them
+(R50 +0.11 dex at z ≥ 1.5 — the incumbent's high-z sizes are 29 per cent too
+big; exp63 repaired that), except R20 at z = 0.4, which the core mixture moves
+from +0.021 to −0.037 dex. At fixed halo mass the same to two decimals.
+
+**The verdict C16 asked for, and it is structured in radius.** The layer
+restores the half-mass-radius diversity at z ≤ 0.7 and supplies 73–87 per
+cent of it at z ≥ 1.0. But it **over-disperses the inner fifth of the mass by
+a factor 2.3 at z = 0.4** (R20: the core mixture's draws are far more diverse
+than the real inner profiles) and **under-disperses the outskirts by half at
+every epoch** (R80: 0.5–0.6 of the truth's width). The truth's size diversity
+at fixed mass grows outward — the mean explains 69 per cent of it at R20 and
+44 per cent at R80 — and the layer's draws are shaped the other way: strong
+in the core, weak outside. That is a concrete specification for the next
+layer: the outer size component (exp60 Option C's "2-D size axis") is what is
+missing, and the core draw is too wide. Neither could be seen before the
+size gate existed; the amplitude and decline statistics the layer was
+calibrated on are blind to where in radius the diversity sits.
+
 ## Block E — the richer size-time law (D3): evaluated, not fitted
 
 A2 measured it. Below z = 2 the per-epoch size optima sit within 0.023 dex

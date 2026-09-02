@@ -2652,3 +2652,12 @@ session should not rediscover them:
   The single-epoch fits peaked at 11.5 GB during the data build and ran at
   0.4 GB; I serialised five 75-minute fits on the peak number and lost 25
   minutes before checking. `ps -o rss` on the running process, then decide.
+- **A statistic that pools over radius cannot tell a core-heavy layer from an
+  outskirts-heavy one.** exp60's layer was calibrated on the amplitude
+  scatter at 100 kpc and the central-decline distribution, and passed both;
+  the first radius-resolved gate (R20/R50/R80 widths) shows it puts 2.3x too
+  much diversity in the inner fifth of the mass and half too little in the
+  outer fifth. Calibrate and gate a generative layer at more than one radius.
+- **A foreground shell call is capped at ten minutes; anything that might
+  take five goes through nohup.** The first layer re-score was killed at draw
+  6 of 8 and had to be rerun from scratch.

@@ -360,6 +360,16 @@ supply 70 per cent of the size diversity at fixed mass, 84 per cent in R80: far
 larger than at z=0.4, and the z=2 outskirts are where the mean is furthest from
 the population it describes. Unchanged: nothing here changes an adopted decision.
 
+**Update 2026-09-02 night (exp73 `size_gate_layer.py`) — the layer's draws
+scored, the first time.** hongshao v1's Option A layer (around the incumbent
+mean), 8 draws, tier 2d gate: R50 width ratio 1.14 / 0.99 / 0.87 / 0.76 / 0.73
+at z = 0.4…2 (mean model 0.50 → 0.28) — passes at z ≤ 1.0; **R20 2.26 → 1.29
+(over-dispersed, core mixture too wide); R80 0.61 → 0.52 (half the truth's
+outer diversity at every epoch).** The truth's size diversity at fixed mass
+grows outward; the layer's is concentrated in the core. C16 is now a design
+statement: the next layer needs an outer size component, and a narrower core
+draw. The amplitude/decline statistics it was calibrated on cannot see this.
+
 ### C17. Would a likelihood with a measured error model make the fits better behaved?
 Raised 2026-08-30 (the user, closing exp63). Every objective in this programme
 is a bare distance — fractional or log residuals, root-mean-squared over radii

@@ -2977,9 +2977,13 @@ Owed to the user, NOT decided here:
   "three-quarters cheaper" corrected to "a third"; per-epoch ceiling overshoots
   the other way (R50 −3..−6%); the z=2 break in the extended size is a
   fixed-kpc artefact (C21 confirmed from the parameter side). README "A2 closed".
-- [ ] Whether the stochastic layer is re-scored on the new size gate — C16 is
-  now quantitative in z and R, and the layer's job at z=2 is 70% of the size
-  diversity at fixed mass.
+- [x] The stochastic layer re-scored on the size gate (decision 3, 2026-09-02
+  night, `size_gate_layer.py`): width passes 3/15 (R50 at z<=1.0: 1.14 /
+  0.99 / 0.87, then 0.76 / 0.73); R20 over-dispersed 2.3x at z=0.4, R80
+  under-dispersed by half at every epoch — the layer's diversity is in the
+  core, the truth's is in the outskirts. Next layer needs an OUTER size
+  component; the core draw is too wide.
+- [x] QA figures for the five per-epoch R50 fits (`ceiling_figures.py`).
 - [ ] C19 (DiffMAH's logmp carries the future) — deliberately not started.
 - [x] **C the refit — NEGATIVE.** The coordinate dropped the inner aperture and
   the fit put +100% inside 2 kpc (R50 −22..−26%, exp63's loss 178 vs 15.3).
