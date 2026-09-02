@@ -580,6 +580,18 @@ whether `halo-history-knows-a-little-about-the-core` (partial |ρ| ≤ 0.23 with
 DiffMAH `early`/`late`/`t50` at fixed halo mass) survives being redone with
 measured-history variables. Nothing is withdrawn on the strength of this yet.
 
+**Update 2026-09-02 night (exp74 Stage 0, no fit).** A DiffMAH curve refitted
+per epoch to the history BEFORE the epoch and anchored there (`history.py`)
+knows nothing of the future (cv R² 0.000 at every epoch, official 0.50–0.69).
+At exp63's FROZEN θ it removes the residual's future-growth dependence
+entirely (+0.12…0.17 → −0.00…−0.05 dex/dex; the truth's own is −0.01…+0.05)
+and three-quarters of the z = 2 fitting-sample tilt (−0.121 → −0.034; the
+mh-complete tilt +0.060 → +0.093). The price at frozen θ is mass: +11 per cent
+at z = 2 on the fitting sample, +18 on the mh-complete subset — the official
+curve understates the anchor mass at z = 2 by 0.06 dex median and 43 per cent
+of the model's z = 2 deposits sit before the official fit's own 2 Gyr data
+cut. Stage 1 (the refit with the curves as the only change) is running.
+
 ### C18. At z = 2, do the massive progenitors and the rest want different models?
 **RESOLVED 2026-08-31 (exp71). It is the selection, from 10 kpc outwards; the
 centre is a separate, older problem.** Details and every table in

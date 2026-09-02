@@ -48,7 +48,7 @@ ANCHOR_Z = list(E.ANCHOR_Z)
 EPOCHS = (0, 1, 2, 3, 4)
 OUTDIR = HERE / "outputs"
 FIT_NPZ = ROOT / "experiments/exp63_analytic_growth/outputs/stage2_fit_joint_kpc_free_sane.npz"
-START_ORDER = ["nested", "exp63", "default", "jitter0"]
+START_ORDER = ["nested", "exp63", "exp63_near", "default", "jitter0"]
 
 
 class PreEpochJoint(S2F.JointProblem2):
@@ -111,6 +111,13 @@ def main(smoke=False, starts_sel=None, merge=False):
     rng = np.random.default_rng(63)
     starts = S2F.starts_for(spec2, th_inc, rng)
     starts.append(("exp63", th_exp63.copy()))
+    # a NEAR start: exp63's optimum moved by 5 per cent of each bound's range
+    # (seed 74). The far starts (default, jitter0) step into the unbuildable-
+    # model penalty on the first line search under this objective and rail;
+    # the near start tests the basin without that failure mode.
+    rng_near = np.random.default_rng(74)
+    span = np.array([hi - lo for lo, hi in bounds])
+    starts.append(("exp63_near", M2.clip_to_bounds(spec2, th_exp63 + 0.05 * span * rng_near.standard_normal(len(span)))))
     starts = [s for n in START_ORDER for s in starts if s[0] == n]
     if starts_sel is not None:
         starts = starts[starts_sel[0]:starts_sel[1] + 1]
