@@ -761,7 +761,8 @@ def _size_figure(model_cogs, data_cogs, R, anchor_z, sizes, name, figdir):
     nz = data_cogs.shape[1]
     cols = _zcolors(nz)
     keys = [f"R{int(round(100 * f))}" for f in SIZE_FRACTIONS]
-    fr_styles = dict(zip(keys, ["-o", "--s", ":^"]))
+    fr_styles = dict(zip(keys, ["-o", "--s", ":^", "-.d"]))
+    assert len(fr_styles) == len(keys), "one line style per size fraction"
     rt = {k: _safe_rhalf(data_cogs, R, f)
           for k, f in zip(keys, SIZE_FRACTIONS)}
     rm = {k: _safe_rhalf(model_cogs, R, f)
