@@ -255,28 +255,84 @@ the residual's future dependence −0.014 / −0.045 / −0.025 / −0.005 (pre-
 functional form was not what mattered, the pinning to the future was.** The
 refit with the measured curves is Stage 1's third column.
 
+### Variant B, the refit (`stage1_refit.py --curves measured`, `stage1_eval.py`)
+
+Four starts, one process each (one `predict2` call per evaluation, as exp63's
+problem): exp63's optimum 17.014, the pre-epoch refit's optimum 17.026, the
+near start 17.055, the nested incumbent 17.121 — **a single basin**. The
+parameters that moved from exp63 by more than 0.05: `b_c` −0.80 → −0.88, `b_e`
+−1.19 → −1.03, `c_e` 0.86 → 0.80 (the size-time exponents, not `a_z` this
+time — the same absorbed future, taken up by a different pair of dials).
+
+| θ \ curves | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | total |
+|---|---|---|---|---|---|---|
+| exp63 on official | 3.468 | 3.005 | 2.958 | 2.945 | 2.978 | **15.353** |
+| refit on pre-epoch | 3.834 | 3.361 | 3.195 | 3.493 | 3.400 | 17.284 |
+| **refit on measured** | 3.799 | 3.296 | 3.159 | 3.483 | 3.274 | **17.010** |
+| exp63 on measured (frozen) | 4.705 | 4.432 | 4.977 | 6.605 | 3.588 | 24.308 |
+
+**The measured history costs 10.8 per cent of exp63's loss, the pre-epoch
+DiffMAH 12.6.** Two points of the pre-epoch cost were its functional form;
+the rest is the price of not reading the future.
+
+| | exp63, official | refit, pre-epoch | refit, measured | truth |
+|---|---|---|---|---|
+| residual dy/dG at z=2 | +0.120 | −0.004 | −0.006 | +0.003 |
+| z=2 tilt, fitting \| mh-complete | −0.122 \| +0.060 | −0.046 \| +0.083 | −0.032 \| +0.094 | |
+| M(<103) z=2, mh-complete | −9.7 % | −2.5 % | **−1.1 %** | |
+| M(<10) z=2, mh-complete | −4.7 % | +0.2 % | −0.3 % | |
+| M(<103) z=1.5, mh-complete | −0.4 % | +7.5 % | +8.6 % | |
+| R50, z=1.5 / 2 | +3.3 / +4.9 % | +6.9 / +10.8 % | +9.0 / +13.1 % | |
+| size gate OFFSET passes | 14/15 | 13/15 | 12/15 | |
+| R50 width ratio, z=0.4 / z=2 | 0.63 / 0.27 | 0.69 / 0.40 | 0.66 / 0.35 | 1 |
+
+**The two honest inputs give the same model** to within a point or two
+everywhere: the leak is zero for both, the z = 2 massive progenitors are
+right for both (the measured history best, −1.1 per cent), both pay at
+z = 1.0–1.5 on the mh-complete subset (+5–9 per cent) and in high-z sizes,
+where the measured history pays a little more (R50 +13 per cent at z = 2, and
+its R50 offset now fails the gate there at +0.054 dex). The centre is
+identical in all three.
+
 ## The verdict
 
-**C19 is confirmed at the level of the model, and its remedy works.** The
-official DiffMAH curve let every fit in this programme see the halo's future;
-that showed up as a +0.12–0.17 dex-per-dex dependence of the model's stellar
-mass on future growth that the simulation does not have, as a steeper
-redshift exponent of the efficiency, as 60 per cent of the z = 2 halo-mass
-tilt on the fitting sample, and as a 12.6 per cent advantage in the loss. With
-the history the halo actually had by each epoch, the model's dependence on
-the future is zero, the z = 2 massive progenitors are within 2.5 per cent, and
-the model's size diversity grows — at the price of a worse loss on the
-programme's objective and heavier z = 1–1.5 massive progenitors.
+**C19 is confirmed at the level of the model, and its origin is now exact.**
+The official DiffMAH curve — one four-number fit to the whole history,
+anchored at z = 0 — lets the halo's final mass rewrite its early history. The
+model read that and made its stellar mass depend on the halo's future growth
+at +0.12–0.17 dex per dex where TNG300's depends at −0.01 to +0.05. Under the
+user's rule (2026-09-04: the halo's full history, final mass included, is
+legitimate input; the galaxy's own stellar mass never is) this is not a cheat
+but a wrong conditional distribution: at fixed current halo mass the model
+sorted galaxies by a variable the simulation does not sort on, four to forty
+times too strongly. It showed up as 60–75 per cent of the z = 2 halo-mass tilt
+on the fitting sample, as the massive z = 2 progenitors 10 per cent too light,
+and as an 11–13 per cent advantage in the loss.
 
-**Recommendation (the user's decision): make the pre-epoch curves the
-standard input.** A model that predicts a galaxy at z = 2 from what its halo
-will do by z = 0.4 is not a model of galaxy growth, whatever its loss. Every
-high-z number in the record should be re-read as "with the future in the
-input"; the incumbent and the stochastic layer (both built on the official
-curves) inherit the same leak.
+**Two honest inputs, built differently, give the same model.** A DiffMAH
+form fitted only to the past (variant A) and the measured history read
+directly (variant B) agree with each other to a point or two on every
+quantity: dependence on the future zero, z = 2 massive progenitors within
+1–2.5 per cent, z = 1.0–1.5 massive progenitors 5–9 per cent heavy, high-z
+sizes 7–13 per cent big, loss 11–13 per cent worse than exp63's. What
+mattered was not the functional form but the pinning of the past to the
+future.
 
-**Not done, and worth doing:** the measured-history representation (plan
-variant B) as a second honest input, to check the 12.6 per cent is the cost
-of honesty and not of DiffMAH's form; a per-epoch efficiency time law is NOT
-the answer (exp63 D2, exp73 E — the time exponents are what the leak
-inflated).
+**Recommendation: adopt the measured history (variant B) as hongshao's
+standard input.** It uses everything the simulation provides — the full MAH,
+the final mass available to any part of the model — reads it as it was, and
+needs no fit to build. It is the cheaper of the two honest inputs (one
+`predict2` call per evaluation; the pre-epoch DiffMAH needs five), the better
+one on the loss (17.01 vs 17.28), and the best of all three on the z = 2
+massive progenitors. Its known costs — the z = 1.0–1.5 massive progenitors
+and the high-z half-mass radii — are where the next modelling step should
+look, with the future-dependence test kept as a standing QA gate: at fixed
+current halo mass, the model's stellar mass must depend on future growth no
+more than TNG300's does. The incumbent and the v1 stochastic layer were built
+on the official curves and inherit the leak; they should be re-baselined on
+the measured history once the input is adopted.
+
+**What is not changed by any input**: the centre (−11 to −13 per cent at 2 kpc
+at z = 2, −9 at z = 1.5), the width collapse (every mean model), and the
+z = 1.0–1.5 real positive dependence on the future (+0.03–0.05) that a causal
+deposition cannot follow.

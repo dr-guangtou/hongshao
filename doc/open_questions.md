@@ -606,6 +606,20 @@ pre-epoch curves as the standard input** (`experiments/exp74_c19_history_leak`).
 The incumbent and the v1 stochastic layer inherit the leak. Variant B (the
 measured history) not built.
 
+**Variant B, 2026-09-04/05 (the measured history as the input, the user's
+direction; recommendation changed).** The user's rule: the halo's full history
+including the final mass is legitimate input; only the galaxy's own stellar
+mass is forbidden. So C19 is a wrong conditional distribution, not a cheat.
+The measured running-peak M200c interpolated (PCHIP in log t, power law before
+1.18 Gyr; `measured.py`) passes the no-future gate (R² within 0.01 of zero at
+snapshots and midpoints) and, refitted (single basin, 17.01 under exp63's
+loss, +10.8 per cent), gives the same model as the pre-epoch DiffMAH to a
+point or two: leak zero, z = 2 mh-complete total −1.1 per cent (exp63 −9.7),
+z = 1–1.5 mh-complete +5–9, R50 +13 per cent at z = 2. **Recommendation:
+adopt the measured history as the standard input**; keep the
+future-dependence test as a QA gate; re-baseline the incumbent and the v1
+layer on it.
+
 ### C18. At z = 2, do the massive progenitors and the rest want different models?
 **RESOLVED 2026-08-31 (exp71). It is the selection, from 10 kpc outwards; the
 centre is a separate, older problem.** Details and every table in

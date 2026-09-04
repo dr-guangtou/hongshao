@@ -41,3 +41,26 @@ Plan `doc/plans/2026-09-02-exp74-c19-history-leak.md`; everything in
   exp63's objective; use a near start.
 - **The machine slept for four hours mid-fit.** `caffeinate -i -w <pid>` on
   every long process, from the start.
+
+## Appendix 2026-09-04/05 — variant B, and the reframing
+
+The user reframed C19 (2026-09-04): for hongshao's application the halo's
+full history from the simulation, final mass included, is legitimate input;
+only the galaxy's own stellar mass is forbidden. So the official curve's
+fault is a wrong conditional distribution (at fixed current halo mass the
+model's stellar mass depends on the halo's future 4–40× more than TNG300's),
+not a cheat. Variant B (`measured.py`): the measured running-peak M200c,
+PCHIP-interpolated in log t, power law before 1.18 Gyr, one curve per galaxy
+for every epoch; the engine reads a curve's own table functions
+(`log_mah_table`, `dm_dlnt_table`). Gates pass (through the data exactly;
+future R² within 0.01 of zero at snapshots and midpoints). Refit: a single
+basin at 17.01 under exp63's loss (+10.8 per cent; pre-epoch DiffMAH +12.6);
+the same model as the pre-epoch to a point or two everywhere; z = 2
+mh-complete total −1.1 per cent (exp63 −9.7). **Recommendation changed: adopt
+the MEASURED history as the standard input** (cheapest, best of the honest
+inputs, needs no fit to build). Keep the future-dependence test as a QA gate.
+
+Decisions owed: adopt; merge; re-baseline the incumbent and the v1 layer on
+the new input. The next modelling targets under the honest input: the
+z = 1.0–1.5 massive progenitors (+5–9 per cent) and the high-z sizes (+13 per
+cent at z = 2).

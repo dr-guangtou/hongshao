@@ -3006,7 +3006,8 @@ Owed to the user, NOT decided here:
   application; what must match the truth is the model's dependence on the
   future at fixed current mass, ~0).
 - [ ] **Decision (user)**: merge.
-- [ ] Variant B (the measured history interpolated) — to separate the cost of
-  honesty from the cost of DiffMAH's form. Not built.
+- [x] Variant B (the measured history, PCHIP-interpolated; `measured.py`): same
+  model as the pre-epoch DiffMAH to a point or two; loss +10.8% vs +12.6%; the
+  form did not matter. RECOMMENDED as the standard input.
 - [ ] The incumbent and the v1 stochastic layer inherit the leak; re-baseline
   when the input is adopted.
