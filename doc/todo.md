@@ -6,6 +6,20 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ## Status
 
+### Exp75 — halo-conditioned residual correction (isolated)
+
+- [x] Create `exp75-halo-residual-correction` from master `6bc2ecc`; leave Exp74 alone.
+- [x] Predeclare input contract, sample roles, references, correction family,
+  fitting objectives, controls, evaluation and the sub-minute operational gate.
+- [ ] Make hash-verified private input snapshots; no shared writable caches.
+- [ ] Write and run focused leakage, nesting, monotonicity and recovery checks.
+- [ ] Run the complete operational gate before any scientific pilot.
+- [ ] Evaluate the fixed pilot protocol; no production claim from a pilot.
+- [ ] Run discovery comparison only after the pilot convergence/numerical gate.
+- [ ] Inspect direct profile QA and record the scientific verdict.
+
+Review: pending; no model or scientific conclusion has been adopted.
+
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 
