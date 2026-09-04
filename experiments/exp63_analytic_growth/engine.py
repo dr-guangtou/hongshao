@@ -162,7 +162,13 @@ def build_curves(recs, verbose=True):
 
 
 def log_mah(lt, hc):
-    """log10 M(t) on lt = log10 t [Gyr]; vectorised over lt."""
+    """log10 M(t) on lt = log10 t [Gyr]; vectorised over lt.
+
+    A curve object that carries its own `log_mah_table` (exp74 variant B: the
+    measured history interpolated) is read through it; a `HaloCurve` through
+    the DiffMAH form."""
+    if hasattr(hc, "log_mah_table"):
+        return hc.log_mah_table(lt)
     lt = np.asarray(lt, float)
     s = expit(MAH_K * (lt - hc.logtc))
     alpha = hc.early + (hc.late - hc.early) * s
@@ -171,6 +177,8 @@ def log_mah(lt, hc):
 
 def dm_dlnt(lt, hc):
     """dM/d ln t [Msun] on lt = log10 t."""
+    if hasattr(hc, "dm_dlnt_table"):
+        return hc.dm_dlnt_table(lt)
     lt = np.asarray(lt, float)
     s = expit(MAH_K * (lt - hc.logtc))
     alpha = hc.early + (hc.late - hc.early) * s

@@ -58,6 +58,20 @@ def main(smoke=False, tables_only=False):
     th63 = np.asarray(fz63["theta_best"], float)
     thr = np.asarray(fzr["theta_best"], float)
     names = list(spec2.theta_names)
+    # variant B, when its refit exists: the measured curves and their optimum
+    fm = OUTDIR / f"stage1_refit_measured{tag}.npz"
+    thm, pr_m, meas = None, None, None
+    if fm.exists():
+        import measured as MB
+        hist = dict(np.load(OUTDIR / f"history_curves{tag}.npz", allow_pickle=True))
+        meas, _ = MB.build_measured(recs, curves, np.load(SEL.HS_NPZ, allow_pickle=True), hist, verbose=False)
+        pr_m = S1.PreEpochJoint(spec2, curves, {k: meas for k in EPOCHS}, data, mask, lmh, F.R_GRID, th_inc)
+        fzm = np.load(fm, allow_pickle=True)
+        thm = np.asarray(fzm["theta_best"], float)
+        print(f"  MEASURED refit: starts " + ", ".join(f"{n} {l:.4f}" for n, l in zip(fzm["names"], fzm["losses"]))
+              + f"; best '{str(fzm['best_name'])}' {float(fzm['loss_best']):.4f}")
+        movedm = [(n, a, b) for n, a, b in zip(names, th63, thm) if abs(a - b) > 0.05]
+        print(f"  moved by > 0.05 from exp63: " + (", ".join(f"{n} {a:+.3f}->{b:+.3f}" for n, a, b in movedm) or "none"))
 
     # ---- 1. the fit -------------------------------------------------------- #
     print(f"  starts: " + ", ".join(f"{n} {l:.4f}" for n, l in zip(fzr["names"], fzr["losses"]))
@@ -73,18 +87,28 @@ def main(smoke=False, tables_only=False):
           f"Off-diagonal: the frozen-theta cost of the input change.\n{RULE}")
     print(f"  {'theta \\ curves':<28}" + "".join(f"{f'z={z}':>9}" for z in ANCHOR_Z) + f"{'total':>10}")
     grid = {}
-    for tl, th in (("exp63", th63), ("exp74 refit", thr)):
-        for cl in ("official", "pre-epoch"):
-            per = (S2F.JointProblem2.per_epoch(pr, th, nodes=M2.FULL_NODES) if cl == "official"
-                   else pr.per_epoch(th, nodes=M2.FULL_NODES))
-            row = np.array([sum(x * x for x in (per[k][0], per[k][1], per[k][2], per[k][4])) for k in pr.epochs])
-            grid[(tl, cl)] = row
-            print(f"  {tl + ' on ' + cl:<28}" + "".join(f"{v:>9.3f}" for v in row) + f"{row.sum():>10.3f}")
+    combos = [("exp63", th63, "official"), ("exp63", th63, "pre-epoch"),
+              ("exp74 refit", thr, "official"), ("exp74 refit", thr, "pre-epoch")]
+    if thm is not None:
+        combos += [("exp63", th63, "measured"), ("refit measured", thm, "official"),
+                   ("refit measured", thm, "measured")]
+    for tl, th, cl in combos:
+        if cl == "official":
+            per = S2F.JointProblem2.per_epoch(pr, th, nodes=M2.FULL_NODES)
+        elif cl == "pre-epoch":
+            per = pr.per_epoch(th, nodes=M2.FULL_NODES)
+        else:
+            per = pr_m.per_epoch(th, nodes=M2.FULL_NODES)
+        row = np.array([sum(x * x for x in (per[k][0], per[k][1], per[k][2], per[k][4])) for k in pr.epochs])
+        grid[(tl, cl)] = row
+        print(f"  {tl + ' on ' + cl:<28}" + "".join(f"{v:>9.3f}" for v in row) + f"{row.sum():>10.3f}")
 
     # ---- predictions ------------------------------------------------------- #
     pred = {"exp63 official": M2.predict2(spec2, th63, curves, F.R_GRID),
             "refit pre-epoch": np.stack([M2.predict2(spec2, thr, pre[k], F.R_GRID, epochs=(k,))[:, 0, :]
                                          for k in EPOCHS], axis=1)}
+    if thm is not None:
+        pred["refit measured"] = M2.predict2(spec2, thm, meas, F.R_GRID)
     good = np.isfinite(data).all(axis=(1, 2)) & (data > 0).all(axis=(1, 2))
     for v in pred.values():
         good &= np.isfinite(v).all(axis=(1, 2)) & (v > 0).all(axis=(1, 2))

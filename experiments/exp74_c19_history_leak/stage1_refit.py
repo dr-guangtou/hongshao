@@ -48,7 +48,7 @@ ANCHOR_Z = list(E.ANCHOR_Z)
 EPOCHS = (0, 1, 2, 3, 4)
 OUTDIR = HERE / "outputs"
 FIT_NPZ = ROOT / "experiments/exp63_analytic_growth/outputs/stage2_fit_joint_kpc_free_sane.npz"
-START_ORDER = ["nested", "exp63", "exp63_near", "default", "jitter0"]
+START_ORDER = ["nested", "exp63", "exp63_near", "exp74pre", "default", "jitter0"]
 
 
 class PreEpochJoint(S2F.JointProblem2):
@@ -58,8 +58,15 @@ class PreEpochJoint(S2F.JointProblem2):
     def __init__(self, spec2, curves_official, curves_by_epoch, data, mask, lmh, R, th_inc, binned=True):
         super().__init__(spec2, curves_official, data, mask, lmh, R, th_inc, binned=binned)
         self.curves_k = {k: [curves_by_epoch[k][i] for i in self.all_rows] for k in self.epochs}
+        # one table per galaxy serving every epoch (variant B): a single
+        # predict2 call, exactly as exp63's problem
+        self.same_curves = all(curves_by_epoch[k] is curves_by_epoch[self.epochs[0]] for k in self.epochs)
 
     def per_epoch(self, theta, nodes=M2.FIT_NODES):
+        if self.same_curves:
+            m = M2.predict2(self.spec2, theta, self.curves_k[self.epochs[0]], self.R,
+                            epochs=tuple(self.epochs), nodes=nodes)
+            return {k: self.problems[k].score_model(m[self.index[k], j]) for j, k in enumerate(self.epochs)}
         out = {}
         for k in self.epochs:
             m = M2.predict2(self.spec2, theta, self.curves_k[k], self.R, epochs=(k,), nodes=nodes)[:, 0, :]
@@ -67,25 +74,32 @@ class PreEpochJoint(S2F.JointProblem2):
         return out
 
 
-def build(smoke=False):
+def build(smoke=False, which="pre-epoch"):
     recs, data, mask_legacy, lmh, spec_inc, th_inc, _ = S0.build(smoke)
     mask, _ = S2F.fit_masks(data, mask_legacy, lmh, "sane")
     curves = E.build_curves(recs, verbose=False)
     fz = np.load(FIT_NPZ, allow_pickle=True)
     spec2 = S2F.spec_from_fit(fz)
     hist_path = OUTDIR / f"history_curves{'_smoke' if smoke else ''}.npz"
-    pre = {k: HI.load_curves(curves, k, hist_path) for k in EPOCHS}
+    if which == "measured":
+        import selection as SEL
+        import measured as MB
+        hist = dict(np.load(hist_path, allow_pickle=True))
+        meas, _ = MB.build_measured(recs, curves, np.load(SEL.HS_NPZ, allow_pickle=True), hist, verbose=True)
+        pre = {k: meas for k in EPOCHS}
+    else:
+        pre = {k: HI.load_curves(curves, k, hist_path) for k in EPOCHS}
     pr = PreEpochJoint(spec2, curves, pre, data, mask, lmh, F.R_GRID, th_inc, binned=True)
     return recs, data, mask, lmh, curves, pre, fz, spec2, th_inc, pr
 
 
-def main(smoke=False, starts_sel=None, merge=False):
-    tag = "_smoke" if smoke else ""
+def main(smoke=False, starts_sel=None, merge=False, which="pre-epoch"):
+    tag = ("_measured" if which == "measured" else "") + ("_smoke" if smoke else "")
     if merge:
         return merge_starts(tag)
-    print(f"{RULE}\nexp74 Stage 1 — exp63's joint mean refitted on PRE-EPOCH curves; the curves are the only "
+    print(f"{RULE}\nexp74 Stage 1 — exp63's joint mean refitted on {which.upper()} curves; the curves are the only "
           f"change\n{RULE}\n")
-    recs, data, mask, lmh, curves, pre, fz, spec2, th_inc, pr = build(smoke)
+    recs, data, mask, lmh, curves, pre, fz, spec2, th_inc, pr = build(smoke, which)
     print(f"  JOINT FIT at all five epochs: masks " + " / ".join(f"{len(pr.rows[k])}" for k in pr.epochs)
           + f" galaxies (union {len(pr.all_rows)}); references = the nested incumbent on the OFFICIAL curves")
     th_nested = M2.with_levers_theta(M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split), spec2)
@@ -118,6 +132,10 @@ def main(smoke=False, starts_sel=None, merge=False):
     rng_near = np.random.default_rng(74)
     span = np.array([hi - lo for lo, hi in bounds])
     starts.append(("exp63_near", M2.clip_to_bounds(spec2, th_exp63 + 0.05 * span * rng_near.standard_normal(len(span)))))
+    # for variant B, the pre-epoch refit's optimum is the closest known start
+    prev = OUTDIR / f"stage1_refit{'_smoke' if smoke else ''}.npz"
+    if which == "measured" and prev.exists():
+        starts.append(("exp74pre", np.asarray(np.load(prev, allow_pickle=True)["theta_best"], float)))
     starts = [s for n in START_ORDER for s in starts if s[0] == n]
     if starts_sel is not None:
         starts = starts[starts_sel[0]:starts_sel[1] + 1]
@@ -146,7 +164,7 @@ def main(smoke=False, starts_sel=None, merge=False):
                  l_s_ref=pr.l_s_ref, l_b_ref=pr.l_b_ref,
                  extended_family=spec2.extended_family, objective="binned",
                  compact_in_kpc=spec2.compact_in_kpc, fit_epoch=-1, fit_sample="sane",
-                 curves="pre-epoch (exp74 history.py)")
+                 curves=f"{which} (exp74)")
         print(f"  wrote {OUTDIR / f'stage1_refit{tag}_start_{name}.npz'}", flush=True)
 
 
@@ -178,4 +196,5 @@ if __name__ == "__main__":
     if "--starts" in a:
         lo, hi = a[a.index("--starts") + 1].split(":")
         ss = (int(lo), int(hi))
-    main(smoke="--smoke" in a, starts_sel=ss, merge="--merge" in a)
+    main(smoke="--smoke" in a, starts_sel=ss, merge="--merge" in a,
+         which=(a[a.index("--curves") + 1] if "--curves" in a else "pre-epoch"))

@@ -86,20 +86,28 @@ def tilt(y, x, mask):
     return float(np.polyfit(x[ok], y[ok], 1)[0])
 
 
-def main(smoke=False, tables_only=False):
-    tag = "_smoke" if smoke else ""
-    print(f"{RULE}\nexp74 Stage 0b — the input change at FROZEN theta (exp63 joint)\n{RULE}\n")
+def main(smoke=False, tables_only=False, which="pre-epoch"):
+    tag = ("_measured" if which == "measured" else "") + ("_smoke" if smoke else "")
+    print(f"{RULE}\nexp74 Stage 0b — the input change at FROZEN theta (exp63 joint): {which} curves\n{RULE}\n")
     recs, data, mask_legacy, lmh_dm, _, _, _ = S0.build(smoke)
     fitmask, complete = S2F.fit_masks(data, mask_legacy, lmh_dm, "sane")
     curves = E.build_curves(recs, verbose=False)
     fz = np.load(FIT_NPZ, allow_pickle=True)
     spec2 = S2F.spec_from_fit(fz)
     theta = np.asarray(fz["theta_best"], float)
-    hist_path = OUTDIR / f"history_curves{tag}.npz"
-    pre = {k: HI.load_curves(curves, k, hist_path) for k in EPOCHS}
-    hist = np.load(hist_path, allow_pickle=True)
-    print(f"  {len(recs)} galaxies; theta = exp63 joint, frozen; pre-epoch curves from "
-          f"{hist_path.name} (G1 {'OK' if hist['g1_ok'] else 'FAILED'}, G2 {'OK' if hist['g2_ok'] else 'FAILED'})")
+    hist_path = OUTDIR / f"history_curves{'_smoke' if smoke else ''}.npz"
+    hist = dict(np.load(hist_path, allow_pickle=True))
+    if which == "measured":
+        import measured as MB
+        hs0 = np.load(SEL.HS_NPZ, allow_pickle=True)
+        meas, _ = MB.build_measured(recs, curves, hs0, hist, verbose=True)
+        pre = {k: meas for k in EPOCHS}
+        print(f"  {len(recs)} galaxies; theta = exp63 joint, frozen; MEASURED curves (one table per galaxy, "
+              f"every epoch)")
+    else:
+        pre = {k: HI.curves_for_epoch(curves, hist, k) for k in EPOCHS}
+        print(f"  {len(recs)} galaxies; theta = exp63 joint, frozen; pre-epoch curves from "
+              f"{hist_path.name} (G1 {'OK' if hist['g1_ok'] else 'FAILED'}, G2 {'OK' if hist['g2_ok'] else 'FAILED'})")
 
     hs = np.load(SEL.HS_NPZ, allow_pickle=True)
     rows = np.array([h.row for h in recs])
@@ -107,7 +115,8 @@ def main(smoke=False, tables_only=False):
     growth = lmh_cat[:, 0][:, None] - lmh_cat
 
     pred_off = M2.predict2(spec2, theta, curves, F.R_GRID)
-    pred_pre = np.stack([M2.predict2(spec2, theta, pre[k], F.R_GRID, epochs=(k,))[:, 0, :] for k in EPOCHS], axis=1)
+    pred_pre = (M2.predict2(spec2, theta, pre[0], F.R_GRID) if which == "measured" else
+                np.stack([M2.predict2(spec2, theta, pre[k], F.R_GRID, epochs=(k,))[:, 0, :] for k in EPOCHS], axis=1))
     good = np.isfinite(data).all(axis=(1, 2)) & (data > 0).all(axis=(1, 2))
     for pr in (pred_off, pred_pre):
         good &= np.isfinite(pr).all(axis=(1, 2)) & (pr > 0).all(axis=(1, 2))
@@ -135,7 +144,7 @@ def main(smoke=False, tables_only=False):
         ch = [(100 * np.nanmedian(pred_pre[fit_all, k, i] / pred_off[fit_all, k, i] - 1),
                100 * np.nanmedian(pred_pre[m_c, k, i] / pred_off[m_c, k, i] - 1)) for i in ir]
         print(f"  {ANCHOR_Z[k]:>6}{'change':<12}" + "".join(f"{a:>+10.1f} |{b:>+9.1f}" for a, b in ch))
-        for lab, pr in (("official", pred_off), ("pre-epoch", pred_pre)):
+        for lab, pr in (("official", pred_off), (which, pred_pre)):
             res = [(100 * np.nanmedian((pr[fit_all, k, i] - data[fit_all, k, i]) / data[fit_all, k, i]),
                     100 * np.nanmedian((pr[m_c, k, i] - data[m_c, k, i]) / data[m_c, k, i])) for i in ir]
             prof[(lab, k)] = res
@@ -148,14 +157,14 @@ def main(smoke=False, tables_only=False):
           f"growth]; exp71: model +0.125, truth +0.003 at z=2\n   (partial rho | slope); fitting sample\n{RULE}")
     print(f"  {'':<22}" + "".join(f"{f'z={z}':>18}" for z in ANCHOR_Z[1:]))
     leak = {}
-    for lab, pr in (("truth", data), ("official model", pred_off), ("pre-epoch model", pred_pre),
-                    ("residual, official", None), ("residual, pre-epoch", None)):
+    for lab, pr in (("truth", data), ("official model", pred_off), (f"{which} model", pred_pre),
+                    ("residual, official", None), (f"residual, {which}", None)):
         cells = []
         for k in range(1, 5):
             if lab == "truth":
                 y = y_tru[:, k]
             elif lab.startswith("residual"):
-                src = pred_off if "official" in lab else pred_pre
+                src = pred_off if lab.endswith("official") else pred_pre
                 y = np.log10(np.clip(src[:, k, c], 1.0, None)) - y_tru[:, k]
             else:
                 y = np.log10(np.clip(pr[:, k, c], 1.0, None))
@@ -170,7 +179,7 @@ def main(smoke=False, tables_only=False):
           f"binning variable) and the catalog mass\n{RULE}")
     print(f"  {'':<22}" + "".join(f"{f'z={z}':>20}" for z in ANCHOR_Z))
     tl = {}
-    for lab, pr in (("official", pred_off), ("pre-epoch", pred_pre)):
+    for lab, pr in (("official", pred_off), (which, pred_pre)):
         for xl, x in (("DiffMAH Mh", lmh_dm), ("catalog Mh", lmh_cat)):
             cells = []
             for k in EPOCHS:
@@ -185,7 +194,7 @@ def main(smoke=False, tables_only=False):
     r50_t = C.size_radius(data[fit_all], F.R_GRID, 0.5)
     print(f"  {'':<12}" + "".join(f"{f'z={z}':>9}" for z in ANCHOR_Z))
     sz = {}
-    for lab, pr in (("official", pred_off), ("pre-epoch", pred_pre)):
+    for lab, pr in (("official", pred_off), (which, pred_pre)):
         r50 = C.size_radius(pr[fit_all], F.R_GRID, 0.5)
         sz[lab] = [float(np.nanmedian(r50[:, k] / r50_t[:, k]) - 1) for k in EPOCHS]
         print(f"  {lab:<12}" + "".join(f"{100 * v:>+8.1f}%" for v in sz[lab]))
@@ -194,8 +203,8 @@ def main(smoke=False, tables_only=False):
     if not tables_only:
         (FIGDIR / "qa").mkdir(parents=True, exist_ok=True)
         logms = np.log10(np.clip(data[fit_all][:, 0, -1], 1.0, None))
-        for lab, pr in (("official", pred_off), ("preepoch", pred_pre)):
-            qa.evaluate(pr[fit_all], data[fit_all], F.R_GRID, ANCHOR_Z, name=f"exp74_frozen_{lab}{tag}",
+        for lab, pr in (("official", pred_off), (which.replace("-", ""), pred_pre)):
+            qa.evaluate(pr[fit_all], data[fit_all], F.R_GRID, ANCHOR_Z, name=f"exp74_frozen_{lab}{'_smoke' if smoke else ''}",
                         figdir=FIGDIR / "qa", figures=True, verbose=False,
                         bin_by=lmh_dm[fit_all][:, 0], bin_label=r"logM$_h$(z=0.4)",
                         bin_by_ms=logms, ms_label=r"logM$_*$ (total)")
@@ -210,4 +219,6 @@ def main(smoke=False, tables_only=False):
 
 
 if __name__ == "__main__":
-    main(smoke="--smoke" in sys.argv, tables_only="--tables-only" in sys.argv)
+    a = sys.argv
+    main(smoke="--smoke" in a, tables_only="--tables-only" in a,
+         which=(a[a.index("--curves") + 1] if "--curves" in a else "pre-epoch"))
