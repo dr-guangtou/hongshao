@@ -216,6 +216,45 @@ z = 2 (2.84 vs 3.11) and pays at z = 1.0–1.5, where its massive progenitors
 are too heavy. The cost of the honest input is 13–20 per cent of the loss,
 concentrated at z = 0.4 (the z = 0 anchor) and z = 1.0–1.5.
 
+## Variant B — the measured history as the input (`measured.py`, 2026-09-04, the user's direction)
+
+The user's rule, stated 2026-09-04: for hongshao's application the halo's
+full history from the simulation — DiffMAH parameters, peak and final halo
+mass included — is legitimate input; what the model must never see is the
+galaxy's own stellar mass. What C19 found is therefore not a cheat but a
+mis-description: the official DiffMAH form lets the final mass rewrite the
+early history, and the model's stellar mass then depends on the halo's future
+four to forty times more than TNG300's does. Variant B keeps the whole history
+as input and lets the deposition read it as it was: the running-peak M200c at
+the sixteen catalog snapshots, a monotone cubic (PCHIP) between them in
+(log t, log M) — each segment shaped by its own two points and the slopes at
+them, a later snapshot steadying the curve just before it and no further — and
+a power law continuing the first segment before 1.18 Gyr. One curve per
+galaxy serves every epoch; the integral is truncated at the epoch as always,
+so the future is present in the input and never consulted. The engine reads
+a curve's own table functions when it carries them (`log_mah_table`,
+`dm_dlnt_table`; `HaloCurve` unchanged, selftest passes).
+
+**Gates.** The curve passes through the measured peak masses exactly (the
+official curve's rms there is 0.105 dex). The no-future test at the
+pre-anchor snapshots AND at the midpoints between them, where the PCHIP slopes
+use neighbours: R² −0.003 / −0.001 / −0.005 / +0.007 at z = 0.7…2 (official
+0.50 / 0.72 / 0.72 / 0.61 at the midpoints). Every galaxy has ≥ 6 usable
+points; the early power-law slope is 3.1 (16–84: 1.2–5.7). At the engine's
+nodes before each anchor the measured curve differs from the official one by
+0.25–0.33 dex (median |Δ log M|) and from the pre-epoch fit by 0.23–0.26 —
+most of it in the extrapolated stretch before 1.18 Gyr, which carries 4 (z =
+0.4) to 14 (z = 2) per cent of the deposited mass.
+
+**At frozen θ** (`stage0_frozen.py --curves measured`) the measured curves
+reproduce the pre-epoch result to within a point: mass +4.4 / +3.5 / +6.6 /
++10.2 / +11.5 per cent at 103 kpc across the epochs (pre-epoch +4.3 … +11.0);
+the residual's future dependence −0.014 / −0.045 / −0.025 / −0.005 (pre-epoch
+−0.014 / −0.045 / −0.027 / −0.003); the z = 2 tilt −0.032 | +0.095 (pre-epoch
+−0.034 | +0.093). **The two honest inputs agree with each other; the
+functional form was not what mattered, the pinning to the future was.** The
+refit with the measured curves is Stage 1's third column.
+
 ## The verdict
 
 **C19 is confirmed at the level of the model, and its remedy works.** The

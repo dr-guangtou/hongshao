@@ -213,7 +213,7 @@ def main(smoke=False, tables_only=False, which="pre-epoch"):
              prof_keys=np.array([f"{a}|{k}" for (a, k) in prof]), prof=np.array(list(prof.values())),
              leak_keys=np.array([f"{a}|{k}" for (a, k) in leak]), leak=np.array(list(leak.values())),
              tilt_keys=np.array([f"{a}|{b}|{k}" for (a, b, k) in tl]), tilt=np.array(list(tl.values())),
-             size_official=sz["official"], size_pre=sz["pre-epoch"],
+             size_official=sz["official"], size_pre=sz[which],
              pred_official=pred_off.astype(np.float32), pred_preepoch=pred_pre.astype(np.float32))
     print(f"\nwrote {OUTDIR / f'stage0_frozen{tag}.npz'}")
 
