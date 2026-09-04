@@ -2,6 +2,18 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **Use a relative tolerance when checking cumulative masses for roundoff
+  (Exp75 preparation).** An absolute 1e-5 Msun threshold rejected five
+  discovery profiles whose downward steps were at most 4.13e-15 of the
+  enclosed mass. The check now allows 1e-12 relative roundoff and leaves the
+  measured profiles unchanged. This is not permission to erase real declines.
+- **Full halo history is allowed for HongShao's intended forward use
+  (user clarification, 2026-09-04).** Do not confuse halo history after the
+  output epoch with the forbidden measured stellar-mass amplitude pin. A
+  prediction may condition on the full halo history; stellar masses at every
+  epoch remain outputs. A history-representation test is not automatically a
+  test of whether its information is legitimate.
+
 - **A globally fixed nuisance coordinate can improve local conditioning while
   making the population representation worse (Exp70).** Fixing damped-cosine
   damping to one of four predeclared population-wide values made the weakest
