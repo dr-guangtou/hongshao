@@ -1,6 +1,7 @@
 """Focused checks; no repository-wide collection or real target data."""
 
 import unittest
+from pathlib import Path
 
 import numpy as np
 
@@ -60,6 +61,82 @@ class CorrectionChecks(unittest.TestCase):
                 np.sort(np.concatenate(roles)), np.arange(100)
             )
             self.assertEqual([len(x) for x in roles], [60, 20, 20])
+
+    def test_prediction_coordinate_audit(self):
+        from prepare import load_module
+
+        audit = load_module(
+            "exp75_qa_checks", Path(__file__).with_name("standard_qa.py")
+        ).recover_applied_coordinates
+        baseline = np.tile(self.baseline, (2, 5, 1))
+        coefficients = np.tile([0.12, 0.3, -0.2, 0.15], (2, 5, 1))
+        corrected = apply_correction(baseline, coefficients, self.radii)
+        result = audit(baseline, corrected, self.radii)
+        np.testing.assert_allclose(
+            result["minimum_by_epoch"], coefficients[0], atol=1e-8
+        )
+        np.testing.assert_allclose(
+            result["maximum_by_epoch"], coefficients[0], atol=1e-8
+        )
+
+    def test_end_to_end_evaluation_label_poison(self):
+        from run import compare
+
+        rng = np.random.default_rng(4)
+        features = rng.normal(size=(30, 5))
+        features[:, 0] += 13
+        baseline = np.tile(self.baseline, (30, 5, 1))
+        coefficients = rng.normal(0, 0.1, size=(30, 5, 4))
+        sample = {
+            "radii": self.radii,
+            "core": features,
+            "history": np.column_stack([features, features[:, 1:]]),
+            "halo": features[:, :4],
+            "target": apply_correction(baseline, coefficients, self.radii),
+        }
+        training, calibration, evaluation = split_roles(make_folds(features[:, 0]), 0)
+        before, _ = compare(sample, baseline, training, calibration, evaluation)
+        sample["target"][evaluation] *= 100
+        after, _ = compare(sample, baseline, training, calibration, evaluation)
+        for name in before:
+            np.testing.assert_array_equal(before[name], after[name])
+
+    def test_scientific_gate_rejects_small_gain(self):
+        from prepare import load_module
+
+        statistics = load_module(
+            "exp75_report_checks", Path(__file__).with_name("report.py")
+        ).statistics
+
+        truth = np.tile(self.baseline, (30, 5, 1))
+        sample = {"target": truth, "halo": np.arange(120).reshape(30, 4)}
+        predictions = {
+            name: truth * 10**0.1
+            for name in ("baseline", "intercept", "mass_only", "shuffled", "direct")
+        }
+        predictions["hybrid"] = truth * 10**0.096
+        result, *_ = statistics(sample, predictions)
+        self.assertFalse(result["decision"]["eligible_for_further_work"])
+        self.assertFalse(
+            result["decision"]["checks"]["pooled_improvement_at_least_five_percent"]
+        )
+
+    def test_scientific_gate_accepts_large_uniform_gain(self):
+        from prepare import load_module
+
+        statistics = load_module(
+            "exp75_report_checks", Path(__file__).with_name("report.py")
+        ).statistics
+
+        truth = np.tile(self.baseline, (30, 5, 1))
+        sample = {"target": truth, "halo": np.arange(120).reshape(30, 4)}
+        predictions = {
+            name: truth * 10**0.1
+            for name in ("baseline", "intercept", "mass_only", "shuffled", "direct")
+        }
+        predictions["hybrid"] = truth * 10**0.09
+        result, *_ = statistics(sample, predictions)
+        self.assertTrue(result["decision"]["eligible_for_further_work"])
 
 
 if __name__ == "__main__":

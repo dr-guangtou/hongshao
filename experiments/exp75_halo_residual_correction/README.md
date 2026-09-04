@@ -1,6 +1,8 @@
 # Exp75 — can halo inputs predict the deposition model's residuals?
 
-Status: PREDECLARED, before driver implementation or fitting (2026-09-04).
+Status: discovery completed, 2026-09-05; worth a bounded follow-up, NOT production.
+The protocol below was committed before driver implementation or fitting
+(2026-09-04, `aebcc473639fe6ca8f976f5d73744e30b0c43854`).
 Base: master `6bc2ecc326d73cff11d6da8feb941a8a3daa865d`.
 Branch: `exp75-halo-residual-correction`. No Exp74 code or fitted artifacts.
 
@@ -143,3 +145,170 @@ mass/size planes, CDFs, cross-epoch mass and size changes), distinguishing means
 from draws. Every figure gets a self-contained caption and PNG/PDF companions.
 All results retain indices, fold roles, model settings, source hashes, git SHA
 and measured runtime. No production adoption from this discovery experiment.
+
+## Discovery result and decision
+
+We fit a second statistical model to the deposition model's leftover profile
+errors, using halo inputs alone to predict amplitude and three radial changes.
+On 842 discovery galaxies evaluated once each, this reduces mean per-galaxy
+log-CoG RMS from 0.11422 dex to 0.10843 dex: a 5.074% improvement over the
+matched-loss deposition baseline. The paired 1000-galaxy-bootstrap 95% interval
+is 4.141–6.006%. It excludes no improvement, but does not establish that the
+population gain exceeds 5%. This is uncertainty conditional on these fitted
+fold models, not a bootstrap of model training or a fresh validation sample.
+
+All five predeclared discovery criteria pass. This supports predictable
+halo-dependent residual structure beyond a global recalibration. It does NOT
+make the current correction a production model: full QA exposes outer-mass
+biases and inadequate population diversity. Preserve the frozen result;
+predeclare any next experiment rather than retuning this discovery comparison.
+
+### Matched held-out comparisons
+
+Each entry is the mean radial log10-mass RMS per galaxy-epoch, pooled equally
+over the same galaxies and five epochs; lower is better. The deposition family
+was newly fitted under the same log-CoG objective, so these numbers must NOT
+be quoted as improvements over the original published Exp63 optimum.
+
+| Prediction | Held-out CoG RMS (dex) | Interpretation versus the baseline |
+| --- | ---: | --- |
+| Deposition baseline | 0.11422 | Reference |
+| Baseline plus global intercept correction | 0.11430 | No improvement |
+| Baseline plus final-mass-only correction | 0.11355 | Small improvement |
+| Baseline plus mass-bin-shuffled assembly correction | 0.11416 | Essentially unchanged |
+| Baseline plus halo-conditioned correction | 0.10843 | 5.074% better |
+| Direct five-coordinate statistical predictor | 0.11007 | Better than baseline; slightly worse pooled error than the hybrid |
+
+The direct predictor remains better at z=0.4 and 0.7 and has smaller maximum
+mass-binned radial bias (0.03556 dex, versus hybrid 0.05792 dex and baseline
+0.08654 dex). It is not dominated by the hybrid. It trains on 80% of galaxies,
+whereas the correction map trains on 20% and its baseline on a separate 60%.
+Do not infer a universal architectural ranking from this asymmetric comparison.
+
+| Redshift | Baseline RMS (dex) | Corrected RMS (dex) | Improvement |
+| --- | ---: | ---: | ---: |
+| 0.4 | 0.10790 | 0.10171 | 5.74% |
+| 0.7 | 0.10681 | 0.10214 | 4.37% |
+| 1.0 | 0.10782 | 0.10383 | 3.70% |
+| 1.5 | 0.11458 | 0.10834 | 5.45% |
+| 2.0 | 0.13400 | 0.12612 | 5.88% |
+
+Every fold's inner calibration chooses a linear map with the five-epoch
+concentration history and ridge penalty 1. This is consistent selection, not
+an independent measurement of concentration history's marginal contribution.
+The direct comparator always chooses quadratic features with the z=0.4
+concentration and penalty 0.01. Its decoder alone, supplied with measured
+stellar coordinates for this diagnostic only, has 0.00455 dex mean radial RMS
+against measured CoGs. That is a representation check, NOT a halo prediction.
+
+### Full QA changes the production judgment
+
+- At z=2 the median log half-mass-radius error improves from +0.07141 dex
+  (baseline relative to measured radii) to -0.00145 dex (hybrid). However,
+  the median log R90 error worsens from -0.05885 dex to +0.06921 dex.
+  Better half-mass radii do not ensure better outer profiles.
+- At z=2 the 50–100 kpc annular-mass RMS improves from 0.55341 dex to
+  0.40618 dex, but the median log mass bias between 100 kpc and the grid edge
+  worsens from -0.09470 dex to +0.47991 dex. The latter uses the 829 galaxies
+  with positive measured envelope mass; nearly flat CoG tails make fractional
+  and log errors especially sensitive. No new density-measurement mask was
+  invented. This is a CoG-derived envelope warning, not a claim about the
+  independently measured isophotal density.
+- The standard R20/R50/R80 offset check passes 13/15 hybrid epoch-size cases,
+  versus 14/15 for the baseline and 15/15 for the direct predictor. Hybrid
+  R20 fails at z=1.5 and 2.0, but 74.94% and 85.39% of the corresponding
+  measured R20 values lie below the 2 kpc grid and use the inherited log-log
+  extrapolation. This is a resolution-limited warning, not a resolved core test.
+- None of the three point predictors passes any of the 15 halo-conditioned
+  size-width cases. This diagnoses the absence of a generative scatter layer;
+  it is not a rejection of a conditional point prediction for being narrow.
+- For total stellar masses at z=2 versus z=0.4, rank correlation is 0.80576
+  for the hybrid versus 0.59176 in the data (baseline 0.84383). Cross-epoch
+  diversity remains missing. No interpolation or continuous-history claim
+  is made for five independently corrected epochs.
+
+The next useful step is a separately predeclared, small test of whether the
+correction can keep its cumulative-mass gain while controlling outer annular
+mass and size biases. Keep the direct statistical predictor as a reference;
+do not spend protected validation data on the present outer-profile defect.
+Only after this mean-model choice should a radius-resolved, temporally coherent
+scatter layer be calibrated. Measured-MAH substitution remains Exp74's work.
+
+### Execution, safeguards and provenance
+
+The discovery membership has 1200 galaxies, of which 850 overlap the established
+halo population; the existing quality selection removes 8, leaving 842.
+No selection/validation galaxy receives a role. Missing concentration is
+training-imputed. All science uses a private hash-verified input snapshot;
+source files were opened read-only and checked unchanged before/after extraction.
+
+The complete 30-galaxy operational gate took 5.741 seconds against a strict
+60-second limit. All five 150-galaxy pilot rotations passed. All five full
+discovery rotations passed, taking 261.260 seconds summed over the serial
+fold commands. Both baseline starts converged in every rotation; the largest
+training-loss disagreement was 0.6712%, below the 1% tolerance. The maximum
+integration-resolution difference was 0.0000380 dex, below 0.001 dex.
+The deposition transition-width parameter reaches its lower bound in several
+fits: convergence does not establish physical identifiability or a global optimum.
+Full standard QA of baseline, direct and hybrid took 53.968 seconds, separately
+from the discovery fitting commands and the three overview figures.
+
+Ten focused tests pass, including synthetic coefficient recovery, exact
+zero-correction nesting, monotonicity, fold separation, training-only
+imputation, scientific-gate tests, and an end-to-end evaluation-label poison
+test: multiplying held-out stellar CoGs by 100 changes none of the six
+predictions. The predicted correction coordinates reconstructed from the saved
+model CoGs reproduce them within 4.34e-13 dex. Coordinate extrema are saved
+in `outputs/discovery_standard_qa.json`; no evaluation stellar coordinate
+enters a halo prediction. No repository-wide pytest collection was attempted.
+
+The scientific fit code is committed in `acd67aca4ab1b461420d6bcfc82287a01d9ed4f6`;
+later changes to `run.py` only format it and correct an overview caption.
+The original fold-zero discovery figure says "provisional pilot fits" because
+of that inherited caption error; fold JSON and NPZ stage/role records are
+authoritative. The final combined figures have correct discovery labels.
+The overview mass plane labels use the actual nearest grid radii (10.25,
+52.30 and 103.45 kpc), not nominal 10/50/100 kpc; standard QA separately
+interpolates to its named apertures. Unmeasured 100–150 kpc annuli are null,
+not zero, because the original grid ends at 148.220 kpc.
+
+Run scripts from this worktree with its private `uv` environment and one BLAS
+thread. Sequence: `prepare.py` once with explicit read-only source/archive
+roots; `run.py gate`; `run.py pilot --rotation N` for N=0..4;
+`run.py discovery --rotation N`; `report.py discovery`; `standard_qa.py`.
+Existing input/fold/standard-QA outputs refuse overwrite. The report may be
+regenerated from frozen predictions. `report.write_manifest()` inventories
+final code, records and figures; fold JSON preserves fitting-time hashes and
+settings. All outputs/figures remain gitignored and local; no merge or push.
+
+### Figure guide
+
+All figures compare identical held-out discovery galaxies and have PNG/PDF
+companions. The three `figures/discovery_*` overview figures compare baseline,
+hybrid and direct predictions: halo-binned means/residuals, stellar-mass planes,
+and best/typical/worst individual profiles. They establish the modest mean
+improvement and expose unrecovered individual departures.
+
+The twelve `figures/standard_qa/qa_*_exp75_hybrid` figures show:
+
+- `mass_kpc_aper`: aperture masses; residual individual scatter remains.
+- `mass_kpc_diff`: annuli/envelopes; outer-envelope biases remain large.
+- `mass_Re_aper`: apertures in each profile's own half-mass-radius units;
+  amplitude scatter remains despite small median biases.
+- `mass_Re_diff`: size-relative annuli/envelopes; shape errors are not removed.
+- `planes`: inner/outer mass relations; slopes and widths remain mismatched.
+- `bins`: halo-mass-binned CoGs; the model-input-conditioned diagnostic.
+- `bins_ms`: stellar-mass-binned CoGs; regression to the mean affects the view.
+- `dens`: derivatives of measured/model CoGs, NOT independent isophotal
+  densities; cumulative-mass agreement hides outer-slope differences.
+- `cases`: individual best/worst maximum fractional errors; severe failures
+  remain. `idx` here is the local 842-row position, unlike original IDs in
+  the overview figure.
+- `growth`: same galaxies across epochs; model histories are too correlated.
+- `size`: mass–size planes; accurate R50 does not ensure accurate R90.
+- `cdf`: mass-distribution CDF residuals; annular distributions still differ.
+
+Inherited dotted "amplitude-pinned" overlays in the binned QA only remove
+amplitude for a shape diagnostic. They are never predictions or inputs to the
+reported primary scores. Width/CDF/plane comparisons of point predictions are
+descriptive, not tests of a sampled population. No scatter draws were produced.

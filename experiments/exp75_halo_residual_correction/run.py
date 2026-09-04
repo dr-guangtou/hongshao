@@ -361,7 +361,7 @@ def direct_figure(sample, evaluation, predictions, tag):
         "Three examples selected by halo mass, not fit quality.\n"
         "Operational fits are capped: this figure checks execution, not scientific accuracy."
         if tag == "gate"
-        else f"Exp75 {tag}: independent evaluation galaxies; provisional pilot fits."
+        else f"Exp75 {tag}: independent evaluation galaxies; unpinned halo-only predictions."
     )
     figure.suptitle(caption, fontsize=9)
     figure.tight_layout(rect=(0, 0, 1, 0.91))
@@ -393,7 +393,9 @@ def run(stage, rotation):
             raise RuntimeError("operational gate did not pass")
     if stage == "discovery":
         for pilot_rotation in range(5):
-            pilot = json.loads((OUTPUT / f"pilot_fold{pilot_rotation}.json").read_text())
+            pilot = json.loads(
+                (OUTPUT / f"pilot_fold{pilot_rotation}.json").read_text()
+            )
             if not pilot["passed"]:
                 raise RuntimeError("all five pilot rotations must pass first")
     tag = "gate" if operational else f"{stage}_fold{rotation}"
@@ -442,7 +444,9 @@ def run(stage, rotation):
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
         ).strip(),
         "input_sha256": file_hash(OUTPUT / "inputs.npz"),
-        "code_sha256": {path.name: file_hash(path) for path in sorted(HERE.glob("*.py"))},
+        "code_sha256": {
+            path.name: file_hash(path) for path in sorted(HERE.glob("*.py"))
+        },
     }
     destination.write_text(json.dumps(record, indent=2) + "\n")
     (OUTPUT / "manifest.json").write_text(json.dumps(record, indent=2) + "\n")

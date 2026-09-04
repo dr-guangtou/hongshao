@@ -2,6 +2,27 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **A successful residual correction can still be unsafe in the outskirts
+  (Exp75).** The halo-only correction improved held-out mean log-CoG RMS by
+  5.074% versus a matched-loss deposition refit, yet its z=2 median log
+  100–148 kpc envelope-mass bias worsened from -0.09470 to +0.47991 dex.
+  Keep the positive predictability result, but do not promote the correction
+  based on cumulative mass alone. Radius-resolved mass and size QA must remain
+  separate from pooled CoG accuracy, and scatter tests must distinguish point
+  predictions from sampled populations.
+- **A nearest-grid aperture is not the nominal aperture (Exp75 figure QA).**
+  The overview initially labeled grid samples as 10/50/100 kpc. They are
+  10.248/52.299/103.450 kpc. Correct the labels from the actual grid, or
+  interpolate explicitly; never silently equate the two. The final overview
+  labels are corrected, with predictions and primary scores unchanged.
+
+- **Load experiment helpers by explicit path when legacy drivers modify the
+  import path (Exp75).** A focused report test imported Exp53's `report.py`
+  after the deposition driver added its own experiment paths. Giving the
+  Exp75 report a unique module name and explicit path fixed the collision;
+  all scientific fits were unaffected. Short generic module names are not
+  isolated merely because the files live in different experiment folders.
+
 - **Use a relative tolerance when checking cumulative masses for roundoff
   (Exp75 preparation).** An absolute 1e-5 Msun threshold rejected five
   discovery profiles whose downward steps were at most 4.13e-15 of the
