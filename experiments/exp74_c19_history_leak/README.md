@@ -198,6 +198,24 @@ number every fit in the record before this one enjoyed.
 - The centre is untouched: −12.8 per cent at 2 kpc at z = 2 against −11.1 —
   the central defect is a separate problem, as C18 said.
 
+### Addendum — the same 2 × 2 with bins by the MEASURED mass (`rescore_bins.py`)
+
+exp63's binned term uses halo-mass terciles by the official DiffMAH mass, the
+variable the honest model no longer uses. Re-scored with terciles by the
+measured M200c(z_k) (references rebuilt in the same bins):
+
+| θ \ curves | z=0.4 | z=0.7 | z=1.0 | z=1.5 | z=2.0 | total |
+|---|---|---|---|---|---|---|
+| exp63 on official | 3.441 | 3.023 | 2.953 | 2.934 | 3.105 | **15.457** |
+| refit on pre-epoch | 3.923 | 3.554 | 3.562 | 4.640 | **2.840** | **18.519** |
+
+The gap is not a binning artefact: it is 12.6 per cent in exp63's bins and
+19.8 per cent in the measured-mass bins (the refit was not optimised in
+these). In the measured-mass bins the honest model is the better one at
+z = 2 (2.84 vs 3.11) and pays at z = 1.0–1.5, where its massive progenitors
+are too heavy. The cost of the honest input is 13–20 per cent of the loss,
+concentrated at z = 0.4 (the z = 0 anchor) and z = 1.0–1.5.
+
 ## The verdict
 
 **C19 is confirmed at the level of the model, and its remedy works.** The

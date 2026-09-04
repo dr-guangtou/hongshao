@@ -2999,7 +2999,12 @@ Owed to the user, NOT decided here:
 - [x] **Stage 1** `stage1_refit.py` (+ `--merge`) and `stage1_eval.py`: one
   parameter moves (a_z); +12.6% loss; leak zero; z=2 tilt −0.122→−0.046; z=2
   mh-complete −9.7%→−2.5%; R50 width 0.27→0.40 at z=2. README verdict.
-- [ ] **Decision (user)**: adopt the pre-epoch curves as the standard input.
+- [x] Re-score the 2×2 with bins by the measured mass: gap 19.8% there, 12.6% in
+  exp63's bins — not a binning artefact; the honest model wins z=2, loses z=1–1.5.
+- [ ] **Decision (user)**: the standard input (see the exp74 README verdict and
+  the 2026-09-04 discussion: the full MAH is legitimate input for the
+  application; what must match the truth is the model's dependence on the
+  future at fixed current mass, ~0).
 - [ ] **Decision (user)**: merge.
 - [ ] Variant B (the measured history interpolated) — to separate the cost of
   honesty from the cost of DiffMAH's form. Not built.
