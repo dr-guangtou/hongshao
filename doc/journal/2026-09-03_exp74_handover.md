@@ -64,3 +64,13 @@ Decisions owed: adopt; merge; re-baseline the incumbent and the v1 layer on
 the new input. The next modelling targets under the honest input: the
 z = 1.0–1.5 massive progenitors (+5–9 per cent) and the high-z sizes (+13 per
 cent at z = 2).
+
+## Closing (2026-09-05)
+
+The user's decisions: record the lessons honestly (done, `doc/lessons.md`);
+**keep the model able to take the DiffMAH parameters and the full measured
+MAH alike** — `measured.py::build_input(recs, kind)` is the single entry
+point for the three representations; the rule is in the repo `CLAUDE.md` and
+`docs/SPEC.md`. Still the user's: merge `exp74-c19-history-leak`; adopt
+`measured` as the application default; re-baseline the incumbent and the v1
+stochastic layer on it.

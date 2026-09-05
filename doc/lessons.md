@@ -2676,3 +2676,32 @@ session should not rediscover them:
   objective on the new curves; the fix is a near start, not more far ones.
 - **A long fit on a laptop needs `caffeinate -i -w <pid>`.** Four hours of a
   five-hour fit were the machine asleep.
+- **Ask what the model is allowed to know before calling an input a leak.**
+  I framed C19 as the model "cheating" by seeing the halo's future and
+  recommended a causal input on that ground. The user's rule for the
+  application is different: the whole merger tree, final mass included, is
+  legitimate; only the galaxy's own stellar mass is not. The right test was
+  never causality — it was whether the model's conditional distribution at
+  fixed current halo mass depends on the future the way the simulation's
+  does (it did, 4–40× too strongly). Same measurement, different verdict:
+  the recommendation moved from "a DiffMAH fitted to the past" to "the
+  measured history, future included". State the application's information
+  rule first; then the test follows from it.
+- **Test the mechanism at frozen parameters before spending the refit.**
+  Swapping the input under exp63's fixed theta showed the leak vanish and
+  the mass rise by 11–18 per cent at z = 2; the refit then moved one
+  parameter and confirmed every number. The frozen-theta run costs a minute
+  and predicts the two-hour fit's outcome; run it first, every time.
+- **When two constructions give the same model, the thing they share is the
+  cause.** A DiffMAH fitted to the past and the raw interpolated history
+  agree to a point or two on every quantity; their difference (the
+  functional form, 0.25 dex at the early nodes) is therefore not what
+  mattered. Build the second construction before attributing an effect to
+  the first one's details.
+- **A single whole-history fit anchored at the end is a channel from the
+  end to the beginning.** Any parametric summary whose normalisation sits at
+  the final time (DiffMAH's `logmp` at z = 0) makes every earlier value a
+  function of the final one; the fit will read it. Local smoothing (each
+  segment from its neighbours) denoises without that channel. Gate any
+  summary input with the future-dependence test at the nodes, not only at
+  the snapshots.

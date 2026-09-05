@@ -3005,6 +3005,8 @@ Owed to the user, NOT decided here:
   the 2026-09-04 discussion: the full MAH is legitimate input for the
   application; what must match the truth is the model's dependence on the
   future at fixed current mass, ~0).
+- [x] Keep both input paths (the user, 2026-09-05): `measured.py::build_input`
+  serves `official` / `pre-epoch` / `measured`; rule in CLAUDE.md and SPEC.
 - [ ] **Decision (user)**: merge.
 - [x] Variant B (the measured history, PCHIP-interpolated; `measured.py`): same
   model as the pre-epoch DiffMAH to a point or two; loss +10.8% vs +12.6%; the

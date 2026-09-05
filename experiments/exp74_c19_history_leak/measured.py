@@ -140,6 +140,37 @@ def build_measured(recs, curves, hs, hist=None, verbose=True):
     return out, dict(n_knots=n_knots, slope0=slopes, fallback=fallback)
 
 
+INPUT_KINDS = ("official", "pre-epoch", "measured")
+
+
+def build_input(recs, kind, hs=None, hist_path=None, verbose=False):
+    """THE ONE ENTRY POINT for the halo-history input (the user, 2026-09-05:
+    keep the model able to take DiffMAH parameters and the measured MAH alike).
+
+    kind = "official"   the official DiffMAH curve, one per galaxy for every
+                        epoch (every experiment before exp74);
+           "pre-epoch"  a DiffMAH curve per galaxy PER EPOCH fitted to the
+                        history before that epoch (`history.py`);
+           "measured"   the measured running-peak history interpolated, one
+                        per galaxy for every epoch (this module).
+    Returns {epoch: curve list} for every kind, so a caller can always write
+    `curves[k]`; for "official" and "measured" the five lists are the same
+    object and `predict2` may be called once for all epochs."""
+    if kind not in INPUT_KINDS:
+        raise ValueError(f"kind must be one of {INPUT_KINDS}, got {kind!r}")
+    curves = E.build_curves(recs, verbose=verbose)
+    if kind == "official":
+        return {k: curves for k in EPOCHS}
+    hist = dict(np.load(hist_path or (OUTDIR / "history_curves.npz"), allow_pickle=True))
+    assert np.array_equal(hist["rows"], np.array([hc.row for hc in curves])), \
+        "history_curves.npz was built for a different record list"
+    if kind == "pre-epoch":
+        return {k: HI.curves_for_epoch(curves, hist, k) for k in EPOCHS}
+    hs = np.load(SEL.HS_NPZ, allow_pickle=True) if hs is None else hs
+    meas, _ = build_measured(recs, curves, hs, hist, verbose=verbose)
+    return {k: meas for k in EPOCHS}
+
+
 def gate_g2_all(curves_by_name, hs, rows, lmh_cat, growth, keep, at="snapshots"):
     """cv R^2 of future growth at fixed M200c(z_k) from each representation read
     at the pre-anchor snapshot times, or at the midpoints between them."""
