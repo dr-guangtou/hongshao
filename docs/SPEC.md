@@ -103,3 +103,32 @@ usage reference is `doc/cubic_logit_profile.md`. The family is approved for
 projected, finite-resolution CoG interpolation and aperture-normalized mass
 predictions. It is not approved as a physical central density law, a spherical
 three-dimensional profile, or an unconstrained infinite-total estimator.
+
+## The halo-history input (exp74, 2026-09-05)
+
+**What the model may know.** The halo's full assembly history from the
+simulation — every snapshot's mass, the DiffMAH parameters, the peak and
+final halo mass — is legitimate input at every epoch (the user, 2026-09-04:
+the application is simulation haloes with full merger trees). What the model
+must never see is the galaxy's own stellar mass at any epoch: the amplitude,
+the stellar-mass–halo-mass relation and their evolution are outputs.
+
+**What must nevertheless match the truth.** At fixed halo mass at an epoch,
+the model's stellar mass must depend on the halo's FUTURE growth no more than
+TNG300's does (+0.003 dex per dex at z = 2, +0.03–0.05 at z = 1–1.5). This is
+a standing QA gate (`selection.partial_growth` on the residual; exp74
+`stage1_eval.py` section 4). The official DiffMAH curve fails it by 4–40×
+because its single whole-history fit anchored at z = 0 lets the final mass
+rewrite the early history (C19).
+
+**Three representations, one interface** (`exp74/measured.py::build_input`):
+`"official"` (the DiffMAH curve, `engine.HaloCurve`), `"pre-epoch"` (a
+DiffMAH curve per epoch fitted to the history before it, `HaloCurve.logt0`
+at the epoch), `"measured"` (the running-peak M200c interpolated, PCHIP in
+log t, power law before 1.18 Gyr, `measured.MeasuredCurve`). The engine reads
+a curve through its own `log_mah_table` / `dm_dlnt_table` when it carries
+them and through the DiffMAH form otherwise, so a model fits and predicts on
+any of the three without change. **The model keeps both the DiffMAH and the
+measured-MAH paths** (the user, 2026-09-05). Recommended default for the
+application: `"measured"`; the two honest inputs give the same model to a
+point or two (exp74 README).

@@ -26,3 +26,22 @@ fitted parameters frozen — never the sample a fit is run on.
   subset to later experiments as the fit mask, and exp57/exp63 fitted on it
   until 2026-08-30. When you see `S0.build(...)`'s `mask` used as a fit mask,
   that is the old, wrong path.
+
+## THE HALO INPUT (the user, 2026-09-04/05 — applies to every experiment)
+
+**The model may know the halo's full assembly history from the simulation,
+including its peak and final halo mass. It must never see the galaxy's own
+stellar mass at any epoch.** The forward model has to predict the stellar
+mass and the stellar-mass–halo-mass relation, not normalise to them.
+
+- The halo history reaches the engine through one interface,
+  `experiments/exp74_c19_history_leak/measured.py::build_input(recs, kind)`
+  with `kind` in `official` (DiffMAH curve), `pre-epoch` (DiffMAH fitted
+  before each epoch) and `measured` (the merger-tree masses interpolated).
+  **Keep all three working**; the recommended default for the application
+  is `measured` (exp74 verdict).
+- Standing QA gate: at fixed halo mass at an epoch the model's stellar mass
+  must not depend on the halo's future growth more than TNG300's does
+  (`selection.partial_growth` on the residual; exp74 `stage1_eval.py` §4).
+  The official DiffMAH curve fails it 4–40× (C19); do not read a high-z
+  number fitted on it without saying so.

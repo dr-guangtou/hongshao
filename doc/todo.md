@@ -2988,3 +2988,28 @@ Owed to the user, NOT decided here:
 - [x] **C the refit — NEGATIVE.** The coordinate dropped the inner aperture and
   the fit put +100% inside 2 kpc (R50 −22..−26%, exp63's loss 178 vs 15.3).
   Repaired (aperture = bin 0, selftest H). NOT re-run — the user's call.
+
+## 2026-09-02/03 — exp74 (C19), on `exp74-c19-history-leak`
+
+- [x] **Stage 0a** `history.py`: pre-epoch DiffMAH curves per galaxy per epoch,
+  anchored at the epoch; G1 OK (0.062 dex vs official's own 0.105 misfit); G2
+  OK (future R² 0.000 at every epoch vs official 0.50–0.69).
+- [x] **Stage 0b** `stage0_frozen.py`: at frozen θ the leak vanishes; 43% of z=2
+  deposits were on extrapolated curve; +11/+18% mass at z=2.
+- [x] **Stage 1** `stage1_refit.py` (+ `--merge`) and `stage1_eval.py`: one
+  parameter moves (a_z); +12.6% loss; leak zero; z=2 tilt −0.122→−0.046; z=2
+  mh-complete −9.7%→−2.5%; R50 width 0.27→0.40 at z=2. README verdict.
+- [x] Re-score the 2×2 with bins by the measured mass: gap 19.8% there, 12.6% in
+  exp63's bins — not a binning artefact; the honest model wins z=2, loses z=1–1.5.
+- [ ] **Decision (user)**: the standard input (see the exp74 README verdict and
+  the 2026-09-04 discussion: the full MAH is legitimate input for the
+  application; what must match the truth is the model's dependence on the
+  future at fixed current mass, ~0).
+- [x] Keep both input paths (the user, 2026-09-05): `measured.py::build_input`
+  serves `official` / `pre-epoch` / `measured`; rule in CLAUDE.md and SPEC.
+- [ ] **Decision (user)**: merge.
+- [x] Variant B (the measured history, PCHIP-interpolated; `measured.py`): same
+  model as the pre-epoch DiffMAH to a point or two; loss +10.8% vs +12.6%; the
+  form did not matter. RECOMMENDED as the standard input.
+- [ ] The incumbent and the v1 stochastic layer inherit the leak; re-baseline
+  when the input is adopted.

@@ -580,6 +580,46 @@ whether `halo-history-knows-a-little-about-the-core` (partial |ρ| ≤ 0.23 with
 DiffMAH `early`/`late`/`t50` at fixed halo mass) survives being redone with
 measured-history variables. Nothing is withdrawn on the strength of this yet.
 
+**Update 2026-09-02 night (exp74 Stage 0, no fit).** A DiffMAH curve refitted
+per epoch to the history BEFORE the epoch and anchored there (`history.py`)
+knows nothing of the future (cv R² 0.000 at every epoch, official 0.50–0.69).
+At exp63's FROZEN θ it removes the residual's future-growth dependence
+entirely (+0.12…0.17 → −0.00…−0.05 dex/dex; the truth's own is −0.01…+0.05)
+and three-quarters of the z = 2 fitting-sample tilt (−0.121 → −0.034; the
+mh-complete tilt +0.060 → +0.093). The price at frozen θ is mass: +11 per cent
+at z = 2 on the fitting sample, +18 on the mh-complete subset — the official
+curve understates the anchor mass at z = 2 by 0.06 dex median and 43 per cent
+of the model's z = 2 deposits sit before the official fit's own 2 Gyr data
+cut. Stage 1 (the refit with the curves as the only change) is running.
+
+**ANSWERED 2026-09-03 (exp74 Stage 1, the refit; decision owed).** With the
+pre-epoch curves as the ONLY change, exp63's joint fit moves one parameter
+(`a_z` 0.348 → 0.286 — the future had been stored as a steeper redshift rise
+of the efficiency), costs 12.6 per cent of exp63's loss (15.35 → 17.28), and:
+the residual's future-growth dependence is zero at every epoch (−0.004 at
+z = 2 vs +0.120; the truth +0.003); the z = 2 fitting-sample tilt falls
+−0.122 → −0.046 (60 per cent was the leak; the mh-complete tilt +0.060 →
++0.083 is real); the z = 2 mh-complete total goes from −9.7 to −2.5 per cent;
+the R50 width ratio at z = 2 rises 0.27 → 0.40. Costs: mh-complete +5–9 per
+cent at z = 1–1.5, R50 +11 per cent at z = 2. **Recommendation: adopt the
+pre-epoch curves as the standard input** (`experiments/exp74_c19_history_leak`).
+The incumbent and the v1 stochastic layer inherit the leak. Variant B (the
+measured history) not built.
+
+**Variant B, 2026-09-04/05 (the measured history as the input, the user's
+direction; recommendation changed).** The user's rule: the halo's full history
+including the final mass is legitimate input; only the galaxy's own stellar
+mass is forbidden. So C19 is a wrong conditional distribution, not a cheat.
+The measured running-peak M200c interpolated (PCHIP in log t, power law before
+1.18 Gyr; `measured.py`) passes the no-future gate (R² within 0.01 of zero at
+snapshots and midpoints) and, refitted (single basin, 17.01 under exp63's
+loss, +10.8 per cent), gives the same model as the pre-epoch DiffMAH to a
+point or two: leak zero, z = 2 mh-complete total −1.1 per cent (exp63 −9.7),
+z = 1–1.5 mh-complete +5–9, R50 +13 per cent at z = 2. **Recommendation:
+adopt the measured history as the standard input**; keep the
+future-dependence test as a QA gate; re-baseline the incumbent and the v1
+layer on it.
+
 ### C18. At z = 2, do the massive progenitors and the rest want different models?
 **RESOLVED 2026-08-31 (exp71). It is the selection, from 10 kpc outwards; the
 centre is a separate, older problem.** Details and every table in
