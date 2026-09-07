@@ -3,6 +3,8 @@
 import unittest
 
 from annular import (
+    HERE,
+    REF,
     annular_matrix,
     apply_correction,
     fit_labels,
@@ -58,6 +60,21 @@ class AnnularChecks(unittest.TestCase):
         self.assertEqual(selected_before, selected_after)
         for name in before:
             np.testing.assert_array_equal(before[name], after[name])
+
+    def test_conditional_growth_difference_has_known_answer(self):
+        report = REF.CONT.BASE.load_module("exp77_test_report", HERE / "report.py")
+        rng = np.random.default_rng(771)
+        mass = 13 + rng.normal(0, 0.2, (30, 5))
+        growth = mass[:, :1] - mass
+        truth = np.tile(self.baseline, (30, 5, 1))
+        sample = {"target": truth, "radii": self.radii, "measured_epoch_mass": mass}
+        result = report.future_difference(
+            sample,
+            {"reference": truth, "selected": truth * 10 ** (0.1 * growth[..., None])},
+        )
+        for value in result.values():
+            self.assertAlmostEqual(value["increase_in_absolute_residual_slope"], 0.1)
+            self.assertTrue(value["significantly_worse"])
 
 
 if __name__ == "__main__":

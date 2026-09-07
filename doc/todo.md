@@ -37,9 +37,15 @@ Scientific details and figures live in the Exp75 README and QA index.
 
 - [x] Reserve unique branch/worktree after checking local and remote Exp76
   activity; predeclare the fixed baseline/family, weights and safeguards.
-- [ ] Focused checks, sub-minute operational gate and fixed-role pilot.
-- [ ] Evaluate the outer-mass versus CoG compromise and halo prediction;
+- [x] Focused checks, sub-minute operational gate and fixed-role pilot.
+- [x] Evaluate the outer-mass versus CoG compromise and halo prediction;
   generate direct QA, record the decision and close before the overnight cutoff.
+
+Review: annular fitting reduces held-out outer-mass error without changing
+the family or regression settings, but fails the predeclared z=1.5 R50 and
+z=2 conditional-growth safeguards. No adoption. Next plan should consider
+CoGs, annuli and sizes together during calibration, then evaluate unchanged
+outer folds; do not tune the decision against already viewed discovery data.
 
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)

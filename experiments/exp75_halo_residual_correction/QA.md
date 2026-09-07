@@ -55,7 +55,7 @@ versions; model-specific interpretations follow the table. The corresponding
 | bins | Mean CoGs and residuals in measured final-halo-mass bins, against measured profiles; systematic radial errors survive averaging. |
 | bins_ms | CoGs and residuals binned by reference stellar mass; exposes the conditional errors hidden by averaging unlike galaxies together. |
 | cases | Best, typical and worst individual CoGs and residuals against measurements; plotted `idx` is the local snapshot row, mapped to global ID in `inputs.npz`. |
-| cdf | Cumulative distributions of radial prediction/data residuals; compare offsets and error tails, not only the central score. |
+| cdf | Cumulative distributions of measured and predicted aperture/annular masses, with their CDF differences; these are mass distributions, not distributions of per-object prediction errors. |
 | dens | CoG-derived one-dimensional density profiles compared with the same operation on data; outer derivatives expose errors hidden in cumulative mass. |
 | growth | Same-galaxy stellar masses across epochs compared with the measured evolution; overly coherent point predictions are not a calibrated temporal scatter model. |
 | mass_Re_aper | Enclosed stellar masses at size-scaled apertures versus measured counterparts; the reference and predicted sizes follow the established QA convention. |
