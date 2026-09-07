@@ -11,7 +11,7 @@ Cross-experiment plan. Mirrors the phase sequence in
 - [x] September 8 continuation: private measured/pre-epoch MAHs, operational
   and pilot gates, matched refits, representation checks and full three-model
   QA; see the experiment's `OVERNIGHT.md` predeclaration.
-- [ ] Close continuation with safe merge/push, preserved artifacts and Obsidian
+- [x] Close continuation with safe merge/push, preserved artifacts and Obsidian
   journal/snapshot before 07:00 Shanghai; stop science at 06:00.
 
 - [x] Create `exp75-halo-residual-correction` from master `6bc2ecc`; leave Exp74 alone.
@@ -32,6 +32,14 @@ still misses the outer envelope, motivating the predeclared annular-loss
 follow-up. Supplied pre-epoch curves fail growth validity and are not a null
 result. Full halo history remains legitimate; protected samples stay untouched.
 Scientific details and figures live in the Exp75 README and QA index.
+
+### Exp77 — annular correction loss (isolated)
+
+- [x] Reserve unique branch/worktree after checking local and remote Exp76
+  activity; predeclare the fixed baseline/family, weights and safeguards.
+- [ ] Focused checks, sub-minute operational gate and fixed-role pilot.
+- [ ] Evaluate the outer-mass versus CoG compromise and halo prediction;
+  generate direct QA, record the decision and close before the overnight cutoff.
 
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
