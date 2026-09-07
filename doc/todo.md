@@ -8,6 +8,12 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ### Exp75 — halo-conditioned residual correction (isolated)
 
+- [ ] September 8 continuation: private measured/pre-epoch MAHs, operational
+  and pilot gates, matched refits, representation checks and full three-model
+  QA; see the experiment's `OVERNIGHT.md` predeclaration.
+- [ ] Close continuation with safe merge/push, preserved artifacts and Obsidian
+  journal/snapshot before 07:00 Shanghai; stop science at 06:00.
+
 - [x] Create `exp75-halo-residual-correction` from master `6bc2ecc`; leave Exp74 alone.
 - [x] Predeclare input contract, sample roles, references, correction family,
   fitting objectives, controls, evaluation and the sub-minute operational gate.
