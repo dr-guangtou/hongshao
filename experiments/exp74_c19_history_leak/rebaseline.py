@@ -67,7 +67,7 @@ FIT_NPZ = ROOT / "experiments/exp63_analytic_growth/outputs/stage2_fit_joint_kpc
 #: values; the other seven (a0, a_M, a_z, a_Mz, log_f_e, b_e, c_e) are the
 #: incumbent's own parameters and are fitted
 INCUMBENT_FROZEN = ("m_half", "d_split", "log_f_c", "b_c", "n_c")
-START_ORDER = {"exp63": ["exp74meas", "exp63", "near", "nested"],
+START_ORDER = {"exp63": ["exp74meas", "exp63", "near", "nested", "cont"],
                "incumbent": ["nested", "near_inc", "jitter_inc"]}
 
 
@@ -131,6 +131,10 @@ def main(smoke=False, model="exp63", starts_sel=None, merge=False):
         starts = [("exp74meas", th_prev), ("exp63", th_exp63.copy()),
                   ("near", M2.clip_to_bounds(spec2, th_prev + 0.05 * span * rng.standard_normal(len(span)))),
                   ("nested", M2.clip_to_bounds(spec2, th_nested))]   # the nesting values sit outside the box
+        # a continuation of a start that stopped at the evaluation cap
+        prev_start = OUTDIR / f"rebaseline{tag}_start_exp63.npz"
+        if prev_start.exists():
+            starts.append(("cont", np.asarray(np.load(prev_start, allow_pickle=True)["theta"], float)))
     else:
         def with_frozen(th):
             th = np.asarray(th, float).copy()

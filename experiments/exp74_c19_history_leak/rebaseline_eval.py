@@ -40,7 +40,9 @@ import engine as E                                       # noqa: E402
 import model2 as M2                                      # noqa: E402
 import selection as SEL                                  # noqa: E402
 import coordinate as C                                   # noqa: E402
-import rebaseline as RB                                  # noqa: E402
+import importlib.util                                    # noqa: E402
+_spec = importlib.util.spec_from_file_location("exp74_rebaseline", HERE / "rebaseline.py")
+RB = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(RB)   # another `rebaseline` shadows it
 from stage0_frozen import tilt, R_SHOW, R_LEAK           # noqa: E402
 from hongshao import qa                                  # noqa: E402
 

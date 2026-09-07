@@ -668,6 +668,35 @@ report it, not to fit it. If it is not, the split genuinely needs a second
 variable at high redshift and that is a modelling step. No fit is required for
 either answer.
 
+### C22. The data's compact share correlates with DiffMAH's parameters, not with the measured assembly history
+**Raised 2026-09-08 by exp76 Stage 0.** exp63 Stage 1's deconvolved inner
+share (the z = 0.4 deposit-size distribution inside 5 kpc) correlates at
+fixed halo mass with DiffMAH's `late` (+0.25), `f_form` (−0.26) and `logtc`
+(−0.19) — P9's targets — but NOT with the formation time or recent growth
+measured from the running-peak history (|ρ| ≤ 0.07 for t50, t80, the growth
+over the last 2.1 and 3.5 Gyr). Whatever the DiffMAH parameters carry that
+the measured history does not (the whole-history fit's response to the
+future — `late` is the slope to z = 0 — and its smoothing), that is what the
+inner share tracks. P9's "assembly correlations" may be partly a property of
+the parametrisation. The question: what measured quantity, if any, does the
+compact share follow? Candidates: the z = 0.4 → 0 growth itself (the future,
+legitimate input under THE HALO INPUT rule); the early history before 1.2 Gyr
+(exp46's head start); the halo's concentration history is already closed.
+
+### C23. The adopted references open a lower-loss basin that the gates reject
+**Raised 2026-09-08 by the re-baseline.** With the objective normalised at
+the nested incumbent on the measured curves and the halo-mass bins by the
+measured mass, exp63's model has two basins: exp74's measured optimum
+(15.56) and one 6 per cent lower (14.63) with a 25 kpc "compact" channel
+holding 44 per cent of the deposits. The lower basin is worse on every gate
+(size-gate offset 10/15 vs 12/15, R50 +21 vs +13 per cent at z = 2, centre
++9.0 vs +5.6 per cent at z = 0.4, z = 2 massive progenitors +3.8 vs −1.0).
+The fifth recorded instance of the loss ranking basins against the gates
+(exp38, exp49, exp52, exp57). Decision owed: which basin is the baseline
+(recommendation: exp74's point, by the gates); and whether the objective
+should score sizes so that this stops happening (it does not score them at
+all).
+
 ## D. Resolved
 
 ### D1. Is exp48's density-plus-log objective the repair for the outer blindness?
