@@ -2761,3 +2761,24 @@ session should not rediscover them:
 - A conditional-response report initially iterated dictionary keys instead
   of prediction arrays. A synthetic known-slope test now guards this report;
   the failure affected reporting only, not saved fitted predictions.
+
+## Exp77 annular correction loss (2026-09-08)
+
+- Fit what the application needs, but check all required observables together.
+  Adding annular masses to the same four-coordinate correction reduces outer
+  RMS by 13.81% versus Exp75 and the z=2 envelope excess from 87.7% to 5.27%,
+  while mean CoG RMS worsens by only 0.135%. Yet z=1.5 R50 bias and z=2
+  conditional-growth response fail the declared safeguards. Retain that
+  verdict rather than adopting from the attractive outer-mass score alone.
+- A relative tolerance on an almost-perfect representation fit can fail
+  despite a small absolute change. The annular diagnostic changes mean
+  radial CoG RMS from 0.00693 to 0.01128 dex: report both the real trade-off
+  and the failed relative criterion, without redefining it after fitting.
+- Compare settings against the corresponding reference fold, not other folds.
+  I initially mistook one fold's larger penalty for a change from Exp75.
+  Explicit fixed-setting controls reproduce Exp77 exactly; the loss targets,
+  not regression settings, explain the outer gain. Map-selection-only controls
+  show no established outer improvement.
+- The standard QA CDF panel shows mass distributions and their CDF differences,
+  not per-object prediction-error distributions. Correct the caption and add
+  an explicit residual CDF when claiming to inspect the latter.
