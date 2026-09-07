@@ -1,5 +1,9 @@
 # Exp77 — does explicitly fitting annular masses improve the halo correction?
 
+Status: discovery completed, QA inspected; final attribution controls and
+closeout in progress. The declared candidate fails the size and conditional
+growth safeguards; no production adoption or replacement of that verdict.
+
 Predeclared 2026-09-08 before driver implementation or fitting. Base master
 `89bf4544e347d6fdc6a8f9d55734a21e98c345a1`; isolated branch
 `exp77_annular_correction_loss`. Exp75 is merged, pushed and journaled.
@@ -114,3 +118,17 @@ No library promotion. Science stops September 8 at 06:00 Shanghai; preserve
 owned checkpoints and stop owned fitting processes then. Finish commit,
 private no-ff integration, normal push, verified non-overwriting artifact
 archive and Obsidian journal/snapshot before 06:55. Retain owned worktrees.
+
+## Post-result attribution check, declared before its driver
+
+All five calibration folds selected annular weight 0.25 and linear maps;
+one also changed the ridge penalty. To avoid assigning a map-selection gain
+entirely to the annular targets, evaluate two diagnostic controls on the same
+fixed folds: (a) weight 0.25 with each fold's original Exp75 feature, degree
+and penalty held fixed; (b) weight-zero coefficient targets with degree and
+penalty selected on the same inner outer-error criterion and 2% CoG safeguard.
+For (b), prefer lower degree then larger penalty within 1% of the best eligible
+outer score. These are post-result attribution checks, not new candidates for
+advancement, and cannot override any failed predeclared criterion. No new
+weight, feature or radial basis is introduced. Save predictions, paired
+outer-error intervals and a direct profile/annular comparison figure.
