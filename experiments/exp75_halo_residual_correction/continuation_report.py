@@ -148,7 +148,7 @@ def future_growth(sample, predictions):
         labels = np.column_stack(
             [
                 np.log10(aperture(value, sample["radii"], 100)[valid, epoch])
-                for value in values
+                for value in values.values()
             ]
         )
         slopes = np.linalg.lstsq(design, labels, rcond=None)[0][-1]
@@ -233,6 +233,43 @@ def summary():
         result["feature_comparisons"][features] = REPORT.statistics(
             mass_sample, values
         )[0]
+    old_sample, old_predictions, _ = REPORT.assemble("discovery")
+    np.testing.assert_array_equal(old_sample["indices"], sample["indices"])
+    np.testing.assert_array_equal(old_sample["target"], sample["target"])
+    _, original_features, _ = assemble(features="original")
+    direct_parity = float(
+        np.max(
+            np.abs(np.log10(original_features["direct"] / old_predictions["direct"]))
+        )
+    )
+    if direct_parity > 1e-10:
+        raise ValueError(
+            "Unchanged-feature direct reference no longer reproduces original predictions"
+        )
+    result["unchanged_feature_direct_parity_max_dex"] = direct_parity
+    result["original_official_input_reference_in_measured_mass_bins"] = (
+        REPORT.statistics(mass_sample, old_predictions)[0]
+    )
+    rng = np.random.default_rng(75110)
+    result["paired_change_from_original_reference"] = {}
+    for name in DEFINITIONS:
+        old_error = np.sqrt(
+            np.mean(np.log10(old_predictions[name] / sample["target"]) ** 2, axis=-1)
+        ).mean(1)
+        new_error = np.sqrt(
+            np.mean(np.log10(predictions[name] / sample["target"]) ** 2, axis=-1)
+        ).mean(1)
+        gains = []
+        for _ in range(1000):
+            rows = rng.integers(0, len(old_error), len(old_error))
+            gains.append(1 - new_error[rows].mean() / old_error[rows].mean())
+        result["paired_change_from_original_reference"][name] = {
+            "original_mean_galaxy_radial_rms_dex": float(old_error.mean()),
+            "measured_input_mean_galaxy_radial_rms_dex": float(new_error.mean()),
+            "fractional_improvement": float(1 - new_error.mean() / old_error.mean()),
+            "paired_galaxy_bootstrap_95_interval": np.percentile(gains, [2.5, 97.5]),
+            "note": "Baseline changes the history input only, with matched refitting. Hybrid/direct also replace regression features; see separate original-feature comparison.",
+        }
     oracle_prediction, reconstructed = oracle(sample, predictions["baseline"])
     main = {name: predictions[name] for name in DEFINITIONS}
     main.update(oracle=oracle_prediction, direct_reconstruction=reconstructed)

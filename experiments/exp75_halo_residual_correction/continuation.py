@@ -50,7 +50,7 @@ def write_record(path, record):
     if path.exists():
         raise FileExistsError(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(record, indent=2) + "\n")
+    path.write_text(json.dumps(record, indent=2, allow_nan=False) + "\n")
 
 
 def prepare_inputs():
@@ -340,9 +340,23 @@ def frozen_swap():
     record = {
         "official_parity_max_dex": parity,
         "mean_galaxy_radial_rms_dex_by_epoch": {
-            name: np.sqrt(np.mean(np.log10(value / sample["target"]) ** 2, axis=-1))
-            .mean(0)
-            .tolist()
+            name: [
+                float(
+                    np.sqrt(
+                        np.mean(
+                            np.log10(value[:, epoch] / sample["target"][:, epoch]) ** 2,
+                            axis=-1,
+                        )
+                    ).mean()
+                )
+                if np.isfinite(value[:, epoch]).all() and (value[:, epoch] > 0).all()
+                else None
+                for epoch in range(5)
+            ]
+            for name, value in predictions.items()
+        },
+        "invalid_prediction_counts_by_epoch": {
+            name: np.any(~np.isfinite(value) | (value <= 0), axis=-1).sum(0).tolist()
             for name, value in predictions.items()
         },
         "note": "Frozen original training-fold parameters; history input alone changes. Not a refit or production comparison.",
@@ -356,6 +370,10 @@ def frozen_swap():
 
 def run(stage, kind, rotation):
     check_deadline()
+    if kind == "pre_epoch":
+        raise ValueError(
+            "Saved pre-epoch inputs failed the accretion-validity audit; see history_audit.json"
+        )
     operational = stage == "gate"
     tag = f"{stage}_{kind}_fold{rotation}"
     destination = OUTPUT / f"{tag}.json"
@@ -461,10 +479,26 @@ if __name__ == "__main__":
     )
     parser.add_argument("--rotation", type=int, choices=range(5), default=0)
     arguments = parser.parse_args()
-    with threadpool_limits(limits=1):
-        if arguments.stage == "prepare":
-            prepare_inputs()
-        elif arguments.stage == "frozen":
-            frozen_swap()
-        else:
-            run(arguments.stage, arguments.input, arguments.rotation)
+    try:
+        with threadpool_limits(limits=1):
+            if arguments.stage == "prepare":
+                prepare_inputs()
+            elif arguments.stage == "frozen":
+                frozen_swap()
+            else:
+                run(arguments.stage, arguments.input, arguments.rotation)
+    except (Exception, KeyboardInterrupt) as error:
+        now = datetime.now(timezone.utc)
+        write_record(
+            OUTPUT / f"stopped_{now.strftime('%Y%m%dT%H%M%S%f')}.json",
+            {
+                "status": "stopped_not_a_science_null",
+                "stage": arguments.stage,
+                "input": arguments.input,
+                "rotation": arguments.rotation,
+                "error_type": type(error).__name__,
+                "reason": str(error),
+                "utc": now.isoformat(),
+            },
+        )
+        raise

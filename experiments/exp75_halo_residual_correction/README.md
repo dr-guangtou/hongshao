@@ -1,6 +1,175 @@
 # Exp75 — can halo inputs predict the deposition model's residuals?
 
-Status: discovery completed, 2026-09-05; worth a bounded follow-up, NOT production.
+Status: original discovery completed, 2026-09-05; measured-history continuation
+completed, 2026-09-08. Neither result is a production qualification.
+The September 8 continuation is predeclared in `OVERNIGHT.md`; its outputs
+and figures are separate from every original artifact. The original protocol
+below is retained as a historical record, including its original scope limits.
+
+## September 8 continuation: input and numerical checks
+
+The physical baseline predicts the stellar profile by integrating deposition
+along a halo history. The hybrid adds four smooth profile corrections
+predicted from halo properties. The direct model predicts five profile
+coordinates from halos without the deposition equation. All three predict
+stellar amplitude; none receives an evaluated galaxy's stellar mass or size.
+
+This continuation asks whether the correction remains useful after the
+physical baseline reads measured MAHs. It uses the committed Exp74 input
+implementation at `360d2d6`, merged into this isolated branch; no active
+Claude code or full-sample stellar-fit parameters are imported. The saved
+halo-only histories are copied into a hash-verified private snapshot.
+
+- The original 842 discovery IDs, CoGs, folds, and fitting/calibration/
+  evaluation roles are unchanged. Exp67 selection and validation have no role.
+- Every galaxy has a measured final halo mass and a usable measured history.
+  Earlier target epochs have 840, 839, 840, and 838 valid catalog halo masses.
+  Missing snapshots are not missing histories: keep the galaxies, preserve
+  Exp74 interpolation, and impute missing regression inputs from training only.
+- The official-input path reproduces every saved original held-out baseline
+  prediction exactly. Thus bringing in the new interface did not change the
+  historical reference.
+- The supplied pre-epoch DiffMAH arm is invalid as supplied, not a negative
+  scientific result. At z=2, 21 of 842 curves have negative halo growth inside
+  the integration domain; eight yield nonpositive stellar profiles with frozen
+  original parameters. Stop this arm without clipping growth, removing galaxies,
+  or redesigning the halo fit. See `outputs/continuation/history_audit.json`
+  and `figures/continuation/pre_epoch_input_audit.png` (PDF alongside).
+- Measured interpolation reproduces its knots to 1.78e-15 dex. Its smallest
+  sampled logarithmic derivative is -4.44e-16, numerical roundoff around zero;
+  the derivative tolerance is 1e-12 and the curves themselves are unchanged.
+- The 30-galaxy operational path took 4.59 seconds, below the 60-second limit.
+  It includes capped fitting, both feature sets, predictions, serialization,
+  scores and a PNG/PDF individual-CoG figure; its scores are not science.
+- All five 150-galaxy pilot folds passed. Their integration differences after
+  doubling the quadrature resolution are 0.000385--0.000473 dex, below the
+  0.001 dex tolerance. Both initializations converge within the allowed 1%
+  training-loss difference. Fold wall times range from 31.89 to 50.94 seconds.
+- Some trial parameters make the inherited truncated-profile normalization
+  undefined. Reject and record such optimizer trials with infinite loss;
+  final predictions must remain finite. This does not change bounds or the
+  original equal-weight log-CoG fitting objective. It is not a repair of the
+  inherited profile table over its entire parameter domain.
+
+All five full-discovery baseline fits also passed: two converged starts within
+1% training loss, and fitted/full integration differences of 0.000426--0.000469
+dex, below the 0.001 dex requirement. Recorded fold wall times were
+193.06--266.87 seconds, one process and one thread at a time.
+
+## September 8 result and decision
+
+The halo-predicted correction remains useful with measured MAHs, but it does
+not yet provide a production-quality profile model. All comparisons below
+use the same 842 discovery galaxies, held out by galaxy across five epochs.
+The score is the mean of each galaxy-epoch's radial log10 CoG RMS, in dex;
+smaller is better. It is not a probabilistic calibration score.
+
+| Prediction | Mean radial CoG error (dex) | Meaning |
+| --- | ---: | --- |
+| Measured-history physical baseline | 0.11762 | Matched reference without correction |
+| Baseline plus global intercept correction | 0.11608 | Global recalibration alone helps little |
+| Baseline plus original halo-descriptor correction | 0.10957 | Correction still helps after the history swap |
+| Baseline plus measured-mass/concentration correction | 0.10771 | Best measured-history hybrid |
+| Baseline plus final-mass-only correction | 0.11516 | Final mass alone does not explain the gain |
+| Baseline plus shuffled-history correction | 0.11599 | Assembly information contributes to the gain |
+| Direct measured-mass/concentration prediction | 0.10815 | Similar pooled score, worse at z=2 |
+
+The measured-feature hybrid improves on its matched physical baseline by
+8.42%, with a paired galaxy-bootstrap 95% interval of 7.05--9.88%. It passes
+all five original discovery criteria, including improvement over the intercept
+and the epoch and halo-bin safeguards. These criteria do not test all the
+observables HongShao must eventually predict.
+
+This is **not** an 8.42% advance over the original Exp75 hybrid. That model's
+error was 0.10843 dex: the new hybrid is only 0.66% better, with a paired
+95% interval from 0.98% worse to 2.26% better. The measured physical baseline
+itself is 2.97% worse than the old baseline's 0.11422 dex under this particular
+equal-log-CoG loss. Exp74 used another objective and population, and official
+DiffMAH describes another halo-mass definition. These results support input
+flexibility and matched tests, not a universal accuracy ordering of inputs.
+
+The full standard QA battery was generated and visually inspected for all
+three models (36 figures). See `QA.md` for captions and the figure index.
+
+- At z=2, median log R50 prediction/data improves from +0.13363 dex for the
+  baseline to -0.00960 dex for the hybrid; median log R90 improves from
+  +0.11931 to +0.00580 dex. The correction substantially fixes the typical
+  size offset, although individual profiles can still be poor.
+- At z=2, the relation between log stellar mass in 50--100 kpc and inside
+  30 kpc remains too steep: its fitted slope is 2.118 for the hybrid,
+  compared with 2.462 for the baseline and 1.565 in the data. Exact apertures
+  are linearly interpolated in radius and cumulative mass.
+- For the outermost 100--148.22 kpc envelope at z=2, median log mass
+  prediction/data falls from +0.34960 dex to +0.27343 dex. This is an
+  improvement, but still corresponds to 88% too much envelope mass for the
+  median positive-mass comparison (829 of 842 galaxies). No value at the
+  grid endpoint is mislabeled as a 150 kpc measurement.
+- The direct model has a better outer-mass plane but its z=2 radial CoG
+  error is 0.14417 dex, worse than the hybrid's 0.12718 dex and the
+  baseline's 0.13800 dex. A better-looking plane is not a complete solution.
+- All three are point predictions, not sampled galaxy populations. Their
+  narrower relations cannot alone disqualify their conditional means; a
+  future probabilistic layer must separately reproduce widths and epoch
+  coherence. No such layer is fitted or qualified here.
+
+Fitting the four corrections directly to every true stellar CoG gives a
+0.00693 dex mean radial error, compared with 0.10771 dex when predicting
+them from halos. This diagnostic uses stellar labels and is never a halo
+prediction. It shows that the four-coordinate family can represent much
+more of the cumulative shape than the halo map predicts. However, its
+outermost-envelope median error at z=2 is still +0.40004 dex (151% too much
+mass). A tiny cumulative error does not guarantee an accurate difference
+between two large cumulative masses. Before adding more halo predictors or
+profile coordinates, test whether the loss is asking for the right thing.
+
+The future-growth check compares the model response with the measured
+response, not with a blanket zero target. At z=2, the hybrid's residual
+response of log stellar mass inside 100 kpc to log later M200c growth is
+-0.04374 dex/dex, with a pointwise 95% interval [-0.08851, -0.00159], after
+controlling quadratically for current M200c (838 valid galaxies). The baseline
+residual is -0.02548 dex/dex with an interval including zero. A similarly
+marginal under-response occurs at z=0.7. These intervals condition on trained
+models, do not correct for multiple epochs, and are not proof of forbidden
+inputs. They are an additional reason to require conditional QA in follow-up.
+
+Decision: close Exp75 as a useful discovery result, not production adoption.
+Agree with Exp74's application contract: full MAHs, peak/final halo masses
+and DiffMAH parameters are legitimate; target stellar masses are not inputs.
+The supplied pre-epoch arm remains an input-validity failure, not a scientific
+null. The next isolated question is whether adding an annular-mass term to
+the correction loss improves outer masses without sacrificing CoGs and sizes;
+keep the baseline, halo features, radial family and discovery roles fixed.
+
+## Continuation reproducibility and records
+
+- `continuation.py`: private snapshots, frozen-input swap, operational gate,
+  pilot and discovery fold fits; checkpoint files are never overwritten.
+- `history_audit.py`: supplied pre-epoch negative-growth audit and galaxy IDs.
+  This is the authoritative validity report; the first `frozen_swap.json`
+  retains NaN scores for invalid profiles as a historical failed check.
+- `continuation_report.py`: assembled held-out comparisons, direct-fit
+  representation diagnostic, exact annuli, conditional checks and full QA.
+- `continuation_figures.py`: matched aperture planes, fixed and most-changed
+  individuals, representation and future-growth figures.
+- `outputs/continuation/summary.json`: numerical results and paired intervals.
+  Fold JSON/NPZ records contain immutable inputs, roles, choices, convergence,
+  runtime, fitting-time git SHA and code hashes. `manifest.json` in that
+  directory inventories the final artifacts separately from the old manifest.
+- Focused checks: `uv run --no-sync python -m unittest discover -s
+  experiments/exp75_halo_residual_correction -p 'test_*.py'`; do not collect
+  repository-wide pytest, blocked by the unrelated missing Exp07 input.
+- Report commands: `uv run --no-sync python
+  experiments/exp75_halo_residual_correction/continuation_report.py --help`.
+  Use a fresh isolated output location to reproduce completed products;
+  existing science checkpoints intentionally refuse replacement. The recorded
+  overnight deadline also intentionally stops a later fitting invocation.
+
+The original 62 output/figure files are checked against their original hashes
+before archival. Selection and validation artifacts remain untouched, no
+library default changes, and Claude's worktrees remain outside this work.
+
+## Original September 4--5 protocol and result
+
 The protocol below was committed before driver implementation or fitting
 (2026-09-04, `aebcc473639fe6ca8f976f5d73744e30b0c43854`).
 Base: master `6bc2ecc326d73cff11d6da8feb941a8a3daa865d`.

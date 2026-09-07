@@ -85,6 +85,41 @@ class ContinuationChecks(unittest.TestCase):
         for name in before:
             np.testing.assert_array_equal(before[name], after[name])
 
+    def test_exact_annuli_conserve_total_and_reject_outside_grid(self):
+        report = BASE.load_module(
+            "exp75_annular_checks", Path(__file__).with_name("continuation_report.py")
+        )
+        radii = np.geomspace(2, 148.22, 24)
+        curves = np.tile(1e11 * (1 - np.exp(-radii / 18)), (2, 5, 1))
+        np.testing.assert_allclose(
+            report.annuli(curves, radii).sum(-1), curves[..., -1], rtol=1e-14
+        )
+        with self.assertRaises(ValueError):
+            report.aperture(curves, radii, 150)
+
+    def test_future_growth_recovers_known_conditional_slope(self):
+        report = BASE.load_module(
+            "exp75_growth_checks", Path(__file__).with_name("continuation_report.py")
+        )
+        rng = np.random.default_rng(758)
+        mass = 13 + rng.normal(0, 0.3, (30, 5))
+        growth = mass[:, :1] - mass
+        radii = np.geomspace(2, 148.22, 24)
+        truth = 10 ** (11 + 0.2 * (mass - 13) + 0.3 * growth)[..., None] * (
+            1 - np.exp(-radii / 18)
+        )
+        sample = {"target": truth, "radii": radii, "measured_epoch_mass": mass}
+        result = report.future_growth(
+            sample, {"test": truth * 10 ** (0.1 * growth[..., None])}
+        )
+        for entry in result.values():
+            self.assertAlmostEqual(
+                entry["models"]["data"]["partial_slope_dex_per_dex"], 0.3
+            )
+            self.assertAlmostEqual(
+                entry["models"]["test"]["residual_slope_model_minus_data"], 0.1
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

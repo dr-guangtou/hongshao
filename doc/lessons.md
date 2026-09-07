@@ -2746,3 +2746,18 @@ session should not rediscover them:
   per-snapshot check stopped safely before fitting. Keep membership fixed:
   interpolate histories using Exp74's rule, impute regression features using
   training galaxies only, and report the available counts for conditional QA.
+
+- Check halo-growth derivatives throughout the deposition integration domain,
+  not just mass fit residuals. Some supplied pre-epoch DiffMAH curves have
+  negative growth and nonpositive stellar predictions. Stop that arm as invalid
+  input; clipping or dropping affected galaxies would answer a changed question.
+- Tiny cumulative-mass errors can hide large outer-annulus errors. Exp75's
+  four-coefficient direct fit to each true CoG reaches 0.00693 dex mean radial
+  RMS, yet its z=2 outer-envelope median mass is 151% above the data. Test
+  the fitting objective before interpreting this as missing halo information.
+- Distinguish a matched-baseline gain from progress over the previous best
+  model: Exp75's measured-input hybrid gains 8.42% over its own baseline but
+  only 0.66% over the old hybrid, with the latter interval including no gain.
+- A conditional-response report initially iterated dictionary keys instead
+  of prediction arrays. A synthetic known-slope test now guards this report;
+  the failure affected reporting only, not saved fitted predictions.
