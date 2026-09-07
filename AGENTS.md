@@ -175,6 +175,16 @@ doc/             # science context, data reference, todo.md, lessons.md
 
 ## Conventions
 
+- (2026-09-04, user clarification) Full halo MAHs, DiffMAH parameters,
+  peak halo mass and final halo mass are legitimate prediction inputs, including
+  halo history after the output epoch. The target galaxy's measured stellar
+  mass at ANY epoch must never supply a prediction input or normalization.
+  Stellar masses, their halo-mass relation and their evolution are outputs.
+- (2026-09-04, user rule) Exp75 work must remain in its own worktree. Do not
+  change Claude-owned branches, worktrees, environments, or artifacts. Read
+  immutable source data only to make verified private input snapshots; never
+  run another worktree's code or share writable output/cache directories.
+
 - **Primary observable = CoG-derived masses.** Always model the
   aperture/annulus/outskirt stellar masses derived from the 1-D curve of growth
   (`logmstar_cog` / `logmstar_aper`, from X–Y isophote analysis). This is the

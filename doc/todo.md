@@ -6,6 +6,33 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ## Status
 
+### Exp75 — halo-conditioned residual correction (isolated)
+
+- [x] September 8 continuation: private measured/pre-epoch MAHs, operational
+  and pilot gates, matched refits, representation checks and full three-model
+  QA; see the experiment's `OVERNIGHT.md` predeclaration.
+- [ ] Close continuation with safe merge/push, preserved artifacts and Obsidian
+  journal/snapshot before 07:00 Shanghai; stop science at 06:00.
+
+- [x] Create `exp75-halo-residual-correction` from master `6bc2ecc`; leave Exp74 alone.
+- [x] Predeclare input contract, sample roles, references, correction family,
+  fitting objectives, controls, evaluation and the sub-minute operational gate.
+- [x] Make hash-verified private input snapshots; no shared writable caches.
+- [x] Write and run focused leakage, nesting, monotonicity and recovery checks.
+- [x] Run the complete operational gate before any scientific pilot.
+- [x] Evaluate the fixed pilot protocol; no production claim from a pilot.
+- [x] Run discovery comparison only after the pilot convergence/numerical gate.
+- [x] Inspect direct profile QA and record the scientific verdict.
+
+Review (September 8): measured-history discovery completed with all five
+numerical gates and full three-model QA. The correction improves on its
+matched baseline, but a gain over the original hybrid is not established;
+outer-envelope errors block production adoption. Direct fitting to true CoGs
+still misses the outer envelope, motivating the predeclared annular-loss
+follow-up. Supplied pre-epoch curves fail growth validity and are not a null
+result. Full halo history remains legitimate; protected samples stay untouched.
+Scientific details and figures live in the Exp75 README and QA index.
+
 - [x] **Data layer** — TNG300 z=0.4 loaders, dataset builder, QC figure,
   cosmic-time mapping, decline cut. Clean sample: 2545/3388. (`hongshao/tng_data.py`)
 

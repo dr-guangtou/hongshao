@@ -2,6 +2,39 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **A successful residual correction can still be unsafe in the outskirts
+  (Exp75).** The halo-only correction improved held-out mean log-CoG RMS by
+  5.074% versus a matched-loss deposition refit, yet its z=2 median log
+  100–148 kpc envelope-mass bias worsened from -0.09470 to +0.47991 dex.
+  Keep the positive predictability result, but do not promote the correction
+  based on cumulative mass alone. Radius-resolved mass and size QA must remain
+  separate from pooled CoG accuracy, and scatter tests must distinguish point
+  predictions from sampled populations.
+- **A nearest-grid aperture is not the nominal aperture (Exp75 figure QA).**
+  The overview initially labeled grid samples as 10/50/100 kpc. They are
+  10.248/52.299/103.450 kpc. Correct the labels from the actual grid, or
+  interpolate explicitly; never silently equate the two. The final overview
+  labels are corrected, with predictions and primary scores unchanged.
+
+- **Load experiment helpers by explicit path when legacy drivers modify the
+  import path (Exp75).** A focused report test imported Exp53's `report.py`
+  after the deposition driver added its own experiment paths. Giving the
+  Exp75 report a unique module name and explicit path fixed the collision;
+  all scientific fits were unaffected. Short generic module names are not
+  isolated merely because the files live in different experiment folders.
+
+- **Use a relative tolerance when checking cumulative masses for roundoff
+  (Exp75 preparation).** An absolute 1e-5 Msun threshold rejected five
+  discovery profiles whose downward steps were at most 4.13e-15 of the
+  enclosed mass. The check now allows 1e-12 relative roundoff and leaves the
+  measured profiles unchanged. This is not permission to erase real declines.
+- **Full halo history is allowed for HongShao's intended forward use
+  (user clarification, 2026-09-04).** Do not confuse halo history after the
+  output epoch with the forbidden measured stellar-mass amplitude pin. A
+  prediction may condition on the full halo history; stellar masses at every
+  epoch remain outputs. A history-representation test is not automatically a
+  test of whether its information is legitimate.
+
 - **A globally fixed nuisance coordinate can improve local conditioning while
   making the population representation worse (Exp70).** Fixing damped-cosine
   damping to one of four predeclared population-wide values made the weakest
@@ -2705,3 +2738,26 @@ session should not rediscover them:
   segment from its neighbours) denoises without that channel. Gate any
   summary input with the future-dependence test at the nodes, not only at
   the snapshots.
+# Exp75 continuation input audit (2026-09-08)
+
+- A usable measured MAH does not imply a valid catalog halo mass at every
+  requested epoch. The fixed 842-galaxy discovery sample has complete final
+  masses but 2/3/2/4 missing entries at z=.7/1/1.5/2. The initial overly strict
+  per-snapshot check stopped safely before fitting. Keep membership fixed:
+  interpolate histories using Exp74's rule, impute regression features using
+  training galaxies only, and report the available counts for conditional QA.
+
+- Check halo-growth derivatives throughout the deposition integration domain,
+  not just mass fit residuals. Some supplied pre-epoch DiffMAH curves have
+  negative growth and nonpositive stellar predictions. Stop that arm as invalid
+  input; clipping or dropping affected galaxies would answer a changed question.
+- Tiny cumulative-mass errors can hide large outer-annulus errors. Exp75's
+  four-coefficient direct fit to each true CoG reaches 0.00693 dex mean radial
+  RMS, yet its z=2 outer-envelope median mass is 151% above the data. Test
+  the fitting objective before interpreting this as missing halo information.
+- Distinguish a matched-baseline gain from progress over the previous best
+  model: Exp75's measured-input hybrid gains 8.42% over its own baseline but
+  only 0.66% over the old hybrid, with the latter interval including no gain.
+- A conditional-response report initially iterated dictionary keys instead
+  of prediction arrays. A synthetic known-slope test now guards this report;
+  the failure affected reporting only, not saved fitted predictions.

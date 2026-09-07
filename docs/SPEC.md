@@ -3,6 +3,15 @@
 This file records stable library interfaces. Scientific experiment decisions
 remain in the corresponding `experiments/expNN_slug/README.md`.
 
+## Halo-only prediction contract (2026-09-04)
+
+The complete halo MAH, its DiffMAH parameters, peak and final halo masses are
+allowed even when predicting an earlier epoch. Observed stellar masses at any
+epoch are training/evaluation targets only, never inference inputs or amplitude
+pins. Exp75 tests an experimental correction to a deposition prediction under
+this contract; it changes no stable library interface. Its frozen design is in
+`experiments/exp75_halo_residual_correction/README.md`.
+
 ## The fitting sample
 
 **Every model fit uses all galaxies selected at z = 0.4 whose halo history and
