@@ -90,10 +90,86 @@ width ratio per epoch; right, the loss and the z = 2 centre.
 **Decision: Stage 1 runs** (the plan's Gate A, read as the distance criterion,
 is met at g ≈ −1.5 to −2).
 
-## Stage 1 — the fit (`stage1_fit.py`, `stage1_eval.py`)
+## Stage 1 — the fit, and the verdict (`stage1_fit.py`, `stage1_eval.py`; `outputs/stage1_eval.log`)
 
-exp63's model with `g_split` free (13 parameters), on the measured curves
-under the adopted references (nested incumbent on measured curves = 1 per
-referenced term; halo-mass bins by the measured mass), four starts at g = 0,
-−1, −2 and a near start around −1.5, one process each. Results below when the
-fit lands.
+exp63's model with `g_split` free (13 parameters) on the measured curves
+under the adopted references. Seven starts, one process each: four from
+exp74's measured optimum (g = 0, −1, −2, and a near start at −1.5) and, once
+the adoption's re-baseline had found its lower basin (14.63; C23), three from
+that basin (g = 0, −1, −2).
+
+| start | from | loss | fitted g |
+|---|---|---|---|
+| g = 0 | exp74's point | 15.560 | 0.00 (stationary) |
+| g = −2 / near −1.5 | exp74's point | 15.134 / 15.141 | −0.31 / −0.30 |
+| **g = 0** | the lower basin | **14.635** | **0.00** (stays exactly) |
+| g = −1 / −2 | the lower basin | 14.998 / 15.057 | −0.27 / −0.26 |
+
+**The objective rejects the split.** From the baseline optimum the loss has
+no gradient in g: the fit leaves it at 0.000 and moves nothing else. Started
+at g = −1 or −2, it walks back to g ≈ −0.27 and stops 2.5 per cent worse. The
+best solution with the split active is therefore a start-dependent one, not
+an optimum of the loss.
+
+### What the split does when it is on (g = −0.27 against the baseline, same objective)
+
+| | baseline (g = 0) | split, g = −0.27 | the data |
+|---|---|---|---|
+| loss (adopted refs) | 14.635 | 14.998 (+2.5 %) | |
+| compact share of the deposits (median) | 0.44 | 0.14 | 0.21 (inner share) |
+| rms distance of the 8 assembly correlations to the data's | 0.46 | 0.27 | 0 |
+| compact share vs recent growth (measured), partial ρ | +0.55 | +0.22 | +0.02 |
+| centre at 2 kpc, z = 0.4 / z = 2 | +9.0 / −13.2 % | +5.4 / −11.1 % | |
+| R50 width ratio at fixed M*, z = 0.4 / z = 2 | 0.57 / 0.42 | 0.66 / 0.49 | 1 |
+| **R80 width ratio, z = 0.4 / z = 2** | 0.48 / 0.22 | **0.63 / 0.48** | 1 |
+| R50 offset, z = 1.5 / 2 | +17 / +21 % | +13 / +18 % | |
+| R50 offset, z = 0.4 / 0.7 | −4 / −3 % | −8 / −7 % | |
+| size-gate OFFSET passes | 10 of 15 | 11 of 15 | |
+| z = 2 massive progenitors, total | +3.8 % | +2.6 % | |
+| z = 1.5 massive progenitors, inside 10 kpc | +4.2 % | +7.5 % | |
+
+**The positive side.** With the split on, the model's galaxies of a given
+mass become far more diverse in size — the outer size (R80) at z = 2 goes
+from 0.22 to 0.48 of the real spread, more than doubling, the largest single
+gain on the width gate the programme has seen from a mean model (exp73
+Block D: every mean model 0.2–0.6, collapsing with z). Both centres improve
+at once (z = 0.4 +9.0 → +5.4 per cent, z = 2 −13.2 → −11.1), the high-z sizes
+come down, and the compact share's spurious dependence on recent growth
+drops by more than half. The mechanism does what Stage 0 said: mass
+arriving in bursts is spread out, mass arriving quietly is kept compact,
+and each galaxy's own history then sets its size.
+
+**The negative side.** The loss does not want it (+2.5 per cent), so it is
+not an optimum; low-z sizes overshoot the other way (−8 per cent at z = 0.4);
+the z = 1.5 massive progenitors get heavier inside 10 kpc; and the fitted g
+(−0.27) is far from the g ≈ −2 that Stage 0 needed to reproduce the
+DiffMAH-variable correlations — at −0.27 those signs are still mostly the
+model's, not the data's (`f_form` +0.05 vs the data's −0.26, `logtc` +0.20 vs
+−0.19).
+
+### The verdict
+
+**Not adopted, and not closed.** The growth-rate split is a real lever on
+the thing the model most lacks — size diversity at fixed mass — and it works
+by a mechanism the data support (the compact share should not follow recent
+growth, and with the split it stops doing so). But exp63's objective cannot
+see sizes and ranks it as a 2.5 per cent loss, so a fit will always switch
+it off. That is C20 and C23 again from the other side: the lever the gates
+want is one the loss rejects. Two ways forward, both the user's call:
+
+1. **Give the objective a size term** (the R50/R80 offset and width at
+   fixed mass, from the gate itself), then refit with g free. If the split
+   is real, a loss that can see sizes will keep it.
+2. **Keep g as a fixed, physics-set parameter** (−0.3 to −2; Stage 0's
+   sweep says the correlations want −2, the fit says −0.3) and let the
+   stochastic layer own the rest of the width.
+
+And C22 first: the data's compact share follows DiffMAH's `late`/`f_form`,
+not the measured formation time — until that is understood, "the assembly
+correlations" are not a safe target.
+
+Figures: `figures/exp76_stage0_sweep` (the slice), `figures/qa/qa_bins_exp76_*`
+(the halo-mass-binned curves of growth for the baseline, the g = 0 fit and
+the g = −0.27 solution; the third shows the z = 1.5 outskirts in the most
+massive third still +8 per cent, and the z = 2 centre in that bin −18 per
+cent against the baseline's −20).

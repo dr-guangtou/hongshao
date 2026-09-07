@@ -79,14 +79,27 @@ def main(smoke=False, tables_only=False):
     print(f"\n{RULE}\n2. THE LOSS per epoch under the adopted references (null = nested incumbent on measured curves)\n{RULE}")
     print(f"  {'model':<24}" + "".join(f"{f'z={z}':>9}" for z in ANCHOR_Z) + f"{'total':>10}")
     grid = {}
-    for lab, th in (("baseline (g = 0)", thb_g), ("growth-rate split", thg)):
+    cands0 = [(str(n), float(l), th) for n, l, th in zip(fg["names"], fg["losses"], fg["thetas"]) if th[jg] < -0.05]
+    rows_loss = [("baseline (g = 0)", thb_g), ("growth-rate split", thg)]
+    if cands0:
+        thn0 = min(cands0, key=lambda c: c[1])[2]
+        rows_loss.append((f"split g={thn0[jg]:+.2f}", thn0))
+    for lab, th in rows_loss:
         per = pr.per_epoch(th, nodes=M2.FULL_NODES)
         row = np.array([sum(x * x for x in (per[k][0], per[k][1], per[k][2], per[k][4])) for k in pr.epochs])
         grid[lab] = row
         print(f"  {lab:<24}" + "".join(f"{v:>9.3f}" for v in row) + f"{row.sum():>10.3f}")
 
+    # the best solution with g < 0, when the best overall is g = 0 (the fit rejecting the split)
+    cands = [(str(n), float(l), th) for n, l, th in zip(fg["names"], fg["losses"], fg["thetas"]) if th[jg] < -0.05]
+    thn = None
+    if cands:
+        n_neg, l_neg, thn = min(cands, key=lambda c: c[1])
+        print(f"  best start with g < 0: '{n_neg}' {l_neg:.4f}, g = {thn[jg]:+.3f} (shown as the third model)")
     pred = {"baseline (g = 0)": M2.predict2(spec_g, thb_g, meas, F.R_GRID),
             "growth-rate split": M2.predict2(spec_g, thg, meas, F.R_GRID)}
+    if thn is not None:
+        pred[f"split g={thn[jg]:+.2f}"] = M2.predict2(spec_g, thn, meas, F.R_GRID)
     good = np.isfinite(data).all(axis=(1, 2)) & (data > 0).all(axis=(1, 2))
     for v in pred.values():
         good &= np.isfinite(v).all(axis=(1, 2)) & (v > 0).all(axis=(1, 2))
@@ -122,7 +135,7 @@ def main(smoke=False, tables_only=False):
     print(f"  {'share':<24}" + "".join(f"{v:>13}" for v in all_vars) + f"{'rms dist':>10}")
     print(f"  {'DATA inner share':<24}" + "".join(f"{v:>13.3f}" for v in r_data))
     p9 = {}
-    for lab, th in (("baseline (g = 0)", thb_g), ("growth-rate split", thg)):
+    for lab, th in rows_loss:
         sh = compact_share(spec_g, th, meas, None)
         r = np.array([partial_spearman(sh[:, 0], va[v], ctrl, fit_all) for v in all_vars])
         p9[lab] = (r, float(np.nanmedian(sh[fit_all, 0])))
@@ -179,7 +192,7 @@ def main(smoke=False, tables_only=False):
     for lab, prd in pred.items():
         print(f"\n  --- {lab} ---")
         out[lab] = qa.evaluate(prd[fit_all], data[fit_all], F.R_GRID, ANCHOR_Z,
-                               name=f"exp76_{lab.split(' ')[0]}{tag}",
+                               name=f"exp76_{lab.replace(' ', '_').replace('=', '').replace('(', '').replace(')', '')}{tag}",
                                figdir=(None if tables_only else FIGDIR / "qa"), figures=not tables_only,
                                verbose=False, bin_by=lmh_bins[fit_all][:, 0], bin_label=r"logM$_h$(z=0.4)",
                                bin_by_ms=logms, ms_label=r"logM$_*$ (total)", halo_mass_epochs=lmh_cat[fit_all])

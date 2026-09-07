@@ -40,7 +40,7 @@ from hongshao.fitting import minimize_loss               # noqa: E402
 RULE = "=" * 100
 EPOCHS = (0, 1, 2, 3, 4)
 OUTDIR = HERE / "outputs"
-START_ORDER = ["g0", "g-1", "g-2", "near-1.5"]
+START_ORDER = ["g0", "g-1", "g-2", "near-1.5", "b0", "b-1", "b-2"]
 
 
 def build(smoke=False):
@@ -82,6 +82,13 @@ def main(smoke=False, starts_sel=None, merge=False):
         th = thg0.copy(); th[jg] = g; return th
     near = M2.clip_to_bounds(spec_g, at(-1.5) + 0.05 * span * rng.standard_normal(len(span)))
     starts = [("g0", at(0.0)), ("g-1", at(-1.0)), ("g-2", at(-2.0)), ("near-1.5", near)]
+    # starts from the ADOPTED baseline's own optimum (a lower basin than exp74's point)
+    fb = E74 / f"rebaseline_exp63{tag}.npz"
+    if fb.exists():
+        thb = np.r_[np.asarray(np.load(fb, allow_pickle=True)["theta_best"], float), 0.0]
+        def atb(g):
+            th = thb.copy(); th[jg] = g; return th
+        starts += [("b0", atb(0.0)), ("b-1", atb(-1.0)), ("b-2", atb(-2.0))]
     if starts_sel is not None:
         starts = starts[starts_sel[0]:starts_sel[1] + 1]
     print(f"\n  {len(starts)} start(s): " + ", ".join(n for n, _ in starts))
