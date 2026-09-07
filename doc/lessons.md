@@ -2738,3 +2738,11 @@ session should not rediscover them:
   segment from its neighbours) denoises without that channel. Gate any
   summary input with the future-dependence test at the nodes, not only at
   the snapshots.
+# Exp75 continuation input audit (2026-09-08)
+
+- A usable measured MAH does not imply a valid catalog halo mass at every
+  requested epoch. The fixed 842-galaxy discovery sample has complete final
+  masses but 2/3/2/4 missing entries at z=.7/1/1.5/2. The initial overly strict
+  per-snapshot check stopped safely before fitting. Keep membership fixed:
+  interpolate histories using Exp74's rule, impute regression features using
+  training galaxies only, and report the available counts for conditional QA.

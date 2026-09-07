@@ -34,6 +34,24 @@ was fitted to SubhaloMass; do not attribute all differences to anchoring.
 Verify units, knot reproduction, nonnegative growth, coverage and extrapolation.
 Reject misalignment or missing histories rather than silently changing sample.
 
+Input audit, before fitting: 2/3/2/4 of the 842 galaxies have no valid M200c
+at z=.7/1/1.5/2, respectively; all have final masses. A missing snapshot is
+not a missing history. Preserve every galaxy and Exp74 interpolation across
+missing knots. Leave missing measured regression features as NaN for the
+existing training-only imputation; condition QA on available measured masses
+and report counts. Require every galaxy to have a usable measured history.
+
+Numerical audit before scientific refitting: the supplied pre-epoch DiffMAH
+fits can have negative derivatives between measurements and yield nonpositive
+CoGs in the frozen swap. Save affected IDs and direct history plots; stop that
+input arm as invalid as supplied. Do not clip accretion or change its sample.
+Measured interpolation has only floating-point endpoint derivatives as small
+as -4.44e-16 in dlogM/dlogt; allow 1e-12 numerical tolerance without altering it.
+The measured pilot also reached an undefined inherited profile-normalization
+trial. Reject such optimizer trials with infinite loss and record their
+parameters; require finite final profiles. Bounds and scientific loss remain
+unchanged. The first interrupted attempt had no completed fit checkpoint.
+
 For each new input, first evaluate saved original fold parameters without
 refitting. Then refit Exp75's twelve-parameter deposition model under its
 original mean-square log-CoG loss, bounds, two data-independent starts,
