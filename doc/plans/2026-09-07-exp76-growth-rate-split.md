@@ -1,9 +1,9 @@
-# exp75 — the growth-rate split under the honest input (PROPOSAL, awaiting the user)
+# exp76 — the growth-rate split under the honest input (PROPOSAL, awaiting the user)
 
-**Branch** `exp75-growth-rate-split` from `master` `360d2d6`. **Status**:
+**Branch** `exp76-growth-rate-split` from `master` `360d2d6`. **Status**:
 proposed 2026-09-07; nothing run. **Prerequisite** the user's own next task —
 adopt the measured history as the application input and re-baseline the
-incumbent and the v1 stochastic layer on it. exp75 runs on the measured
+incumbent and the v1 stochastic layer on it. exp76 runs on the measured
 input from the start (exp63's model refitted on it exists:
 `exp74/outputs/stage1_refit_measured.npz`).
 
@@ -50,7 +50,7 @@ compact share that rises for slow, early growth is what the early-formed
 compact progenitors (exp46: a 0.3 dex head start by 1 Gyr) need at the
 centre.
 
-## What exp75 does
+## What exp76 does
 
 **Stage 0 — leverage by evaluation, no fit (an afternoon).**
 - Re-measure P9's table on the measured input: the partial correlations at
@@ -99,7 +99,7 @@ layer inherits the finding.
   3-D or multi-axis profiles to size the target first; blocked on data.
 - **Not the layer yet.** The v2 layer needs an outer size component
   (exp73 Block D, second use) and should be built on whatever mean model
-  exp75 leaves, after the re-baseline.
+  exp76 leaves, after the re-baseline.
 - **Not the early history below 1.18 Gyr.** Snapshots at z = 6–12 exist for
   74 → 0 per cent of galaxies; using them where present is heterogeneous by
   construction. Worth a coverage-controlled test later, since the compact
