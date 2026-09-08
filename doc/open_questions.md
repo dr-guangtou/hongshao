@@ -684,7 +684,7 @@ legitimate input under THE HALO INPUT rule); the early history before 1.2 Gyr
 (exp46's head start); the halo's concentration history is already closed.
 
 ### C23. The adopted references open a lower-loss basin that the gates reject
-**Raised 2026-09-08 by the re-baseline.** With the objective normalised at
+**Raised 2026-09-08 by the re-baseline. DECIDED the same morning (the user): exp74's optimum is the baseline mean; the size-term question stays open.** With the objective normalised at
 the nested incumbent on the measured curves and the halo-mass bins by the
 measured mass, exp63's model has two basins: exp74's measured optimum
 (15.56) and one 6 per cent lower (14.63) with a 25 kpc "compact" channel

@@ -71,6 +71,22 @@ START_ORDER = {"exp63": ["exp74meas", "exp63", "near", "nested", "cont"],
                "incumbent": ["nested", "near_inc", "jitter_inc"]}
 
 
+#: THE ADOPTED BASELINE MEAN (the user, 2026-09-08): exp74's measured-input
+#: optimum, `outputs/stage1_refit_measured.npz`, scored under the adopted
+#: references (nested incumbent on measured curves, bins by the measured
+#: mass). The 14.63 basin in `outputs/rebaseline_exp63.npz` is loss-preferred
+#: and gate-rejected (C23) and is NOT the baseline.
+BASELINE_NPZ = OUTDIR / "stage1_refit_measured.npz"
+
+
+def adopted_baseline():
+    """(spec2, theta) of the adopted baseline mean; the input it goes with is
+    `measured.build_input(recs, "measured")`."""
+    fz = np.load(FIT_NPZ, allow_pickle=True)
+    fb = np.load(BASELINE_NPZ, allow_pickle=True)
+    return S2F.spec_from_fit(fz), np.asarray(fb["theta_best"], float)
+
+
 def measured_mass_bins(recs, lmh_dm):
     """The binning variable of the adopted objective: the measured M200c at
     each epoch, the DiffMAH value where the catalog has none."""

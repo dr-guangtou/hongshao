@@ -399,8 +399,8 @@ loss does not.** The objective does not score sizes at all, and the basin
 it prefers buys its 6 per cent by putting a fifth more mass into a 25 kpc
 "compact" channel, which the size gate sees and the loss cannot.
 
-**Recommendation (the user's decision): adopt exp74's measured-input
-optimum as the baseline mean**, with the adopted references as the loss
+**DECIDED 2026-09-08 (the user): exp74's measured-input optimum IS the
+baseline mean** (`rebaseline.adopted_baseline()`), with the adopted references as the loss
 normalisation, and record the 14.63 basin as loss-preferred and
 gate-rejected. Both parameter sets are in `outputs/rebaseline_exp63*.npz`.
 

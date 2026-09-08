@@ -3021,7 +3021,8 @@ Owed to the user, NOT decided here:
 - [x] Incumbent re-baselined: 16.14, a single basin.
 - [x] exp63's model re-baselined: TWO basins — exp74's point (15.56) and a
   lower one (14.63) the gates reject (C23). Recommendation: exp74's point.
-- [ ] **Decision (user)**: the baseline mean (gates vs loss).
+- [x] **Decision (user, 2026-09-08)**: exp74's optimum is the baseline mean
+  (`rebaseline.adopted_baseline()`); the 14.63 basin is gate-rejected.
 - [ ] The v1 stochastic layer's re-baseline (exp60 stages 1-3 on a measured-
   history predictor; ~half a day; after the decision above).
 - [x] exp76 Stage 0 + Stage 1: the split is rejected by the loss (g -> 0) and
