@@ -175,6 +175,14 @@ doc/             # science context, data reference, todo.md, lessons.md
 
 ## Conventions
 
+- (2026-09-09, user decision) Close Exp75/Exp77 as diagnostic experiments;
+  do not advance their learned profile-correction maps as the production
+  framework. The next direction is a compact physical prescription shared
+  across epochs, tested against cumulative and annular masses together.
+  Statistical direct/correction models remain diagnostic benchmarks. State
+  full fitted complexity and which parameters observations would constrain
+  before advocating a candidate for forward use.
+
 - (2026-09-04, user clarification) Full halo MAHs, DiffMAH parameters,
   peak halo mass and final halo mass are legitimate prediction inputs, including
   halo history after the output epoch. The target galaxy's measured stellar

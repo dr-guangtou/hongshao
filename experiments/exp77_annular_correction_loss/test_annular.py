@@ -1,6 +1,7 @@
 """Known-answer and held-out-label checks before the new annular fits."""
 
 import unittest
+from unittest.mock import patch
 
 from annular import (
     HERE,
@@ -37,7 +38,9 @@ class AnnularChecks(unittest.TestCase):
             prediction = apply_correction(self.baseline, fitted, self.radii)
             self.assertTrue(np.all(np.diff(prediction) >= 0))
 
+    @patch.object(REF.CONT, "check_deadline", new=lambda: None)
     def test_evaluation_labels_never_change_predictions(self):
+        # This synthetic invariance check is independent of the overnight run date.
         rng = np.random.default_rng(77)
         baseline = np.tile(self.baseline, (12, 5, 1))
         sample = {

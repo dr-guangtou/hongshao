@@ -2,6 +2,29 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **Archived synthetic checks must not expire with a science-run deadline.**
+  The Exp77 held-out-label test stopped after September 8 despite unchanged
+  mathematics. Isolate its synthetic calculation from the wall-clock guard;
+  preserve the real guard and the separate explicit before/after-cutoff test.
+
+- **Halo-only prediction is not sufficient for the intended physical forward
+  framework (Exp75/Exp77 closeout, September 9).** The learned correction
+  absorbs TNG300-specific residual relationships into 140/220 affine map
+  coefficients and 20 predicted epoch-specific coordinates. Freezing these
+  coefficients does not expose that dependence through a compact set of
+  interpretable parameters observations can constrain. Stop this production
+  direction. Keep Exp75's evidence of predictable missing structure and
+  Exp77's lesson that annular fitting improves the outskirts; investigate
+  compact shared physical prescriptions instead. The strict relative radius
+  gate is not the main reason for this architectural decision.
+
+- **Profile-coordinate count is not learned-model complexity (Exp77 note).**
+  Four predicted corrections per epoch require a halo-to-coordinate map.
+  Across five epochs the selected linear maps have 140 or 220 affine
+  coefficients, depending on whether six or ten halo inputs are used. These
+  coefficients can be frozen in forward use; they are not automatically new
+  downstream free parameters. Keep these three counts separate.
+
 - **A successful residual correction can still be unsafe in the outskirts
   (Exp75).** The halo-only correction improved held-out mean log-CoG RMS by
   5.074% versus a matched-loss deposition refit, yet its z=2 median log
