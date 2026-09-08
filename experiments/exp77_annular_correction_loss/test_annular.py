@@ -3,6 +3,7 @@
 import unittest
 from unittest.mock import patch
 
+import numpy as np
 from annular import (
     HERE,
     REF,
@@ -11,7 +12,6 @@ from annular import (
     fit_labels,
     predict_from_calibration,
 )
-import numpy as np
 
 
 class AnnularChecks(unittest.TestCase):
