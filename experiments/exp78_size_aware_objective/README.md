@@ -205,6 +205,23 @@ width pass ever on a mean model (R20 at z = 0.4, 0.80), the envelope at z =
 M(<10) at z = 1.5 mh-complete +9.3 (baseline +7.8), M(<100) at z = 0.4
 −5.1 (baseline −3.1), and it is 0.49 higher in the loss than the optimum.
 
+**The second basin's curved mass planes (the user's reading of
+`qa_planes_exp78_size-aware_(base)`).** In the outer-vs-inner mass planes
+at z ≥ 1 the second basin bends: the slope of M(50–100) against M(<30) at
+z = 2 is 2.51 against the truth's 1.66 (the baseline 1.63, the optimum
+1.83), with the low-mass end falling off a cliff. The cause is the fitted
+compact/extended switch: its width `d_split` is 0.137 dex (the baseline
+0.27, the optimum 0.95) at `m_half` = 12.30, so a deposit made while the
+halo was below 10^12.3 goes almost entirely to the compact channel and one
+made above it to the extended channel. At z = 2 the lowest quintile of
+M(<30) is 89 per cent compact and holds 10^−1.79 of its inner mass at
+30–100 kpc, the highest quintile 24 per cent and 10^−0.82 (the baseline:
+47 per cent and 10^−1.27; 11 per cent and 10^−0.82). A threshold in halo
+mass becomes a knee in the mass plane; the steeper compact profile (`n_c`
+1.38) sharpens it. The tercile MEDIANS the loss scores do not see a knee,
+which is why this basin reads well on the envelope and badly in the plane —
+one more reading the QA planes give and the loss does not.
+
 **Verdict (the gates decide).** Neither size-aware solution beats the
 baseline on the offset sub-gate (11 vs 12) or on R50 at z ≥ 1.5, which is
 the failure the term was built to fix; both buy the outer envelope and some
