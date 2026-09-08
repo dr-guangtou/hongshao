@@ -3092,3 +3092,32 @@ Owed to the user, NOT decided here:
   high-z outskirts +30% per galaxy in the 50-100 kpc shell at z=2; R50 +13-21%).
 - [ ] Variant B2: a light per-galaxy smoothing of the measured history (the
   honest inputs are 10-15% noisier per galaxy at z>=1.5 than the official).
+
+## 2026-09-09 — exp78, the size-aware objective (`exp78-size-aware-objective`)
+
+- [x] Stage 0: two candidate terms with asserted blind spots; the radius term
+  ranks the five known models as the gates do (PASS); exp77's annular term
+  ranks the gate-rejected basin best and is blind to a central point mass (FAIL).
+- [x] Stage 1: refit under A²+F²+S²+B²+Z² (12 + 0 parameters), four starts +
+  continuation; optimum 15.82 in the 14.63 basin's family with the compact
+  size railed at 31.6 kpc; second basin 16.31. Judge: offset gate 11/15 vs
+  the baseline's 12; R50 at z ≥ 1.5 worse; envelope at z = 2 +30% → +10%;
+  widths up; centre worse. **Not adopted** (the gates decide).
+- [x] Stage 2: g free (13 parameters) from g = 0, −1, −2: g → −0.005; the
+  size-aware loss rejects the split as exp63's did.
+- [ ] Re-tune the extended deposit's r200 scaling under the measured input
+  (the high-z R50 excess is in the top tercile and grows with M*; slope 0.37
+  vs 0.11 at z = 2) — a model change, before any further objective work.
+- [ ] Widen or re-parametrise the compact channel's size bound only if the
+  r200 re-tune leaves the bound binding.
+- [ ] If a size term stays in the loss: a gated weight sweep, not weight 1 by
+  fiat; a width term belongs to the stochastic layer.
+- [ ] exp76's fate: option 2 (g fixed by physics with the layer owning the
+  width) is the remaining route; the size term did not rescue option 1.
+- [ ] Merge `exp78-size-aware-objective` (the user's call).
+
+### Review
+The term was designed and vetted before the fit as the user asked, and the
+fit's outcome was predictable from the frozen-model arithmetic (a lesson
+recorded). The result is a clean negative: the loss can be made to see the
+size, but at weight 1 it spends the freedom where the gate already passes.

@@ -96,7 +96,16 @@ def main(smoke=False, tables_only=False):
     moved = [(n, a, b) for n, a, b in zip(names, th_basin, th1) if abs(a - b) > 0.05]
     print(f"  size-aware moved by > 0.05 from the 14.63 basin: "
           + (", ".join(f"{n} {a:+.3f}->{b:+.3f}" for n, a, b in moved) or "none"))
-    f2p = OUTDIR / f"stage1_fit_growth{tag}.npz"
+    fc = OUTDIR / f"stage1_fit{tag}_start_cont_baseline.npz"
+    if fc.exists():
+        # the second basin under the size-aware loss: the baseline start settled by continuation
+        thc = np.asarray(np.load(fc, allow_pickle=True)["theta"], float)
+        models["size-aware (base)"] = (spec2, thc)
+        print(f"  size-aware (base): the baseline start settled by continuation, loss {float(np.load(fc, allow_pickle=True)['loss']):.4f}")
+        moved = [(n, a, b) for n, a, b in zip(names, th_base, thc) if abs(a - b) > 0.05]
+        print(f"  size-aware (base) moved by > 0.05 from the baseline: "
+              + (", ".join(f"{n} {a:+.3f}->{b:+.3f}" for n, a, b in moved) or "none"))
+    f2p = OUTDIR / f"stage2_fit_growth{tag}.npz"
     if f2p.exists():
         f2 = np.load(f2p, allow_pickle=True)
         th2 = np.asarray(f2["theta_best"], float)
@@ -108,7 +117,7 @@ def main(smoke=False, tables_only=False):
         moved = [(n, a, b) for n, a, b in zip(names, th1, th2[:-1]) if abs(a - b) > 0.05]
         print(f"  Stage 2 moved by > 0.05 from Stage 1: "
               + (", ".join(f"{n} {a:+.3f}->{b:+.3f}" for n, a, b in moved) or "none"))
-    print(f"  PARAMETERS: baseline 12; size-aware 12 (+0 for the term); size-aware + g 13")
+    print(f"  PARAMETERS: baseline 12; size-aware 12 (+0 for the term), both basins; size-aware + g 13")
 
     # ---- 2. the loss grid ------------------------------------------------------ #
     print(f"\n{RULE}\n2. THE LOSS GRID under the adopted references — A, F, S, B, Z per epoch; the loss with and without Z\n{RULE}")
@@ -124,6 +133,15 @@ def main(smoke=False, tables_only=False):
         print(f"  {'':<16}{'total':>6}{'':>40}{(tab[:, :4] ** 2).sum():>13.3f}{(tab ** 2).sum():>8.3f}")
         full = M2.predict2(sp, th, [meas[i] for i in range(len(recs))], F.R_GRID, epochs=EPOCHS, nodes=M2.FULL_NODES)
         pred[lab] = full
+
+    print(f"\n  the radius term's tercile medians of log10 R_f(model)/R_f(truth) [dex], low / mid / high halo-mass tercile")
+    import size_terms as ST
+    for lab, (sp, th) in models.items():
+        med = sap.median_tables(sp, th)
+        print(f"  {lab}:")
+        for i, f in enumerate(ST.FRACTIONS):
+            print(f"    R{int(100 * f):<3}" + "".join(
+                "  z=" + f"{ANCHOR_Z[j]}:" + "/".join(f"{v:+.3f}" for v in med[j, i]) for j in range(5)))
 
     good = np.isfinite(data).all(axis=(1, 2)) & (data > 0).all(axis=(1, 2))
     for v in pred.values():

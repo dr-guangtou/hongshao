@@ -23,8 +23,9 @@ Starts, each its own process (`--starts k:k`), then `--merge`:
   basin     the 14.63 basin (gate-rejected; the loss's own favourite so far)
   exp63     exp63's joint fit on the official curves
   nested    the nested incumbent, clipped into the box
-  cont      a continuation from the best start that stopped at the cap
-            (near starts rail into the failure penalty under this objective)
+  --continue NAME   a continuation of a start that stopped at the cap, from
+            its own point (near starts rail into the failure penalty under
+            this objective; a basin is settled from its own point)
 
 Run:
     HONGSHAO_DATA_DIR=/Users/shuang/Desktop/tng300_mah_mprof OMP_NUM_THREADS=1 PYTHONPATH=. \\
@@ -74,8 +75,8 @@ ANCHOR_Z = list(E.ANCHOR_Z)
 EPOCHS = (0, 1, 2, 3, 4)
 OUTDIR = HERE / "outputs"
 E74 = ROOT / "experiments/exp74_c19_history_leak/outputs"
-START_ORDER = {"stage1": ["baseline", "basin", "exp63", "nested", "cont"],
-               "stage2": ["g0", "g-1", "g-2", "cont"]}
+START_ORDER = {"stage1": ["baseline", "basin", "exp63", "nested"],
+               "stage2": ["g0", "g-1", "g-2"]}
 
 
 class SizeAwareProblem:
@@ -98,7 +99,8 @@ class SizeAwareProblem:
         raw = self.per_epoch(th_null)[1]
         self.z_ref = raw.copy()
 
-    def _radius_term(self, mk, k):
+    def _median_table(self, mk, k):
+        """(n_frac, 3) tercile medians of log10 R_f(model)/R_f(truth) at epoch k."""
         terc = ST.tercile_masks(self.lmh_k[k])
         good = np.isfinite(mk).all(1) & (mk[:, -1] > 0)
         med = np.full((len(ST.FRACTIONS), 3), np.nan)
@@ -108,7 +110,15 @@ class SizeAwareProblem:
                 sel = t & good & np.isfinite(d)
                 if sel.sum() >= 5:
                     med[i, b] = np.median(d[sel])
-        return float(np.sqrt(np.nanmean(med ** 2)))
+        return med
+
+    def _radius_term(self, mk, k):
+        return float(np.sqrt(np.nanmean(self._median_table(mk, k) ** 2)))
+
+    def median_tables(self, spec, theta, nodes=M2.FULL_NODES):
+        """(5, n_frac, 3) the term's tercile-median tables per epoch, for any spec."""
+        m = M2.predict2(spec, theta, self.pr.curves, self.Rm, epochs=tuple(self.epochs), nodes=nodes)
+        return np.array([self._median_table(m[self.index_m[k], j], k) for j, k in enumerate(self.epochs)])
 
     def per_epoch(self, theta, nodes=M2.FIT_NODES):
         """({k: (A, F, S, n_bad, B)}, (5,) raw radius term, (5,) normalised Z)."""
@@ -164,7 +174,7 @@ def build(smoke=False, growth=False):
     return recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, spec, th_inc, th_nested, pr, sap, Rm, truth_m, n_inner, rows_m
 
 
-def main(smoke=False, starts_sel=None, merge=False, growth=False):
+def main(smoke=False, starts_sel=None, merge=False, growth=False, cont=None):
     stage = "stage2" if growth else "stage1"
     tag = ("_growth" if growth else "") + ("_smoke" if smoke else "")
     if merge:
@@ -204,17 +214,17 @@ def main(smoke=False, starts_sel=None, merge=False, growth=False):
                   ("exp63", np.asarray(fz["theta_best"], float)),
                   ("nested", M2.clip_to_bounds(spec, th_nested))]
         sap.report(th_base, "THE BASELINE MEAN (exp74's measured optimum), scored here")
-    prev = sorted(OUTDIR.glob(f"{stage}_fit{tag}_start_*.npz"))
-    prev = [p for p in prev if "cont" not in p.name]
-    if prev:
-        best = min(prev, key=lambda p: float(np.load(p, allow_pickle=True)["loss"]))
-        fb = np.load(best, allow_pickle=True)
-        if int(fb["n_eval"]) >= S2F.MAX_EVALS["smoke" if smoke else "full"] - 20:
-            starts.append(("cont", np.asarray(fb["theta"], float)))
-            print(f"  continuation start from {best.name} ({int(fb['n_eval'])} evals, loss {float(fb['loss']):.4f})")
-    starts = [s for n in START_ORDER[stage] for s in starts if s[0] == n]
-    if starts_sel is not None:
-        starts = starts[starts_sel[0]:starts_sel[1] + 1]
+    if cont is not None:
+        # a continuation of a start that stopped at the evaluation cap (near
+        # starts rail into the failure penalty; a basin is settled from its own point)
+        src = OUTDIR / f"{stage}_fit{tag}_start_{cont}.npz"
+        fb = np.load(src, allow_pickle=True)
+        starts = [(f"cont_{cont}", np.asarray(fb["theta"], float))]
+        print(f"  continuation of '{cont}' ({int(fb['n_eval'])} evals, loss {float(fb['loss']):.4f})")
+    else:
+        starts = [s for n in START_ORDER[stage] for s in starts if s[0] == n]
+        if starts_sel is not None:
+            starts = starts[starts_sel[0]:starts_sel[1] + 1]
     print(f"\n  {len(starts)} start(s): " + ", ".join(n for n, _ in starts))
     OUTDIR.mkdir(parents=True, exist_ok=True)
     for name, p0 in starts:
@@ -243,8 +253,7 @@ def main(smoke=False, starts_sel=None, merge=False, growth=False):
 
 
 def merge_starts(stage, tag):
-    files = [OUTDIR / f"{stage}_fit{tag}_start_{n}.npz" for n in START_ORDER[stage]]
-    files = [f for f in files if f.exists()]
+    files = sorted(OUTDIR.glob(f"{stage}_fit{tag}_start_*.npz"))
     assert files, "no start files to merge"
     res = [dict(np.load(f, allow_pickle=True)) for f in files]
     ls = np.array([float(r["loss"]) for r in res])
@@ -275,4 +284,5 @@ if __name__ == "__main__":
     if "--starts" in a:
         lo, hi = a[a.index("--starts") + 1].split(":")
         ss = (int(lo), int(hi))
-    main(smoke="--smoke" in a, starts_sel=ss, merge="--merge" in a, growth="--growth" in a)
+    main(smoke="--smoke" in a, starts_sel=ss, merge="--merge" in a, growth="--growth" in a,
+         cont=(a[a.index("--continue") + 1] if "--continue" in a else None))
