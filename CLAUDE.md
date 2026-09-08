@@ -51,3 +51,17 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   bins by the measured mass). The lower-loss basin the adopted references
   open (14.63 vs 15.56) is gate-rejected (C23) and is not the baseline: **the
   gates decide, the loss does not.**
+
+## INTEGRATION (agreed by the user, Claude and the Codex agent, 2026-09-09)
+
+**One agent integrates: Claude merges and pushes `master`, from the retained
+checkout `hongshao` where `master` is checked out.** Every other agent works
+in an isolated feature worktree under `/Users/shuang/Dropbox/work/project/massive/`
+and hands over completed commits on its branch; it does not update `master`.
+Before creating a branch or an experiment id, list the worktrees and
+`experiments/` — ids are taken by whoever created the directory first (exp75,
+exp77: Codex; exp76: Claude; next free: exp78, declared). `doc/lessons.md`,
+`doc/todo.md` and `doc/open_questions.md` are append-only and conflict when
+both agents append; resolve by keeping both sides. Gitignored artifacts
+(outputs, figures) live only in the checkout that made them: copy and
+hash-verify before removing any worktree.
