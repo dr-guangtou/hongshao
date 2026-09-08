@@ -3121,3 +3121,9 @@ The term was designed and vetted before the fit as the user asked, and the
 fit's outcome was predictable from the frozen-model arithmetic (a lesson
 recorded). The result is a clean negative: the loss can be made to see the
 size, but at weight 1 it spends the freedom where the gate already passes.
+- [x] Side quest (the user): a stricter jump cut (> 0.6 dex between adjacent
+  epochs, 45 galaxies) — frozen and refit: the z = 2 amplitude moves by ~4%,
+  no gate or basin changes; keep the rule until the snapshot check; quote
+  the z = 2 amplitude with ±4% sample-rule uncertainty. `side_jump_cut.py`.
+- [ ] The snapshot check of the 45 jumpers (exp77's open item); if confirmed
+  broken, tighten `selection.JUMP_DEX` and re-baseline (expect +4% at z = 2).

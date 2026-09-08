@@ -2870,3 +2870,12 @@ session should not rediscover them:
   `stage1_fit_growth.npz` while the merge wrote `stage2_fit_growth.npz`; a
   ten-minute judge ran without the Stage 2 row. One `STAGE_FILES` dict
   shared by fit and judge would have prevented it.
+- **A few outliers can own a tenth of a per-galaxy term and still move no
+  median** (exp78 side quest). 45 galaxies (1.9 per cent) with a > 0.6 dex
+  stellar-mass jump between adjacent epochs carry 12 per cent of A² and 6
+  per cent of S at z = 2; removing them and refitting raises the z = 2
+  amplitude by about 4 per cent and changes no gate, basin or parameter
+  beyond 0.2. Measure an outlier set's share of each term at frozen
+  parameters first; the refit then only confirms the size. Quote the
+  affected number with that uncertainty rather than changing the sample
+  rule ahead of the snapshot check.

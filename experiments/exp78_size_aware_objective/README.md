@@ -250,6 +250,56 @@ bought (R80 width 0.22 → 0.48 at z = 2) is a width, and the radius term is
 an offset term by design. exp76 stays not adopted, not closed; option 2 (g
 fixed by physics, with the layer owning the width) is the remaining route.
 
+## Side quest — do the galaxies with a sudden stellar-mass increase move the fit? (`side_jump_cut.py`)
+
+The user's observation: different models fail at the same few galaxies
+(`qa_cases_*`: the worst two have M*(<100 kpc) at z = 2 three to ten times
+below their z = 1.5 value). THE FITTING SAMPLE rule keeps them (its jump
+criterion removes only a rise above 1.0 dex between adjacent epochs, two
+galaxies); exp77 decided to keep them until a snapshot check. This measures
+what they cost.
+
+**The stricter cut.** A galaxy is removed at every epoch if M*(<100) or
+M*(<30) rises by more than 0.6 dex (a factor 4) between adjacent epochs: 45
+galaxies, 1.9 per cent of the fitting sample, 30 of them between z = 2 and
+1.5 and 13 between 1.5 and 1.0. (At 0.5 dex it would be 109; the adjacent
+growth distribution has a 97.7th percentile of +0.52 dex between z = 2 and
+1.5, so 0.5 dex is inside the tail of plausible major mergers.)
+
+**Frozen, same references** (the baseline mean scored on both samples):
+the 45 carry 11.9 per cent of the amplitude term A² and 5.7 per cent of the
+shape term S at z = 2, 5.7 / 4.5 per cent at z = 1.5, and 2 per cent at z ≤
+1; the baseline's loss on the stricter sample is 15.28 against 15.56. No
+median moves: the profile changes by at most 1.2 points (M(<10) at z = 2
+−2.4 → −3.6 per cent on the fitting sample, mh-complete unchanged), the size
+gate is identical (12 of 15, R50 at z = 2 +0.054 → +0.055), the
+future-dependence gate within 0.01 dex per dex.
+
+**The refit on the stricter sample** (exp63's objective, its own
+references; from the baseline, 3108 evaluations at the cap; and from the
+14.63 basin, which does not move at all, 40 evaluations): the baseline start
+stays in the baseline's basin — the compact size 9.6 → 9.7 kpc, the largest
+moves `n_c` 0.56 → 0.73, `b_e` −1.03 → −0.88, `a_z` +0.34 → +0.40. Scored
+on the FULL sample under the adopted references it is 15.30 (the baseline
+15.56), the gain at z = 1.0–1.5 and z = 2 slightly worse (2.95 → 2.99).
+Its QA on the full sample against the baseline: M(<10) at z = 2 −2.4 →
++1.6 per cent (mh-complete −0.5 → +2.8); M(<103) at z = 2 −1.4 → +2.4; the
+z = 0.4 outskirts −3.1 → −5.6; the z = 1.5 centre −9.8 → −11.0; R50 at z =
+1.5 / 2 +0.037 / +0.054 → +0.043 / +0.064; the offset gate 12 of 15 and the
+future-dependence gate unchanged.
+
+**Reading.** The jumpers are galaxies whose high-redshift mass is
+anomalously LOW, so they pull the fitted z = 2 amplitude down by about 4 per
+cent at 10 and 100 kpc; removing them raises it by that much and nothing
+else changes — no gate flips, no basin moves, the parameters stay within
+0.2 of the baseline's. That is the size of the uncertainty the unresolved
+snapshot question puts on the z = 2 amplitude numbers (a few per cent,
+comparable to the existing biases), and it is not what separates the two
+basins or what the size gate fails on. Recommendation: keep the current
+rule until the snapshot check, and quote the z = 2 amplitude with a ±4 per
+cent sample-rule uncertainty. Logs: `outputs/side_jump_frozen.log`,
+`side_jump_judge_baseline.log`, `side_jump_judge_basin.log`.
+
 ## What is owed after exp78
 
 - Re-tune the extended deposit's r200 scaling under the measured input: the
