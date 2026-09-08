@@ -1,5 +1,18 @@
 # AGENTS.md — HongShao
 
+## Working rules for two agents (user agreement, 2026-09-09)
+
+- Claude uses the main `hongshao` directory on experiment feature branches
+  started from current master; Claude alone handles integration and pushes.
+- Codex uses isolated worktrees and feature branches only. Never edit files
+  or switch branches in Claude's directory, or update master independently.
+- Codex hands off verified commits, branch names and artifact locations to
+  Claude. Delete a Codex worktree only after its commits and gitignored
+  artifacts have been preserved, with copied artifacts hash-verified.
+- Check existing worktrees, branches and experiment IDs before creation.
+  Exp78 is reserved for Claude's size-aware objective work; do not duplicate it.
+- Shared record additions must preserve both agents' contributions on merge.
+
 Orientation for AI agents (and humans) working in this repo.
 
 ## What this is
