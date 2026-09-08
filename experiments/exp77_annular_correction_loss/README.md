@@ -1,5 +1,32 @@
 # Exp77 — does explicitly fitting annular masses improve the halo correction?
 
+## Final disposition (2026-09-09)
+
+Closed by user decision, with no production correction-map integration and
+no further fitting required. Annular calibration produced a promising
+improvement in outer masses, despite the recorded strict relative safeguards.
+The architectural decision is separate: 140/220 fitted halo-map coefficients
+and 20 epoch-specific correction outputs encode TNG300 residual relationships
+without a compact physical prescription that observations can constrain.
+Retain the annular-objective lesson and all diagnostic results; move to a
+compact physical model shared across epochs. Historical gates are unchanged.
+The earlier recommendations below are retained as chronology, not active tasks.
+
+The September 9 PDF describes the mechanism accurately, but its discussion of
+possible frozen-component integration predates this final decision and is
+not a production recommendation. This final disposition takes precedence.
+
+## Model explanation (September 9)
+
+The six-page [model and profile-correction note](../../output/pdf/exp77_model_and_profile_correction.pdf)
+explains the implemented mathematics, calibration and prediction pseudocode,
+parameter accounting, and prospective forward-model use. Rebuild it with
+`uv run --no-project --with reportlab --with pymupdf python experiments/exp77_annular_correction_loss/build_model_note.py`.
+The generated PDF and source-hash record live under `output/pdf/`; rendered
+review pages live under `tmp/pdfs/exp77_model_note/`. This is documentation
+only: it changes neither the predeclared verdict nor any fitted result.
+
+
 Status: discovery and attribution controls completed, full QA inspected,
 2026-09-08. The declared candidate fails the size and conditional-growth
 safeguards; no production adoption or replacement of that verdict.

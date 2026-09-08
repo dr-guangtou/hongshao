@@ -1,5 +1,18 @@
 # Exp75 — can halo inputs predict the deposition model's residuals?
 
+## Final disposition (2026-09-09)
+
+Closed by user decision, with no additional science runs required. Retain the
+original and measured-MAH results as diagnostic benchmarks, not a production
+residual-correction framework. Halo properties predict some of the physical
+model's remaining errors, but a flexible TNG300-calibrated correction does
+not expose those missing relationships through a compact, interpretable set
+of parameters for observations to constrain. The direct model remains an
+empirical comparator, not a proven statistical upper limit. Historical scores,
+QA, and sample membership are unchanged. The next direction is a compact
+physical prescription shared across epochs, evaluated with CoGs and annular
+masses together; no unfinished follow-up is required to close this experiment.
+
 Status: original discovery completed, 2026-09-05; measured-history continuation
 completed, 2026-09-08. Neither result is a production qualification.
 The September 8 continuation is predeclared in `OVERNIGHT.md`; its outputs

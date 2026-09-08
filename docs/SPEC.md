@@ -1,5 +1,16 @@
 # HongShao architecture specification
 
+## Physical-framework direction (2026-09-09)
+
+Exp75/Exp77 are closed diagnostic experiments, not production components.
+The agreed next direction is a compact physical prescription shared across
+epochs, tested with cumulative and annular stellar masses together. A frozen
+TNG300-trained residual map can populate halos but does not, by that fact,
+provide an interpretable framework whose galaxy-formation dependence can be
+constrained by observations. No Exp75/Exp77 correction-map integration is
+planned. Retain their statistical predictions as diagnostic benchmarks, not
+a proven statistical upper limit. No stable library interface changes here.
+
 This file records stable library interfaces. Scientific experiment decisions
 remain in the corresponding `experiments/expNN_slug/README.md`.
 

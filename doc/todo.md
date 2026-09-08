@@ -6,6 +6,21 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ## Status
 
+### Exp75 / Exp77 final closeout (September 9)
+
+- [x] Scientific work complete; retain all fits, sample membership and QA.
+- [x] Record the user decision to stop the learned profile-correction direction.
+- [x] Preserve the correction-mechanism PDF as a historical explanation, with
+  its integration suggestion superseded by the final experiment dispositions.
+- [x] Verify artifact preservation on master (241 Exp75 and 100 Exp77
+  non-cache files, including overlapping private references, all SHA-256
+  matched). Worktree removal follows the documentation merge and final checks.
+
+Next scientific direction: a compact physical prescription shared across
+epochs, fitted to cumulative and annular masses together. Direct statistical
+models and the closed correction experiments are diagnostic references only.
+Earlier Exp75/Exp77 follow-up suggestions below are superseded, not open tasks.
+
 ### Exp75 — halo-conditioned residual correction (isolated)
 
 - [x] September 8 continuation: private measured/pre-epoch MAHs, operational
