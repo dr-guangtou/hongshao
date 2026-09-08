@@ -2,6 +2,39 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **A successful residual correction can still be unsafe in the outskirts
+  (Exp75).** The halo-only correction improved held-out mean log-CoG RMS by
+  5.074% versus a matched-loss deposition refit, yet its z=2 median log
+  100–148 kpc envelope-mass bias worsened from -0.09470 to +0.47991 dex.
+  Keep the positive predictability result, but do not promote the correction
+  based on cumulative mass alone. Radius-resolved mass and size QA must remain
+  separate from pooled CoG accuracy, and scatter tests must distinguish point
+  predictions from sampled populations.
+- **A nearest-grid aperture is not the nominal aperture (Exp75 figure QA).**
+  The overview initially labeled grid samples as 10/50/100 kpc. They are
+  10.248/52.299/103.450 kpc. Correct the labels from the actual grid, or
+  interpolate explicitly; never silently equate the two. The final overview
+  labels are corrected, with predictions and primary scores unchanged.
+
+- **Load experiment helpers by explicit path when legacy drivers modify the
+  import path (Exp75).** A focused report test imported Exp53's `report.py`
+  after the deposition driver added its own experiment paths. Giving the
+  Exp75 report a unique module name and explicit path fixed the collision;
+  all scientific fits were unaffected. Short generic module names are not
+  isolated merely because the files live in different experiment folders.
+
+- **Use a relative tolerance when checking cumulative masses for roundoff
+  (Exp75 preparation).** An absolute 1e-5 Msun threshold rejected five
+  discovery profiles whose downward steps were at most 4.13e-15 of the
+  enclosed mass. The check now allows 1e-12 relative roundoff and leaves the
+  measured profiles unchanged. This is not permission to erase real declines.
+- **Full halo history is allowed for HongShao's intended forward use
+  (user clarification, 2026-09-04).** Do not confuse halo history after the
+  output epoch with the forbidden measured stellar-mass amplitude pin. A
+  prediction may condition on the full halo history; stellar masses at every
+  epoch remain outputs. A history-representation test is not automatically a
+  test of whether its information is legitimate.
+
 - **A globally fixed nuisance coordinate can improve local conditioning while
   making the population representation worse (Exp70).** Fixing damped-cosine
   damping to one of four predeclared population-wide values made the weakest
@@ -2732,3 +2765,47 @@ session should not rediscover them:
   exactly 0 from the baseline; starts at g = −1, −2 walked back to −0.27
   and stopped 2.5 per cent worse. Always start a new parameter from both
   ends of its plausible range, not from zero only.
+# Exp75 continuation input audit (2026-09-08)
+
+- A usable measured MAH does not imply a valid catalog halo mass at every
+  requested epoch. The fixed 842-galaxy discovery sample has complete final
+  masses but 2/3/2/4 missing entries at z=.7/1/1.5/2. The initial overly strict
+  per-snapshot check stopped safely before fitting. Keep membership fixed:
+  interpolate histories using Exp74's rule, impute regression features using
+  training galaxies only, and report the available counts for conditional QA.
+
+- Check halo-growth derivatives throughout the deposition integration domain,
+  not just mass fit residuals. Some supplied pre-epoch DiffMAH curves have
+  negative growth and nonpositive stellar predictions. Stop that arm as invalid
+  input; clipping or dropping affected galaxies would answer a changed question.
+- Tiny cumulative-mass errors can hide large outer-annulus errors. Exp75's
+  four-coefficient direct fit to each true CoG reaches 0.00693 dex mean radial
+  RMS, yet its z=2 outer-envelope median mass is 151% above the data. Test
+  the fitting objective before interpreting this as missing halo information.
+- Distinguish a matched-baseline gain from progress over the previous best
+  model: Exp75's measured-input hybrid gains 8.42% over its own baseline but
+  only 0.66% over the old hybrid, with the latter interval including no gain.
+- A conditional-response report initially iterated dictionary keys instead
+  of prediction arrays. A synthetic known-slope test now guards this report;
+  the failure affected reporting only, not saved fitted predictions.
+
+## Exp77 annular correction loss (2026-09-08)
+
+- Fit what the application needs, but check all required observables together.
+  Adding annular masses to the same four-coordinate correction reduces outer
+  RMS by 13.81% versus Exp75 and the z=2 envelope excess from 87.7% to 5.27%,
+  while mean CoG RMS worsens by only 0.135%. Yet z=1.5 R50 bias and z=2
+  conditional-growth response fail the declared safeguards. Retain that
+  verdict rather than adopting from the attractive outer-mass score alone.
+- A relative tolerance on an almost-perfect representation fit can fail
+  despite a small absolute change. The annular diagnostic changes mean
+  radial CoG RMS from 0.00693 to 0.01128 dex: report both the real trade-off
+  and the failed relative criterion, without redefining it after fitting.
+- Compare settings against the corresponding reference fold, not other folds.
+  I initially mistook one fold's larger penalty for a change from Exp75.
+  Explicit fixed-setting controls reproduce Exp77 exactly; the loss targets,
+  not regression settings, explain the outer gain. Map-selection-only controls
+  show no established outer improvement.
+- The standard QA CDF panel shows mass distributions and their CDF differences,
+  not per-object prediction-error distributions. Correct the caption and add
+  an explicit residual CDF when claiming to inspect the latter.
