@@ -45,3 +45,9 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   (`selection.partial_growth` on the residual; exp74 `stage1_eval.py` §4).
   The official DiffMAH curve fails it 4–40× (C19); do not read a high-z
   number fitted on it without saying so.
+- **THE BASELINE MEAN (the user, 2026-09-08)**: exp74's measured-input
+  optimum — `exp74/rebaseline.py::adopted_baseline()` — scored under the
+  adopted references (nested incumbent on the measured curves, halo-mass
+  bins by the measured mass). The lower-loss basin the adopted references
+  open (14.63 vs 15.56) is gate-rejected (C23) and is not the baseline: **the
+  gates decide, the loss does not.**

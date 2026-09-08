@@ -141,9 +141,11 @@ def build_measured(recs, curves, hs, hist=None, verbose=True):
 
 
 INPUT_KINDS = ("official", "pre-epoch", "measured")
+#: the application default, ADOPTED 2026-09-08 (exp74 verdict; the user's decision)
+DEFAULT_INPUT_KIND = "measured"
 
 
-def build_input(recs, kind, hs=None, hist_path=None, verbose=False):
+def build_input(recs, kind=DEFAULT_INPUT_KIND, hs=None, hist_path=None, verbose=False):
     """THE ONE ENTRY POINT for the halo-history input (the user, 2026-09-05:
     keep the model able to take DiffMAH parameters and the measured MAH alike).
 

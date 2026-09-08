@@ -336,3 +336,123 @@ the measured history once the input is adopted.
 at z = 2, −9 at z = 1.5), the width collapse (every mean model), and the
 z = 1.0–1.5 real positive dependence on the future (+0.03–0.05) that a causal
 deposition cannot follow.
+
+## Adoption and the re-baseline (2026-09-08, the user's overnight run; branch `adopt-measured-input`)
+
+`measured.DEFAULT_INPUT_KIND = "measured"`: the application input is now the
+measured history. `rebaseline.py` moves the programme's reference points with
+it — the objective's shape and binned terms are normalised at the nested
+incumbent ON THE MEASURED CURVES (1.000 at the null on the adopted input),
+and the binned term's halo-mass terciles are by the MEASURED mass at each
+epoch (2 galaxy-epochs of 11,785 filled from DiffMAH). Two products, each
+fitted with several starts as separate processes; `rebaseline_eval.py` is
+the judge (`outputs/rebaseline_eval.log`, figures `figures/qa/*exp74_adopt_*`).
+
+### The incumbent, re-baselined — clean
+
+The same engine with the compact channel switched off (exp63's nesting
+values frozen) and its seven parameters refitted on the measured curves:
+three starts (the nested values, a near one, a far one) agree to 0.001 at
+**16.142** (null 20.846, −22.6 per cent) — a single basin. Against its
+official-curve values the amplitude's mass slope softened (`a_M` −0.56 →
+−0.41) and its mass–redshift cross term halved (`a_Mz` +0.32 → +0.17): the
+honest history needs less mass dependence in the efficiency. On the gates it
+is the incumbent as ever — centre +11 per cent at 2 kpc at z = 0.4, R50 +18 /
++22 per cent at z ≥ 1.5 — and its dependence on the halo's future is zero.
+**This is the null every later fit on the adopted input nests in.**
+
+### The baseline mean — the loss and the gates disagree
+
+exp63's 12-parameter model on the measured curves, five starts:
+
+| start | loss | what happened |
+|---|---|---|
+| exp74's measured optimum | 15.560 | a stationary point: converged in 40 evaluations |
+| exp63's original θ → continued | 14.795 → **14.635** | a LOWER basin, converged |
+| nested (clipped into the box) | 16.161 | the incumbent's basin, compact channel shut |
+| near start | failed | railed into the penalty on the first step |
+
+**The adopted references opened a basin 6 per cent below the one exp74's
+parameters occupy, and it is a different model**: the compact channel's
+mass scale rises 11.8 → 12.5 (its share of the deposits 0.10 → 0.44), its
+size 9.6 → 25 kpc (`log_f_c` 0.98 → 1.40, no longer compact), its time
+exponent steepens (`b_c` −0.88 → −1.63) while the extended channel's goes flat
+(`b_e` −1.03 → −0.04). The two channels have partly swapped roles.
+
+The gates rank the two basins the other way:
+
+| | exp74's point (15.56) | the lower basin (14.63) |
+|---|---|---|
+| size-gate OFFSET passes | 12 of 15 | 10 of 15 |
+| R50 at z = 1.5 / 2 | +9 / +13 % | +17 / +21 % |
+| centre at 2 kpc, z = 0.4 | +5.6 % | +9.0 % |
+| total at 148 kpc, z = 0.4 | −3.1 % | −4.4 % |
+| z = 2 massive progenitors, total | −1.0 % | +3.8 % |
+| z = 1.5 massive progenitors, total | +8.6 % | +10.7 % |
+| dependence on the halo's future, z = 2 | −0.005 | −0.007 |
+
+Everything the gates score is equal or worse in the lower basin; only the
+loss is better. This is the failure mode the programme has recorded four
+times before — exp38's loss-optimal basin, exp49, exp52, exp57's long-reach
+basin — **and the rule that came out of them applies: the gates decide, the
+loss does not.** The objective does not score sizes at all, and the basin
+it prefers buys its 6 per cent by putting a fifth more mass into a 25 kpc
+"compact" channel, which the size gate sees and the loss cannot.
+
+**DECIDED 2026-09-08 (the user): exp74's measured-input optimum IS the
+baseline mean** (`rebaseline.adopted_baseline()`), with the adopted references as the loss
+normalisation, and record the 14.63 basin as loss-preferred and
+gate-rejected. Both parameter sets are in `outputs/rebaseline_exp63*.npz`.
+
+### What did not change, and what is still owed
+
+- The measured input's core result holds in every basin: the model's
+  dependence on the halo's future is zero (−0.01 to −0.07 dex per dex against
+  exp63-official's +0.12 to +0.17), the z = 2 fitting-sample tilt is −0.02 to
+  −0.03 instead of −0.122.
+- **The v1 stochastic layer is NOT re-baselined.** It is built on exp57's X3
+  expansion problem, which runs on the old step engine and reads snapshot
+  masses generated from the official DiffMAH curve (`engine.build_curves`
+  asserts exactly that). Re-baselining it means re-running exp60's stages
+  1–3 on a predictor that takes the measured history — about half a day —
+  and it should wait for the baseline decision above.
+
+### The honest input's per-galaxy cost at high redshift (the user's reading of the figures, 2026-09-08, confirmed)
+
+The halo-mass-binned curves favour the honest models; the per-galaxy planes
+at z ≥ 1.5 favour the official one. Both are right. Per-galaxy scatter of
+log(model/truth) at 103 kpc, fitting sample [dex] (model–truth correlation
+in brackets):
+
+| | z=0.4 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|
+| exp63 official | 0.115 (0.89) | 0.122 (0.89) | 0.129 (0.89) | 0.157 (0.89) |
+| refit pre-epoch | 0.123 (0.87) | 0.133 (0.87) | 0.147 (0.86) | 0.167 (0.87) |
+| refit measured | 0.117 (0.89) | 0.129 (0.88) | 0.143 (0.87) | 0.167 (0.87) |
+
+Equal at z ≤ 1; 10–15 per cent noisier per galaxy at z ≥ 1.5. Two causes:
+
+1. **The official curve was a per-galaxy denoiser.** One smooth fit through
+   every snapshot, the future ones included, averages out halo-finder noise
+   in each halo's early history; the pre-epoch fit at z = 2 has four points
+   and the measured curve passes exactly through the tree's values, plus a
+   per-galaxy power-law extension before 1.2 Gyr that carries 14 per cent
+   of the z = 2 deposits. Population medians do not see this; single
+   galaxies do, at ~0.01 dex.
+2. **The honest inputs make the high-z outskirts too extended, galaxy by
+   galaxy.** The official curve understates each halo's early mass (0.06
+   dex at z = 2, more for fast growers); the honest curves give the larger
+   mass, so the halo radius at deposit time is larger and the extended
+   deposits, sized by that radius, land further out. Median per-galaxy
+   error in the 50–100 kpc shell at z = 2: measured refit +30 per cent,
+   exp63 official −2 per cent — the same fact as R50 being +13 to +21 per
+   cent at z ≥ 1.5. The fit balanced the population medians through the
+   binned term and could not fix the per-galaxy outskirts without breaking
+   the centre.
+
+Neither says the input is wrong; both say **the size law's dependence on
+the halo radius at deposit time needs re-tuning under the honest input**
+(the extended deposit is scaled by r200 at the deposit's time, which is now
+larger and noisier at early times), and that a light per-galaxy smoothing
+of the measured history (plan variant B2) is worth its half day. Both are
+owed.

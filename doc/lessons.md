@@ -2738,6 +2738,33 @@ session should not rediscover them:
   segment from its neighbours) denoises without that channel. Gate any
   summary input with the future-dependence test at the nodes, not only at
   the snapshots.
+- **Re-normalising an objective is a model change; re-check the basins.**
+  Rebuilding exp63's references at the honest input and binning by the
+  measured mass looked like bookkeeping. It opened a basin 6 per cent
+  lower in loss that every gate rejects, and the "obvious" start (the
+  previous optimum) sat in the old basin as a stationary point. Any change
+  to a loss's references or binning gets a multi-start fit and the gate
+  table before its optimum is called the baseline.
+- **The loss ranked basins against the gates for the fifth time** (exp38,
+  exp49, exp52, exp57, now the re-baseline). The objective scores no size
+  at all, so a solution that moves mass into a 25 kpc "compact" channel
+  wins the loss and loses the size gate. Either the gates decide, as the
+  rule says, or the objective grows a size term; the record now says which
+  fits it lost to.
+- **A gate written as a sign test is ill-posed where the data's correlation
+  is zero.** exp76's Gate A asked the model to reproduce the SIGN of
+  correlations that the data measure at |ρ| ≤ 0.07; the signs are noise.
+  Gate on a distance from the data's value, with the data's own uncertainty
+  as the scale.
+- **A module name can be shadowed by another experiment's; import by file
+  path.** `import rebaseline` resolved to exp54's `rebaseline.py` and the
+  judge crashed after its build. The exp54 `scoreboard` lesson, again; `ls
+  experiments/*/<name>.py` before naming a module, or import by path.
+- **The loss can have zero gradient in a new parameter at the old optimum
+  while a start elsewhere finds a lower loss with it.** exp76's g stayed at
+  exactly 0 from the baseline; starts at g = −1, −2 walked back to −0.27
+  and stopped 2.5 per cent worse. Always start a new parameter from both
+  ends of its plausible range, not from zero only.
 # Exp75 continuation input audit (2026-09-08)
 
 - A usable measured MAH does not imply a valid catalog halo mass at every

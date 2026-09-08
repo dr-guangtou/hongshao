@@ -3054,3 +3054,26 @@ Owed to the user, NOT decided here:
   form did not matter. RECOMMENDED as the standard input.
 - [ ] The incumbent and the v1 stochastic layer inherit the leak; re-baseline
   when the input is adopted.
+
+## 2026-09-08 — the overnight run: adoption + re-baseline (`adopt-measured-input`) and exp76
+
+- [x] Adopt the measured history (`measured.DEFAULT_INPUT_KIND`); references
+  rebuilt at the nested incumbent on measured curves; bins by the measured mass.
+- [x] Incumbent re-baselined: 16.14, a single basin.
+- [x] exp63's model re-baselined: TWO basins — exp74's point (15.56) and a
+  lower one (14.63) the gates reject (C23). Recommendation: exp74's point.
+- [x] **Decision (user, 2026-09-08)**: exp74's optimum is the baseline mean
+  (`rebaseline.adopted_baseline()`); the 14.63 basin is gate-rejected.
+- [ ] The v1 stochastic layer's re-baseline (exp60 stages 1-3 on a measured-
+  history predictor; ~half a day; after the decision above).
+- [x] exp76 Stage 0 + Stage 1: the split is rejected by the loss (g -> 0) and
+  wanted by the gates (R80 width at z=2 0.22 -> 0.48 with g = -0.27). Not
+  adopted, not closed.
+- [ ] **Decision (user)**: a size term in the objective (C23 / exp76 option 1),
+  or g fixed by physics (option 2), or close exp76.
+- [ ] C22: what measured quantity does the data's compact share follow?
+- [ ] Merge `adopt-measured-input`; merge or close `exp76-growth-rate-split`.
+- [ ] Re-tune the extended deposit's r200 scaling under the honest input (the
+  high-z outskirts +30% per galaxy in the 50-100 kpc shell at z=2; R50 +13-21%).
+- [ ] Variant B2: a light per-galaxy smoothing of the measured history (the
+  honest inputs are 10-15% noisier per galaxy at z>=1.5 than the official).
