@@ -3025,7 +3025,7 @@ Owed to the user, NOT decided here:
   core, the truth's is in the outskirts. Next layer needs an OUTER size
   component; the core draw is too wide.
 - [x] QA figures for the five per-epoch R50 fits (`ceiling_figures.py`).
-- [ ] C19 (DiffMAH's logmp carries the future) — deliberately not started.
+- [x] C19 (DiffMAH's logmp carries the future) — ANSWERED by exp74 (2026-09-03/05).
 - [x] **C the refit — NEGATIVE.** The coordinate dropped the inner aperture and
   the fit put +100% inside 2 kpc (R50 −22..−26%, exp63's loss 178 vs 15.3).
   Repaired (aperture = bin 0, selftest H). NOT re-run — the user's call.
@@ -3042,13 +3042,13 @@ Owed to the user, NOT decided here:
   mh-complete −9.7%→−2.5%; R50 width 0.27→0.40 at z=2. README verdict.
 - [x] Re-score the 2×2 with bins by the measured mass: gap 19.8% there, 12.6% in
   exp63's bins — not a binning artefact; the honest model wins z=2, loses z=1–1.5.
-- [ ] **Decision (user)**: the standard input (see the exp74 README verdict and
+- [x] **Decision (user, 2026-09-08)**: the measured history is the standard input (see the exp74 README verdict and
   the 2026-09-04 discussion: the full MAH is legitimate input for the
   application; what must match the truth is the model's dependence on the
   future at fixed current mass, ~0).
 - [x] Keep both input paths (the user, 2026-09-05): `measured.py::build_input`
   serves `official` / `pre-epoch` / `measured`; rule in CLAUDE.md and SPEC.
-- [ ] **Decision (user)**: merge.
+- [x] **Decision (user)**: merge — exp74 merged 2026-09-07.
 - [x] Variant B (the measured history, PCHIP-interpolated; `measured.py`): same
   model as the pre-epoch DiffMAH to a point or two; loss +10.8% vs +12.6%; the
   form did not matter. RECOMMENDED as the standard input.
@@ -3072,7 +3072,7 @@ Owed to the user, NOT decided here:
 - [ ] **Decision (user)**: a size term in the objective (C23 / exp76 option 1),
   or g fixed by physics (option 2), or close exp76.
 - [ ] C22: what measured quantity does the data's compact share follow?
-- [ ] Merge `adopt-measured-input`; merge or close `exp76-growth-rate-split`.
+- [x] Merge `adopt-measured-input` (2026-09-08, `1fcdc08`); [ ] merge or close `exp76-growth-rate-split`.
 - [ ] Re-tune the extended deposit's r200 scaling under the honest input (the
   high-z outskirts +30% per galaxy in the 50-100 kpc shell at z=2; R50 +13-21%).
 - [ ] Variant B2: a light per-galaxy smoothing of the measured history (the
