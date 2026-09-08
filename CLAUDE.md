@@ -52,16 +52,23 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   open (14.63 vs 15.56) is gate-rejected (C23) and is not the baseline: **the
   gates decide, the loss does not.**
 
-## INTEGRATION (agreed by the user, Claude and the Codex agent, 2026-09-09)
+## WORKING RULES FOR TWO AGENTS (the user, 2026-09-09 — replaces every earlier integration note)
 
-**One agent integrates: Claude merges and pushes `master`, from the retained
-checkout `hongshao` where `master` is checked out.** Every other agent works
-in an isolated feature worktree under `/Users/shuang/Dropbox/work/project/massive/`
-and hands over completed commits on its branch; it does not update `master`.
-Before creating a branch or an experiment id, list the worktrees and
-`experiments/` — ids are taken by whoever created the directory first (exp75,
-exp77: Codex; exp76: Claude; next free: exp78, declared). `doc/lessons.md`,
-`doc/todo.md` and `doc/open_questions.md` are append-only and conflict when
-both agents append; resolve by keeping both sides. Gitignored artifacts
-(outputs, figures) live only in the checkout that made them: copy and
-hash-verify before removing any worktree.
+- **Claude** uses the main `hongshao` directory, starting each new experiment
+  on a feature branch from the current `master`.
+- **Codex** uses a separate worktree and feature branch for every experiment;
+  it never switches branches or edits files in Claude's directory.
+- **Handoff**: Codex commits and verifies its work, then provides the branch
+  name and the artifact locations. Claude merges it into `master` and
+  preserves any gitignored outputs (copy and hash-verify).
+- **Cleanup**: Codex removes its worktree only after confirming that its
+  commits and artifacts have been preserved.
+- **Branch and experiment ids must still be checked before creation**
+  (`git worktree list`, `git branch -a`, `ls experiments`), because the
+  worktrees share one Git repository. Taken: exp75, exp77 (Codex), exp76
+  (Claude); exp78 is declared for the size-aware objective (Claude).
+- `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
+  and conflict when both agents append; resolve by keeping both sides.
+
+This separates the two agents' working files and gives `master` a single
+owner, which addresses both sources of collision seen on 2026-09-08.
