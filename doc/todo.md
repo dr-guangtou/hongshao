@@ -3031,3 +3031,7 @@ Owed to the user, NOT decided here:
   or g fixed by physics (option 2), or close exp76.
 - [ ] C22: what measured quantity does the data's compact share follow?
 - [ ] Merge `adopt-measured-input`; merge or close `exp76-growth-rate-split`.
+- [ ] Re-tune the extended deposit's r200 scaling under the honest input (the
+  high-z outskirts +30% per galaxy in the 50-100 kpc shell at z=2; R50 +13-21%).
+- [ ] Variant B2: a light per-galaxy smoothing of the measured history (the
+  honest inputs are 10-15% noisier per galaxy at z>=1.5 than the official).

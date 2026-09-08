@@ -416,3 +416,43 @@ gate-rejected. Both parameter sets are in `outputs/rebaseline_exp63*.npz`.
   asserts exactly that). Re-baselining it means re-running exp60's stages
   1–3 on a predictor that takes the measured history — about half a day —
   and it should wait for the baseline decision above.
+
+### The honest input's per-galaxy cost at high redshift (the user's reading of the figures, 2026-09-08, confirmed)
+
+The halo-mass-binned curves favour the honest models; the per-galaxy planes
+at z ≥ 1.5 favour the official one. Both are right. Per-galaxy scatter of
+log(model/truth) at 103 kpc, fitting sample [dex] (model–truth correlation
+in brackets):
+
+| | z=0.4 | z=1.0 | z=1.5 | z=2.0 |
+|---|---|---|---|---|
+| exp63 official | 0.115 (0.89) | 0.122 (0.89) | 0.129 (0.89) | 0.157 (0.89) |
+| refit pre-epoch | 0.123 (0.87) | 0.133 (0.87) | 0.147 (0.86) | 0.167 (0.87) |
+| refit measured | 0.117 (0.89) | 0.129 (0.88) | 0.143 (0.87) | 0.167 (0.87) |
+
+Equal at z ≤ 1; 10–15 per cent noisier per galaxy at z ≥ 1.5. Two causes:
+
+1. **The official curve was a per-galaxy denoiser.** One smooth fit through
+   every snapshot, the future ones included, averages out halo-finder noise
+   in each halo's early history; the pre-epoch fit at z = 2 has four points
+   and the measured curve passes exactly through the tree's values, plus a
+   per-galaxy power-law extension before 1.2 Gyr that carries 14 per cent
+   of the z = 2 deposits. Population medians do not see this; single
+   galaxies do, at ~0.01 dex.
+2. **The honest inputs make the high-z outskirts too extended, galaxy by
+   galaxy.** The official curve understates each halo's early mass (0.06
+   dex at z = 2, more for fast growers); the honest curves give the larger
+   mass, so the halo radius at deposit time is larger and the extended
+   deposits, sized by that radius, land further out. Median per-galaxy
+   error in the 50–100 kpc shell at z = 2: measured refit +30 per cent,
+   exp63 official −2 per cent — the same fact as R50 being +13 to +21 per
+   cent at z ≥ 1.5. The fit balanced the population medians through the
+   binned term and could not fix the per-galaxy outskirts without breaking
+   the centre.
+
+Neither says the input is wrong; both say **the size law's dependence on
+the halo radius at deposit time needs re-tuning under the honest input**
+(the extended deposit is scaled by r200 at the deposit's time, which is now
+larger and noisier at early times), and that a light per-galaxy smoothing
+of the measured history (plan variant B2) is worth its half day. Both are
+owed.

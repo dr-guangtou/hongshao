@@ -76,3 +76,19 @@ growth — P9's target may be partly the parametrisation.
   `caffeinate -i -w` on every process; the machine stayed awake.
 - A foreground shell call is capped at ten minutes; every fit and judge ran
   through nohup.
+
+## Addendum (morning): the user's reading of the QA figures, confirmed
+
+Honest models win the halo-mass-binned curves and lose the per-galaxy
+planes at z ≥ 1.5 (scatter 0.157 → 0.167 dex at z = 2; correlation 0.89 →
+0.87). Causes: the official curve denoised each galaxy's early history
+using all snapshots; and the honest inputs' larger early halo masses push
+the extended deposits outward (50–100 kpc shell at z = 2: +30 per cent per
+galaxy vs −2). Two more owed items: re-tune the extended deposit's r200
+scaling under the honest input; a light per-galaxy smoothing of the
+measured history (variant B2). exp76's figures show no meaningful change on
+the average curves — its gains were in the size spread and the assembly
+correlations, which those figures do not show — and all its models sit in
+the gate-rejected 14.63 basin.
+
+Nothing else is left on `adopt-measured-input` except the decisions.
