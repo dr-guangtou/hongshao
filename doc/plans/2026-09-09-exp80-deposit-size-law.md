@@ -1,7 +1,14 @@
-# exp79 (proposed) — the deposit size law under the measured input, read from the data first
+# exp80 (proposed) — the deposit size law under the measured input, read from the data first
 
-Status: PROPOSAL, awaiting the user (2026-09-09). Id exp79 not yet declared;
-check `git worktree list`, `git branch -a`, `ls experiments` before creating.
+Status: PROPOSAL, awaiting the user (2026-09-09). exp79 is TAKEN by the
+Codex agent (`hongshao_exp79_deposition_reach`: the deposit truncation
+boundary C x R200c at deposition and the stellar-mass budget; incomplete,
+no model adopted). exp80 is free as of 2026-09-09 06:00 (`git worktree
+list`, `git branch -a`, `ls experiments`); check again before creating.
+Relation to exp79: exp79 asks where a deposit is CUT OFF (the reach, C = 3);
+this asks where a deposit is CENTRED (the size law s_c, s_e and their time
+dependence). Both touch the outskirts; coordinate the boundary value with
+exp79's result before Stage 1, and do not change C here.
 
 ## Why this, now
 
