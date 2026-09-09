@@ -684,7 +684,7 @@ legitimate input under THE HALO INPUT rule); the early history before 1.2 Gyr
 (exp46's head start); the halo's concentration history is already closed.
 
 ### C23. The adopted references open a lower-loss basin that the gates reject
-**Raised 2026-09-08 by the re-baseline. DECIDED the same morning (the user): exp74's optimum is the baseline mean; the size-term question stays open.** With the objective normalised at
+**Raised 2026-09-08 by the re-baseline. DECIDED the same morning (the user): exp74's optimum is the baseline mean; the size-term question was pursued in exp78 (2026-09-09) and moved to C24: a term that ranks the basins correctly exists, but the refit under it does not beat the baseline on the gates.** With the objective normalised at
 the nested incumbent on the measured curves and the halo-mass bins by the
 measured mass, exp63's model has two basins: exp74's measured optimum
 (15.56) and one 6 per cent lower (14.63) with a 25 kpc "compact" channel
@@ -696,6 +696,21 @@ The fifth recorded instance of the loss ranking basins against the gates
 (recommendation: exp74's point, by the gates); and whether the objective
 should score sizes so that this stops happening (it does not score them at
 all).
+
+### C24. A size term the loss can see does not reach the high-redshift size excess
+**Raised 2026-09-09 by exp78.** The radius term (tercile-median log
+R20/R50/R80 offsets, normalised to the null) ranks the known models as the
+size gate does, yet the refit under A²+F²+S²+B²+Z² improves the term only at
+z ≤ 1 (where the gate already passed) and leaves R50 at z ≥ 1.5 worse
+(+0.037 → +0.059, +0.054 → +0.068 dex), with the compact channel's size
+railed at 31.6 kpc in every start. The excess sits in the top halo-mass
+tercile and grows with stellar mass (mass–size slope 0.37 vs the truth's
+0.11 at z = 2; the baseline 0.33). Open: (a) is it the extended deposit's
+r200 scaling under the honest input (the exp74 addendum's owed re-tune), i.e.
+a model-class limit; (b) what weight, if any, a size term should carry —
+decided by a gated sweep, not by the loss; (c) whether the compact channel
+should be re-parametrised as a late, extended deposit, since its size bound
+binds. The sixth loss-vs-gates case (exp38, exp49, exp52, exp57, C23, exp78).
 
 ## D. Resolved
 

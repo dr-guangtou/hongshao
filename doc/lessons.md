@@ -2832,3 +2832,50 @@ session should not rediscover them:
 - The standard QA CDF panel shows mass distributions and their CDF differences,
   not per-object prediction-error distributions. Correct the caption and add
   an explicit residual CDF when claiming to inspect the latter.
+
+## exp78 — the size-aware objective (2026-09-09)
+
+- **A term that ranks the known models correctly can still be bought cheaply
+  by a refit.** The radius term (tercile-median log R20/R50/R80 offsets)
+  ordered five existing models exactly as the size gate does, and the fit
+  under it then improved the term only where the gate already passed (z ≤ 1)
+  and left z = 2 worse. Stage 0's ranking check is necessary, not
+  sufficient: also read, at the frozen models, how much of the term's value
+  sits where the gate FAILS, because that is the part the other terms will
+  defend.
+- **Score a candidate term with the loss it will join before fitting.** With
+  weight 1 the radius term separated the two basins by 0.38 the right way
+  while the four old terms separated them by 0.93 the wrong way; the fit
+  landed where that arithmetic said it would. The "loss + Z²" column at the
+  frozen models predicted the refit's outcome for free.
+- **An outskirts term rewards the basin the gates reject.** exp77's
+  annular term (both normalisations) ranked the 14.63 basin best and the
+  baseline next to the incumbent, and is exactly blind to a central point
+  mass. A term that measures where the mass is not cannot price where it is.
+- **A railed size bound is a model statement.** Every size-aware start
+  pushed the "compact" channel's size to the 31.6 kpc box edge with a
+  steep time exponent: the model class wants late deposits larger than the
+  bound and the channel's name no longer describes it. Report the rail as a
+  finding about the class, not as an optimiser nuisance.
+- **The high-z size excess is in the top halo-mass tercile and grows with
+  stellar mass (slope 0.37 vs the truth's 0.11 at z = 2).** No re-weighting
+  reached it; the extended deposit's r200 scaling under the honest input is
+  the owed model change. Sixth loss-vs-gates case.
+- **A start from the previous optimum is a stationary point again**
+  (16.31, a continuation moved it by 0.0006): the baseline's basin survives
+  the new term; the lower basin was found only from the basin's own theta.
+  Every objective change needs the multi-basin start set, as the
+  re-baseline lesson said.
+- **Name the merged file by the stage that made it.** The judge looked for
+  `stage1_fit_growth.npz` while the merge wrote `stage2_fit_growth.npz`; a
+  ten-minute judge ran without the Stage 2 row. One `STAGE_FILES` dict
+  shared by fit and judge would have prevented it.
+- **A few outliers can own a tenth of a per-galaxy term and still move no
+  median** (exp78 side quest). 45 galaxies (1.9 per cent) with a > 0.6 dex
+  stellar-mass jump between adjacent epochs carry 12 per cent of A² and 6
+  per cent of S at z = 2; removing them and refitting raises the z = 2
+  amplitude by about 4 per cent and changes no gate, basin or parameter
+  beyond 0.2. Measure an outlier set's share of each term at frozen
+  parameters first; the refit then only confirms the size. Quote the
+  affected number with that uncertainty rather than changing the sample
+  rule ahead of the snapshot check.

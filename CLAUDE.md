@@ -65,8 +65,11 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   commits and artifacts have been preserved.
 - **Branch and experiment ids must still be checked before creation**
   (`git worktree list`, `git branch -a`, `ls experiments`), because the
-  worktrees share one Git repository. Taken: exp75, exp77 (Codex), exp76
-  (Claude); exp78 is declared for the size-aware objective (Claude).
+  worktrees share one Git repository. Taken: exp75, exp77, exp79 (Codex;
+  exp79 = the deposition reach boundary, in `hongshao_exp79_deposition_reach`),
+  exp76, exp78 (Claude; the size-aware objective, done 2026-09-09). exp80 is
+  the next free id (proposed for the deposit size law,
+  `doc/plans/2026-09-09-exp80-deposit-size-law.md`).
 - `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
   and conflict when both agents append; resolve by keeping both sides.
 
