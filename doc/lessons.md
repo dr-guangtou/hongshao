@@ -2879,3 +2879,63 @@ session should not rediscover them:
   parameters first; the refit then only confirms the size. Quote the
   affected number with that uncertainty rather than changing the sample
   rule ahead of the snapshot check.
+
+## exp80 — the deposit size law read from the data (2026-09-09/10)
+
+- **A non-negative deconvolution's modes are partly the operator's.** The
+  baseline's true deposit-size distribution is a continuum from 3 to 60
+  kpc, yet NNLS under its own kernel reads it as two modes with a gap, as
+  it reads the data. exp63 Stage 1's "bimodal in 92 per cent" tested the
+  representation (permuted control), not the bimodality. Pass the model
+  through the SAME operator as the data and compare the two readings; the
+  operator's bias is then measurable on a known input (it moves the
+  extended size by up to 0.25 dex and the share by 0.09).
+- **A gate written against the baseline is passed by re-tuning alone.**
+  "Recover > 0.02 dex of the z = 2 R50 offset at frozen amplitude" was met
+  by every candidate AND by the control (the baseline's own two size
+  constants re-tuned on the sizes: 0.026 dex). The control also showed
+  what the gate hides — that re-tune costs +0.30 in the loss and doubles
+  the z = 0.4 centre error, which is why the fit never went there. A
+  frozen-theta gate needs the re-tune control, and the verdict must be
+  read at equal cost in the terms the objective defends.
+- **A knob can be worthless alone and decisive with a re-tune.** q_e alone
+  at the baseline's constants tunes back to zero; with log_f_e and b_e
+  re-tuned it is the only change that buys all 15 size offsets at no loss
+  cost. Tune each knob WITH the constants it interacts with, and report the
+  knob-alone control so the reader sees the interaction.
+- **L-BFGS-B aborts from a start with a real gradient if the loss is
+  finite but astronomical off the box.** The first line-search trial
+  landed at the box corner (amplitude 10^10 too large, loss 10^24, not the
+  failure penalty); scipy's cubic interpolation collapsed the step to zero
+  and the fit "converged" in 43 evaluations with the loss unchanged.
+  exp78's starts never saw this because their gradients were near zero.
+  Treat any loss above the unbuildable-model penalty as the penalty; and
+  when a fit returns the start's loss after ~3 gradients, probe the finite
+  differences before believing it (`fd_probe`: the gradient was −10).
+- **Start a new parameter from the previous optimum AND from a tuned
+  point.** From the baseline the loss has no descent direction in q_e (it
+  rails at 0, the exp76 pattern); the descent exists only after the size
+  constants move with it. A start at the old optimum alone would have
+  reported "the loss rejects q_e".
+- **Judge a fit against the frozen point it started from, not only
+  against the baseline.** Stage 1's basin scored the same offset gate as the
+  baseline and looked like "no gain" until the frozen point (the same model
+  with three constants set by the sizes) was put in the judge: it beat both
+  on every size and centre entry. The loss had moved AWAY from a gate-clean
+  point; without that row in the table the reading would have been "the
+  change does not help".
+- **A lever the loss can spend on shape will be spent on shape** (exp78
+  from the model side). The expansion exponent, meant for the high-z sizes,
+  was taken to three times the size-clean value to buy the z ≤ 1 per-galaxy
+  shape term, and the z = 2 sizes did not move. Before fitting a new
+  parameter under the standard objective, score the frozen point's loss
+  terms (here: S at z ≤ 1 still 1.01 with room to fall) — that is where the
+  loss will take it.
+- **Write the merged file's "best" as the loss's best, and judge by name.**
+  The merge picked the 14.63 basin (q_e → 0, C23) as the winner; the judge
+  needed `--best NAME` to score the basin the experiment is about. A merge
+  that only reports the loss's favourite hides the result under this rule.
+- **A run that prints only at the end cannot be polled on "wrote"; and a
+  figure line matches it too.** The judge's figure lines matched
+  `^wrote` and the poll fired mid-run (the handover's warning, repeated).
+  Poll on the final npz name.

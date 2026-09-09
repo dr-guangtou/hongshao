@@ -698,6 +698,7 @@ should score sizes so that this stops happening (it does not score them at
 all).
 
 ### C24. A size term the loss can see does not reach the high-redshift size excess
+**exp80 (2026-09-10): the model change owed here was made — the expansion exponent q_e; the gates want it at 0.13 and the loss at 0.43 (C25).**
 **Raised 2026-09-09 by exp78.** The radius term (tercile-median log
 R20/R50/R80 offsets, normalised to the null) ranks the known models as the
 size gate does, yet the refit under A²+F²+S²+B²+Z² improves the term only at
@@ -728,3 +729,23 @@ model puts +0.149 dex too much mass inside 2 kpc at redshift 0.4.
 the incumbent's 13.80%; a free shared curve reaches 13.64%. The budget is 0.2
 percentage points and two parameters collect it. The 10–11% target came from a
 ladder of per-galaxy bounds that never constrained a shared law.
+
+
+### C25. The gates accept a size-law change the loss will not keep: the expansion exponent
+**Raised 2026-09-10 by exp80.** Reading the deposit-size distribution from
+every epoch's curves (the same NNLS operator on the data and on the
+baseline's own curves) says the early deposits are a fixed physical size at
+every halo mass while the late ones sit at 0.13 R200c of the CURRENT halo;
+the baseline's law (size ∝ R200c at the deposit time) does the opposite at
+both ends. One extra parameter — the deposit expands after deposition by the
+fraction q_e of its halo's growth in radius — with the law's two constants
+re-tuned on the sizes at frozen amplitude gives the first mean model that
+passes all 15 size-offset entries, halves the high-z centre errors and
+raises every width, at a loss 0.07 above the baseline's (q_e = 0.127). Under
+the standard objective the same 13-parameter model goes to q_e = 0.43 and a
+loss 0.9 lower with the z = 2 sizes unchanged, the slope and the widths
+worse: the loss spends a size lever on the per-galaxy shape at z ≤ 1, as it
+spent exp78's size term. Seventh loss-vs-gates case. Open: whether a fit
+with q_e FIXED at 0.127 keeps the sizes; whether the mean should be chosen
+by the gates at a point the loss would leave (the rule says the gates
+decide, but it has never been applied to a point that was not a fit).

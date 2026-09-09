@@ -1,6 +1,6 @@
 # exp80 (proposed) — the deposit size law under the measured input, read from the data first
 
-Status: PROPOSAL, awaiting the user (2026-09-09). exp79 is TAKEN by the
+Status: EXECUTED 2026-09-09/10 (branch `exp80-deposit-size-law`; verdict in `experiments/exp80_deposit_size_law/README.md`). Was: PROPOSAL, awaiting the user (2026-09-09). exp79 is TAKEN by the
 Codex agent (`hongshao_exp79_deposition_reach`: the deposit truncation
 boundary C x R200c at deposition and the stellar-mass budget; incomplete,
 no model adopted). exp80 is free as of 2026-09-09 06:00 (`git worktree
