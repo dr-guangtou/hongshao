@@ -517,6 +517,14 @@ def figures(res, kernel_names, tag):
                 (res[(kn, k)]["lm"] >= res[(kn, k)]["edges"][b]) & (res[(kn, k)]["lm"] <= res[(kn, k)]["edges"][b + 1] + 1e-9)])
                 for k in EPOCHS])
             d, m, an = med("data"), med("model"), med("analytic")
+            if q in ("ls_e", "ls_e_r200"):
+                # an extended "size" where the extended mode holds no mass is the
+                # operator's edge bin, not a measurement (the user, 2026-09-10):
+                # blank the epochs whose median extended share is below 0.05
+                sh_d, sh_m, sh_a = (np.array([np.nanmedian(res[(kn, k)][src]["share_e"][
+                    (res[(kn, k)]["lm"] >= res[(kn, k)]["edges"][b]) & (res[(kn, k)]["lm"] <= res[(kn, k)]["edges"][b + 1] + 1e-9)])
+                    for k in EPOCHS]) for src in ("data", "model", "analytic"))
+                d, m, an = np.where(sh_d >= 0.05, d, np.nan), np.where(sh_m >= 0.05, m, np.nan), np.where(sh_a >= 0.05, an, np.nan)
             f = (lambda v: 10 ** v) if q in ("ls_c", "ls_e") else (lambda v: v)
             a.plot(zz, f(d), "o-", color=tc[b], lw=2, label=f"data, {TERCILE_LABELS[b]} logMh" if j == 0 else None)
             a.plot(zz, f(m), "s--", color=tc[b], lw=1.4, label="baseline, deconvolved" if (j == 0 and b == 0) else None)
@@ -532,7 +540,8 @@ def figures(res, kernel_names, tag):
                 a.set_yscale("log")
     for a in ax:
         a.legend(fontsize=7)
-    fig.suptitle("tercile medians vs epoch under the extended kernel: the data's demanded sizes against the baseline's", fontsize=11)
+    fig.suptitle("tercile medians vs epoch under the extended kernel: the data's demanded sizes against the baseline's "
+                 "(extended-mode panels blank where that mode holds < 5% of the mass)", fontsize=11)
     fig.tight_layout()
     save_fig(fig, FIGDIR / f"exp80_stage0_sizes_vs_z{tag}")
     paths.append(FIGDIR / f"exp80_stage0_sizes_vs_z{tag}.png")

@@ -366,3 +366,28 @@ spend the lever, and a gated sweep of q_e (0.05–0.25) if it does not.
 - `stage1_eval.py` — the judge (`--best NAME`, `--also NAMES`);
   `outputs/stage1_eval.{log,npz}` (final), `stage1_eval_interim.log` (the
   capped starts), `figures/qa/*exp80_*`.
+
+## Addendum (2026-09-10, the user's questions on `exp80_stage0_sizes_vs_z.png`)
+
+1. The "data" compact and extended sizes in that figure are NOT observed
+   channels: they are the two halves of the deconvolved deposit-size
+   distribution (NNLS under a fixed kernel) split at one radius. Only the
+   curves of growth are data; Finding 1 says the split itself is partly the
+   operator's.
+2. The extended "size" at z ≥ 1.5 was an artefact: the extended half holds
+   no mass there (median share 0.00) and the plotted value was the mean of
+   the solver's 600 kpc edge bin in the few galaxies with any mass beyond
+   the split. The figure now blanks those cells (share < 0.05).
+3. `stage0_size_evolution.py` / `figures/exp80_size_evolution.png`: R20,
+   R50, R80 measured DIRECTLY from the curves on the merged grid — the
+   whole-sample distributions per epoch (median, 16–84, 5–95) and the same
+   galaxies followed back from z = 0.4 in halo-mass and stellar-mass
+   terciles, truth vs the baseline vs the frozen q_e point. All three radii
+   shrink monotonically toward high z (truth R50 11.6 → 3.0 kpc); the
+   models flatten at z ≥ 1.5 (baseline R50 3.5 kpc at z = 2, frozen point
+   3.2); the truth's spread is wider at every epoch (C16); the halo-mass
+   terciles converge toward high z faster in the truth (top tercile R50
+   16.9 → 3.4 kpc; baseline 15.8 → 4.3; frozen point 16.8 → 3.9); binning
+   by stellar mass at z = 0.4 shows the regression-to-the-mean pattern
+   (low tercile too large, high too small), so the halo-mass row is the
+   one that judges the mean. Log: `outputs/stage0_size_evolution.log`.
