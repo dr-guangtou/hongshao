@@ -58,7 +58,14 @@ import model2 as M2                                      # noqa: E402
 import families                                          # noqa: E402
 
 LAW_DEFAULT = dict(g_e=0.0, g_c=0.0, q_e=0.0, b_e2=0.0, z_brk_e=2.0, b_c2=0.0, z_brk_c=2.0,
-                   early_kpc=None, early_b=0.0, z_sw=2.0, s_floor_kpc=0.0)
+                   early_kpc=None, early_b=0.0, z_sw=2.0, s_floor_kpc=0.0, smooth_delay=False)
+#: `smooth_delay=True` with a spec carrying tau_d (exp63 Stage 2b): instead of
+#: model2's STEP arrival (a node's extended mass has arrived or not, which makes
+#: the loss a staircase in tau_d with no finite-difference gradient — seen
+#: 2026-09-12: tau_d did not move from its start in 3000 evaluations), the
+#: accreted mass arrives with an EXPONENTIAL distribution of merger times of
+#: mean tau_d Hubble times at accretion: the fraction arrived by the epoch is
+#: 1 - exp(-(t_k - t') H(z') / tau_d). Nests at tau_d -> 0; smooth in tau_d.
 SWITCH_WIDTH = 0.1                                       # dex in log(1+z') for the (d) blend
 CAP_OF_TRUNCATION = 0.3                                  # s_e <= 0.3 R_trunc (gompertz c = 0.8 allows 0.42)
 LAW_KNOBS = tuple(LAW_DEFAULT)
@@ -71,6 +78,22 @@ def with_law(**kw):
     law = dict(LAW_DEFAULT)
     law.update(kw)
     return law
+
+
+def arrival_weights(spec2, p, law, lt, include):
+    """(5, N) weights of the extended deposits that have arrived by each epoch:
+    model2's boolean step, or the exponential arrival when `smooth_delay`."""
+    if not spec2.delay or p["tau_d"] <= 0.0:
+        return include.astype(float)
+    if not law.get("smooth_delay", False):
+        return M2.arrival_include(spec2, p, lt, include).astype(float)
+    t = 10.0 ** np.asarray(lt, float)
+    h = M2.hubble_gyr(E.z_of_t(t))
+    out = np.zeros((len(include), len(t)))
+    for k in range(len(include)):
+        dt = np.clip(E.T_ANCHOR[k] - t, 0.0, None)
+        out[k] = include[k] * (1.0 - np.exp(-dt * h / p["tau_d"]))
+    return out
 
 
 def describe(law):
@@ -89,6 +112,7 @@ def n_extra_parameters(law):
     n += 2 * (law["b_c2"] != 0.0)
     n += 3 * (law["early_kpc"] is not None)
     n += law["s_floor_kpc"] != 0.0
+    n += law.get("smooth_delay", False) and 0     # tau_d is the spec's parameter, not a knob
     return int(n)
 
 
@@ -178,7 +202,7 @@ def predict_law(spec2, theta, law, curves, R, epochs=(0, 1, 2, 3, 4), nodes=M2.F
         r_tr_c = spec2.trunc_C * np.array([E.r200c_of(hc, lt, "analytic") for hc in cv])
         Bc = M.cog_truncated(M2.COMPACT_FAMILY, (p["n_c"],), s_c.ravel(), r_tr_c.ravel(), R).reshape(len(R), n, N)
         wc_ = dm_c * w[None, :]; we_ = dm_e * w[None, :]
-        inc_e = M2.arrival_include(spec2, p, lt, include)
+        inc_e = arrival_weights(spec2, p, law, lt, include)
         Be_shared = None
         for j, k in enumerate(epochs):
             if Be_shared is None or epoch_dependent(law):

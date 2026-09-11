@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 # merge + judge the six controlled fits (tables only; figures for the adopted one later)
 cd /Users/shuang/Dropbox/work/project/massive/hongshao
 export HONGSHAO_DATA_DIR=/Users/shuang/Desktop/tng300_mah_mprof OMP_NUM_THREADS=1 PYTHONPATH=.
@@ -18,7 +18,11 @@ case "$1" in
     done; wait ;;
   delay)
     EVALARGS="--fit-tag _noknob_delay0.15 --knobs none --delay --best baseline" judge "delay_alone" --knobs none --delay 0.15 &
-    EVALARGS="--fit-tag _delay0.15_fix-q_e0.127 --delay" judge "delay_qfix" --delay 0.15 --fix q_e=0.127 &
     EVALARGS="--fit-tag _delay0.15 --delay" judge "delay_qfree" --delay 0.15 &
+    EVALARGS="--fit-tag _delay0.15_fix-q_e0.127 --delay" judge "delay_qfix" --delay 0.15 --fix q_e=0.127 &
+    wait ;;
+  exp)
+    EVALARGS="--fit-tag _noknob_delay0.15_exp --knobs none --delay --delay-exp --best baseline" judge "exp_alone" --knobs none --delay 0.15 --delay-exp &
+    EVALARGS="--fit-tag _delay0.15_exp_fix-q_e0.127 --delay --delay-exp --best baseline" judge "exp_qfix" --delay 0.15 --delay-exp --fix q_e=0.127 &
     wait ;;
 esac
