@@ -163,11 +163,40 @@ CoG maps at statistical parity with PCA (exp50/51), symbolic densities
    failure mode cannot occur; the probe's value (0.15 Hubble times, not
    0.3) is what the z = 2 curves allow. The future-dependence gate must
    be re-read (the delay reads only the past, so it should pass).
-4. **Plan.** (running) three fits: delay alone, delay with q_e = 0.127
-   fixed, delay with q_e free, from the baseline; judge on the gates
-   (offset and width, both samples, the leak gate, the planes); adopt if
-   the gates improve with the leak gate held; then a continuation and the
-   q_e sweep on top. Result: (pending).
+4. **Plan.** Three fits: delay alone, delay with q_e = 0.127 fixed, delay
+   with q_e free, from the baseline; judge on the gates (offset and width,
+   both samples, the leak gate, the planes); adopt if the gates improve
+   with the leak gate held; then the fitted-tau_d form.
+
+   **Result (2026-09-12, tau_d held at 0.15 — model2's step arrival has no
+   gradient in tau_d, so these fits did not move it; the exponential-arrival
+   form that does is in `size_law.arrival_weights` and its fits follow).**
+   Loss 12.49 (delay alone, 13 parameters), 12.47 (delay + q_e fixed),
+   12.72 (delay + q_e free, 14 parameters) against the baseline's 15.56
+   and the old loss-best basin's 14.63 — the first change in the
+   programme that the LOSS and the GATES both prefer:
+
+   | model | params | loss | offset / width (of 15) | R50 z=1.5 / 2 | R20 z=2 | R80 z=2 | slope z=2 (truth 0.11) | M(<2) z=0.4 / 1.5 / 2 | M(<103) z=1.5 mh-c | 50–100 kpc z=2 fit \| mh-c |
+   | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | --- |
+   | baseline | 12 | 15.56 | 12 / 0 | +0.037 / +0.054 | +0.092 | +0.039 | 0.33 | +5.6 / −9.8 / −12.6 | +8.6 | +29.6 \| −0.5 |
+   | delay alone (tau_d 0.15) | 13 | 12.49 | 13 / 0 | +0.045 / +0.046 | +0.073 | −0.007 | 0.33 | +9.5 / −9.3 / −11.6 | +3.7 | −4.6 \| −25.5 |
+   | delay + q_e = 0.127 | 13 | 12.47 | 13 / 0 | +0.045 / +0.046 | — | — | 0.32 | +8.6 / −9.0 / −11.9 | +3.9 | −4.1 \| −25.4 |
+   | **delay + q_e free (→ 0.125)** | 14 | **12.72** | **14 / 2** | **+0.018 / +0.030** | +0.054 | −0.019 | **0.20** | **+0.9 / −6.7 / −7.3** | +2.9 | +6.8 \| −19.4 |
+
+   With the delay in place the loss no longer abuses q_e: it settles at
+   0.125 — the gate-chosen value of exp80 — with the baseline's structure
+   kept (d_split 0.22, n_c 0.66; compare the q_e-only fit's 1.07 / 0.50).
+   The delay + q_e model passes 14 of 15 offset entries and 2 width entries
+   (R20 at z = 0.4 and 0.7: 0.84 and 0.81 of the truth's scatter — the
+   first width passes on any mean model), halves the z = 2 mass–size
+   slope's excess, and improves the centre at EVERY epoch. Costs: the
+   50–100 kpc shell of the mh-complete progenitors at z ≥ 1.5 is 14–19 per
+   cent light (mass moved inward; the cumulative M(<103) there is +2.9 vs
+   the baseline's +8.6, better), M(<10) at z = 1 +5.5 (baseline +3.7), and
+   the future-dependence gate at z = 0.7 and z = 2 moves from −0.013 /
+   −0.007 to −0.043 / −0.027 dex per dex (the truth −0.005 / +0.004) while
+   improving at z = 1–1.5 (−0.061 / −0.038 → −0.039 / −0.015). The
+   formation-time residual check on the fitted model: (pending, measurement 5).
 
 ### S2. The post-deposition expansion at the gate-chosen value (exp80's q_e)
 1. **Motivation.** The data's early deposits are a fixed physical size and
@@ -179,7 +208,16 @@ CoG maps at statistical parity with PCA (exp50/51), symbolic densities
    are running; ~1 h each.
 4. **Plan.** Judge the three; if the sizes survive the refit at a fixed
    q_e, adopt that mean by the gates (a gate-selected q_e, not a
-   loss-selected one — C25) and combine with S1. Result: (pending).
+   loss-selected one — C25) and combine with S1.
+   **Result (2026-09-12): the sizes do NOT survive.** At q_e = 0.08 /
+   0.127 / 0.20 fixed, the twelve free parameters go to the 14.63 basin's
+   family in every case (compact size 18–19 kpc with its index railed at
+   0.5, d_split ≈ 1.0): losses 14.79 / 14.71 / 14.69, offset gate 10 of 15
+   (the baseline 12), R50 at z = 2 unchanged, the z = 2 centre −12 per
+   cent. Holding q_e alone holds nothing; the size constants must be held
+   with it (the S0C point holds log_f_e and b_e at the size-tuned values).
+   S2 is therefore only reachable through S5's two-block selection, or
+   through S1, which changes what the loss wants (below).
 
 ### S3. Formation-history conditioning of the centre at z ≥ 1.5 (the decline's other half)
 1. **Motivation.** The z ≥ 1.5 centre is the one place with a real median

@@ -3171,3 +3171,40 @@ right parameter, used it for the wrong thing — the same lesson as exp78
 from the model side. The result is a model change the gates accept and the
 loss rejects, which puts the adoption question squarely where the rule says
 it belongs.
+
+## 2026-09-12 — exp81, the evidence-based rethink (`exp81-evidence-rethink`, from the exp80 branch)
+
+- [x] Error budget + halo-predictability ceiling of the baseline
+  (`residual_budget.py`): per-galaxy scatter, systematic ≤ 7%; centre at
+  z ≤ 1 at the ceiling (R² ≤ 0.10); outskirts and all of z ≥ 1.5 have
+  0.22–0.35 of the residual variance halo-predictable from the PAST.
+- [x] The missing information is formation time (`residual_features.py`,
+  `residual_shape.py`): residual +0.45 dex per dex of recent growth (truth
+  −0.55 to −0.84); the model's stars follow the halo instantly.
+- [x] The deposition delay (exp63's tau_d) at frozen theta removes it
+  (`delay_probe.py`); fitted jointly (tau_d held at 0.15; the step arrival
+  has no gradient): delay + q_e free → loss 12.72 (baseline 15.56), 14/15
+  offsets, 2 widths, centres better at every epoch, slope 0.20 — the first
+  change the loss and the gates both prefer. Fixing q_e alone fails (10/15).
+- [x] The exponential arrival (smooth in tau_d) implemented; fits running
+  at session end (see the roadmap S1 for the fitted tau_d).
+- [x] Roadmap: `doc/plans/2026-09-12-roadmap-evidence-rethink.md`.
+- [ ] **Decision (user)**: adopt the delay + q_e model (or its
+  exponential-arrival version) as the baseline mean by the gates; the
+  costs to weigh: the mh-complete 50–100 kpc shell at z ≥ 1.5 (−14 to −19%),
+  the leak gate at z = 0.7 / 2 (−0.04 / −0.03 dex per dex).
+- [ ] S3: the early-mass conditioning of the centre (now at z = 0.4 too);
+  S4: the layer re-baseline on the adopted mean; S5: gate-consistent
+  selection; S6: B2 / C22 / the jumper check.
+- [ ] Merge `exp81-evidence-rethink` (which carries the exp80 branch).
+
+### Review
+The rethink held to its brief: measure before proposing. The budget and
+ceiling turned the seven loss-vs-gates cases from a mystery into a
+statement (0.03-dex medians inside 0.17-dex scatter, no halo information
+in the centre), and the feature analysis named the one thing the model
+lacked. The delay had been rejected once, but on a z = 0.4-only fit of a
+leaky input; re-read under the honest input and a joint fit it is the
+largest single gain in the programme's record. Two ops lessons: a step
+function has no gradient (tau_d never moved), and zsh does not word-split
+an unquoted variable (three judges scored the wrong file).
