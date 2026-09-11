@@ -28,9 +28,12 @@ The truth has a strong assembly bias of the stellar-mass–halo-mass relation
 baseline deposits stars from accreted mass instantly, so its residual runs
 the opposite way (ρ = +0.5 with the mass gained in the last Gyr).** One
 physical parameter — a deposition delay for accreted mass — removes that
-correlation at frozen amplitude; the exp80 expansion exponent handles the
-sizes and half the central decline; the widths belong to the stochastic
-layer. The roadmap orders these by evidence.
+correlation, and fitted jointly with exp80's expansion exponent it is the
+first change in the programme that the loss and the gates both prefer
+(loss 15.56 → 12.72; size offsets 12 → 14 of 15; the first width passes;
+the centre better at every epoch; the mass–size slope at z = 2 halved
+toward the truth). The widths belong to the stochastic layer. The roadmap
+orders what follows by evidence.
 
 ## 1. The evidence (exp81, measurements 1–3; exp80; the record)
 
@@ -196,7 +199,17 @@ CoG maps at statistical parity with PCA (exp50/51), symbolic densities
    the future-dependence gate at z = 0.7 and z = 2 moves from −0.013 /
    −0.007 to −0.043 / −0.027 dex per dex (the truth −0.005 / +0.004) while
    improving at z = 1–1.5 (−0.061 / −0.038 → −0.039 / −0.015). The
-   formation-time residual check on the fitted model: (pending, measurement 5).
+   formation-time residual check on the fitted delay + q_e model
+   (`residual_check_delay_qfree.log`): the recent-growth correlation is
+   gone at every cell (|ρ| ≤ 0.12 against +0.27 to +0.58) and the residual's
+   halo-predictability at z ≥ 1 falls to R² 0.02–0.05 — the ceiling. The
+   rms of the residual: 0.189 → 0.164 dex at z = 2, 5 kpc; 0.167 → 0.139 at
+   z = 2, 103 kpc; 0.117 → 0.112 at z = 0.4, 103 kpc. The price the check
+   also shows: at z = 0.4 the residual now correlates with the EARLY mass
+   (+0.38 at 5 kpc, +0.34 at 103 kpc; R² 0.24 / 0.15) and the z = 0.4
+   central scatter rises 0.136 → 0.148 dex — the delay removes late mass
+   from every galaxy, and the early-formed ones at z = 0.4 are now too
+   heavy. That residual is S3's target, now at z = 0.4 as well.
 
 ### S2. The post-deposition expansion at the gate-chosen value (exp80's q_e)
 1. **Motivation.** The data's early deposits are a fixed physical size and
@@ -227,7 +240,11 @@ CoG maps at statistical parity with PCA (exp50/51), symbolic densities
 2. **Evidence.** E1, E2, E3 (z = 2, 5 kpc: early-history R² 0.25),
    `compact-highz-progenitors-formed-early` (0.3 dex head start by 1 Gyr).
    exp59's disqualification of per-deposit conditioning was on the leaky
-   input with the old engine.
+   input with the old engine. After S1 the target moves: the delay model's
+   residual correlates with the early mass at z = 0.4 (+0.38 at 5 kpc,
+   R² 0.24), i.e. early-formed haloes are now too heavy at low redshift —
+   the same conditioning variable, opposite sign, so a single early-mass
+   term in the efficiency or the compact share is the candidate.
 3. **Feasibility.** Moderate: a one-parameter form is needed (candidates:
    the compact channel's share or the efficiency rising with the mass
    fraction assembled by 2 Gyr; or the compact size shrinking with it);
