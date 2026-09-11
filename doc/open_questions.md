@@ -749,3 +749,24 @@ spent exp78's size term. Seventh loss-vs-gates case. Open: whether a fit
 with q_e FIXED at 0.127 keeps the sizes; whether the mean should be chosen
 by the gates at a point the loss would leave (the rule says the gates
 decide, but it has never been applied to a point that was not a fit).
+
+### C26. The deposition delay: how long, and what does it cost the massive progenitors' outskirts?
+**Raised 2026-09-12 by exp81.** The baseline's residual correlates +0.5 at
+fixed halo mass with the mass gained in the last Gyr (the truth −0.6): the
+model deposits stars from accreted mass instantly. exp63's delay tau_d
+(rejected there on a z = 0.4-only fit of the official curves) fitted
+jointly over five epochs on the measured history, with q_e free, lowers
+the loss 15.56 → 12.72 and passes 14 of 15 size offsets and 2 widths — the
+first change the loss and the gates agree on. Open: (a) tau_d itself —
+model2's step arrival has no gradient, so the fits held 0.15; the
+exponential arrival (`size_law.arrival_weights`) is smooth and its fits are
+the first item owed; (b) the mh-complete progenitors' 50–100 kpc shell at
+z ≥ 1.5 is 14–19 per cent light while their cumulative M(<103) improves —
+is the delayed mass arriving at the wrong radius, or is this the
+completeness selection (C18) seen through a model that now follows recent
+growth? (c) the future-dependence gate at z = 0.7 and z = 2 moves from
+−0.01 to −0.04 dex per dex (truth −0.005 / +0.004) while improving at
+z = 1–1.5 — a delay reads only the past, so the source is the refitted
+efficiency law; (d) the delay leaves an early-mass residual at z = 0.4
+(+0.38 at 5 kpc): the early-formed haloes are now too heavy at low
+redshift — the same conditioning variable with the opposite sign (S3).
