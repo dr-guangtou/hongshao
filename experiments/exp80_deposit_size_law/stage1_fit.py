@@ -86,7 +86,7 @@ STAGE_FILES = {"stage1": "stage1_fit"}
 
 
 def knob_tag(knobs):
-    return "" if tuple(knobs) == DEFAULT_KNOBS else "_" + "-".join(knobs)
+    return "" if tuple(knobs) == DEFAULT_KNOBS else ("_noknob" if not knobs else "_" + "-".join(knobs))
 
 
 class LawProblem:
@@ -165,17 +165,25 @@ def railed(names, theta, bounds, tol=1e-3):
             if b - a > tol and (v - a < tol * max(abs(a), 1) or b - v < tol * max(abs(b), 1))]
 
 
-def build(smoke=False, knobs=DEFAULT_KNOBS):
+def build(smoke=False, knobs=DEFAULT_KNOBS, delay=False):
+    """`delay=True`: exp63 Stage 2b's deposition delay tau_d (Hubble times at
+    accretion; the extended channel's deposits arrive later, mass in transit
+    is not yet deposited) as a thirteenth model parameter, appended after
+    the twelve and before the size-law knobs (exp81, 2026-09-12)."""
     recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, th_inc, pr = RB.build(smoke)
+    if delay:
+        spec2 = M2.Spec2(theta_names=M2.THETA_NAMES_DELAY, extended_family=spec2.extended_family,
+                         compact_in_kpc=spec2.compact_in_kpc)
     lp = LawProblem(pr, spec2, knobs)
     th_nested = M2.with_levers_theta(M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split), spec2)
-    bounds = [tuple(b) for b in np.asarray(fz["bounds"], float).tolist()] + [S0C.BOUNDS[k] for k in knobs]
+    bounds = [tuple(b) for b in np.asarray(fz["bounds"], float).tolist()] + ([M2.BOUNDS["tau_d"]] if delay else []) \
+        + [S0C.BOUNDS[k] for k in knobs]
     return recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, th_inc, th_nested, pr, lp, bounds
 
 
 def tuned_constants(knobs, smoke):
     """(log_f_e, b_e, {knob: value}) from Stage 0 C's tune for this knob set."""
-    src = TUNED_SOURCE[tuple(knobs)]
+    src = TUNED_SOURCE.get(tuple(knobs), "a_expand_free")
     p = OUTDIR / f"stage0_cand_{src}{'_smoke' if smoke else ''}.npz"
     p = p if p.exists() else OUTDIR / f"stage0_cand_{src}.npz"
     d = np.load(p, allow_pickle=True)
@@ -183,17 +191,21 @@ def tuned_constants(knobs, smoke):
     return vals, p.name
 
 
-def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNOBS):
+def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNOBS, fix=None, delay=None):
     knobs = tuple(knobs)
-    tag = knob_tag(knobs) + ("_smoke" if smoke else "")
+    fix = dict(fix or {})
+    tag = knob_tag(knobs) + (f"_delay{delay:g}" if delay is not None else "") \
+        + ("".join(f"_fix-{k}{v:g}" for k, v in fix.items())) + ("_smoke" if smoke else "")
     if merge:
         return merge_starts(tag)
     print(f"{RULE}\nexp80 STAGE 1 — the fit of the size law with knobs {list(knobs)} under A^2+F^2+S^2+B^2 (no size term)"
           f"{' (SMOKE)' if smoke else ''}\n{RULE}\n")
-    recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, th_inc, th_nested, pr, lp, bounds = build(smoke, knobs)
-    n_par = lp.n_theta
-    print(f"  PARAMETERS: {n_par} fitted (12 + {list(knobs)}); an observer could vary all {n_par}; "
-          f"knob bounds " + ", ".join(f"{k} {S0C.BOUNDS[k]}" for k in knobs))
+    recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, th_inc, th_nested, pr, lp, bounds = build(smoke, knobs, delay is not None)
+    for k, v in fix.items():
+        bounds[lp.names.index(k)] = (float(v), float(v))
+    n_par = lp.n_theta - len(fix)
+    print(f"  PARAMETERS: {n_par} fitted (12 + {list(knobs)}" + (f", with {fix} FIXED" if fix else "") + f"); "
+          f"an observer could vary all {lp.n_theta}; knob bounds " + ", ".join(f"{k} {S0C.BOUNDS[k]}" for k in knobs))
     th_nested13 = np.r_[th_nested, np.zeros(len(knobs))]
     tab = lp.table(th_nested13)
     assert np.allclose(tab[:, 2:], 1.0, atol=2e-2), tab
@@ -209,6 +221,10 @@ def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNO
 
     th_base = theta_of(E74 / "stage1_refit_measured.npz")
     th_basin = theta_of(E74 / "rebaseline_exp63.npz")
+    if delay is not None:
+        # the twelve plus tau_d at the requested start value; the nested incumbent carries tau_d = 0 already
+        th_base, th_basin = np.r_[th_base, delay], np.r_[th_basin, delay]
+        print(f"  DELAY: tau_d fitted (bounds {M2.BOUNDS['tau_d']}), started at {delay:g} Hubble times")
     vals, src = tuned_constants(knobs, smoke)
     print(f"  Stage 0 C tuned constants from {src}: " + ", ".join(f"{k} {v:+.3f}" for k, v in vals.items()))
 
@@ -220,9 +236,9 @@ def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNO
                     th[spec2.index(n)] = vals[n]
         return np.r_[th, [knob_values[k] for k in knobs]]
 
-    tuned_knobs = {k: vals[k] for k in knobs}
-    zero = {k: 0.0 for k in knobs}
-    far = {k: FAR_VALUES[k] for k in knobs}
+    tuned_knobs = {k: fix.get(k, vals[k]) for k in knobs}
+    zero = {k: fix.get(k, 0.0) for k in knobs}
+    far = {k: fix.get(k, FAR_VALUES[k]) for k in knobs}
     starts = [("tuned", with_law(th_base, tuned_knobs)),
               ("baseline", with_law(th_base, zero, constants=False)),
               ("far", with_law(th_base, far, constants=False)),
@@ -301,5 +317,9 @@ if __name__ == "__main__":
         lo, hi = a[a.index("--starts") + 1].split(":")
         ss = (int(lo), int(hi))
     kn = tuple(a[a.index("--knobs") + 1].split(",")) if "--knobs" in a else DEFAULT_KNOBS
+    if "--knobs" in a and a[a.index("--knobs") + 1] == "none":
+        kn = ()
+    fx = {kv.split("=")[0]: float(kv.split("=")[1]) for kv in a[a.index("--fix") + 1].split(",")} if "--fix" in a else None
+    dl = float(a[a.index("--delay") + 1]) if "--delay" in a else None
     main(smoke="--smoke" in a, starts_sel=ss, merge="--merge" in a,
-         cont=(a[a.index("--continue") + 1] if "--continue" in a else None), knobs=kn)
+         cont=(a[a.index("--continue") + 1] if "--continue" in a else None), knobs=kn, fix=fx, delay=dl)
