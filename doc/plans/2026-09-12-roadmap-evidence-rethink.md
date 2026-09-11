@@ -211,6 +211,27 @@ CoG maps at statistical parity with PCA (exp50/51), symbolic densities
    from every galaxy, and the early-formed ones at z = 0.4 are now too
    heavy. That residual is S3's target, now at z = 0.4 as well.
 
+   **The fitted delay (exponential arrival, tau_d free; `--delay-exp`).**
+   Delay alone: tau_d → 0.31 Hubble times (mean of the exponential; median
+   lag 0.21), loss 12.19 (the lowest of the night), radius term Z 0.34 —
+   but the twelve go to the wide-compact family again (compact size 26
+   kpc, n_c at its floor, c_e 1.2): offset 13 of 15, NO width pass, the
+   R50 widths 0.55 → 0.31 of the truth's (the baseline 0.66 → 0.35), the
+   z = 0.4 centre +8.0 per cent, the mh-complete 50–100 kpc shell at z = 2
+   −22 per cent, and the recent-growth residual at z = 2 only half removed
+   (+0.30 against the baseline's +0.55; the step form with q_e: +0.11).
+   With q_e fixed at 0.127 the same happens (loss 12.19, n_c railed,
+   compact size 20 kpc). Reading: given a free tau_d and twelve free
+   parameters the loss buys shape at z ≤ 1 with the wide-compact family
+   and lets the delay carry only part of the formation-time dependence;
+   the step form at 0.15 with q_e free is the better MODEL by the gates
+   even though it is 0.5 worse in the loss — the loss-vs-gates pattern is
+   softened by the delay, not abolished. **Recommended mean: the delay at
+   tau_d = 0.15 (step) with q_e free (14 parameters, loss 12.72, 14 of 15
+   offsets, 2 widths).** A fitted tau_d needs S5's two-block selection (or
+   the compact channel's size held at its exp80 bound) to keep the twelve
+   out of the wide-compact family.
+
 ### S2. The post-deposition expansion at the gate-chosen value (exp80's q_e)
 1. **Motivation.** The data's early deposits are a fixed physical size and
    the late ones follow the current halo radius; a deposit that grows with

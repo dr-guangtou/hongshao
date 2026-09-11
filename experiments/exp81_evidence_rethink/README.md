@@ -66,6 +66,11 @@ the mh-complete progenitors' 50–100 kpc shell at z ≥ 1.5 (−14 to −19 per
 cent; the cumulative M(<103) there improves, +8.6 → +2.9 at z = 1.5) and a
 larger future-growth dependence at z = 0.7 and z = 2 (0.03 dex per dex).
 
-**The exponential arrival** (`size_law.arrival_weights`, smooth in tau_d):
-fits from the step solutions — see the roadmap's S1 for the fitted tau_d
-(added when they finish).
+**The exponential arrival** (`size_law.arrival_weights`, smooth in tau_d),
+fitted from the step solutions: tau_d → 0.31 (delay alone, loss 12.19,
+offset 13 / width 0, R50 widths 0.55–0.31, centre z = 0.4 +8.0, z = 2
+−10.8; the recent-growth residual at z = 2 +0.30, half removed) and 0.31
+with q_e = 0.127 fixed (loss 12.19, n_c railed, compact size 20 kpc; judge
+`stage1_eval_exp_qfix.log`). Both drift into the wide-compact family; the
+recommended mean stays the step delay at 0.15 with q_e free (see the
+roadmap S1).
