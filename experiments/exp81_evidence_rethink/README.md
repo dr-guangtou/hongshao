@@ -17,6 +17,9 @@ README is the record of the measurements).
    part of the history carries the unused information — partial Spearman
    at fixed halo mass with the early mass, recent growth, growth rate and
    t50; restricted-feature R².
+4. `residual_shape.py` → `outputs/residual_shape.log`: the functional form
+   (binned medians and slopes at fixed halo mass) of the residual against
+   the early-mass fraction and the recent growth.
 3. `delay_probe.py` → `outputs/delay_probe.{log,npz}`: exp63's deposition
    delay tau_d applied to the baseline at frozen theta.
 

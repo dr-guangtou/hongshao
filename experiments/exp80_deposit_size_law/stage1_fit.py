@@ -156,7 +156,7 @@ class LawProblem:
         th12, law = self.split(theta)
         p = self.spec2.unpack(th12)
         return (", ".join(f"{n} {p[n]:+.3f}" for n in ("log_f_c", "b_c", "log_f_e", "b_e", "m_half", "d_split", "n_c", "c_e"))
-                + "; law: " + SL.describe(law))
+                + (f", tau_d {p['tau_d']:+.3f}" if "tau_d" in p else "") + "; law: " + SL.describe(law))
 
 
 def railed(names, theta, bounds, tol=1e-3):

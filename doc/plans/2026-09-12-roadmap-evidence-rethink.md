@@ -69,6 +69,15 @@ Restricted feature sets: at z = 2 the early history alone gives R² 0.25–0.31,
 the recent history 0.18–0.29, the mass at the epoch alone 0.00; at z ≤ 1 the
 outskirts need the mid-history.
 
+**E3b — the functional form** (`residual_shape.log`). Binned at fixed halo
+mass, the residual is monotonic and close to linear in the log of the
+recent growth: at z = 2 from −0.09 dex (haloes that gained nothing in their
+last Gyr) to +0.22 dex (haloes that gained 0.5–1.2 dex), slope +0.45 dex per
+dex at every radius; +0.63 at z = 1 and +0.45 at z = 0.4 in the outskirts.
+The truth's slope is −0.55 to −0.84 dex per dex. The model's stars follow
+the halo instantly; the data's lag it. Against the early-mass fraction the
+residual runs the other way (−0.4 dex per dex at z = 2), the same fact.
+
 **E4 — the deposition delay at frozen theta** (`delay_probe.log`).
 exp63's Stage 2b lever (tau_d: a satellite's stars join the central tau_d
 Hubble times after accretion; mass in transit is not deposited) applied to
@@ -146,9 +155,14 @@ CoG maps at statistical parity with PCA (exp50/51), symbolic densities
    channel is undelayed by construction.
 3. **Feasibility.** Implemented (`model2.Spec2.with_delay`,
    `stage1_fit.py --delay`); 13 parameters; ~1 h per fit. Risk: exp63's
-   P9 rejection on the official curves — the leak that made early masses
-   too low is gone, so the test is new; the future-dependence gate must be
-   re-read (the delay reads only the past, so it should pass).
+   Stage 2b rejected tau_d = 0.3 — but that was a fit at z = 0.4 ONLY on
+   the official curves, in which the optimiser used the delay to keep
+   late-accreted stars outside the 148 kpc aperture and the unfitted
+   epochs then collapsed (M*(50–100) −97 per cent at z = 2). The fits here
+   are joint over the five epochs on the measured history, so that
+   failure mode cannot occur; the probe's value (0.15 Hubble times, not
+   0.3) is what the z = 2 curves allow. The future-dependence gate must
+   be re-read (the delay reads only the past, so it should pass).
 4. **Plan.** (running) three fits: delay alone, delay with q_e = 0.127
    fixed, delay with q_e free, from the baseline; judge on the gates
    (offset and width, both samples, the leak gate, the planes); adopt if
