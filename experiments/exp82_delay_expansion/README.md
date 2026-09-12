@@ -17,3 +17,20 @@ Results are appended below as the rounds finish.
 | 0.15 (tuned basin) | tuned 12.75 (0.152) | two | 12.70 | **14 / 1** | +0.016 / +0.027 | −0.020 | — | +0.5 / −6.2 / −6.9 | −0.043 / −0.039 / −0.015 / −0.026 | +7.5 \| −17.7 |
 | 0.15 (wide basin) | baseline 12.27 (0.385), far 12.30 (0.520) | " | 12.26 | 13 / 0 (R50 widths 0.52 → 0.25) | +0.031 / +0.032 | −0.014 | — | +5.8 / −8.3 / −9.8 | −0.042 / −0.051 / −0.031 / −0.029 | +0.4 \| −21.4 |
 | 0.20 (wide basin, all starts) | tuned 12.16 (0.557), baseline 12.15 (0.488), far 12.14 (0.445) | one | 12.29 | 15 / 0 (R50 widths 0.46 → 0.21) | +0.018 / +0.001 | −0.040 | — | +5.4 / −6.7 / −7.1 | −0.042 / −0.034 / −0.019 / −0.013 | −8.9 \| −32.4 |
+| 0.30 (wide basin, all starts) | tuned 12.69 (0.598), baseline 12.70 (0.568), far 12.70 (0.543) | one | 12.69 | 12 / 0 (R50 widths 0.41 → 0.20; R80 z=2 −0.067 OFF) | +0.018 / +0.011 | −0.067 | — | +5.1 / −9.0 / −9.5 | −0.046 / −0.026 / −0.014 / +0.010 | −15.6 \| −36.6 |
+
+**The grid, read.** The loss's minimum in tau_d is near 0.20 (12.15) and
+the loss prefers, at every tau_d ≥ 0.15, the wide-split family (d_split
+≈ 1.1–1.3, q_e 0.4–0.6) that narrows every size distribution to 0.2–0.5
+of the truth's and returns the z = 0.4 centre to +5 per cent — the family
+every earlier judge rejected. The baseline's structure (d_split 0.27, n_c
+0.7, q_e settling at 0.11–0.15) survives only at tau_d ≤ 0.15, and at 0.15
+only from the start that carries Stage 0 C's size constants. **The
+gate-chosen grid point is tau_d = 0.15, the tuned-start basin** (14 of 15
+offsets, one width pass, the centre +0.5 / −6.2 / −6.9 per cent, widths
+0.73 → 0.35 of the truth's, loss 12.70): it beats tau_d = 0.10 (13, leak
+worse at every epoch) and the wide basins on the widths and the centre at
+equal or better offset counts. Its known costs stand: the mh-complete
+progenitors' 50–100 kpc shell at z ≥ 1.5 (−12 / −18 per cent; the
+cumulative M(<103) there +3.4 / −1.4), and the future-dependence gate at
+z = 0.7 (−0.043 against the baseline's −0.013, the truth −0.005).
