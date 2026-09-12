@@ -2939,3 +2939,39 @@ session should not rediscover them:
   figure line matches it too.** The judge's figure lines matched
   `^wrote` and the poll fired mid-run (the handover's warning, repeated).
   Poll on the final npz name.
+
+## exp81 — the evidence-based rethink (2026-09-12)
+
+- **Measure the error budget and the information ceiling before choosing a
+  lever.** Seven loss-vs-gates fights were over 0.03-dex medians inside a
+  0.17-dex per-galaxy scatter, and in the centre at z ≤ 1 that scatter has
+  no halo information at all (out-of-fold R² ≤ 0.10). No objective or
+  mean-model change could have won those fights. The predictable part of
+  the residual (0.22–0.35 in the outskirts and at z ≥ 1.5) named the lever.
+- **Regress the residual on the input's features before writing a model
+  term.** One partial-correlation table (the residual against the recent
+  growth, the early mass and t50 at fixed halo mass) said what the model
+  lacked (stars lag the halo) and the sign and size of the missing law
+  (−0.5 to −0.8 dex per dex). The frozen-theta probe of the candidate then
+  took ten minutes.
+- **A rejected lever is rejected under the conditions it was tried.**
+  exp63's delay was rejected on a z = 0.4-only fit of the official curves,
+  where the optimiser hid late mass outside the aperture and the unfitted
+  epochs collapsed. Jointly fitted on the measured history it is the
+  largest gain on record. Re-read every "rejected" lever against the
+  conditions that have changed since (here: the input and the fit's scope).
+- **A step function has no gradient.** model2's arrival mask is boolean per
+  node; tau_d stayed at 0.150 to three decimals through 3000 evaluations
+  and the log said "fitted". A parameter that enters only through a
+  threshold needs a smooth form (the exponential arrival) or a
+  derivative-free stage; check that every new parameter MOVES.
+- **zsh does not word-split an unquoted variable.** `$EVALARGS` holding
+  `--fit-tag X --best Y` was passed as ONE argument; three judges silently
+  scored the default file and overwrote a good npz. Use bash for such
+  scripts (or `${=VAR}` in zsh) and check the judge's first lines name the
+  intended model.
+- **Judge a fit against the baseline AND against the frozen point AND
+  against its own mechanism.** The delay model's gate table said "better";
+  the residual check on the fitted model said WHY (the recent-growth
+  correlation gone, R² at the ceiling) and showed the price (a new
+  early-mass residual at z = 0.4) — which is the next lever, not a footnote.

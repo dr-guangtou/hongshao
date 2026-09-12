@@ -75,16 +75,16 @@ def tilt(y, x, mask):
     return float(np.polyfit(x[ok], y[ok], 1)[0]) if ok.sum() >= 30 else np.nan
 
 
-def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=None):
+def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=None, fit_tag=None, delay=False, delay_form="step"):
     tag = "_smoke" if smoke else ""
-    ktag = S1.knob_tag(knobs)
+    ktag = fit_tag if fit_tag is not None else S1.knob_tag(knobs)
     print(f"{RULE}\nexp80 — the judge: the size law with {list(knobs)} against the adopted baseline\n{RULE}\n")
-    recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, th_inc, th_nested, pr, lp, bounds = S1.build(smoke, knobs)
+    recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, th_inc, th_nested, pr, lp, bounds = S1.build(smoke, knobs, delay, delay_form)
     Rm, truth_m, n_inner = S0T.merged_truth(recs, data)
     good_m = np.isfinite(truth_m).all(2) & (truth_m > 0).all(2)
     rows_m = {k: pr.rows[k][good_m[pr.rows[k], k]] for k in pr.epochs}
     index_of = np.full(len(recs), -1); index_of[pr.all_rows] = np.arange(len(pr.all_rows))
-    nk = len(knobs)
+    nk = len(knobs) + (1 if delay else 0)      # tau_d rides with the twelve; baseline/basin get tau_d = 0
 
     def theta_of(path):
         p = Path(str(path).replace(".npz", f"{tag}.npz"))
@@ -140,7 +140,7 @@ def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=N
     grid, pred, pred_m = {}, {}, {}
     print(f"  {'model':<16}{'epoch':>6}{'A':>8}{'F':>8}{'S':>8}{'B':>8}{'Z raw':>8}{'Z norm':>8}{'A2+F2+S2+B2':>13}")
     all_curves = [meas[i] for i in range(len(recs))]
-    for lab, th in list({"null": np.r_[th_nested, np.zeros(nk)]}.items()) + list(models.items()):
+    for lab, th in list({"null": np.r_[th_nested, np.zeros(len(knobs))]}.items()) + list(models.items()):
         m = lp.predict(th, Rm, nodes=M2.FULL_NODES)
         raw = np.array([ST.radius_term(m[index_of[rows_m[k]], j], truth_m[rows_m[k], k], Rm, lmh_bins[rows_m[k], k])[0]
                         for j, k in enumerate(EPOCHS)])
@@ -272,5 +272,9 @@ if __name__ == "__main__":
     a = sys.argv
     also = tuple(a[a.index("--also") + 1].split(",")) if "--also" in a else ()
     kn = tuple(a[a.index("--knobs") + 1].split(",")) if "--knobs" in a else S1.DEFAULT_KNOBS
+    if "--knobs" in a and a[a.index("--knobs") + 1] == "none":
+        kn = ()
     main(smoke="--smoke" in a, tables_only="--tables-only" in a, also=also, knobs=kn,
-         best=(a[a.index("--best") + 1] if "--best" in a else None))
+         best=(a[a.index("--best") + 1] if "--best" in a else None),
+         fit_tag=(a[a.index("--fit-tag") + 1] if "--fit-tag" in a else None), delay="--delay" in a,
+         delay_form=("exp" if "--delay-exp" in a else "step"))
