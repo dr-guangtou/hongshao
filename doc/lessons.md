@@ -2975,3 +2975,10 @@ session should not rediscover them:
   the residual check on the fitted model said WHY (the recent-growth
   correlation gone, R² at the ceiling) and showed the price (a new
   early-mass residual at z = 0.4) — which is the next lever, not a footnote.
+- **A `nohup` background job does not survive the Claude Code process
+  ending on macOS.** exp82's first round (twelve fits, 22:41) died within
+  minutes of the session closing, logs frozen at their first line. Launch
+  long jobs through a launcher that gives them their own session
+  (`experiments/exp82_delay_expansion/launch.py`: `subprocess.Popen(...,
+  start_new_session=True)` plus `caffeinate -i -w PID`), and check the
+  processes are alive a minute later.
