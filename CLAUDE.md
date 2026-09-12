@@ -67,9 +67,9 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   (`git worktree list`, `git branch -a`, `ls experiments`), because the
   worktrees share one Git repository. Taken: exp75, exp77, exp79 (Codex;
   exp79 = the deposition reach boundary, in `hongshao_exp79_deposition_reach`),
-  exp76, exp78 (Claude; the size-aware objective, done 2026-09-09). exp80 is
-  the next free id (proposed for the deposit size law,
-  `doc/plans/2026-09-09-exp80-deposit-size-law.md`).
+  exp76, exp78 (Claude; the size-aware objective, done 2026-09-09), exp80
+  (Claude; the deposit size law, branch `exp80-deposit-size-law`,
+  2026-09-09/10). exp81 is the next free id; check before creating.
 - `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
   and conflict when both agents append; resolve by keeping both sides.
 

@@ -3127,3 +3127,47 @@ size, but at weight 1 it spends the freedom where the gate already passes.
   the z = 2 amplitude with ±4% sample-rule uncertainty. `side_jump_cut.py`.
 - [ ] The snapshot check of the 45 jumpers (exp77's open item); if confirmed
   broken, tighten `selection.JUMP_DEX` and re-baseline (expect +4% at z = 2).
+
+## 2026-09-09/10 — exp80, the deposit size law under the measured input (`exp80-deposit-size-law`)
+
+- [x] Stage 0 A/B (no fit): exp63 Stage 1's NNLS deconvolution generalised to
+  every epoch on the merged grid, applied to the data AND to the baseline's
+  own curves (same operator), with the baseline's true deposits read
+  analytically. Findings: the two modes are partly the operator's (a
+  continuum reads as two spikes); the data's compact mode is a fixed
+  physical size at every halo mass (7.0 → 4.1 kpc, z = 0.4 → 2) while the
+  baseline's grows with halo mass at z ≥ 1 (top tercile 0.06–0.10 dex too
+  large); the data's extended mode grows with halo mass and holds at 0.13
+  R200c of the CURRENT halo, the baseline's shrinks; the shares agree.
+- [x] Stage 0 C (frozen amplitude, split, kernels): the plan's gate (> 0.02
+  dex of the z = 2 R50 recovered) is passed by the re-tune control alone
+  (0.026 dex at +0.30 loss and a doubled z = 0.4 centre); g_e, a break and
+  the early-fixed-kpc form tune back to the control; q_e = 1 empties the
+  centre; **q_e ≈ 0.13 with re-tuned constants: 15/15 offsets, R50 at z = 2
+  +0.054 → +0.020, the centre better at every epoch, loss +0.07.** Chosen:
+  q_e, 13 parameters.
+- [x] Stage 1 (standard objective, 13 parameters, 5 starts + 3
+  continuations): one new basin at 14.66 with q_e ≈ 0.43 (the 14.63 basin
+  sheds q_e); the judge: offset gate 12 of 15 (the baseline's), R50 at z = 2
+  unchanged (+0.054), slope worse, widths narrower, planes overshoot.
+  **Not adopted.** The loss spent the lever on shape at z ≤ 1 (the seventh
+  loss-vs-gates case). Stage 0 C's frozen point (q_e = 0.127, constants set
+  by the sizes, no fit) is the best gate reading of any mean model: 15/15
+  offsets, R50 z = 1.5 / 2 +0.013 / +0.020, widths up, high-z centres halved.
+- [ ] **Decision (user)**: adopt the frozen point as the mean by the gates,
+  or first the frozen-q_e fit (q_e = 0.127 fixed, 12 free) under the
+  standard objective; if the sizes survive that, adopt; if not, a gated
+  q_e sweep (0.05–0.25).
+- [ ] Re-baseline the v1 stochastic layer on the adopted mean afterwards.
+- [ ] Merge `exp80-deposit-size-law` (the user's call).
+
+### Review
+The plan's order held: the data were read before any fit, and the reading
+picked the change (a deposit that expands with its halo) that the frozen
+test confirmed. Two things the plan did not foresee: the gate against the
+baseline was passed by the re-tune control, so the discriminating reading
+had to be against the control; and the standard objective, handed the
+right parameter, used it for the wrong thing — the same lesson as exp78
+from the model side. The result is a model change the gates accept and the
+loss rejects, which puts the adoption question squarely where the rule says
+it belongs.
