@@ -2982,3 +2982,11 @@ session should not rediscover them:
   (`experiments/exp82_delay_expansion/launch.py`: `subprocess.Popen(...,
   start_new_session=True)` plus `caffeinate -i -w PID`), and check the
   processes are alive a minute later.
+- **Twelve simultaneous fits froze the machine twice (the user had to hard
+  reboot, 2026-09-12 23:00).** I had read a single fit's resident size
+  (~750 MB after half an hour) and multiplied; the peak is what matters,
+  and a MacBook Pro with other work open has far less than its nominal
+  RAM to give. Before launching a batch: measure ONE run's peak resident
+  size over its first minutes, set the concurrency from (free memory minus
+  a 16 GB headroom) / peak, never above four, and run the rest through a
+  queue. Be gentle: a two-hour queue is cheaper than a reboot.
