@@ -34,3 +34,22 @@ equal or better offset counts. Its known costs stand: the mh-complete
 progenitors' 50–100 kpc shell at z ≥ 1.5 (−12 / −18 per cent; the
 cumulative M(<103) there +3.4 / −1.4), and the future-dependence gate at
 z = 0.7 (−0.043 against the baseline's −0.013, the truth −0.005).
+
+## The chosen model's checks (`outputs/residual_check_tau0.15_tuned.log`)
+
+- **The mechanism holds on the fitted model.** The residual's correlation
+  with the halo's recent growth at fixed halo mass is |ρ| ≤ 0.13 at every
+  cell (the baseline +0.27 to +0.58); the residual's out-of-fold
+  halo-predictability at z ≥ 1 is R² 0.02–0.06 (the baseline 0.22–0.35),
+  i.e. at the halo-information ceiling; the rms falls from 0.189 → 0.165
+  dex at z = 2, 5 kpc and 0.167 → 0.139 at z = 2, 103 kpc.
+- **What is left.** At z = 0.4 the residual correlates with the EARLY mass
+  (+0.37 at 5 kpc, +0.33 at 103 kpc; R² 0.22 / 0.15; rms at 5 kpc 0.136 →
+  0.146): early-formed haloes are now too heavy at low redshift — exp83's
+  (S3) target.
+- **The decline.** For the 42 per cent of galaxies whose true central mass
+  fell from z = 2 to 0.4 (−0.066 dex at 4.9 kpc), the model's change is
+  +0.039 (the baseline +0.061): a third of the mismatch removed by the
+  expansion, the decliner span 0.147 → 0.120 dex; the non-decliners' span
+  0.082 → 0.105 (the expansion acts on every galaxy). A subpopulation
+  mechanism is still owed (C8, S3).
