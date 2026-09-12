@@ -2990,3 +2990,6 @@ session should not rediscover them:
   size over its first minutes, set the concurrency from (free memory minus
   a 16 GB headroom) / peak, never above four, and run the rest through a
   queue. Be gentle: a two-hour queue is cheaper than a reboot.
+  Measured afterwards: one delay + q_e fit holds 11.5 GB resident after
+  forty seconds (the 750 MB was a different spec); the exp82 grid runs
+  through `queue.sh 2`, two fits at a time, about six hours.
