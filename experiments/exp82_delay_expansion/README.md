@@ -53,3 +53,38 @@ z = 0.7 (−0.043 against the baseline's −0.013, the truth −0.005).
   expansion, the decliner span 0.147 → 0.120 dex; the non-decliners' span
   0.082 → 0.105 (the expansion acts on every galaxy). A subpopulation
   mechanism is still owed (C8, S3).
+
+## The full judge with figures on the chosen model (`outputs/eval_tau0.15.log`, `figures/qa/*exp80_*`; the model is labelled `exp80` there — the judge script's name)
+
+Parameters: **14 in the model (exp63's twelve, tau_d, q_e); 13 fitted at
+each grid point with tau_d held; tau_d chosen by the gates on the grid.**
+Loss 12.70 (baseline 15.56, the old loss-best basin 14.63). Size gate at
+fixed stellar mass 14 of 15 offsets and 1 width (R20 at z = 0.4, 0.73 of
+the truth's scatter); at fixed halo mass 14 / 0. R50 offsets −0.013 /
+−0.009 / −0.008 / +0.016 / +0.027 dex (baseline −0.016 / −0.027 / −0.010 /
++0.037 / +0.054); R20 at z = 2 +0.054 (baseline +0.092); R80 at z = 2 −0.020
+(baseline +0.039). The centre M(<2 kpc) +0.5 / −6.2 / −6.9 per cent at
+z = 0.4 / 1.5 / 2 (baseline +5.6 / −9.8 / −12.6). The mass planes
+(`qa_planes_exp80_exp80.png`): no knee; the outer-vs-inner slopes a little
+shallower than the truth at z ≤ 1.5 (M(30–50) | M(<30) 1.26 against 1.43 at
+z = 0.4; the baseline 1.33) and right at z = 2 (1.59 against 1.42;
+M(50–100) 1.60 against 1.66). The future-dependence gate −0.043 / −0.039 /
+−0.015 / −0.026 dex per dex at z = 0.7 / 1 / 1.5 / 2 (baseline −0.013 /
+−0.061 / −0.038 / −0.007; the truth −0.005 / +0.061 / +0.033 / +0.004):
+worse at z = 0.7 and z = 2 by 0.03, better at z = 1 and 1.5. The
+mh-complete profile: M(<10) +3.2 / +4.2 / +8.1 / +8.6 / +3.2 per cent
+(baseline +2.4 / +6.4 / +7.8 / −0.5 at z = 0.7 … 2); M(<103) +1.1 / +5.1 /
++3.4 / −1.4 (baseline −0.3 / +4.5 / +8.6 / −1.0); the 50–100 kpc shell at
+z = 1.5 / 2 −11.8 / −17.7 (baseline +4.4 / −0.5).
+
+**Verdict.** Against the baseline the chosen model improves the loss by 18
+per cent, the size offsets (12 → 14 of 15) with the first width pass, the
+centre at every epoch, the z = 2 outer sizes and the mass–size slope, and
+removes the formation-time residual the model class had always carried,
+with one physical parameter (the delay) and one geometric one (the
+expansion). Its costs are the mh-complete progenitors' 50–100 kpc shell at
+z ≥ 1.5 and a 0.03 dex-per-dex rise of the future-growth dependence at
+z = 0.7 and z = 2. **Recommended for adoption as the baseline mean** (the
+user's call; `rebaseline.adopted_baseline()` and the CLAUDE.md rule would
+then point at `outputs/stage1_fit_delay0.15_fix-tau_d0.15_start_tuned.npz`
+with `size_law.predict_law` as the engine).

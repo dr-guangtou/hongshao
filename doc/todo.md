@@ -3208,3 +3208,28 @@ leaky input; re-read under the honest input and a joint fit it is the
 largest single gain in the programme's record. Two ops lessons: a step
 function has no gradient (tau_d never moved), and zsh does not word-split
 an unquoted variable (three judges scored the wrong file).
+
+## 2026-09-12/13 — exp82, the delay and the expansion exponent together (`exp82-delay-expansion`)
+
+- [x] The tau_d grid (0.10 / 0.15 / 0.20 / 0.30; step arrival; q_e free;
+  three starts; two fits at a time after twelve at once froze the machine):
+  the gate-chosen mean is tau_d = 0.15, the tuned-start basin (loss 12.70,
+  14/15 offsets + 1 width, centre +0.5 / −6.2 / −6.9, q_e → 0.15). tau_d ≥
+  0.20 and the other starts at 0.15 land in the wide-split family (loss
+  12.15–12.30, widths 0.2–0.5 of the truth's, centre +5%).
+- [x] Full judge with figures, the residual check (mechanism holds; the
+  z = 0.4 early-mass residual remains), the decliner split (a third of the
+  decline mismatch removed).
+- [ ] Round 3 (the exponential arrival at 0.15): see the README.
+- [ ] **Decision (user)**: adopt the tau_d = 0.15 model as the baseline mean
+  (re-point `rebaseline.adopted_baseline()`, update the CLAUDE.md rule);
+  merge `exp82-delay-expansion`.
+- [ ] exp83 (S3): the early-mass conditioning of the centre, read from this
+  model's residual; exp84 (S4): the layer on the adopted mean.
+
+### Review
+The grid did what the plan asked: it separated the loss's preference (a
+delay of 0.20 in the wide-split family) from the gates' (0.15 in the
+baseline's structure) and chose by the gates. Two ops lessons cost real
+time: twelve fits at once froze the machine (measure one run's peak first),
+and nohup jobs die with the Claude Code process (own-session launcher).

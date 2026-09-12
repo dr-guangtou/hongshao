@@ -2993,3 +2993,18 @@ session should not rediscover them:
   Measured afterwards: one delay + q_e fit holds 11.5 GB resident after
   forty seconds (the 750 MB was a different spec); the exp82 grid runs
   through `queue.sh 2`, two fits at a time, about six hours.
+
+## exp82 — the delay + expansion grid (2026-09-13)
+
+- **A grid in a held parameter separates the loss's basin from the gates'.**
+  With tau_d held, the loss's minimum (0.20) sits in the family the gates
+  reject; the gates' basin (0.15, the baseline's structure) is reachable
+  only from the start that carries the size constants tuned on the sizes.
+  When a parameter has no gradient or a loss-preferred abuse, hold it on a
+  grid and let the gates choose; report every basin per grid point by name.
+- **A single-start controlled result needs its multi-start check before
+  adoption.** exp81's tau_d = 0.15 point reproduced from the same start
+  (12.75 vs 12.72) but the other two starts at that grid point found a
+  0.45-lower basin the gates reject; the exp81 reading was right and
+  incomplete. The protocol (several starts, judge by name) is not optional
+  for an adoption.

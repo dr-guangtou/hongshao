@@ -330,3 +330,16 @@ at a time in the order below.
 | exp84 | S4, the stochastic layer re-baselined on exp82's mean with an outer size component | after exp82; a Codex candidate | layer |
 | S6 | the truncation scan (B2), C22, the jumper snapshot check | independent half-days; Codex candidates | none |
 | S5 | gate-consistent selection | only if exp82's gate-chosen tau_d and the loss's disagree badly | procedure |
+
+## 6. exp82's result (2026-09-13)
+
+The tau_d grid (0.10 / 0.15 / 0.20 / 0.30, step arrival, q_e free, three
+starts each, at most two fits at a time): the loss's minimum is near 0.20
+(12.15) in the wide-split family that narrows every size distribution; the
+baseline's structure survives only at tau_d ≤ 0.15, and at 0.15 only from
+the start carrying Stage 0 C's size constants. **The gate-chosen mean is
+tau_d = 0.15 with q_e → 0.15: loss 12.70, 14 of 15 offsets, one width pass,
+the centre +0.5 / −6.2 / −6.9 per cent, the formation-time residual gone.**
+Recommended for adoption; the costs and the exponential-arrival comparison
+are in `experiments/exp82_delay_expansion/README.md`. Next: exp83 (S3, the
+early-mass residual at z = 0.4), exp84 (S4, the layer).
