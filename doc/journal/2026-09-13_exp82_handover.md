@@ -19,9 +19,10 @@ chosen by the gates, the full protocol; adopt by the gates.
   z = 2 slope 0.20, formation-time residual gone. Costs: mh-complete
   50–100 kpc shell at z ≥ 1.5 −12 / −18 per cent; leak gate +0.03 at
   z = 0.7 / 2; the z = 0.4 early-mass residual (exp83's target).
-- Round 3 (the exponential arrival held at 0.15, three starts) was running
-  at the end of the session; its judge line is appended to the README when
-  done (`judge.sh 0.15 --delay-exp --best tuned --also baseline,far`).
+- Round 3 (the exponential arrival held at 0.15, three starts) judged:
+  equivalent within the gates' resolution and slightly behind the step form
+  (12.92 vs 12.70, 14/0 vs 14/1, centre −0.5/−6.9/−8.1); the step form
+  stays the chosen model. Nothing running at handover.
 
 ## Decisions owed (the user)
 1. Adopt the tau_d = 0.15 (step) model — or the exponential form if its

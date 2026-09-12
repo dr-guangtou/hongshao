@@ -3220,7 +3220,8 @@ an unquoted variable (three judges scored the wrong file).
 - [x] Full judge with figures, the residual check (mechanism holds; the
   z = 0.4 early-mass residual remains), the decliner split (a third of the
   decline mismatch removed).
-- [ ] Round 3 (the exponential arrival at 0.15): see the README.
+- [x] Round 3 (the exponential arrival at 0.15): equivalent, slightly behind
+  the step form (12.92 vs 12.70, 14/0 vs 14/1); the step form stays chosen.
 - [ ] **Decision (user)**: adopt the tau_d = 0.15 model as the baseline mean
   (re-point `rebaseline.adopted_baseline()`, update the CLAUDE.md rule);
   merge `exp82-delay-expansion`.

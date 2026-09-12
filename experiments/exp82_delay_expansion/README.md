@@ -88,3 +88,25 @@ z = 0.7 and z = 2. **Recommended for adoption as the baseline mean** (the
 user's call; `rebaseline.adopted_baseline()` and the CLAUDE.md rule would
 then point at `outputs/stage1_fit_delay0.15_fix-tau_d0.15_start_tuned.npz`
 with `size_law.predict_law` as the engine).
+
+## Round 3 — the exponential arrival held at tau_d = 0.15 (`outputs/eval_tau0.15_exp.log`)
+
+| start | loss (q_e) | basin | offset / width | R50 z=1.5 / 2 | R80 z=2 | M(<2) z=0.4 / 1.5 / 2 | leak z=0.7 / 1 / 1.5 / 2 | 50–100 kpc z=2 fit \| mh-c |
+| --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |
+| tuned | 12.92 (0.178) | baseline structure | 14 / 0 | +0.019 / +0.028 | −0.017 | −0.5 / −6.9 / −8.1 | −0.044 / −0.054 / −0.031 / −0.016 | +8.7 \| −15.9 |
+| far | 12.92 (0.119) | same | 13 / 0 | +0.021 / +0.030 | −0.022 | +1.7 / −8.4 / −9.2 | −0.044 / −0.053 / −0.030 / −0.015 | +5.4 \| — |
+| baseline | 12.56 (0.469) | wide split | 13 / 0 | — | — | — | — | — |
+
+The physically motivated smooth form (an exponential distribution of merger
+times with mean 0.15 Hubble times at accretion) is equivalent to the step
+form within the gates' resolution and slightly behind it on the loss (12.92
+vs 12.70), the width pass and the centre; its far start returns to the same
+basin. **The chosen model remains the step form at tau_d = 0.15.** A fitted
+tau_d (the exponential form with tau_d free drifted to the wide-split family
+in exp81) would need S5's two-block selection; on this evidence the held
+value is the honest statement: the delay is about 0.15 Hubble times at
+accretion, with the gates unable to separate 0.10 from 0.15 on the sizes
+and preferring 0.15 on the centre and the future-dependence gate.
+
+Parameter count of the chosen model: 14 (exp63's twelve, tau_d held at
+0.15, q_e fitted → 0.152); 13 fitted.
