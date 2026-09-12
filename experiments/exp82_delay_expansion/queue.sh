@@ -7,7 +7,7 @@ OUT=experiments/exp82_delay_expansion/outputs
 TAUS="${TAUS:-0.10 0.15 0.20 0.30}"
 for TAU in $TAUS; do for k in 0 1 2; do
   TAUG=$(python3 -c "print(f'{float(\"$TAU\"):g}')")
-  NAME=$(case $k in 0) echo tuned;; 1) echo baseline;; 2) echo far;; esac)
+  NAMES=(tuned baseline far); NAME=${NAMES[$k]}
   if [ -f $OUT/stage1_fit_delay${TAUG}${TAG}_fix-tau_d${TAUG}_start_${NAME}.npz ]; then echo "skip tau $TAU$TAG $NAME (done)"; continue; fi
   if pgrep -f "starts $k:$k --delay $TAU --fix tau_d=$TAU $FORM --outdir" > /dev/null; then echo "skip tau $TAU$TAG $NAME (running)"; continue; fi
   while [ $(pgrep -f "stage1_fit.py --starts" | wc -l) -ge $((2 * MAX)) ]; do sleep 60; done   # uv wrapper + worker = 2 per fit
