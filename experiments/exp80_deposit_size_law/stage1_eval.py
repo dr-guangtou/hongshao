@@ -64,6 +64,14 @@ ANCHOR_Z = list(E.ANCHOR_Z)
 EPOCHS = (0, 1, 2, 3, 4)
 OUTDIR, FIGDIR = HERE / "outputs", HERE / "figures"
 E74 = ROOT / "experiments/exp74_c19_history_leak/outputs"
+
+
+def set_outdir(path):
+    """exp82 and later: the fit files, the eval outputs and the figures live under this directory."""
+    global OUTDIR, FIGDIR
+    OUTDIR = Path(path)
+    FIGDIR = OUTDIR.parent / "figures"
+    OUTDIR.mkdir(parents=True, exist_ok=True)
 SEL_NPZ = ROOT / "experiments/exp54_unpinned_amplitude/outputs/selection.npz"
 R_SHOW = (2.0, 10.25, 52.30, 103.45)
 R_LEAK = 103.45
@@ -114,8 +122,8 @@ def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=N
     # Stage 0 C's frozen-theta point (the baseline with log_f_e, b_e, q_e at the
     # radius-term tune): the size-clean point the fit started from
     src = S1.TUNED_SOURCE.get(tuple(knobs))
-    if src is not None and (OUTDIR / f"stage0_cand_{src}.npz").exists():
-        d0 = np.load(OUTDIR / f"stage0_cand_{src}.npz", allow_pickle=True)
+    if src is not None and (HERE / "outputs" / f"stage0_cand_{src}.npz").exists():
+        d0 = np.load(HERE / "outputs" / f"stage0_cand_{src}.npz", allow_pickle=True)
         th0 = th_base.copy()
         for n_, v_ in zip([str(n) for n in d0["free"]], np.asarray(d0["x_tuned"], float)):
             th0[names.index(n_)] = v_
@@ -270,6 +278,8 @@ def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=N
 
 if __name__ == "__main__":
     a = sys.argv
+    if "--outdir" in a:
+        set_outdir(a[a.index("--outdir") + 1])
     also = tuple(a[a.index("--also") + 1].split(",")) if "--also" in a else ()
     kn = tuple(a[a.index("--knobs") + 1].split(",")) if "--knobs" in a else S1.DEFAULT_KNOBS
     if "--knobs" in a and a[a.index("--knobs") + 1] == "none":

@@ -315,3 +315,18 @@ strategy; each is a half-day and bounds a systematic.
 3. S5 as the way the next mean is selected.
 4. S4 the layer on the adopted mean.
 5. S6 in the gaps.
+
+## 5. The agreed sequence (the user, 2026-09-12)
+
+Wrap up here (exp80 and exp81 merged to master), then one experiment
+branch per direction from master; S1 and S2 are fitted TOGETHER because they
+interact (q_e alone drifts, the delay alone leaves the sizes); the rest one
+at a time in the order below.
+
+| step | what | grouping | parameters |
+| --- | --- | --- | --- |
+| exp82 | the delay and the expansion exponent, adopted by the gates: q_e free, tau_d held on a grid (0.10 / 0.15 / 0.20 / 0.30; step form, then the exponential form at the chosen value), five starts + continuation, the full battery, the residual and arrival-radius checks, the leak gate | S1 + S2 | 14 (13 fitted) |
+| exp83 | S3, early-mass conditioning of the centre — read from exp82's residual (its target moved to z = 0.4), frozen probe first | after exp82 | +1 |
+| exp84 | S4, the stochastic layer re-baselined on exp82's mean with an outer size component | after exp82; a Codex candidate | layer |
+| S6 | the truncation scan (B2), C22, the jumper snapshot check | independent half-days; Codex candidates | none |
+| S5 | gate-consistent selection | only if exp82's gate-chosen tau_d and the loss's disagree badly | procedure |
