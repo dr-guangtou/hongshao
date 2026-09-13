@@ -3,6 +3,9 @@ partial Spearman at fixed halo mass of log10(model/truth) with the recent
 growth and the early mass (measurement 2's cells), and the out-of-fold R^2
 of the residual from the full history, for a named fit file. Usage:
     ... residual_check_model.py FIT_NPZ [--delay] [--delay-exp] [--knobs q_e|none]
+FIT_NPZ is a file name in exp80's outputs or an absolute path (exp82). Also
+prints the centre split by decline (exp81 measurement 1, section 3) for the
+fitted model, since a post-deposition expansion acts as a decline mechanism.
 """
 from __future__ import annotations
 
@@ -59,9 +62,10 @@ def main():
         kn = ()
     recs, data, mask, lmh_dm, lmh_bins, meas, fz, spec2, th_inc, th_nested, pr, lp, bounds = S1.build(
         False, kn, "--delay" in a, "exp" if "--delay-exp" in a else "step")
-    th = np.asarray(np.load(ROOT / "experiments/exp80_deposit_size_law/outputs" / fit_file, allow_pickle=True)["theta"], float)
+    fp = Path(fit_file) if Path(fit_file).is_absolute() else ROOT / "experiments/exp80_deposit_size_law/outputs" / fit_file
+    th = np.asarray(np.load(fp, allow_pickle=True)["theta"], float)
     rows = pr.all_rows
-    m = lp.predict(th, F.R_GRID, nodes=None or __import__("model2").FULL_NODES)
+    m = lp.predict(th, F.R_GRID, nodes=__import__("model2").FULL_NODES)
     truth = data[rows]; good = np.isfinite(truth).all(axis=(1, 2)) & (truth > 0).all(axis=(1, 2))
     r = np.log10(np.clip(m[good], 1, None)) - np.log10(truth[good])
     cvg = [c for c, g in zip([meas[i] for i in rows], good) if g]
@@ -77,6 +81,16 @@ def main():
                             + [np.log10(np.clip(rate, 1e-3, None)), lm_k])
         print(f"    z={ANCHOR_Z[k]} R={R:<6.0f} recent {partial(r[:, k, i], lm_k - lm_prev, lm_k):+.2f} | early {partial(r[:, k, i], lm_2 - lm_k, lm_k):+.2f}   "
               f"median {np.median(r[:, k, i]):+.3f} rms {np.sqrt(np.mean(r[:, k, i] ** 2)):.3f}  OOF R^2 {oof_r2(r[:, k, i], X):+.3f}")
+    I3 = int(np.argmin(np.abs(F.R_GRID - 4.92)))
+    t = truth[good]
+    dec = t[:, 4, I3] > t[:, 0, I3]
+    r3 = r[:, :, I3]
+    print(f"  the centre M*(<4.9 kpc), median log10(model/truth) per epoch, split by decline ({100 * dec.mean():.0f}% declined):")
+    for nm, sel in (("all", np.ones(len(r3), bool)), ("centre declined", dec), ("did not decline", ~dec)):
+        meds = [np.median(r3[sel, k]) for k in EPOCHS]
+        print(f"    {nm:<18}" + "".join(f"{v:>+9.3f}" for v in meds) + f"   span {np.ptp(meds):.3f}")
+    print(f"    true change z=2 -> 0.4 (decliners) {np.median(np.log10(t[dec, 0, I3] / t[dec, 4, I3])):+.3f} dex; the model's "
+          f"{np.median(np.log10(m[good][dec, 0, I3] / m[good][dec, 4, I3])):+.3f}")
 
 
 if __name__ == "__main__":

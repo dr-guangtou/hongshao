@@ -77,6 +77,13 @@ EPOCHS = (0, 1, 2, 3, 4)
 OUTDIR = HERE / "outputs"
 E74 = ROOT / "experiments/exp74_c19_history_leak/outputs"
 DEFAULT_KNOBS = ("q_e",)
+
+
+def set_outdir(path):
+    """exp82 and later run these scripts into their own outputs directory."""
+    global OUTDIR
+    OUTDIR = Path(path)
+    OUTDIR.mkdir(parents=True, exist_ok=True)
 FAR_VALUES = {"q_e": 0.5, "g_e": -1.0 / 3.0, "b_e2": 1.0, "s_floor_kpc": 5.0}
 #: which Stage 0 C candidate file holds the tuned constants for a knob set
 TUNED_SOURCE = {("q_e",): "a_expand_free", ("q_e", "g_e"): "a_expand_free_g", ("g_e",): "b_fixed_kpc"}
@@ -187,8 +194,8 @@ def build(smoke=False, knobs=DEFAULT_KNOBS, delay=False, delay_form="step"):
 def tuned_constants(knobs, smoke):
     """(log_f_e, b_e, {knob: value}) from Stage 0 C's tune for this knob set."""
     src = TUNED_SOURCE.get(tuple(knobs), "a_expand_free")
-    p = OUTDIR / f"stage0_cand_{src}{'_smoke' if smoke else ''}.npz"
-    p = p if p.exists() else OUTDIR / f"stage0_cand_{src}.npz"
+    p = HERE / "outputs" / f"stage0_cand_{src}{'_smoke' if smoke else ''}.npz"
+    p = p if p.exists() else HERE / "outputs" / f"stage0_cand_{src}.npz"
     d = np.load(p, allow_pickle=True)
     vals = dict(zip([str(n) for n in d["free"]], np.asarray(d["x_tuned"], float)))
     return vals, p.name
@@ -231,7 +238,7 @@ def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNO
         print(f"  DELAY: tau_d fitted (bounds {M2.BOUNDS['tau_d']}), started at {delay:g} Hubble times; arrival form '{delay_form}'")
         if start_from is not None:
             # start the twelve (+ tau_d) from a named fit file's theta (its knobs dropped)
-            fs = np.load(OUTDIR / start_from, allow_pickle=True)
+            fs = np.load(Path(start_from) if Path(start_from).is_absolute() else OUTDIR / start_from, allow_pickle=True)
             th_src = np.asarray(fs["theta"], float)
             th_base = np.r_[th_src[:12], delay]
             print(f"  the 'baseline' start's twelve taken from {start_from} (loss there {float(fs['loss']):.4f})")
@@ -322,6 +329,8 @@ def merge_starts(tag):
 
 if __name__ == "__main__":
     a = sys.argv
+    if "--outdir" in a:
+        set_outdir(a[a.index("--outdir") + 1])
     ss = None
     if "--starts" in a:
         lo, hi = a[a.index("--starts") + 1].split(":")

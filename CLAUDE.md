@@ -45,12 +45,21 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   (`selection.partial_growth` on the residual; exp74 `stage1_eval.py` §4).
   The official DiffMAH curve fails it 4–40× (C19); do not read a high-z
   number fitted on it without saying so.
-- **THE BASELINE MEAN (the user, 2026-09-08)**: exp74's measured-input
-  optimum — `exp74/rebaseline.py::adopted_baseline()` — scored under the
-  adopted references (nested incumbent on the measured curves, halo-mass
-  bins by the measured mass). The lower-loss basin the adopted references
-  open (14.63 vs 15.56) is gate-rejected (C23) and is not the baseline: **the
-  gates decide, the loss does not.**
+- **THE BASELINE MEAN (the user, 2026-09-13, after exp82)**: the deposition
+  delay (tau_d held at 0.15 Hubble times at accretion, step arrival) plus
+  the expansion exponent q_e on exp63's twelve, fitted under the standard
+  objective on the measured history — `exp74/rebaseline.py::adopted_mean()`
+  (engine `exp80/size_law.py::predict_law`; 14 parameters, 13 fitted;
+  file `exp82/outputs/stage1_fit_delay0.15_fix-tau_d0.15_start_tuned.npz`).
+  Chosen on a tau_d grid BY THE GATES (offset 14 of 15, one width pass, the
+  centre +0.5 / −6.2 / −6.9 per cent; loss 12.70): the loss's own minimum
+  (tau_d 0.20, the wide-split family, 12.15) narrows every size
+  distribution and is not the baseline. The previous baseline (exp74's
+  optimum, 15.56) stays as `adopted_baseline()` for every comparison.
+  Known costs to carry: the mh-complete progenitors' 50–100 kpc shell at
+  z ≥ 1.5 (−12 / −18 per cent), the future-dependence gate +0.03 dex per
+  dex at z = 0.7 and z = 2, the z = 0.4 early-mass residual (exp83).
+  **The gates decide, the loss does not.**
 
 ## WORKING RULES FOR TWO AGENTS (the user, 2026-09-09 — replaces every earlier integration note)
 
@@ -69,7 +78,9 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   exp79 = the deposition reach boundary, in `hongshao_exp79_deposition_reach`),
   exp76, exp78 (Claude; the size-aware objective, done 2026-09-09), exp80
   (Claude; the deposit size law, branch `exp80-deposit-size-law`,
-  2026-09-09/10). exp81 is the next free id; check before creating.
+  2026-09-09/10), exp81 (Claude; the evidence-based rethink, 2026-09-12),
+  exp82 (Claude; the delay + expansion exponent, branch
+  `exp82-delay-expansion`). exp83 is the next free id; check before creating.
 - `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
   and conflict when both agents append; resolve by keeping both sides.
 

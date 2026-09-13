@@ -751,6 +751,7 @@ by the gates at a point the loss would leave (the rule says the gates
 decide, but it has never been applied to a point that was not a fit).
 
 ### C26. The deposition delay: how long, and what does it cost the massive progenitors' outskirts?
+**exp82 (2026-09-13): (a) answered — the gates choose tau_d = 0.15 on a grid; the loss's minimum (0.20) is the wide-split family that narrows the widths. (b), (c), (d) remain open (the 50–100 kpc shell of the mh-complete progenitors −12 / −18 per cent at z = 1.5 / 2; the leak gate +0.03 at z = 0.7 / 2; the z = 0.4 early-mass residual → exp83).**
 **Raised 2026-09-12 by exp81.** The baseline's residual correlates +0.5 at
 fixed halo mass with the mass gained in the last Gyr (the truth −0.6): the
 model deposits stars from accreted mass instantly. exp63's delay tau_d

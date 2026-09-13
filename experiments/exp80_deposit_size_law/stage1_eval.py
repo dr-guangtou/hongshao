@@ -64,6 +64,14 @@ ANCHOR_Z = list(E.ANCHOR_Z)
 EPOCHS = (0, 1, 2, 3, 4)
 OUTDIR, FIGDIR = HERE / "outputs", HERE / "figures"
 E74 = ROOT / "experiments/exp74_c19_history_leak/outputs"
+
+
+def set_outdir(path):
+    """exp82 and later: the fit files, the eval outputs and the figures live under this directory."""
+    global OUTDIR, FIGDIR
+    OUTDIR = Path(path)
+    FIGDIR = OUTDIR.parent / "figures"
+    OUTDIR.mkdir(parents=True, exist_ok=True)
 SEL_NPZ = ROOT / "experiments/exp54_unpinned_amplitude/outputs/selection.npz"
 R_SHOW = (2.0, 10.25, 52.30, 103.45)
 R_LEAK = 103.45
@@ -75,7 +83,8 @@ def tilt(y, x, mask):
     return float(np.polyfit(x[ok], y[ok], 1)[0]) if ok.sum() >= 30 else np.nan
 
 
-def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=None, fit_tag=None, delay=False, delay_form="step"):
+def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=None, fit_tag=None, delay=False, delay_form="step",
+         name="exp80"):
     tag = "_smoke" if smoke else ""
     ktag = fit_tag if fit_tag is not None else S1.knob_tag(knobs)
     print(f"{RULE}\nexp80 — the judge: the size law with {list(knobs)} against the adopted baseline\n{RULE}\n")
@@ -114,8 +123,8 @@ def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=N
     # Stage 0 C's frozen-theta point (the baseline with log_f_e, b_e, q_e at the
     # radius-term tune): the size-clean point the fit started from
     src = S1.TUNED_SOURCE.get(tuple(knobs))
-    if src is not None and (OUTDIR / f"stage0_cand_{src}.npz").exists():
-        d0 = np.load(OUTDIR / f"stage0_cand_{src}.npz", allow_pickle=True)
+    if src is not None and (HERE / "outputs" / f"stage0_cand_{src}.npz").exists():
+        d0 = np.load(HERE / "outputs" / f"stage0_cand_{src}.npz", allow_pickle=True)
         th0 = th_base.copy()
         for n_, v_ in zip([str(n) for n in d0["free"]], np.asarray(d0["x_tuned"], float)):
             th0[names.index(n_)] = v_
@@ -232,7 +241,7 @@ def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=N
     for lab, prd in pred.items():
         print(f"\n  --- {lab} ---")
         out[lab] = qa.evaluate(prd[fit_all], data[fit_all], F.R_GRID, ANCHOR_Z,
-                               name=f"exp80_{lab.replace(' ', '_').replace('(', '').replace(')', '').replace('.', 'p')}{tag}",
+                               name=f"{name}_{lab.replace(' ', '_').replace('(', '').replace(')', '').replace('.', 'p')}{tag}",
                                figdir=(None if tables_only else FIGDIR / "qa"), figures=not tables_only,
                                verbose=False, bin_by=lmh_bins[fit_all][:, 0], bin_label=r"logM$_h$(z=0.4)",
                                bin_by_ms=logms, ms_label=r"logM$_*$ (total)", halo_mass_epochs=lmh_cat[fit_all])
@@ -270,6 +279,8 @@ def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=N
 
 if __name__ == "__main__":
     a = sys.argv
+    if "--outdir" in a:
+        set_outdir(a[a.index("--outdir") + 1])
     also = tuple(a[a.index("--also") + 1].split(",")) if "--also" in a else ()
     kn = tuple(a[a.index("--knobs") + 1].split(",")) if "--knobs" in a else S1.DEFAULT_KNOBS
     if "--knobs" in a and a[a.index("--knobs") + 1] == "none":
@@ -277,4 +288,5 @@ if __name__ == "__main__":
     main(smoke="--smoke" in a, tables_only="--tables-only" in a, also=also, knobs=kn,
          best=(a[a.index("--best") + 1] if "--best" in a else None),
          fit_tag=(a[a.index("--fit-tag") + 1] if "--fit-tag" in a else None), delay="--delay" in a,
-         delay_form=("exp" if "--delay-exp" in a else "step"))
+         delay_form=("exp" if "--delay-exp" in a else "step"),
+         name=(a[a.index("--name") + 1] if "--name" in a else "exp80"))

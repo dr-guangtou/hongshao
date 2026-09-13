@@ -2975,3 +2975,36 @@ session should not rediscover them:
   the residual check on the fitted model said WHY (the recent-growth
   correlation gone, R² at the ceiling) and showed the price (a new
   early-mass residual at z = 0.4) — which is the next lever, not a footnote.
+- **A `nohup` background job does not survive the Claude Code process
+  ending on macOS.** exp82's first round (twelve fits, 22:41) died within
+  minutes of the session closing, logs frozen at their first line. Launch
+  long jobs through a launcher that gives them their own session
+  (`experiments/exp82_delay_expansion/launch.py`: `subprocess.Popen(...,
+  start_new_session=True)` plus `caffeinate -i -w PID`), and check the
+  processes are alive a minute later.
+- **Twelve simultaneous fits froze the machine twice (the user had to hard
+  reboot, 2026-09-12 23:00).** I had read a single fit's resident size
+  (~750 MB after half an hour) and multiplied; the peak is what matters,
+  and a MacBook Pro with other work open has far less than its nominal
+  RAM to give. Before launching a batch: measure ONE run's peak resident
+  size over its first minutes, set the concurrency from (free memory minus
+  a 16 GB headroom) / peak, never above four, and run the rest through a
+  queue. Be gentle: a two-hour queue is cheaper than a reboot.
+  Measured afterwards: one delay + q_e fit holds 11.5 GB resident after
+  forty seconds (the 750 MB was a different spec); the exp82 grid runs
+  through `queue.sh 2`, two fits at a time, about six hours.
+
+## exp82 — the delay + expansion grid (2026-09-13)
+
+- **A grid in a held parameter separates the loss's basin from the gates'.**
+  With tau_d held, the loss's minimum (0.20) sits in the family the gates
+  reject; the gates' basin (0.15, the baseline's structure) is reachable
+  only from the start that carries the size constants tuned on the sizes.
+  When a parameter has no gradient or a loss-preferred abuse, hold it on a
+  grid and let the gates choose; report every basin per grid point by name.
+- **A single-start controlled result needs its multi-start check before
+  adoption.** exp81's tau_d = 0.15 point reproduced from the same start
+  (12.75 vs 12.72) but the other two starts at that grid point found a
+  0.45-lower basin the gates reject; the exp81 reading was right and
+  incomplete. The protocol (several starts, judge by name) is not optional
+  for an adoption.
