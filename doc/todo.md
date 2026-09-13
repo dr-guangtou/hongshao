@@ -3234,3 +3234,31 @@ delay of 0.20 in the wide-split family) from the gates' (0.15 in the
 baseline's structure) and chose by the gates. Two ops lessons cost real
 time: twelve fits at once froze the machine (measure one run's peak first),
 and nohup jobs die with the Claude Code process (own-session launcher).
+
+## 2026-09-13 — exp83, the early-mass conditioning of the centre (S3; `exp83-early-mass-centre`)
+
+- [x] Stage 0: exp81's residual check on the adopted file (identical to
+  exp82's); the residual's form against x = log M(2 Gyr) − log Mh at fixed
+  Mh (linear; early-formed = the decliners; TWO components at z = 0.4: a
+  mass part +0.114 dex/dex and a concentration part +0.059 on top).
+- [x] The term: phi(t') = min(log M(2 Gyr) − log M(t'), 0) relative to the
+  population median at t' (`size_law.set_early_ref`), three placements
+  nesting at zero (efficiency `a_early`, compact share `s_early`, compact
+  size `c_early`); the frozen probe on 13 points.
+- [x] Verdict: a_early ≈ −0.28 removes the 103 kpc (mass) half exactly and
+  improves the leak gate; NOTHING reaches the 5 kpc half (+0.37 → +0.26 at
+  best): the concentration part lives in the pre-2-Gyr deposits where the
+  variable is zero by construction. Gate failed at every point; **Stage 1
+  not run** (the rule: fit only on a passing probe).
+- [ ] **Decision (user)**: (a) fit the mass half anyway (`queue.sh 2 -0.28`,
+  15 parameters, 14 fitted, judged by name against the adopted mean and the
+  baseline), or (b) close S3 as specified and open the centre's mechanism
+  (an expansion of the pre-2-Gyr compact deposits) as its own experiment;
+  merge `exp83-early-mass-centre` (engine knobs + probe) either way.
+
+### Review
+The probe did its job in an afternoon: the z = 0.4 early-mass residual is
+two things, and the one-parameter term the roadmap named can only fix one
+of them. The reading that mattered was "where were the stars that carry the
+residual deposited?" — before 2 Gyr, where any variable defined relative to
+2 Gyr is identically zero. Two lessons recorded.

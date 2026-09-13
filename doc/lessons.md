@@ -3008,3 +3008,22 @@ session should not rediscover them:
   0.45-lower basin the gates reject; the exp81 reading was right and
   incomplete. The protocol (several starts, judge by name) is not optional
   for an adoption.
+
+## exp83 — the early-mass probe (2026-09-13)
+
+- **A per-deposit variable that is monotone in time is a second time law.**
+  The raw early fraction phi(t') = log M(2 Gyr) − log M(t') falls with t'
+  for every halo, so an efficiency term in it is mostly a_z in disguise: at
+  frozen theta, re-centred on z = 0.4, it dragged z = 2 down by 0.18 dex
+  and 40 per cent at 2 kpc. Take such a variable relative to the
+  population's median at that time (model2's `alpha_ref` device, now
+  `size_law.set_early_ref`) so the new parameter measures "earlier than the
+  typical halo of that moment", not "earlier than later".
+- **Before choosing a conditioning variable, ask where the stars that carry
+  the residual were deposited.** The z = 0.4 central early-mass residual
+  sits in the deposits made before 2 Gyr (a fifth of the mass, most of the
+  centre), and any variable defined as "the fraction assembled by 2 Gyr" is
+  zero for every deposit before 2 Gyr by construction. Three placements
+  (efficiency, share, size) all left the 5 kpc correlation at +0.24 to
+  +0.38; a mass-weighted distribution of the variable over the deposits
+  (printed by the probe) would have said so before the grid.

@@ -32,6 +32,28 @@ changes of the exp80 plan as named knobs, EVERY ONE NESTING AT THE BASELINE
                   early_kpc = None switches it off.
   s_floor_kpc     a FLOOR on the extended deposit size in kpc (0 = off): early
                   deposits in small haloes cannot be smaller than it.
+  a_early,        (e) exp83, the EARLY-MASS term. The conditioning variable of a
+  s_early         deposit made at t' is the fraction of the halo's mass at t'
+                  that was already assembled by T_EARLY_GYR = 2 Gyr,
+                      phi(t') = min(log M(2 Gyr) - log M(t'), 0)      [dex, <= 0]
+                  (zero for every deposit made before 2 Gyr; for the last
+                  deposit before an epoch it is the per-galaxy early-mass
+                  fraction log M(2 Gyr) - log Mh(z_k) that the residual is
+                  regressed on), taken RELATIVE to the population's median at
+                  that time, phi(t') - phi_ref(t') (`set_early_ref`, the same
+                  device as model2's alpha_ref for g_rel): phi is monotone in
+                  time for every halo, so the raw variable is a second time
+                  law and its population mean belongs to a_z; the relative
+                  variable says how much earlier than the typical halo of that
+                  moment this one assembled. `a_early` multiplies the deposit's stellar
+                  efficiency by 10^(a_early phi): a_early < 0 makes deposits in
+                  haloes that grew much since 2 Gyr MORE efficient (early-formed
+                  haloes lighter), a_early > 0 the reverse. `s_early` adds
+                  s_early phi to the LOGIT of the compact share: s_early < 0
+                  makes the same deposits more compact. `c_early` multiplies
+                  the COMPACT deposit's size by 10^(c_early phi): c_early > 0
+                  makes the deposits of haloes that grew more than typical
+                  since 2 Gyr smaller. All three nest at zero.
 
 Parameter count: each knob used in a fit is one parameter (a break needs
 two: the exponent and the break redshift; (d) needs three).
@@ -58,7 +80,11 @@ import model2 as M2                                      # noqa: E402
 import families                                          # noqa: E402
 
 LAW_DEFAULT = dict(g_e=0.0, g_c=0.0, q_e=0.0, b_e2=0.0, z_brk_e=2.0, b_c2=0.0, z_brk_c=2.0,
-                   early_kpc=None, early_b=0.0, z_sw=2.0, s_floor_kpc=0.0, smooth_delay=False)
+                   early_kpc=None, early_b=0.0, z_sw=2.0, s_floor_kpc=0.0, smooth_delay=False,
+                   a_early=0.0, s_early=0.0, c_early=0.0)
+#: the reference time of the early-mass term (e): the mass assembled by 2 Gyr
+#: (z = 3.2), the variable of exp81's residual regressions
+T_EARLY_GYR = 2.0
 #: `smooth_delay=True` with a spec carrying tau_d (exp63 Stage 2b): instead of
 #: model2's STEP arrival (a node's extended mass has arrived or not, which makes
 #: the loss a staircase in tau_d with no finite-difference gradient — seen
@@ -112,19 +138,27 @@ def n_extra_parameters(law):
     n += 2 * (law["b_c2"] != 0.0)
     n += 3 * (law["early_kpc"] is not None)
     n += law["s_floor_kpc"] != 0.0
+    n += law.get("a_early", 0.0) != 0.0
+    n += law.get("s_early", 0.0) != 0.0
+    n += law.get("c_early", 0.0) != 0.0
     n += law.get("smooth_delay", False) and 0     # tau_d is the spec's parameter, not a knob
     return int(n)
 
 
-def sizes_at_nodes(spec2, p, law, lm, lz, r200, lr200_obs=None):
+def sizes_at_nodes(spec2, p, law, lm, lz, r200, lr200_obs=None, phi=None):
     """(s_c, s_e) [kpc] at the nodes for one epoch, in model2's own arithmetic
     (the fraction's log clipped to (-8, 2), then multiplied by R200c) so the
     default law nests bit for bit. `lr200_obs` (n, 1) is log R200c at the
-    observed epoch, needed only when q_e != 0."""
+    observed epoch, needed only when q_e != 0; `phi` (n, N) the early-mass
+    variable, needed only when c_early != 0."""
     dlm = lm - M2.LEVER_PIVOT_LOGM
     lf_c = p["log_f_c"] + p["b_c"] * lz + p.get("g_c", 0.0) * dlm
     if law["g_c"] != 0.0:
         lf_c = lf_c + law["g_c"] * dlm
+    if law.get("c_early", 0.0) != 0.0:
+        if phi is None:
+            raise ValueError("c_early != 0 needs the early-mass variable phi")
+        lf_c = lf_c + law["c_early"] * phi
     if law["b_c2"] != 0.0:
         lf_c = lf_c + law["b_c2"] * np.maximum(lz - np.log10(1.0 + law["z_brk_c"]), 0.0)
     s_c = 10.0 ** np.clip(lf_c, -8, 2) * (1.0 if spec2.compact_in_kpc else r200)
@@ -159,6 +193,40 @@ def epoch_dependent(law):
     return law["q_e"] != 0.0
 
 
+_EARLY_REF = {"lt": None, "phi": None}
+
+
+def early_fraction_raw(curves, lm):
+    """phi(t') = min(log M(T_EARLY_GYR) - log M(t'), 0) at the nodes, (n, N):
+    the fraction (in dex, <= 0) of the halo's mass at the deposit that was
+    already in place at 2 Gyr; zero before 2 Gyr."""
+    lm2 = np.array([E.log_mah(np.array([np.log10(T_EARLY_GYR)]), hc)[0] for hc in curves])
+    return np.minimum(lm2[:, None] - lm, 0.0)
+
+
+def set_early_ref(curves, nodes=None):
+    """Tabulate the population-median phi(t') at the quadrature nodes from the
+    fitting sample's curves (a fixed function stored with the fit, not a
+    fitted quantity). Returns (lt, phi_ref)."""
+    lt = E.nodes(**(nodes or M2.FULL_NODES))[0]
+    lm = np.array([E.log_mah(lt, hc) for hc in curves])
+    _EARLY_REF["lt"], _EARLY_REF["phi"] = lt, np.median(early_fraction_raw(curves, lm), axis=0)
+    return lt, _EARLY_REF["phi"]
+
+
+def early_ref(lt):
+    if _EARLY_REF["lt"] is None:
+        raise RuntimeError("call size_law.set_early_ref(curves) before using a_early / s_early")
+    return np.interp(np.asarray(lt, float), _EARLY_REF["lt"], _EARLY_REF["phi"])
+
+
+def early_fraction(curves, lm, lt):
+    """The early-mass term's variable: phi(t') - phi_ref(t'), (n, N); positive
+    for a halo that had assembled more of its mass by 2 Gyr than the typical
+    halo of the sample had at the same t'."""
+    return early_fraction_raw(curves, lm) - early_ref(lt)[None, :]
+
+
 def deposits_law(spec2, theta, law, curves, lt, epochs=(0, 1, 2, 3, 4)):
     """(dm_c, dm_e, s_c, s_e_by_epoch, r_trunc_by_epoch): (n, N) arrays; the
     by-epoch ones are {k: (n, N)} (one shared array when the law is not epoch
@@ -172,17 +240,23 @@ def deposits_law(spec2, theta, law, curves, lt, epochs=(0, 1, 2, 3, 4)):
         r200[i] = E.r200c_of(hc, lt, "analytic")
     z = np.broadcast_to(E.z_of_t(10.0 ** lt), (n, N))
     eff = (p["a0"], p["a_M"], p["a_z"], p["a_Mz"])
-    dmstar = 10.0 ** np.clip(E.log_eps_e2(eff, lm, z), -30, 10) * dm
-    wc = M2.compact_share(p, lm, alpha=dm / 10.0 ** lm, lt_nodes=lt)
+    log_eps = E.log_eps_e2(eff, lm, z)
+    a_early, s_early, c_early = law.get("a_early", 0.0), law.get("s_early", 0.0), law.get("c_early", 0.0)
+    phi = early_fraction(curves, lm, lt) if (a_early != 0.0 or s_early != 0.0 or c_early != 0.0) else None
+    if a_early != 0.0:
+        log_eps = log_eps + a_early * phi
+    dmstar = 10.0 ** np.clip(log_eps, -30, 10) * dm
+    wc = M2.compact_share(p, lm, alpha=dm / 10.0 ** lm, lt_nodes=lt,
+                          logit_extra=(s_early * phi if s_early != 0.0 else None))
     lz = np.log10(1.0 + z)
     s_e, r_tr = {}, {}
     if epoch_dependent(law):
         lt_k = np.log10(E.T_ANCHOR)
         for k in epochs:
             lr_obs = np.array([np.log10(E.r200c_of(hc, lt_k[k], "analytic")) for hc in curves])[:, None]
-            s_c, s_e[k], r_tr[k] = sizes_at_nodes(spec2, p, law, lm, lz, r200, lr_obs)
+            s_c, s_e[k], r_tr[k] = sizes_at_nodes(spec2, p, law, lm, lz, r200, lr_obs, phi=phi)
     else:
-        s_c, shared, tr = sizes_at_nodes(spec2, p, law, lm, lz, r200)
+        s_c, shared, tr = sizes_at_nodes(spec2, p, law, lm, lz, r200, phi=phi)
         s_e = {k: shared for k in epochs}
         r_tr = {k: tr for k in epochs}
     return dmstar * wc, dmstar * (1.0 - wc), s_c, s_e, r_tr
@@ -223,7 +297,8 @@ def selfcheck(spec2, theta, curves, R):
     got = predict_law(spec2, theta, LAW_DEFAULT, curves, R)
     assert np.array_equal(got, ref), "LAW_DEFAULT does not nest"
     for kw in (dict(g_e=-1.0 / 3.0), dict(g_c=-1.0 / 3.0), dict(q_e=1.0), dict(b_e2=0.5, z_brk_e=2.0),
-               dict(b_c2=0.5, z_brk_c=2.0), dict(early_kpc=np.log10(4.0), early_b=0.0, z_sw=2.0), dict(s_floor_kpc=4.0)):
+               dict(b_c2=0.5, z_brk_c=2.0), dict(early_kpc=np.log10(4.0), early_b=0.0, z_sw=2.0), dict(s_floor_kpc=4.0),
+               dict(a_early=-0.5), dict(s_early=-2.0), dict(c_early=0.5)):
         d = predict_law(spec2, theta, with_law(**kw), curves, R)
         assert np.all(np.isfinite(d)) and np.all(np.diff(d, axis=2) >= -1e-9), kw
         moved = float(np.max(np.abs(np.log10(d / ref))))
@@ -242,4 +317,5 @@ if __name__ == "__main__":
     import fit as F
     recs = H.build_records(rows=np.arange(0, 2397, 60), verbose=False)
     curves = E.build_curves(recs, verbose=False)
+    set_early_ref(curves)
     selfcheck(spec2, th, curves, F.R_GRID)

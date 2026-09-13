@@ -185,6 +185,11 @@ def build(smoke=False, knobs=DEFAULT_KNOBS, delay=False, delay_form="step"):
         spec2 = M2.Spec2(theta_names=M2.THETA_NAMES_DELAY, extended_family=spec2.extended_family,
                          compact_in_kpc=spec2.compact_in_kpc)
     lp = LawProblem(pr, spec2, knobs, law_base=(dict(smooth_delay=True) if (delay and delay_form == "exp") else None))
+    if any(k in ("a_early", "s_early", "c_early") for k in knobs):
+        # exp83: the early-mass term acts relative to the fitting sample's median phi(t') (a fixed table)
+        lt_ref, phi_ref = SL.set_early_ref(pr.curves)
+        print(f"  EARLY-MASS REFERENCE set from the {len(pr.curves)} fitting-sample curves: median phi(t') at t' = 2 / 3.3 / 5.9 / 9.3 Gyr "
+              + " / ".join(f"{np.interp(np.log10(t), lt_ref, phi_ref):+.2f}" for t in (2.0, 3.3, 5.9, 9.3)))
     th_nested = M2.with_levers_theta(M2.nested_theta(th_inc, delay=spec2.delay, growth=spec2.growth_split), spec2)
     bounds = [tuple(b) for b in np.asarray(fz["bounds"], float).tolist()] + ([M2.BOUNDS["tau_d"]] if delay else []) \
         + [S0C.BOUNDS[k] for k in knobs]
@@ -202,7 +207,7 @@ def tuned_constants(knobs, smoke):
 
 
 def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNOBS, fix=None, delay=None, delay_form="step",
-         start_from=None):
+         start_from=None, start_adopted=None):
     knobs = tuple(knobs)
     fix = dict(fix or {})
     tag = knob_tag(knobs) + (f"_delay{delay:g}" if delay is not None else "") + ("_exp" if delay_form == "exp" else "") \
@@ -261,15 +266,33 @@ def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNO
               ("far", with_law(th_base, far, constants=False)),
               ("basin", with_law(th_basin, tuned_knobs, constants=False)),
               ("nested", with_law(M2.clip_to_bounds(spec2, th_nested), tuned_knobs, constants=False))]
-    lp.report(starts[1][1], "THE BASELINE MEAN (knobs at 0), scored here")
-    lp.report(starts[0][1], "the baseline with Stage 0 C's tuned law (the 'tuned' start), scored here")
+    if start_adopted is not None:
+        # exp83: the three starts from THE ADOPTED MEAN (exp82's fourteen, `rebaseline.adopted_mean()`), the new
+        # knob(s) at the probe value ('adopted_probe'), at zero ('adopted_zero': does the loss have a gradient
+        # in the new parameter at the adopted optimum?) and at twice the probe value ('adopted_far': a new
+        # parameter is started from both ends, exp76's lesson)
+        ad = RB.adopted_mean()
+        assert list(lp.names[:len(ad["names"])]) == ad["names"], (lp.names, ad["names"])
+        new_knobs = list(lp.names[len(ad["names"]):])
+        assert set(start_adopted) == set(new_knobs), (start_adopted, new_knobs)
+        th_ad = np.asarray(ad["theta_full"], float)
+        print(f"  STARTS FROM THE ADOPTED MEAN {ad['file'].name}: new knob(s) {new_knobs} at the probe value {start_adopted}, at 0, at twice the probe")
+        starts = [("adopted_probe", np.r_[th_ad, [start_adopted[k] for k in new_knobs]]),
+                  ("adopted_zero", np.r_[th_ad, np.zeros(len(new_knobs))]),
+                  ("adopted_far", np.r_[th_ad, [2.0 * start_adopted[k] for k in new_knobs]])]
+        lp.report(starts[1][1], "THE ADOPTED MEAN (new knobs at 0), scored here")
+        lp.report(starts[0][1], "the adopted mean with the new knob at the probe value, scored here")
+    else:
+        lp.report(starts[1][1], "THE BASELINE MEAN (knobs at 0), scored here")
+        lp.report(starts[0][1], "the baseline with Stage 0 C's tuned law (the 'tuned' start), scored here")
     if cont is not None:
         src_f = OUTDIR / f"{STAGE_FILES['stage1']}{tag}_start_{cont}.npz"
         fb = np.load(src_f, allow_pickle=True)
         starts = [(f"cont_{cont}", np.asarray(fb["theta"], float))]
         print(f"  continuation of '{cont}' ({int(fb['n_eval'])} evals, loss {float(fb['loss']):.4f})")
     else:
-        starts = [s for n in START_ORDER for s in starts if s[0] == n]
+        if start_adopted is None:
+            starts = [s for n in START_ORDER for s in starts if s[0] == n]
         if starts_sel is not None:
             starts = starts[starts_sel[0]:starts_sel[1] + 1]
     print(f"\n  {len(starts)} start(s): " + ", ".join(n for n, _ in starts))
@@ -340,7 +363,8 @@ if __name__ == "__main__":
         kn = ()
     fx = {kv.split("=")[0]: float(kv.split("=")[1]) for kv in a[a.index("--fix") + 1].split(",")} if "--fix" in a else None
     dl = float(a[a.index("--delay") + 1]) if "--delay" in a else None
+    sa = {kv.split("=")[0]: float(kv.split("=")[1]) for kv in a[a.index("--start-adopted") + 1].split(",")} if "--start-adopted" in a else None
     main(smoke="--smoke" in a, starts_sel=ss, merge="--merge" in a,
          cont=(a[a.index("--continue") + 1] if "--continue" in a else None), knobs=kn, fix=fx, delay=dl,
          delay_form=("exp" if "--delay-exp" in a else "step"),
-         start_from=(a[a.index("--start-from") + 1] if "--start-from" in a else None))
+         start_from=(a[a.index("--start-from") + 1] if "--start-from" in a else None), start_adopted=sa)

@@ -771,3 +771,21 @@ z = 1–1.5 — a delay reads only the past, so the source is the refitted
 efficiency law; (d) the delay leaves an early-mass residual at z = 0.4
 (+0.38 at 5 kpc): the early-formed haloes are now too heavy at low
 redshift — the same conditioning variable with the opposite sign (S3).
+
+## exp83 (2026-09-13) — the centre's early-mass residual is a concentration residual
+
+The adopted mean's z = 0.4 residual against the early-mass fraction has a
+mass part (+0.114 dex per dex at 103 kpc; removed exactly by an efficiency
+falling with the relative fraction assembled by 2 Gyr, a_early ≈ −0.28)
+and a concentration part (+0.059 dex per dex at 5 kpc at fixed M(<103); the
+truth's own +0.150) that no per-deposit efficiency, share or size term keyed
+to the 2 Gyr fraction can reach, because it lives in the stars deposited
+before 2 Gyr. The early-formed haloes' centres are too concentrated at
+z = 0.4 and too diffuse at z = 2 at fixed total — the decline. Open: (a)
+does an age-driven expansion of the COMPACT channel (s_c growing with
+t_obs/t', the analogue of q_e for the in-situ stars, with log_f_c refitted)
+produce the decliners' −0.066 dex without moving the non-decliners? (b) is
+the mass half worth its own parameter (a fit at a_early ≈ −0.28 would raise
+the loss at frozen theta by 0.66 and reopen the z = 2 recent-growth
+correlation from +0.13 to +0.17)? (c) the z = 2 early correlation (−0.15)
+has the opposite sign and the same structural cause.
