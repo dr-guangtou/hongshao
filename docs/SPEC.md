@@ -152,3 +152,24 @@ any of the three without change. **The model keeps both the DiffMAH and the
 measured-MAH paths** (the user, 2026-09-05). Recommended default for the
 application: `"measured"`; the two honest inputs give the same model to a
 point or two (exp74 README).
+
+## The adopted mean model (2026-09-13, exp82)
+
+The mean model is exp63's two-channel deposition model with two additions,
+both nesting at zero: a **deposition delay** for the extended (ex-situ)
+channel — the stars of an accreted satellite join the central `tau_d`
+Hubble times (at accretion) after the halo accreted it; mass in transit is
+not deposited (`model2.Spec2.with_delay`, `arrival_include`; a step
+arrival, `tau_d` held at 0.15 and chosen on a grid by the QA gates because
+the step has no gradient and the loss's own minimum narrows the size
+distributions) — and a **post-deposition expansion** — a deposit's size
+grows after deposition by the fraction `q_e` (fitted, 0.15) of its halo's
+growth in radius, its truncation radius growing with it
+(`exp80/size_law.py::predict_law`, `arrival_weights`; `smooth_delay=True`
+gives the exponential arrival). 14 parameters, 13 fitted. The pointer is
+`exp74/rebaseline.py::adopted_mean()`; the previous mean stays as
+`adopted_baseline()` for comparisons. Evidence: exp81 (the residual's
+formation-time dependence and the halo-predictability ceiling), exp82 (the
+grid). The input contract, the fitting sample and the QA gates are
+unchanged; the future-dependence gate is 0.03 dex per dex worse than the
+previous mean at z = 0.7 and z = 2 and is carried as a known cost (C26).

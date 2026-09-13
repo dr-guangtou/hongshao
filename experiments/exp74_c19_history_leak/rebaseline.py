@@ -80,11 +80,47 @@ BASELINE_NPZ = OUTDIR / "stage1_refit_measured.npz"
 
 
 def adopted_baseline():
-    """(spec2, theta) of the adopted baseline mean; the input it goes with is
-    `measured.build_input(recs, "measured")`."""
+    """(spec2, theta) of exp74's measured-input optimum — THE BASELINE MEAN
+    from 2026-09-08 to 2026-09-13, kept as the comparison point every judge
+    scores against; the input it goes with is `measured.build_input(recs,
+    "measured")`. The CURRENT adopted mean is `adopted_mean()` (exp82)."""
     fz = np.load(FIT_NPZ, allow_pickle=True)
     fb = np.load(BASELINE_NPZ, allow_pickle=True)
     return S2F.spec_from_fit(fz), np.asarray(fb["theta_best"], float)
+
+
+#: THE ADOPTED MEAN (the user, 2026-09-13, after exp82): the deposition delay
+#: (exp63 Stage 2b's tau_d, held at 0.15 Hubble times at accretion, step
+#: arrival) and exp80's expansion exponent q_e (fitted, 0.152) on exp63's
+#: twelve, fitted under the standard objective on the measured history; the
+#: gate-chosen grid point (offset 14 of 15, one width, the centre +0.5 /
+#: -6.2 / -6.9 per cent at z = 0.4 / 1.5 / 2, loss 12.70 against 15.56).
+#: Engine: `exp80/size_law.py::predict_law(spec, theta[:13], law, ...)` with
+#: `spec = Spec2(theta_names=THETA_NAMES_DELAY, ...)` and `law = with_law(q_e=theta[13])`.
+ADOPTED_MEAN_NPZ = ROOT / "experiments/exp82_delay_expansion/outputs/stage1_fit_delay0.15_fix-tau_d0.15_start_tuned.npz"
+
+
+def adopted_mean():
+    """The current adopted mean (exp82): dict(spec, theta13, law, theta_full,
+    names, file). Predict with
+    `size_law.predict_law(d["spec"], d["theta13"], d["law"], curves, R, epochs)`.
+    14 parameters (13 fitted, tau_d held)."""
+    import importlib.util
+    sl_path = ROOT / "experiments/exp80_deposit_size_law/size_law.py"
+    spec_ = importlib.util.spec_from_file_location("exp80_size_law", sl_path)
+    SL = importlib.util.module_from_spec(spec_); spec_.loader.exec_module(SL)
+    fz = np.load(FIT_NPZ, allow_pickle=True)
+    base = S2F.spec_from_fit(fz)
+    spec = M2.Spec2(theta_names=M2.THETA_NAMES_DELAY, extended_family=base.extended_family,
+                    compact_in_kpc=base.compact_in_kpc)
+    fa = np.load(ADOPTED_MEAN_NPZ, allow_pickle=True)
+    names = [str(n) for n in fa["theta_names"]]
+    th = np.asarray(fa["theta"], float)
+    assert names[:13] == list(M2.THETA_NAMES_DELAY) and names[13] == "q_e", names
+    law = SL.with_law(q_e=float(th[13]))
+    return dict(spec=spec, theta13=th[:13], law=law, theta_full=th, names=names, file=ADOPTED_MEAN_NPZ,
+                predict=lambda curves, R, epochs=(0, 1, 2, 3, 4), nodes=M2.FULL_NODES:
+                        SL.predict_law(spec, th[:13], law, curves, R, epochs=epochs, nodes=nodes))
 
 
 def measured_mass_bins(recs, lmh_dm):
