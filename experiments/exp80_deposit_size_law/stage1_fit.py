@@ -258,9 +258,10 @@ def main(smoke=False, starts_sel=None, merge=False, cont=None, knobs=DEFAULT_KNO
                     th[spec2.index(n)] = vals[n]
         return np.r_[th, [knob_values[k] for k in knobs]]
 
-    tuned_knobs = {k: fix.get(k, vals[k]) for k in knobs}
+    # a knob Stage 0 C never tuned (exp83's early-mass knobs) sits at its nesting value in the legacy starts
+    tuned_knobs = {k: fix.get(k, vals.get(k, 0.0)) for k in knobs}
     zero = {k: fix.get(k, 0.0) for k in knobs}
-    far = {k: fix.get(k, FAR_VALUES[k]) for k in knobs}
+    far = {k: fix.get(k, FAR_VALUES.get(k, 0.0)) for k in knobs}
     starts = [("tuned", with_law(th_base, tuned_knobs)),
               ("baseline", with_law(th_base, zero, constants=False)),
               ("far", with_law(th_base, far, constants=False)),
