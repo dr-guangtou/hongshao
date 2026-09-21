@@ -3027,3 +3027,13 @@ session should not rediscover them:
   (efficiency, share, size) all left the 5 kpc correlation at +0.24 to
   +0.38; a mass-weighted distribution of the variable over the deposits
   (printed by the probe) would have said so before the grid.
+- **The frozen probe's loss column predicts where the fit will stop.** At
+  frozen theta the loss was flat to a_early ≈ −0.1 and rose +0.66 by −0.3;
+  the three-start fit settled at −0.06 to −0.08 with a gain of 0.05. When
+  the diagnostic wants a value the frozen loss already prices at +0.5 or
+  more, say before the fit that it will return a fraction of it, and let
+  the user weigh two hours of fits against that forecast.
+- **Count a gate change only when it clears the threshold by more than the
+  rounding.** exp83's 15 / 0 against the adopted 14 / 1 was R20 at z = 2
+  going +0.050 → +0.049 and a width of 0.80 on the 0.80 line in both
+  models. Read the cells, not the tally.

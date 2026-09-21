@@ -1,6 +1,6 @@
 # exp83 — the early-mass conditioning of the centre on the adopted mean (S3)
 
-Status: STAGE 0 DONE 2026-09-13, no passing probe, Stage 1 not run (branch `exp83-early-mass-centre` from
+Status: DONE 2026-09-22 — Stage 0: no passing probe; Stage 1 run at the user's request (2026-09-21): a_early → −0.08, not recommended for adoption (branch `exp83-early-mass-centre` from
 master `0ddca75`). Roadmap: `doc/plans/2026-09-12-roadmap-evidence-rethink.md`
 §3 S3 and §5. The model under change is THE ADOPTED MEAN (exp82:
 `rebaseline.adopted_mean()`, the delay tau_d = 0.15 held + q_e = 0.152 on

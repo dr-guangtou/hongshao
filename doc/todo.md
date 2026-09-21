@@ -3262,3 +3262,25 @@ two things, and the one-parameter term the roadmap named can only fix one
 of them. The reading that mattered was "where were the stars that carry the
 residual deposited?" — before 2 Gyr, where any variable defined relative to
 2 Gyr is identically zero. Two lessons recorded.
+
+### exp83 Stage 1 (2026-09-21/22, the user's decision: fit the mass half anyway)
+
+- [x] Smoke fit first (caught a KeyError in the legacy start list for a
+  knob Stage 0 C never tuned; fixed, `ac1d29b`).
+- [x] Three starts from the adopted mean (a_early −0.28 / 0 / −0.56), two at
+  a time, own sessions: one basin, a_early → −0.06 to −0.08, loss 12.70 →
+  12.65 at the full nodes. The parameter moves from both sides.
+- [x] Judged by name (`adopted_far`) against the adopted mean and the
+  previous baseline, full battery + figures; residual checks on two starts.
+- [x] Verdict: the z = 0.4 early-mass correlation +0.33 → +0.26 (103 kpc),
+  +0.37 → +0.33 (5 kpc), not halved; every gate within resolution of the
+  adopted mean. **NOT recommended for adoption**; the adopted mean stands.
+- [ ] **Decision (user)**: confirm non-adoption and merge
+  `exp83-early-mass-centre` (engine knobs nest at zero); next is exp84 (S4,
+  the layer) and, separately, the centre's mechanism (open question).
+
+#### Review
+The fit confirmed what the frozen probe predicted, at a cost of two hours
+of machine time: the probe's loss column (+0.08 at −0.15, +0.66 at −0.3)
+already said the optimiser would stop near −0.1. The smoke run before the
+queue paid for itself within a minute.

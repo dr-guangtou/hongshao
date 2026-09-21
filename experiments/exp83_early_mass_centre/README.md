@@ -4,7 +4,10 @@ Plan: `doc/plans/2026-09-13-exp83-early-mass-centre.md` (roadmap S3). The
 model under change is THE ADOPTED MEAN (exp82, `rebaseline.adopted_mean()`:
 the delay tau_d = 0.15 held + q_e = 0.152 on exp63's twelve; 14 parameters,
 13 fitted). Stage 0 is a frozen-theta probe; Stage 1 (a fit) was to run
-only on a probe that passes the gate. **No probe passes; no fit was run.**
+only on a probe that passes the gate. No probe passed; the user then chose
+(2026-09-21) to fit the mass half anyway — Stage 1 below. **Verdict: the
+fitted term is weak (a_early −0.08), the model is the adopted mean within
+the gates' resolution, and it is NOT recommended for adoption.**
 
 ## Stage 0, part 1 — the residual's form (`outputs/stage0_probe.log`, section 1; `outputs/residual_check_adopted.log`)
 
@@ -103,7 +106,76 @@ within 0.02 of the adopted +0.051.
    median) pass at a_early ≤ −0.1. **Stage 1 was not run** (the user's
    rule: fit only on a passing probe).
 
-## What is ready if the user decides to fit anyway
+## Stage 1 — the fit of the mass half (the user's decision, 2026-09-21/22)
+
+`queue.sh 2 -0.28`: three starts from the adopted mean's fourteen with
+a_early at −0.28 / 0 / −0.56, the standard objective, tau_d held at 0.15,
+two fits at a time. **Parameters: 15 in the model (exp63's twelve, tau_d
+held, q_e, a_early); 14 fitted.** Logs `outputs/fit_a_early_s{0,1,2}.log`,
+merge `outputs/merge.log`, the judge (full battery, figures
+`figures/qa/*exp83_*`; the judged model is labelled `exp80` inside the log,
+the script's name for "the model under judgement")
+`outputs/eval_adopted_far.log`, residual checks
+`outputs/residual_check_adopted_{probe,far}.log`.
+
+| start | a_early: start → fitted | q_e | loss: start → fitted | evaluations |
+| --- | --- | ---: | --- | ---: |
+| adopted_probe | −0.28 → −0.080 | 0.174 | 13.58 → 12.702 | 1156 |
+| adopted_zero | 0 → −0.063 | 0.150 | 12.746 → 12.706 | 1426 |
+| adopted_far | −0.56 → −0.082 | 0.177 | 16.89 → 12.699 | 3016 (the cap) |
+
+**One basin, and the parameter moves**: three starts from both sides of
+the answer agree on a weak negative coefficient (−0.06 to −0.08) within
+0.007 in loss, with the adopted mean's structure (d_split 0.29–0.30, n_c
+0.71–0.73). Judged BY NAME: `adopted_far` (the lowest), with `adopted_zero`
+alongside.
+
+| reading | previous baseline | adopted mean (exp82) | exp83 fit (a_early −0.082) |
+| --- | ---: | ---: | ---: |
+| loss, full nodes | 15.56 | 12.70 | 12.65 |
+| early-mass correlation of the residual at z = 0.4, 5 kpc / 103 kpc (the target; halved = +0.18 / +0.17) | — | +0.37 / +0.33 | **+0.33 / +0.26** |
+| the same at z = 2, 5 kpc / 103 kpc | — | −0.15 / −0.12 | −0.17 / −0.14 |
+| recent-growth correlation at z = 2, 5 kpc | — | +0.13 | +0.15 |
+| decliners' central change z = 2 → 0.4 (truth −0.066) | +0.061 | +0.039 | +0.036 |
+| non-decliners' z = 2 centre median | — | +0.051 | +0.052 |
+| size gate at fixed stellar mass, offsets / widths of 15 | 12 / 0 | 14 / 1 | 15 / 0 |
+| M(<2 kpc) per cent, z = 0.4 / 1.5 / 2 | +5.6 / −9.8 / −12.6 | +0.5 / −6.2 / −6.9 | −0.2 / −5.9 / −6.8 |
+| M(<103 kpc) per cent, z = 0.4 / 1 / 2 | −3.1 / +1.2 / −1.4 | −4.2 / +3.8 / +0.2 | −4.0 / +3.9 / +0.4 |
+| future-dependence gate, dex per dex, z = 0.7 / 1 / 1.5 / 2 (truth −0.006 / +0.052 / +0.025 / +0.003) | −0.013 / −0.046 / −0.026 / −0.005 | −0.039 / −0.026 / −0.009 / −0.015 | −0.037 / −0.024 / −0.009 / −0.016 |
+| mh-complete 50–100 kpc shell, z = 1.5 / 2 | +4.4 / −0.5 | −11.8 / −17.7 | −9.5 / −14.6 |
+| fitting-sample 50–100 kpc shell, z = 1.5 / 2 | +17.6 / +29.6 | +5.8 / +7.5 | +8.8 / +11.9 |
+
+**Read.**
+
+1. **The target is not met.** The z = 0.4 early-mass correlation falls
+   from +0.33 to +0.26 at 103 kpc and from +0.37 to +0.33 at 5 kpc — a fifth
+   and a tenth of the way, against the gate's half. The loss will not pay
+   for the coefficient that removes the mass component (−0.28 costs +0.66
+   at frozen theta; the fit settles at −0.08 for a gain of 0.05, 0.4 per
+   cent of the loss). This is the prediction made before the fit, and an
+   eighth loss-vs-gates reading of a mild kind: the loss is nearly flat in
+   the parameter while the diagnostic wants 3.5 times more of it.
+2. **Everything else is the adopted mean.** The size gate's 15 / 0 against
+   14 / 1 is two threshold crossings, not a change: R20 at z = 2 moves
+   +0.050 → +0.049 across the 0.05 line, and the R20 width at z = 0.4 is
+   0.80 in both models, on the line. The centre, the cumulative profile
+   and the future-dependence gate move by less than their resolution; the
+   decliner split is unchanged (the model's change +0.036 against the
+   truth's −0.066). The one visible trade is in the 50–100 kpc shell at
+   z ≥ 1.5: the mh-complete progenitors 3 points better, the fitting sample
+   3–4 points worse (the refitted q_e 0.177, not a_early, is the likely
+   mover).
+3. **Verdict: NOT recommended for adoption.** A fifteenth parameter that
+   buys 0.4 per cent of the loss and a fifth of its own target does not
+   earn its place; the adopted mean stays `rebaseline.adopted_mean()`. The
+   result is still informative: the halo's early-mass fraction carries a
+   real, shuffle-free signal in the total stellar mass at z = 0.4 (the
+   frozen probe zeroes it cleanly), but the shared five-epoch objective
+   prices it below the damage it does at z = 2, where the same variable
+   enters with the opposite sign (−0.15 → −0.17). The two signs are the
+   decline seen from its two ends; a term with one sign cannot serve both.
+
+## What was prepared before the user's decision (kept for the record)
 
 - The fit on the mass half alone: `queue.sh 2 -0.28` (three starts from
   the adopted fourteen with a_early at −0.28 / 0 / −0.56, two at a time,

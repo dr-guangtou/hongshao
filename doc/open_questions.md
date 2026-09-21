@@ -789,3 +789,12 @@ the mass half worth its own parameter (a fit at a_early ≈ −0.28 would raise
 the loss at frozen theta by 0.66 and reopen the z = 2 recent-growth
 correlation from +0.13 to +0.17)? (c) the z = 2 early correlation (−0.15)
 has the opposite sign and the same structural cause.
+
+Update 2026-09-22 (exp83 Stage 1): (b) is answered — fitted under the
+standard objective the mass term settles at a_early −0.08 (three starts, one
+basin), moves the z = 0.4 correlation only +0.33 → +0.26 at 103 kpc, and
+changes no gate; not recommended for adoption. The early-mass variable has
+opposite signs at z = 0.4 and z = 2 (+0.33 / −0.14 at 103 kpc), so a
+single-sign efficiency term is priced out by the shared objective. (a) and
+(c) stay open and are one question: a mechanism that moves mass outward in
+early-formed galaxies between z = 2 and z = 0.4.

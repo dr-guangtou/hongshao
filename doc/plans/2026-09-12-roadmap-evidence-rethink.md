@@ -357,3 +357,10 @@ radii halved) failed at every probe value; **no fit was run**. Decision
 owed: fit the mass half (+1 parameter) or open the compact channel's
 expansion as the centre's mechanism (a model change). S4 (exp84, the layer)
 is unaffected and can proceed on the adopted mean.
+
+Update 2026-09-22: the mass half was fitted at the user's request (three
+starts, one basin): a_early −0.08, loss 12.70 → 12.65, the z = 0.4
+early-mass correlation +0.33 → +0.26 at 103 kpc and +0.37 → +0.33 at 5 kpc,
+every gate within resolution of the adopted mean. Not recommended for
+adoption; S3 as specified is closed; the adopted mean stands. S4 (exp84)
+next.
