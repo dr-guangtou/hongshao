@@ -15,7 +15,12 @@ never touch the scoring half:
     `form="rows"` is the nonparametric control: whole (5, 2) records of
     calibration-half galaxies handed to scoring-half galaxies, centred.
     `corr="identity"` (independent epochs) and `corr="one"` (a persistent
-    trait) are the persistence controls.
+    trait) are the persistence controls. `offsets` (10,) [dex], zero by
+    default, shift the draw's centre: the PROFILE-CENTRED variant calibrates
+    them so the drawn median profile stays on the mean at each axis's
+    reference radius (a symmetric log-size draw moves the median profile,
+    because the profile's response to a larger and a smaller deposit is not
+    symmetric — Jensen; exp60 saw the same 0.058 dex inside 10 kpc).
   * amplitude: eps ~ N(0, amp_corr) * sig_add, added to the log profile at
     every radius; sig_add per epoch is calibrated so the TOTAL drawn
     deviation at 103 kpc meets Stage 0's target (the width the size draws
@@ -67,9 +72,13 @@ class Sampler:
         self.amp_sigma, self.amp_corr = np.asarray(amp_sigma, float), np.asarray(amp_corr, float)
         self.L_amp = np.linalg.cholesky(self.amp_corr + 1e-9 * np.eye(5))
         self.sig_add = None                                              # set by calibrate_amplitude
+        self.offsets = np.zeros(10)                                      # set by calibrate_offsets (profile-centred)
+        self.scale_axis = np.ones(2)                                     # per-axis scales (the two-scale variant)
 
     def describe(self):
-        return (f"form={self.form} corr={self.corr_kind} scale={self.scale:.3f}; sigma_c "
+        return (f"form={self.form} corr={self.corr_kind} scale={self.scale:.3f} x (c {self.scale_axis[0]:.3f}, e {self.scale_axis[1]:.3f}); offsets c "
+                + " ".join(f"{v:+.2f}" for v in self.offsets[:5]) + " e " + " ".join(f"{v:+.2f}" for v in self.offsets[5:])
+                + "; sigma_c "
                 + " ".join(f"{v:.3f}" for v in self.sigma[:5]) + "; sigma_e " + " ".join(f"{v:.3f}" for v in self.sigma[5:])
                 + "; anatomy medians c " + " ".join(f"{v:+.2f}" for v in self.medians[:5])
                 + " e " + " ".join(f"{v:+.2f}" for v in self.medians[5:]) + " (not applied)")
@@ -80,6 +89,7 @@ class Sampler:
             v = self.pool[rng.integers(0, len(self.pool), n)] * self.scale
         else:
             v = (rng.standard_normal((n, 10)) @ self.L.T) * self.sigma[None, :] * self.scale
+        v = v * np.repeat(self.scale_axis, 5)[None, :] + self.offsets[None, :]
         return dict(c=v[:, :5], e=v[:, 5:])
 
     def draw_amplitude(self, n, rng):
@@ -106,3 +116,31 @@ class Sampler:
         induced = LC.half_width(np.concatenate(devs))
         self.sig_add = np.sqrt(np.clip(self.amp_sigma ** 2 - induced ** 2, 0.0, None))
         return induced
+
+    #: the reference radius (index on R_GRID) at which each axis's offset
+    #: centres the drawn median profile: 4.9 kpc for the compact size, 32.6 kpc
+    #: for the extended one (where each axis's response is largest)
+    CENTRE_INDEX = {"c": 3, "e": 12}
+
+    def calibrate_offsets(self, predict_fn, mean, n, rng, n_real=4, n_iter=8):
+        """The profile-centred variant: per axis and epoch, the offset that
+        puts the drawn MEDIAN log M(<R_ref) on the mean's, by damped fixed-
+        point iteration on the median residual (the response is close to
+        linear in the offset near zero); the two axes alternate."""
+        lmean = np.log10(np.clip(mean, 1.0, None))
+        hist = []
+        for it in range(n_iter):
+            devs = [self.draw_sizes(n, rng) for _ in range(n_real)]
+            lg = np.stack([np.log10(np.clip(predict_fn(dv), 1.0, None)) for dv in devs])
+            med = np.nanmedian(lg.reshape(-1, *lg.shape[2:]), axis=0) - np.nanmedian(lmean, axis=0)   # (5, nr)
+            for a, (lo, hi) in (("c", (0, 5)), ("e", (5, 10))):
+                r = med[:, self.CENTRE_INDEX[a]]                             # (5,) dex, the median excess
+                # a larger deposit LOWERS the enclosed mass at its radius: push the offset against the excess
+                self.offsets[lo:hi] += 0.6 * r / max(self.RESPONSE[a], 1e-3)
+            hist.append(float(np.max(np.abs(med[:, [3, 12]]))))
+        return hist
+
+    #: dlog M(<R_ref) per dex of size deviation, from the engine selfcheck
+    #: (+0.3 dex: -0.07 to -0.09 at 4.9 kpc for c, -0.03 to -0.12 at 32.6 kpc
+    #: for e): the fixed point's slope, only the step size depends on it
+    RESPONSE = {"c": 0.27, "e": 0.25}

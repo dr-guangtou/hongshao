@@ -9,9 +9,18 @@ realizations (and over the two swaps) with its scatter across realizations.
 THE VARIANTS (the plan's a-d):
   gauss         the fitted layer: Gaussian, per-epoch widths and the 10x10
                 cross-epoch / cross-axis correlation from the anatomy
+  gauss-centred the same with per-axis, per-epoch OFFSETS calibrated so the
+                drawn median profile stays on the mean at 4.9 / 32.6 kpc (S3
+                by construction inside the engine; the offsets are printed)
   gauss-scaled  the same with ONE size scale calibrated so the R50 width at
                 fixed stellar mass is the truth's on the calibration half
                 (R20 and R80 are then the tests, not calibrations)
+  gauss-2scale  TWO scales: the compact axis's on the R20 width, the extended
+                axis's on the R80 width (R50 is then the test); added after
+                the first run showed R20 over-dispersed 1.4x in every variant
+                (the compact axis's anatomy width is inflated by its flat loss
+                valley) and R80 under at z >= 1.5 with one scale
+  gauss-2sc-cent the two scales AND the profile-centring offsets — the candidate
   rows          the nonparametric control: whole anatomy records resampled
   independent   correlation = identity (the epochs draw independently)
   persistent    correlation = 1 within an axis (a persistent trait)
@@ -48,20 +57,45 @@ E73 = P.ROOT / "experiments/exp73_size_relative/outputs/size_gate_layer.npz"
 SEED, N_REAL = 84, 8
 I52, I148 = 15, 23                                       # exp60's annulus indices on R_GRID
 VARIANTS = (("gauss", dict(form="gauss", corr="fitted", scale=1.0)),
+            ("gauss-centred", dict(form="gauss", corr="fitted", scale=1.0, centred=True)),
             ("gauss-scaled", dict(form="gauss", corr="fitted", scale=None)),
+            ("gauss-2scale", dict(form="gauss", corr="fitted", scale=1.0, two_scales=True)),
+            ("gauss-2sc-cent", dict(form="gauss", corr="fitted", scale=1.0, two_scales=True, centred=True)),
             ("rows", dict(form="rows", corr="fitted", scale=1.0)),
             ("independent", dict(form="gauss", corr="identity", scale=1.0)),
             ("persistent", dict(form="gauss", corr="one", scale=1.0)))
 S3_TOL, S5_TOL_SIGMA, S5_TOL_CORR, PERSIST_TOL = 0.010, 0.10, 0.05, 0.15
 
 
-def r50_width_ratio(draw_cogs, data, R):
-    """Mean over epochs of (the draw's R50 scatter at fixed M*(<148) / the truth's)."""
+def width_ratio(draw_cogs, data, R, key="R50"):
+    """Mean over epochs of (the draw's size scatter at fixed M*(<148) / the truth's)."""
     lm_t = np.log10(np.clip(data[:, :, -1], 1.0, None))
     lm_m = np.log10(np.clip(draw_cogs[:, :, -1], 1.0, None))
-    rt = LC.size_residuals(LC.log_sizes(data, R, ("R50",))["R50"], lm_t)
-    rm = LC.size_residuals(LC.log_sizes(draw_cogs, R, ("R50",))["R50"], lm_m)
+    rt = LC.size_residuals(LC.log_sizes(data, R, (key,))[key], lm_t)
+    rm = LC.size_residuals(LC.log_sizes(draw_cogs, R, (key,))[key], lm_m)
     return float(np.nanmean(np.nanstd(rm, axis=0) / np.nanstd(rt, axis=0)))
+
+
+def r50_width_ratio(draw_cogs, data, R):
+    return width_ratio(draw_cogs, data, R, "R50")
+
+
+def calibrate_two_scales(smp, predict_fn, data, R, n, rng, n_real=3, n_round=2):
+    """The two-scale variant: the compact axis's scale on the R20 width, the
+    extended axis's on the R80 width (alternating bisections); R50 is then
+    the test of the two axes together."""
+    for _ in range(n_round):
+        for i_axis, key in ((0, "R20"), (1, "R80")):
+            lo, hi = 0.05, 3.0
+            for _ in range(10):
+                smp.scale_axis[i_axis] = 0.5 * (lo + hi)
+                ratio = np.mean([width_ratio(predict_fn(smp.draw_sizes(n, rng)), data, R, key) for _ in range(n_real)])
+                if ratio < 1.0:
+                    lo = smp.scale_axis[i_axis]
+                else:
+                    hi = smp.scale_axis[i_axis]
+            smp.scale_axis[i_axis] = 0.5 * (lo + hi)
+    return smp.scale_axis.copy()
 
 
 def calibrate_scale(smp, predict_fn, data, R, n, rng, n_real=3):
@@ -140,8 +174,12 @@ def v1_rows():
     return out
 
 
-def main(smoke=False, fast=False):
+def main(smoke=False, fast=False, only=None):
+    variants = VARIANTS if only is None else tuple(v for v in VARIANTS if v[0] in only)
+    assert variants, only
+    out_path = OUT if only is None else OUT.with_name(OUT.stem + "_" + "-".join(v[0] for v in variants) + ".npz")
     print(f"{RULE}\nexp84 STAGE 2 — the layer composed and judged held out, both ways\n{RULE}\n")
+    print(f"  variants: " + ", ".join(v[0] for v in variants))
     n_real = 2 if (smoke or fast) else N_REAL
     recs, data, keep, lmh, pred = P.build(smoke)
     rows_all = np.where(keep)[0]
@@ -165,8 +203,8 @@ def main(smoke=False, fast=False):
     print(f"  {n} galaxies; halves of {len(halves[0])} / {len(halves[1])}; {n_real} realizations per swap; "
           f"amplitude target " + " ".join(f"{v:.3f}" for v in amp_sigma))
 
-    results = {name: [] for name, _ in VARIANTS}
-    direct = {name: [] for name, _ in VARIANTS}
+    results = {name: [] for name, _ in variants}
+    direct = {name: [] for name, _ in variants}
     described = {}
     t_start = time.time()
     for swap in range(2):
@@ -175,12 +213,17 @@ def main(smoke=False, fast=False):
         pf_c = lambda dev, rc=rows_c: pred.predict(size_dev={a: _expand(dev[a], rc, pred.n) for a in P.AXES}, rows=rc)  # noqa: E731
         pf_s = lambda dev, rs=rows_s: pred.predict(size_dev={a: _expand(dev[a], rs, pred.n) for a in P.AXES}, rows=rs)  # noqa: E731
         mean_c, mean_s = mean_all[calib], mean_all[score]
-        for i_var, (name, kw) in enumerate(VARIANTS):
-            rng_v = np.random.default_rng(SEED + 100 * swap + i_var)
+        for name, kw in variants:
+            rng_v = np.random.default_rng(SEED + 100 * swap + [v[0] for v in VARIANTS].index(name))
             smp = Sampler(delta_c, delta_e, amp_sigma, amp_corr, calib, form=kw["form"], corr=kw["corr"],
                           scale=1.0 if kw["scale"] is None else kw["scale"])
             if kw["scale"] is None:
                 calibrate_scale(smp, pf_c, d_all[calib], R, len(calib), rng_v)
+            if kw.get("two_scales"):
+                calibrate_two_scales(smp, pf_c, d_all[calib], R, len(calib), rng_v)
+            if kw.get("centred"):
+                hist = smp.calibrate_offsets(pf_c, mean_c, len(calib), rng_v)
+                print(f"    centring: max |median excess| at 4.9 / 32.6 kpc per iteration " + " ".join(f"{h:.3f}" for h in hist))
             induced = smp.calibrate_amplitude(pf_c, mean_c, len(calib), rng_v)
             described[name] = smp.describe()
             draws = np.stack([smp.profiles(pf_s, len(score), rng_v) for _ in range(n_real)])
@@ -246,7 +289,7 @@ def main(smoke=False, fast=False):
     if smoke:
         print("\n  (smoke: nothing saved)")
         return
-    np.savez(OUT, variants=np.array([v[0] for v in VARIANTS]), n_real=n_real, seed=SEED,
+    np.savez(out_path, variants=np.array([v[0] for v in variants]), n_real=n_real, seed=SEED,
              **{f"gate_ms_{name}_keys": np.array([f"{k}|{j}" for (k, j) in merged[name]["gate_ms"]]) for name in merged},
              **{f"gate_ms_{name}_vals": np.array([[v["offset"], v["width_ratio"], v["width_sd"]] for v in merged[name]["gate_ms"].values()]) for name in merged},
              **{f"gate_mh_{name}_vals": np.array([[v["offset"], v["width_ratio"], v["width_sd"]] for v in merged[name]["gate_mh"].values()]) for name in merged},
@@ -255,7 +298,7 @@ def main(smoke=False, fast=False):
                                              *summary[name]["s5_ratio"], *[summary[name]["persistence"][k] for k in LC.SIZE_KEYS],
                                              *summary[name]["s1"]]) for name in merged},
              described=np.array([f"{k}: {v}" for k, v in described.items()]))
-    print(f"  saved -> {OUT.relative_to(P.ROOT)}")
+    print(f"  saved -> {out_path.relative_to(P.ROOT)}")
 
 
 def _expand(v, idx, n_total):
@@ -266,4 +309,6 @@ def _expand(v, idx, n_total):
 
 
 if __name__ == "__main__":
-    main(smoke="--smoke" in sys.argv[1:], fast="--fast" in sys.argv[1:])
+    a = sys.argv[1:]
+    main(smoke="--smoke" in a, fast="--fast" in a,
+         only=a[a.index("--variants") + 1].split(",") if "--variants" in a else None)
