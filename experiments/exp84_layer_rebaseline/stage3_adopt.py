@@ -47,6 +47,7 @@ def draw_cogs(pred, layer, rows, rng, n_draw=1):
     out = []
     for _ in range(n_draw):
         v = (rng.standard_normal((n, 10)) @ L.T) * sigma[None, :] * scale
+        v = v * np.repeat(np.asarray(layer["scale_axis"], float), 5)[None, :] + np.asarray(layer["offsets"], float)[None, :]
         dev = {"c": S2._expand(v[:, :5], rows, pred.n), "e": S2._expand(v[:, 5:], rows, pred.n)}
         m = pred.predict(size_dev=dev, rows=rows)
         eps = (rng.standard_normal((n, 5)) @ L_amp.T) * layer["sig_add"][None, :]
@@ -74,12 +75,17 @@ def main(variant="gauss", scale=None, tables_only=False):
         smp.scale = float(scale)
     elif kw["scale"] is None:
         S2.calibrate_scale(smp, pf, d, R, n, rng)
+    if kw.get("two_scales"):
+        S2.calibrate_two_scales(smp, pf, d, R, n, rng)
+    if kw.get("centred"):
+        smp.calibrate_offsets(pf, mean, n, rng)
     induced = smp.calibrate_amplitude(pf, mean, n, rng)
     print(f"  {smp.describe()}")
     print(f"  amplitude: induced by the size draws " + " ".join(f"{v:.3f}" for v in induced)
           + "; sig_add " + " ".join(f"{v:.3f}" for v in smp.sig_add) + "; target " + " ".join(f"{v:.3f}" for v in smp.amp_sigma))
     if not tables_only:
-        np.savez(OUT, variant=variant, form=kw["form"], corr_kind=kw["corr"], scale=smp.scale, sigma=smp.sigma,
+        np.savez(OUT, variant=variant, form=kw["form"], corr_kind=kw["corr"], scale=smp.scale, scale_axis=smp.scale_axis,
+                 offsets=smp.offsets, sigma=smp.sigma,
                  corr=smp.corr, corr_fitted=smp.corr_fitted, anatomy_medians=smp.medians, sig_add=smp.sig_add,
                  amp_sigma=smp.amp_sigma, amp_corr=smp.amp_corr, rows=rows, seed=SEED,
                  mean_file=str(pred.adopted["file"].name), theta_full=pred.adopted["theta_full"],
@@ -87,7 +93,8 @@ def main(variant="gauss", scale=None, tables_only=False):
         print(f"  frozen -> {OUT.relative_to(P.ROOT)}")
         layer = load_layer()
     else:
-        layer = dict(sigma=smp.sigma, corr=smp.corr, scale=smp.scale, amp_corr=smp.amp_corr, sig_add=smp.sig_add)
+        layer = dict(sigma=smp.sigma, corr=smp.corr, scale=smp.scale, scale_axis=smp.scale_axis, offsets=smp.offsets,
+                     amp_corr=smp.amp_corr, sig_add=smp.sig_add)
 
     draws = draw_cogs(pred, layer, rows, np.random.default_rng(SEED + 1), n_draw=N_DRAW)
     print(f"\n  the standard battery on the MEAN with {N_DRAW} drawn populations overlaid -> {FIGDIR.relative_to(P.ROOT)}/qa_*_exp84_v2_layer.*")

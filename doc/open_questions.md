@@ -798,3 +798,18 @@ opposite signs at z = 0.4 and z = 2 (+0.33 / −0.14 at 103 kpc), so a
 single-sign efficiency term is priced out by the shared objective. (a) and
 (c) stay open and are one question: a mechanism that moves mass outward in
 early-formed galaxies between z = 2 and z = 0.4.
+
+## C27 (exp84, 2026-09-22): the layer's median-profile shift (S3 at 0.012 / 0.031 dex against 0.010)
+
+A median-zero deviation of the extended deposit size moves the drawn
+population's median CoG (the profile's response to a larger and a smaller
+deposit is not symmetric), by 0.012 dex at z ≤ 1 and 0.031 dex at z = 2
+where the drawn width is 0.29 dex. Centring at two radii with offsets makes
+it worse elsewhere (the shift is radius-structured). Candidate levers, not
+tried: a draw symmetric in the PROFILE (a skewed log-size distribution), or
+a narrower extended width at z ≥ 1.5 with R80's width re-read. Also open:
+R20 and R50 at z ≤ 1 over-dispersed by 20 per cent at fixed stellar mass
+with the compact draw already off — the extended draw and the amplitude
+alone over-disperse the inner sizes at low redshift; and the compact axis
+itself: the anatomy wants +0.14 dex larger compact deposits at z = 0.4 in
+the median (a mean-model residual the layer does not apply).

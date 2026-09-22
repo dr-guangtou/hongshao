@@ -3292,17 +3292,37 @@ Plan `doc/plans/2026-09-22-exp84-layer-rebaseline.md` (approved by the user
 galaxy and per epoch with a fitted cross-epoch correlation; X3 dropped;
 decline targets reported, not gated.
 
-- [ ] `size_law.predict_law(..., size_dev=)` — per-galaxy per-epoch
+- [x] `size_law.predict_law(..., size_dev=)` — per-galaxy per-epoch
       deviations of log s_c / log s_e; nests at None; selfcheck extended.
-- [ ] `predictor.py` — the measured history + `adopted_mean()`; smoke
+- [x] `predictor.py` — the measured history + `adopted_mean()`; smoke
       MEASURES one call's wall time and peak RSS (FIT / FULL nodes, with and
       without a deviation) before any batch.
-- [ ] Stage 0 — targets frozen on the adopted mean (S5, S3 reference, the
+- [x] Stage 0 — targets frozen on the adopted mean (S5, S3 reference, the
       truth's size persistence, S1 for the record, the mean's 2d/2e null row).
-- [ ] Stage 1 — the anatomy: per-galaxy-per-epoch δ_c, δ_e (1-D sweeps,
+- [x] Stage 1 — the anatomy: per-galaxy-per-epoch δ_c, δ_e (1-D sweeps,
       7×7 joint), the other twelve as control, correlations, edge fractions.
-- [ ] `qa.evaluate_draws` — tier 2d/2e on drawn populations, demo checks.
-- [ ] Stage 2 — compose and judge held out, both swaps, 8 realizations;
-      variants a–d; the v1 row from exp73's saved numbers.
-- [ ] Stage 3 — package `hongshao_v2_layer.npz`, battery figures, README.
-- [ ] Verdict, lessons, handover; adoption is the user's call.
+- [x] `qa.evaluate_draws` — tier 2d/2e on drawn populations, demo checks.
+- [x] Stage 2 round 1 — held out, both swaps, 8 realizations; variants
+      a–d; the v1 row from exp73's record: widths 0/15 → 9/15, R80 5/5,
+      persistence reproduced by the fitted correlation; R20 over 1.4×, S3
+      0.03–0.04 (Jensen).
+- [x] Stage 2 round 2 — the two-scale (c on R20, e on R80) and
+      profile-centred variants: the compact draw calibrates to ZERO; the
+      two-scale layer (= amplitude + extended size) passes offsets 15/15 and
+      widths 12/15 (M*) / 15/15 (Mh), S5 exact, persistence matched, S3
+      0.012 / 0.031; centring harmful (S3 0.078, offsets 9/15).
+- [x] Stage 3 — `hongshao_v2_layer.npz` (gauss-2scale, full-sample
+      calibration), battery figures `figures/qa/*exp84_v2_layer*`, README.
+- [x] Verdict, lessons (5), open question C27, handover.
+- [ ] **Decision owed (the user)**: adopt `gauss-2scale` as the v2 layer;
+      merge `exp84-layer-rebaseline`.
+
+### Review
+The rebuild took one session, not the half-day the roadmap allowed —
+because one predict call is two seconds and the anatomy trick made every
+per-galaxy-epoch refit a shared sweep. The result that mattered was not in
+the plan: the compact-size draw calibrates to nothing, and the outer
+component the exp73 verdict asked for carries the whole gain. The two
+things that went wrong were both caught by reading the tables (an inflated
+anatomy width; a centring that helped at two radii and hurt at twenty) and
+one by reading a launch line (a packaging script that predated its variant).
