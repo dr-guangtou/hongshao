@@ -802,8 +802,8 @@ def print_draw_gate(rows, anchor_z, label, fractions=(0.2, 0.5, 0.8)):
 def print_draw_cdfs(rows, anchor_z, cdf_keys=CDF_KEYS):
     """Tier 2e with several sources: KS / floor per quantity and epoch, the
     mean (a ``cdfs`` dict from ``evaluate``) and layers (``evaluate_draws``)."""
-    print(f"  tier 2e — KS over the truth's split-half floor (1 = indistinguishable from a resample; "
-          f"W1 ratio in brackets)")
+    print("  tier 2e — KS over the truth's split-half floor (1 = indistinguishable from a resample; "
+          "W1 ratio in brackets)")
     print(f"  {'quantity':<14}{'source':<14}" + "".join(f"{f'z={z}':>16}" for z in anchor_z))
     for q in cdf_keys:
         for name, cd in rows:
