@@ -76,7 +76,8 @@ def parabola(xl, xc, xr, yl, yc, yr):
     shift = np.where(convex, 0.5 * (yl - yr) / safe * (xr - xl) / 2, 0.0)
     shift = np.clip(shift, xl - xc, xr - xc)
     y_par = np.where(convex, yc - (yr - yl) ** 2 / (8.0 * safe), yc)
-    return xc + shift, np.minimum(y_par, yc)
+    # the loss is non-negative; a parabola through three grid points can dip below zero
+    return xc + shift, np.clip(np.minimum(y_par, yc), 0.0, None)
 
 
 def _smallest_sufficient(flat_grid_abs, ys_flat, l0):
