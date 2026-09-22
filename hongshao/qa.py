@@ -709,6 +709,112 @@ def evaluate(model_cogs, data_cogs, R, anchor_z, name="model", figdir=None,
                 size_gate_ms=gate_ms, size_gate_mh=gate_mh, cdfs=cdfs)
 
 
+def evaluate_draws(draws, data_cogs, R, anchor_z, halo_mass_epochs=None,
+                   cdf_keys=CDF_KEYS, fractions=(0.2, 0.5, 0.8)):
+    """Tiers 2d and 2e scored on DRAWN populations (exp84; open question C16
+    closed as a procedure): the stochastic layer's realizations go through
+    ``evaluate`` exactly as a mean does, and the per-cell numbers are then
+    averaged over the draws with their scatter across draws.
+
+    ``draws``: (S, n, nz, nr) CoG populations, one per realization, aligned
+    with ``data_cogs``; a draw's non-finite rows are dropped for that draw
+    (the count is returned). Returns dict(gate_ms, gate_mh, cdfs, n_draw,
+    n_finite): each gate is {(key, j): dict(offset, offset_sd, width_ratio,
+    width_sd, pass_offset, pass_width)} plus the pass counts
+    ``counts_ms`` / ``counts_mh`` = (n_offset_pass, n_width_pass, n_cells)
+    read from the DRAW-AVERAGED cell, and ``cdfs`` {(quantity, j): dict(
+    ks_ratio, ks_sd, w1_ratio, w1_sd)}. A width sub-gate scored here is a
+    verdict on the layer; on a mean it is only the expected reading.
+    """
+    draws = np.asarray(draws, float)
+    data_cogs = np.asarray(data_cogs, float)
+    per, n_finite = [], []
+    for d in draws:
+        ok = np.isfinite(d).all(axis=(1, 2)) & (d > 0).all(axis=(1, 2))
+        n_finite.append(int(ok.sum()))
+        hm = None if halo_mass_epochs is None else np.asarray(halo_mass_epochs, float)[ok]
+        per.append(evaluate(d[ok], data_cogs[ok], R, anchor_z, figdir=None,
+                            figures=False, verbose=False,
+                            bin_by=None if hm is None else hm[:, 0],
+                            halo_mass_epochs=hm))
+
+    def _gate(which):
+        cells = list(per[0][which][0])
+        out, n_off, n_wid = {}, 0, 0
+        for c in cells:
+            oo = np.array([p[which][0][c]["offset"] for p in per])
+            ww = np.array([p[which][0][c]["width_ratio"] for p in per])
+            o, w = float(np.nanmean(oo)), float(np.nanmean(ww))
+            po = bool(np.isfinite(o) and abs(o) <= SIZE_GATE_OFFSET)
+            pw = bool(np.isfinite(w) and abs(w - 1.0) <= SIZE_GATE_WIDTH)
+            n_off += po
+            n_wid += pw
+            out[c] = dict(offset=o, offset_sd=float(np.nanstd(oo)), width_ratio=w,
+                          width_sd=float(np.nanstd(ww)), pass_offset=po, pass_width=pw)
+        return out, (n_off, n_wid, len(cells))
+
+    gate_ms, counts_ms = _gate("size_gate_ms")
+    gate_mh, counts_mh = (_gate("size_gate_mh") if halo_mass_epochs is not None
+                          else ({}, (0, 0, 0)))
+    cdfs = {}
+    for c in per[0]["cdfs"]:
+        if c[0] not in cdf_keys:
+            continue
+        kk = np.array([p["cdfs"][c]["ks_ratio"] for p in per])
+        w1 = np.array([p["cdfs"][c]["w1_ratio"] for p in per])
+        cdfs[c] = dict(ks_ratio=float(np.nanmean(kk)), ks_sd=float(np.nanstd(kk)),
+                       w1_ratio=float(np.nanmean(w1)), w1_sd=float(np.nanstd(w1)))
+    return dict(gate_ms=gate_ms, gate_mh=gate_mh, counts_ms=counts_ms,
+                counts_mh=counts_mh, cdfs=cdfs, n_draw=len(draws),
+                n_finite=np.array(n_finite))
+
+
+def print_draw_gate(rows, anchor_z, label, fractions=(0.2, 0.5, 0.8)):
+    """One tier 2d table with several SOURCES per size key: ``rows`` is a list
+    of (name, gate) where ``gate`` is ``evaluate``'s ``size_gate_*[0]`` for a
+    mean (no scatter) or ``evaluate_draws``'s ``gate_*`` for a layer."""
+    print(f"  tier 2d at fixed {label}: offset = median dlog R (pass |.| <= {SIZE_GATE_OFFSET}); "
+          f"width = model scatter at fixed mass / truth's (pass within {int(100 * SIZE_GATE_WIDTH)}%)")
+    print(f"  {'size':<5}{'source':<14}" + "".join(f"{f'z={z}':>20}" for z in anchor_z)
+          + f"{'OFFSET':>9}{'WIDTH':>7}")
+    for frac in fractions:
+        key = f"R{int(round(100 * frac))}"
+        for name, gate in rows:
+            cells, po, pw, n = [], 0, 0, 0
+            for j in range(len(anchor_z)):
+                v = gate.get((key, j))
+                if v is None:
+                    cells.append(f"{'--':>20}")
+                    continue
+                n += 1
+                a = bool(np.isfinite(v["offset"]) and abs(v["offset"]) <= SIZE_GATE_OFFSET)
+                b = bool(np.isfinite(v["width_ratio"]) and abs(v["width_ratio"] - 1.0) <= SIZE_GATE_WIDTH)
+                po += a
+                pw += b
+                tag = "ok" if (a and b) else ("OFF" if not a else "WID")
+                sd = v.get("width_sd")
+                cell = (f"{v['offset']:+.3f} {v['width_ratio']:.2f} {tag:<3}" if sd is None
+                        else f"{v['offset']:+.3f} {v['width_ratio']:.2f}±{sd:.2f} {tag:<3}")
+                cells.append(cell.rjust(20))
+            print(f"  {key:<5}{name:<14}" + "".join(cells) + f"{po:>7}/{n}{pw:>5}/{n}")
+
+
+def print_draw_cdfs(rows, anchor_z, cdf_keys=CDF_KEYS):
+    """Tier 2e with several sources: KS / floor per quantity and epoch, the
+    mean (a ``cdfs`` dict from ``evaluate``) and layers (``evaluate_draws``)."""
+    print(f"  tier 2e — KS over the truth's split-half floor (1 = indistinguishable from a resample; "
+          f"W1 ratio in brackets)")
+    print(f"  {'quantity':<14}{'source':<14}" + "".join(f"{f'z={z}':>16}" for z in anchor_z))
+    for q in cdf_keys:
+        for name, cd in rows:
+            cells = []
+            for j in range(len(anchor_z)):
+                v = cd.get((q, j))
+                cells.append("--".rjust(16) if v is None
+                             else f"{v['ks_ratio']:6.1f} [{v['w1_ratio']:5.1f}]".rjust(16))
+            print(f"  {q:<14}{name:<14}" + "".join(cells))
+
+
 def _cdf_figure(truth, model, anchor_z, name, figdir):
     """Tier 2e visual: the population CDF of each mass, truth vs model, with
     a residual strip. The residual is what the KS statistic maximizes, so
@@ -1480,6 +1586,39 @@ def demo():
     assert np.allclose(mr_rmin, 0.1, atol=1e-9)
     # tier 2e must be present in the standard report
     assert "cdfs" in res2 and (CDF_KEYS[0], 0) in res2["cdfs"]
+
+    # --- the layer's draws through the same code path (exp84) ---------------
+    n3, nz3 = 400, 3
+    sig3 = rng.uniform(5.0, 40.0, (n3, nz3, 1))
+    amp3 = 10.0 ** rng.uniform(10.5, 11.5, (n3, 1, 1)) * np.ones((1, nz3, 1))
+    truth3 = amp3 * (1.0 - np.exp(-R[None, None, :] ** 2 / (2.0 * sig3 ** 2)))
+    hm3 = np.log10(amp3[:, 0, 0])[:, None] + 2.0 + 0.1 * rng.standard_normal((n3, nz3))
+    # identity draws: every cell at the floor, no scatter across draws, every sub-gate passes
+    ev_id = evaluate_draws(np.stack([truth3, truth3]), truth3, R, [0.4, 1.0, 2.0], halo_mass_epochs=hm3)
+    assert ev_id["counts_ms"] == (3 * nz3, 3 * nz3, 3 * nz3), ev_id["counts_ms"]
+    assert ev_id["counts_mh"] == (3 * nz3, 3 * nz3, 3 * nz3), ev_id["counts_mh"]
+    assert all(v["width_sd"] < 1e-12 and abs(v["offset"]) < 1e-12 for v in ev_id["gate_ms"].values())
+    assert all(v["ks_ratio"] < 1.5 for v in ev_id["cdfs"].values()), ev_id["cdfs"]
+    # a draw that hands the truth's own profiles to SHUFFLED galaxies: tier 2e
+    # and the width sub-gate at fixed STELLAR mass pass (pairing-blind, the
+    # documented caveat — the size at fixed M* is the truth's own plane), while
+    # at fixed HALO mass the offset stays and the width can change (the
+    # halo-size pairing is broken): this is why both conditionings are scored
+    perm_draws = np.stack([truth3[rng.permutation(n3)] for _ in range(3)])
+    ev_pm = evaluate_draws(perm_draws, truth3, R, [0.4, 1.0, 2.0], halo_mass_epochs=hm3)
+    assert ev_pm["counts_ms"][0] == 3 * nz3 and ev_pm["counts_ms"][1] == 3 * nz3, ev_pm["counts_ms"]
+    # ... on the kpc quantities only: the Re-relative ones measure the draw
+    # inside the TRUTH galaxy's Re (``measure_all``'s convention), a paired
+    # quantity, so a permutation is rightly not a resample there
+    assert all(v["ks_ratio"] < 1.5 for c, v in ev_pm["cdfs"].items() if c[0].startswith("kpc:")), ev_pm["cdfs"]
+    assert all(v["ks_ratio"] > 1.5 for c, v in ev_pm["cdfs"].items() if c[0].startswith("Re:")), ev_pm["cdfs"]
+    # a too-TIGHT layer (every size pulled 60% toward the median) keeps the
+    # offsets and fails the width sub-gate in every cell
+    med_sig = np.median(sig3)
+    tight3 = amp3 * (1.0 - np.exp(-R[None, None, :] ** 2 / (2.0 * (med_sig + 0.4 * (sig3 - med_sig)) ** 2)))
+    ev_tt = evaluate_draws(np.stack([tight3, tight3]), truth3, R, [0.4, 1.0, 2.0], halo_mass_epochs=hm3)
+    assert ev_tt["counts_ms"][1] == 0, ev_tt["counts_ms"]
+    assert all(v["width_ratio"] < 0.8 for v in ev_tt["gate_ms"].values())
 
     print("qa.demo OK: identity exact, +10% scaling -> +10% bias everywhere, "
           "0 dex scatter, 10% max|rel| (all-R and R>5); energy distance: 0 on "
