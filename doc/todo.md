@@ -3275,9 +3275,9 @@ residual deposited?" — before 2 Gyr, where any variable defined relative to
 - [x] Verdict: the z = 0.4 early-mass correlation +0.33 → +0.26 (103 kpc),
   +0.37 → +0.33 (5 kpc), not halved; every gate within resolution of the
   adopted mean. **NOT recommended for adoption**; the adopted mean stands.
-- [ ] **Decision (user)**: confirm non-adoption and merge
-  `exp83-early-mass-centre` (engine knobs nest at zero); next is exp84 (S4,
-  the layer) and, separately, the centre's mechanism (open question).
+- [x] **Decision (the user, 2026-09-22)**: non-adoption confirmed; S3 closed;
+  `exp83-early-mass-centre` merged to master. Next is exp84 (S4, the layer
+  on the adopted mean) and, separately, the centre's mechanism (open question).
 
 #### Review
 The fit confirmed what the frozen probe predicted, at a cost of two hours
