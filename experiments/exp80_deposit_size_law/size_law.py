@@ -262,8 +262,20 @@ def deposits_law(spec2, theta, law, curves, lt, epochs=(0, 1, 2, 3, 4)):
     return dmstar * wc, dmstar * (1.0 - wc), s_c, s_e, r_tr
 
 
-def predict_law(spec2, theta, law, curves, R, epochs=(0, 1, 2, 3, 4), nodes=M2.FULL_NODES, block=300):
-    """M*(<R) [Msun] at the requested epochs under the size law: (n, len(epochs), len(R))."""
+def predict_law(spec2, theta, law, curves, R, epochs=(0, 1, 2, 3, 4), nodes=M2.FULL_NODES, block=300,
+                size_dev=None):
+    """M*(<R) [Msun] at the requested epochs under the size law: (n, len(epochs), len(R)).
+
+    `size_dev` (exp84, the stochastic layer): per-galaxy, PER-EPOCH deviations
+    of the two deposit sizes, `dict(c=(n, 5), e=(n, 5))` in dex, indexed by
+    the epoch number (columns 0..4 = z 0.4 .. 2). At the observed epoch k
+    every compact deposit's size is multiplied by 10^dev_c[:, k] and every
+    extended deposit's by 10^dev_e[:, k]; the sizes are re-capped at the
+    truncation limit. The deviation acts at the EVALUATION of an epoch, not on
+    the deposits' history, so a galaxy may be drawn compact at one epoch and
+    extended at another (the layer's cross-epoch correlation is the draw's).
+    `None` (or an all-zero array) reproduces the mean bit for bit.
+    """
     p = spec2.unpack(theta)
     R = np.asarray(R, float)
     lt, w, include, _ = E.nodes(**nodes)
@@ -274,20 +286,63 @@ def predict_law(spec2, theta, law, curves, R, epochs=(0, 1, 2, 3, 4), nodes=M2.F
         dm_c, dm_e, s_c, s_e, r_tr = deposits_law(spec2, theta, law, cv, lt, epochs)
         n, N = dm_c.shape
         r_tr_c = spec2.trunc_C * np.array([E.r200c_of(hc, lt, "analytic") for hc in cv])
-        Bc = M.cog_truncated(M2.COMPACT_FAMILY, (p["n_c"],), s_c.ravel(), r_tr_c.ravel(), R).reshape(len(R), n, N)
+        dev_c = dev_e = None
+        if size_dev is not None:
+            dev_c = np.asarray(size_dev["c"], float)[lo:lo + n]
+            dev_e = np.asarray(size_dev["e"], float)[lo:lo + n]
+            assert dev_c.shape == dev_e.shape == (n, 5), (dev_c.shape, dev_e.shape, n)
+        Bc_shared = None
+        if dev_c is None:
+            Bc_shared = M.cog_truncated(M2.COMPACT_FAMILY, (p["n_c"],), s_c.ravel(), r_tr_c.ravel(), R).reshape(len(R), n, N)
         wc_ = dm_c * w[None, :]; we_ = dm_e * w[None, :]
         inc_e = arrival_weights(spec2, p, law, lt, include)
         Be_shared = None
         for j, k in enumerate(epochs):
-            if Be_shared is None or epoch_dependent(law):
-                Be = M.cog_truncated(spec2.extended_family, (p["c_e"],), s_e[k].ravel(), r_tr[k].ravel(), R).reshape(len(R), n, N)
-                if not epoch_dependent(law):
+            if Bc_shared is not None:
+                Bc = Bc_shared
+            else:
+                # the cap never goes below the mean's own size (the baseline does not
+                # cap the compact channel), so a zero deviation nests bit for bit
+                s_c_k = np.minimum(s_c * 10.0 ** dev_c[:, k][:, None], np.maximum(s_c, CAP_OF_TRUNCATION * r_tr_c))
+                Bc = M.cog_truncated(M2.COMPACT_FAMILY, (p["n_c"],), s_c_k.ravel(), r_tr_c.ravel(), R).reshape(len(R), n, N)
+            if Be_shared is None or epoch_dependent(law) or dev_e is not None:
+                s_e_k = s_e[k]
+                if dev_e is not None:
+                    s_e_k = np.minimum(s_e_k * 10.0 ** dev_e[:, k][:, None], np.maximum(s_e_k, CAP_OF_TRUNCATION * r_tr[k]))
+                Be = M.cog_truncated(spec2.extended_family, (p["c_e"],), s_e_k.ravel(), r_tr[k].ravel(), R).reshape(len(R), n, N)
+                if not epoch_dependent(law) and dev_e is None:
                     Be_shared = Be
             else:
                 Be = Be_shared
             out[lo:lo + n, j] = (np.einsum("rgn,gn->gr", Bc, wc_ * include[k][None, :])
                                  + np.einsum("rgn,gn->gr", Be, we_ * inc_e[k][None, :]))
     return out
+
+
+def selfcheck_size_dev(spec2, theta, law, curves, R):
+    """exp84: a zero deviation reproduces the mean bit for bit; a deviation of
+    one axis at one epoch moves that epoch only, in the expected direction
+    (a larger compact size lowers the mass inside 5 kpc; a larger extended
+    size lowers the mass inside 30 kpc), and leaves the total at the grid's
+    end nearly unchanged (mass is conserved, only the truncation cap moves it)."""
+    n = len(curves)
+    ref = predict_law(spec2, theta, law, curves, R)
+    zero = dict(c=np.zeros((n, 5)), e=np.zeros((n, 5)))
+    assert np.array_equal(predict_law(spec2, theta, law, curves, R, size_dev=zero), ref), "a zero size_dev does not nest"
+    i5, i30 = int(np.argmin(np.abs(R - 4.92))), int(np.argmin(np.abs(R - 30.0)))
+    for axis, idx, label in (("c", i5, "M(<5 kpc)"), ("e", i30, "M(<30 kpc)")):
+        for k in (0, 4):
+            dev = dict(c=np.zeros((n, 5)), e=np.zeros((n, 5)))
+            dev[axis][:, k] = 0.3
+            got = predict_law(spec2, theta, law, curves, R, size_dev=dev)
+            other = [j for j in range(5) if j != k]
+            assert np.array_equal(got[:, other], ref[:, other]), (axis, k, "another epoch moved")
+            moved = np.median(np.log10(got[:, k, idx] / ref[:, k, idx]))
+            assert moved < -1e-3, (axis, k, moved)
+            end = float(np.max(np.abs(np.log10(got[:, k, -1] / ref[:, k, -1]))))
+            print(f"    size_dev {axis} +0.3 dex at epoch {k}: {label} moves {moved:+.3f} dex (median); "
+                  f"the grid-end total by at most {end:.3f} dex; the other epochs untouched")
+    print("  size_law selfcheck_size_dev OK: a zero deviation nests bit for bit")
 
 
 def selfcheck(spec2, theta, curves, R):
@@ -319,3 +374,7 @@ if __name__ == "__main__":
     curves = E.build_curves(recs, verbose=False)
     set_early_ref(curves)
     selfcheck(spec2, th, curves, F.R_GRID)
+    spec_d = M2.Spec2(theta_names=M2.THETA_NAMES_DELAY, extended_family=spec2.extended_family,
+                      compact_in_kpc=spec2.compact_in_kpc)
+    th_d = np.append(th, 0.15)                              # the adopted mean's structure: tau_d held, q_e on
+    selfcheck_size_dev(spec_d, th_d, with_law(q_e=0.15), curves, F.R_GRID)
