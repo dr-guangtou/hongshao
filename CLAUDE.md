@@ -80,7 +80,8 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   (Claude; the deposit size law, branch `exp80-deposit-size-law`,
   2026-09-09/10), exp81 (Claude; the evidence-based rethink, 2026-09-12),
   exp82 (Claude; the delay + expansion exponent, branch
-  `exp82-delay-expansion`). exp83 is the next free id; check before creating.
+  `exp82-delay-expansion`), exp83 (Claude; the early-mass term, closed and
+  not adopted 2026-09-22). exp84 is the next free id; check before creating.
 - `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
   and conflict when both agents append; resolve by keeping both sides.
 
