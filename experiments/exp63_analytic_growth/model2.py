@@ -218,15 +218,20 @@ def clip_to_bounds(spec2, theta):
     return np.clip(np.asarray(theta, float), lo, hi)
 
 
-def compact_share(theta_dict, logmh, alpha=None, lt_nodes=None):
+def compact_share(theta_dict, logmh, alpha=None, lt_nodes=None, logit_extra=None):
     """The compact share of a deposit; `alpha` = dlnM/dlnt at the deposit,
-    used only when the spec carries `g_split`. `w_min` (a lever) floors it."""
+    used only when the spec carries `g_split`. `w_min` (a lever) floors it.
+    `logit_extra` (exp83): an additive term on the logit of the share, in
+    logit units, from a size-law knob; None or zero leaves the share exactly."""
     x = theta_dict["m_half"] - np.asarray(logmh, float)
     if "g_split" in theta_dict and alpha is not None:
         x = x + theta_dict["g_split"] * (np.asarray(alpha, float) - 1.0)
     if "g_rel" in theta_dict and alpha is not None:
         x = x + theta_dict["g_rel"] * (np.asarray(alpha, float) - alpha_ref(lt_nodes))
-    w = expit(x / theta_dict["d_split"])
+    logit = x / theta_dict["d_split"]
+    if logit_extra is not None:
+        logit = logit + logit_extra
+    w = expit(logit)
     w_min = theta_dict.get("w_min", 0.0)
     return w_min + (1.0 - w_min) * w
 

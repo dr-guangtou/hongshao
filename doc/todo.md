@@ -3234,3 +3234,53 @@ delay of 0.20 in the wide-split family) from the gates' (0.15 in the
 baseline's structure) and chose by the gates. Two ops lessons cost real
 time: twelve fits at once froze the machine (measure one run's peak first),
 and nohup jobs die with the Claude Code process (own-session launcher).
+
+## 2026-09-13 — exp83, the early-mass conditioning of the centre (S3; `exp83-early-mass-centre`)
+
+- [x] Stage 0: exp81's residual check on the adopted file (identical to
+  exp82's); the residual's form against x = log M(2 Gyr) − log Mh at fixed
+  Mh (linear; early-formed = the decliners; TWO components at z = 0.4: a
+  mass part +0.114 dex/dex and a concentration part +0.059 on top).
+- [x] The term: phi(t') = min(log M(2 Gyr) − log M(t'), 0) relative to the
+  population median at t' (`size_law.set_early_ref`), three placements
+  nesting at zero (efficiency `a_early`, compact share `s_early`, compact
+  size `c_early`); the frozen probe on 13 points.
+- [x] Verdict: a_early ≈ −0.28 removes the 103 kpc (mass) half exactly and
+  improves the leak gate; NOTHING reaches the 5 kpc half (+0.37 → +0.26 at
+  best): the concentration part lives in the pre-2-Gyr deposits where the
+  variable is zero by construction. Gate failed at every point; **Stage 1
+  not run** (the rule: fit only on a passing probe).
+- [ ] **Decision (user)**: (a) fit the mass half anyway (`queue.sh 2 -0.28`,
+  15 parameters, 14 fitted, judged by name against the adopted mean and the
+  baseline), or (b) close S3 as specified and open the centre's mechanism
+  (an expansion of the pre-2-Gyr compact deposits) as its own experiment;
+  merge `exp83-early-mass-centre` (engine knobs + probe) either way.
+
+### Review
+The probe did its job in an afternoon: the z = 0.4 early-mass residual is
+two things, and the one-parameter term the roadmap named can only fix one
+of them. The reading that mattered was "where were the stars that carry the
+residual deposited?" — before 2 Gyr, where any variable defined relative to
+2 Gyr is identically zero. Two lessons recorded.
+
+### exp83 Stage 1 (2026-09-21/22, the user's decision: fit the mass half anyway)
+
+- [x] Smoke fit first (caught a KeyError in the legacy start list for a
+  knob Stage 0 C never tuned; fixed, `ac1d29b`).
+- [x] Three starts from the adopted mean (a_early −0.28 / 0 / −0.56), two at
+  a time, own sessions: one basin, a_early → −0.06 to −0.08, loss 12.70 →
+  12.65 at the full nodes. The parameter moves from both sides.
+- [x] Judged by name (`adopted_far`) against the adopted mean and the
+  previous baseline, full battery + figures; residual checks on two starts.
+- [x] Verdict: the z = 0.4 early-mass correlation +0.33 → +0.26 (103 kpc),
+  +0.37 → +0.33 (5 kpc), not halved; every gate within resolution of the
+  adopted mean. **NOT recommended for adoption**; the adopted mean stands.
+- [x] **Decision (the user, 2026-09-22)**: non-adoption confirmed; S3 closed;
+  `exp83-early-mass-centre` merged to master. Next is exp84 (S4, the layer
+  on the adopted mean) and, separately, the centre's mechanism (open question).
+
+#### Review
+The fit confirmed what the frozen probe predicted, at a cost of two hours
+of machine time: the probe's loss column (+0.08 at −0.15, +0.66 at −0.3)
+already said the optimiser would stop near −0.1. The smoke run before the
+queue paid for itself within a minute.

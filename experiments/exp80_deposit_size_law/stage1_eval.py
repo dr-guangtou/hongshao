@@ -112,6 +112,13 @@ def main(smoke=False, tables_only=False, also=(), knobs=S1.DEFAULT_KNOBS, best=N
         print(f"  JUDGED AS exp80: the start '{best}' (loss {float(fb['loss']):.4f}), not the loss's best '{str(f1['best_name'])}'")
     names = list(lp.names)
     models = {"baseline": th_base, "14.63 basin": th_basin, "exp80": th1}
+    if delay:
+        # exp83 and later: THE ADOPTED MEAN (exp82) judged next to the previous baseline; the knobs it does
+        # not carry are at their nesting value
+        ad = S1.RB.adopted_mean()
+        if list(names[:len(ad["names"])]) == ad["names"] and len(names) > len(ad["names"]):
+            models["adopted mean"] = np.r_[np.asarray(ad["theta_full"], float), np.zeros(len(names) - len(ad["names"]))]
+            print(f"  adopted mean: {ad['file'].name} (exp82; 14 parameters, 13 fitted), the new knob(s) {names[len(ad['names']):]} at 0")
     tn = [str(n) for n in f1["theta_names"]]
     print(f"  Stage 1: starts " + ", ".join(
         f"{n} {l:.4f} ({e} evals, " + ", ".join(f"{k} {float(t[tn.index(k)]):+.3f}" for k in knobs) + ")"

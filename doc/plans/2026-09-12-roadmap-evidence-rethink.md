@@ -343,3 +343,24 @@ the centre +0.5 / −6.2 / −6.9 per cent, the formation-time residual gone.**
 Recommended for adoption; the costs and the exponential-arrival comparison
 are in `experiments/exp82_delay_expansion/README.md`. Next: exp83 (S3, the
 early-mass residual at z = 0.4), exp84 (S4, the layer).
+
+## 7. exp83's result (2026-09-13)
+
+S3's frozen probe (`experiments/exp83_early_mass_centre/README.md`): the
+z = 0.4 early-mass residual of the adopted mean is two components. An
+efficiency falling with the relative fraction assembled by 2 Gyr
+(a_early ≈ −0.28) removes the mass component (103 kpc: +0.33 → 0) and
+improves the future-dependence gate; the concentration component (5 kpc at
+fixed total, +0.059 dex per dex) is out of reach of every placement of the
+2 Gyr variable because it lives in the pre-2-Gyr deposits. The gate (both
+radii halved) failed at every probe value; **no fit was run**. Decision
+owed: fit the mass half (+1 parameter) or open the compact channel's
+expansion as the centre's mechanism (a model change). S4 (exp84, the layer)
+is unaffected and can proceed on the adopted mean.
+
+Update 2026-09-22: the mass half was fitted at the user's request (three
+starts, one basin): a_early −0.08, loss 12.70 → 12.65, the z = 0.4
+early-mass correlation +0.33 → +0.26 at 103 kpc and +0.37 → +0.33 at 5 kpc,
+every gate within resolution of the adopted mean. Not recommended for
+adoption; S3 as specified is closed; the adopted mean stands. S4 (exp84)
+next.
