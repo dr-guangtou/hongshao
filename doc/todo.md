@@ -3312,10 +3312,11 @@ decline targets reported, not gated.
       widths 12/15 (M*) / 15/15 (Mh), S5 exact, persistence matched, S3
       0.012 / 0.031; centring harmful (S3 0.078, offsets 9/15).
 - [x] Stage 3 — `hongshao_v2_layer.npz` (gauss-2scale, full-sample
-      calibration), battery figures `figures/qa/*exp84_v2_layer*`, README.
+      calibration), battery figures in the experiment's `figures/qa/`, README.
 - [x] Verdict, lessons (5), open question C27, handover.
-- [ ] **Decision owed (the user)**: adopt `gauss-2scale` as the v2 layer;
-      merge `exp84-layer-rebaseline`.
+- [x] **Decision (the user, 2026-09-23)**: `gauss-2scale` ADOPTED as the v2
+      layer (`rebaseline.adopted_layer()`); figures moved into the
+      experiment's own `figures/qa/` (a rule now in CLAUDE.md); merged.
 
 ### Review
 The rebuild took one session, not the half-day the roadmap allowed —

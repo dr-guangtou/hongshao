@@ -1,7 +1,7 @@
 """exp84 Stage 3 — package the layer (exp60 stage3d's role): the chosen variant
 calibrated on the FULL fitting sample, frozen to `outputs/hongshao_v2_layer.npz`,
 with `draw_cogs` as the entry point every later script uses, and the standard
-QA battery with the drawn populations overlaid (`figures/qa/*exp84_v2_layer*`).
+QA battery with the drawn populations overlaid (`experiments/exp84_layer_rebaseline/figures/qa/*exp84_v2_layer*`).
 
 Stage 2's held-out tables are the layer's validation record; the full-sample
 tables printed here are the shipped artifact's own numbers (in-sample for the
@@ -29,7 +29,7 @@ from hongshao import qa                                  # noqa: E402
 
 RULE = P.RULE
 OUT = P.OUTDIR / "hongshao_v2_layer.npz"
-FIGDIR = P.ROOT / "figures/qa"
+FIGDIR = HERE / "figures/qa"
 SEED, N_DRAW = 2084, 8
 
 
@@ -96,6 +96,7 @@ def main(variant="gauss", scale=None, tables_only=False):
         layer = dict(sigma=smp.sigma, corr=smp.corr, scale=smp.scale, scale_axis=smp.scale_axis, offsets=smp.offsets,
                      amp_corr=smp.amp_corr, sig_add=smp.sig_add)
 
+    FIGDIR.mkdir(parents=True, exist_ok=True)
     draws = draw_cogs(pred, layer, rows, np.random.default_rng(SEED + 1), n_draw=N_DRAW)
     print(f"\n  the standard battery on the MEAN with {N_DRAW} drawn populations overlaid -> {FIGDIR.relative_to(P.ROOT)}/qa_*_exp84_v2_layer.*")
     ev_mean = qa.evaluate(mean, d, R, list(P.ANCHOR_Z), name="exp84_v2_layer", figdir=str(FIGDIR),

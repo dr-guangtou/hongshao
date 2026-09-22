@@ -61,6 +61,26 @@ mass and the stellar-mass–halo-mass relation, not normalise to them.
   dex at z = 0.7 and z = 2, the z = 0.4 early-mass residual (exp83).
   **The gates decide, the loss does not.**
 
+- **THE STOCHASTIC LAYER (the user, 2026-09-23, after exp84)**: hongshao's
+  v2 layer is exp84's two-component layer — a cross-epoch-correlated total-mass
+  draw plus a per-galaxy, PER-EPOCH draw of the extended deposit size with the
+  anatomy's fitted cross-epoch correlation (the compact-size draw calibrated
+  to zero) — around `adopted_mean()`: `exp74/rebaseline.py::adopted_layer()`
+  (artifact `exp84/outputs/hongshao_v2_layer.npz`, draws through
+  `exp84/stage3_adopt.draw_cogs`, engine hook `size_law.predict_law(size_dev=)`).
+  Validated held out: widths 12/15 (M*) and 15/15 (Mh), offsets 15/15, S5
+  exact, persistence matched. Costs carried: the drawn median profile shifts
+  0.012 / 0.031 dex (C27); inner sizes at z <= 1 over-dispersed 1.2x; the
+  decline statistics unchanged. Score any layer with `qa.evaluate_draws` on
+  the DRAWS, both conditionings, offset and width separately. The v1 layer
+  (exp60) is superseded.
+
+## FIGURES (the user, 2026-09-23)
+
+**An experiment's figures go in its own `experiments/expNN_*/figures/qa/`,
+never in the repo-level `figures/qa/`** (which holds only the standard
+battery of the adopted models). Scripts set `FIGDIR = HERE / "figures/qa"`.
+
 ## WORKING RULES FOR TWO AGENTS (the user, 2026-09-09 — replaces every earlier integration note)
 
 - **Claude** uses the main `hongshao` directory, starting each new experiment

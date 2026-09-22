@@ -5,8 +5,13 @@ Branch `exp84-layer-rebaseline` (from master `17f2127`). Plan
 Everything below is committed scripts + gitignored outputs; every stage's
 numbers are in `outputs/stage*.log`.
 
-**Status: Stage 2 judged held out (two rounds); Stage 3 packaging ready;
-adoption is the user's call.**
+**Status: ADOPTED (the user, 2026-09-23) — the two-component layer
+(`gauss-2scale`: total mass + extended size; the compact-size draw
+calibrated to zero) is hongshao's v2 stochastic layer. Frozen artifact
+`outputs/hongshao_v2_layer.npz`; entry point `stage3_adopt.draw_cogs`;
+accessor `exp74/rebaseline.adopted_layer()`. Figures live in this
+experiment's `figures/qa/` (the three plain-language ones from `figures.py`
+and the standard battery from `stage3_adopt.py`).**
 
 ## What was built
 
@@ -147,13 +152,13 @@ on the full fitting sample, frozen to `outputs/hongshao_v2_layer.npz`
 (sigma per epoch and axis, the 10×10 correlation, the two scales, sig_add,
 the amplitude correlation, seeds; `draw_cogs(pred, layer, rows, rng)` is
 the entry point), and the standard battery with eight drawn populations
-overlaid in `figures/qa/qa_*_exp84_v2_layer.*`. Its full-sample tables are
+overlaid in `figures/qa/qa_*_exp84_v2_layer.*` (the experiment's own figures folder). Its full-sample tables are
 in-sample for the widths; Stage 2 round 2 is the validation record. The
 packaged scales are c 0.051, e 0.976; sig_add 0.106 / 0.105 / 0.104 /
 0.109 / 0.133 dex; full sample: offsets 15/15 at both conditionings,
 widths 13/15 (M*) and 15/15 (Mh), S3 0.011 / 0.030, S5 1.01 / 1.01 / 0.99 /
 0.99 / 0.98 with nearest-epoch 0.656 (target 0.660), S4 +0.002, persistence
-0.67 / 0.61 / 0.57, declining 34.0 per cent. `qa_planes_exp84_v2_layer`
+0.67 / 0.61 / 0.57, declining 34.0 per cent. `figures/qa/qa_planes_exp84_v2_layer`
 (truth filled, mean open, draw ×): the draws fill the truth's scatter in
 the kpc mass planes at z ≤ 1 (M(30)–M(50–100): 0.22 vs 0.20 at z = 0.4),
 stay under it at z ≥ 1.5 (0.23–0.28 vs 0.32–0.46 — the high-z outskirts
@@ -188,3 +193,6 @@ over-wide in the centre at z = 0.4 — the same reading as R20/R50's 1.20.
 Recommendation: adopt `gauss-2scale` as hongshao's v2 layer, with the
 compact axis reported as calibrated to zero (i.e. two components), and log
 the S3 residual as an open question with the two candidate levers above.
+
+**ADOPTED (the user, 2026-09-23)** as stated in the status line; C27 and
+the costs above are carried with it.

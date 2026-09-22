@@ -3074,3 +3074,14 @@ session should not rediscover them:
   at one. Caught by reading the launch, not by any error. When a new
   variant adds a calibration step, grep every consumer of the variant table
   for that step before running it.
+- **An experiment's figures belong to the experiment (the user, 2026-09-23).**
+  exp84's battery and its three plain-language figures were written to the
+  repo-level `figures/qa/`, which holds the standard battery of the ADOPTED
+  models; the user moved them to `experiments/exp84_layer_rebaseline/figures/qa/`
+  and made it a rule in CLAUDE.md. Set `FIGDIR = HERE / "figures/qa"` in
+  every experiment script; the repo-level folder is not a scratch space.
+- **Say the result in the user's words before your own.** The first exp84
+  summary was a wall of gate names (S3, S5, C27, tier 2d, gauss-2scale); the
+  user asked for the goal, what was tried, what works and what does not, in
+  plain language, with figures. Every verdict needs that version first — the
+  jargon is the index, not the message.

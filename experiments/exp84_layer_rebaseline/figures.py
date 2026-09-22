@@ -35,7 +35,7 @@ import predictor as P                                    # noqa: E402
 import stage3_adopt as S3                                # noqa: E402
 from hongshao import qa                                  # noqa: E402
 
-FIGDIR = P.ROOT / "figures/qa"
+FIGDIR = HERE / "figures/qa"                             # the experiment's own figures, never the repo-level figures/qa
 EPOCH_COLORS = qa._EPOCH_COLORS
 C_TRUTH, C_MEAN, C_LAYER, C_V1 = "#777777", "#0072B2", "#D55E00", "#999999"
 ROUND1 = P.OUTDIR / "stage2_judge.npz"
@@ -197,6 +197,7 @@ def examples_figure(d, mean, draws, R, lmh, rng):
 
 
 def main(summary_only=False):
+    FIGDIR.mkdir(parents=True, exist_ok=True)
     print("exp84 figures")
     width_summary_figure()
     print(f"  wrote {FIGDIR / 'exp84_width_summary.png'}")

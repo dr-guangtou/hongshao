@@ -364,3 +364,17 @@ early-mass correlation +0.33 → +0.26 at 103 kpc and +0.37 → +0.33 at 5 kpc,
 every gate within resolution of the adopted mean. Not recommended for
 adoption; S3 as specified is closed; the adopted mean stands. S4 (exp84)
 next.
+
+## 8. exp84's result (2026-09-22/23)
+
+S4 done and ADOPTED (the user, 2026-09-23): the layer rebuilt on the
+adopted mean with the measured history (`experiments/exp84_layer_rebaseline/README.md`).
+The compact-size draw calibrates to zero; the two-component layer (total
+mass + extended size, drawn per epoch with the anatomy's cross-epoch
+correlation) takes the width sub-gate from 1/15 to 12/15 at fixed stellar
+mass and from 0/15 to 15/15 at fixed halo mass held out, offsets 15/15,
+amplitude statistics exact, TNG's size persistence reproduced (the
+identity and persistent-trait controls miss it by 0.4 either way). Costs:
+the drawn median profile shifts 0.012 / 0.031 dex (C27), inner sizes at
+z ≤ 1 over-dispersed 1.2×, the decline statistics unchanged (33 vs 42 per
+cent). Next: the centre's mechanism (its own id), S6, and C27's levers.

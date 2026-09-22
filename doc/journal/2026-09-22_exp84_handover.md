@@ -30,7 +30,7 @@ approved by the user at the start of the session).
   persistent 0.95). S3 0.012 (z ≤ 1) / 0.031 (all) against 0.010; centring
   at two radii is harmful (0.078, offsets 9/15). Logged as C27.
 - Artifact `outputs/hongshao_v2_layer.npz` (gauss-2scale, full-sample
-  calibration), figures `figures/qa/qa_*_exp84_v2_layer.*`.
+  calibration), figures `experiments/exp84_layer_rebaseline/figures/qa/`.
 - Five lessons in `doc/lessons.md`, `doc/open_questions.md` C27,
   `doc/todo.md` with review, CLAUDE.md id list (exp84 taken, exp85 next).
 
@@ -60,7 +60,7 @@ approved by the user at the start of the session).
 ## Branch State
 - Branch `exp84-layer-rebaseline` from master `17f2127`; committed; not
   merged; not pushed. Gitignored outputs in
-  `experiments/exp84_layer_rebaseline/outputs/` and `figures/qa/*exp84_*`.
+  `experiments/exp84_layer_rebaseline/{outputs,figures}/`.
 - exp79 is Codex's; exp85 is the next free id (check `git worktree list`,
   `git branch -a`, `ls experiments`).
 
