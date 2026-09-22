@@ -81,7 +81,7 @@ def main(variant="gauss", scale=None, tables_only=False):
         smp.calibrate_offsets(pf, mean, n, rng)
     induced = smp.calibrate_amplitude(pf, mean, n, rng)
     print(f"  {smp.describe()}")
-    print(f"  amplitude: induced by the size draws " + " ".join(f"{v:.3f}" for v in induced)
+    print("  amplitude: induced by the size draws " + " ".join(f"{v:.3f}" for v in induced)
           + "; sig_add " + " ".join(f"{v:.3f}" for v in smp.sig_add) + "; target " + " ".join(f"{v:.3f}" for v in smp.amp_sigma))
     if not tables_only:
         np.savez(OUT, variant=variant, form=kw["form"], corr_kind=kw["corr"], scale=smp.scale, scale_axis=smp.scale_axis,
@@ -110,7 +110,7 @@ def main(variant="gauss", scale=None, tables_only=False):
           + " ".join(f"{v:.2f}" for v in dg["s5_sigma"] / smp.amp_sigma) + f", nearest-epoch {dg['s5_near']:+.3f} "
           f"(target {LC.nearest_epoch(smp.amp_corr):+.3f}); S4 {dg['s4']:+.3f}; persistence "
           + "/".join(f"{dg['persistence'][k][0]:+.2f}" for k in LC.SIZE_KEYS)
-          + f" (truth " + "/".join(f"{LC.nearest_epoch(t0[f'persistence_truth_{k}']):+.2f}" for k in LC.SIZE_KEYS) + ")"
+          + " (truth " + "/".join(f"{LC.nearest_epoch(t0[f'persistence_truth_{k}']):+.2f}" for k in LC.SIZE_KEYS) + ")"
           f"; S1 declining {100 * dg['s1'][0]:.1f}% (truth {100 * float(t0['s1_frac']):.1f}%)")
     print("\n  tier 2e, full sample")
     qa.print_draw_cdfs([("mean", ev_mean["cdfs"]), (variant, ev["cdfs"])], P.ANCHOR_Z)

@@ -152,7 +152,8 @@ def average_swaps(a, b):
             o = 0.5 * (ga[c]["offset"] + gb[c]["offset"])
             w = 0.5 * (ga[c]["width_ratio"] + gb[c]["width_ratio"])
             po, pw = abs(o) <= qa.SIZE_GATE_OFFSET, abs(w - 1) <= qa.SIZE_GATE_WIDTH
-            n_off += po; n_wid += pw
+            n_off += po
+            n_wid += pw
             out[c] = dict(offset=o, offset_sd=0.5 * (ga[c]["offset_sd"] + gb[c]["offset_sd"]), width_ratio=w,
                           width_sd=0.5 * (ga[c]["width_sd"] + gb[c]["width_sd"]), pass_offset=po, pass_width=pw)
         return out, (n_off, n_wid, len(out))
@@ -179,7 +180,7 @@ def main(smoke=False, fast=False, only=None):
     assert variants, only
     out_path = OUT if only is None else OUT.with_name(OUT.stem + "_" + "-".join(v[0] for v in variants) + ".npz")
     print(f"{RULE}\nexp84 STAGE 2 — the layer composed and judged held out, both ways\n{RULE}\n")
-    print(f"  variants: " + ", ".join(v[0] for v in variants))
+    print("  variants: " + ", ".join(v[0] for v in variants))
     n_real = 2 if (smoke or fast) else N_REAL
     recs, data, keep, lmh, pred = P.build(smoke)
     rows_all = np.where(keep)[0]
@@ -223,7 +224,7 @@ def main(smoke=False, fast=False, only=None):
                 calibrate_two_scales(smp, pf_c, d_all[calib], R, len(calib), rng_v)
             if kw.get("centred"):
                 hist = smp.calibrate_offsets(pf_c, mean_c, len(calib), rng_v)
-                print(f"    centring: max |median excess| at 4.9 / 32.6 kpc per iteration " + " ".join(f"{h:.3f}" for h in hist))
+                print("    centring: max |median excess| at 4.9 / 32.6 kpc per iteration " + " ".join(f"{h:.3f}" for h in hist))
             induced = smp.calibrate_amplitude(pf_c, mean_c, len(calib), rng_v)
             described[name] = smp.describe()
             draws = np.stack([smp.profiles(pf_s, len(score), rng_v) for _ in range(n_real)])
@@ -261,7 +262,8 @@ def main(smoke=False, fast=False, only=None):
     summary = {}
     for name in merged:
         dg = direct[name]
-        s3l = np.mean([g["s3_lowz"] for g in dg]); s3a = np.mean([g["s3_all"] for g in dg])
+        s3l = np.mean([g["s3_lowz"] for g in dg])
+        s3a = np.mean([g["s3_all"] for g in dg])
         s5 = np.mean([g["s5_sigma"] for g in dg], axis=0) / amp_sigma
         near = np.mean([g["s5_near"] for g in dg])
         s4 = np.mean([g["s4"] for g in dg])
@@ -279,7 +281,8 @@ def main(smoke=False, fast=False, only=None):
     qa.print_draw_cdfs([("mean", ev_mean["cdfs"])] + [(name, merged[name]["cdfs"]) for name in merged], P.ANCHOR_Z)
 
     print(f"\n{RULE}\n  THE COUNT — offsets / widths passing of 15 (fixed M* | fixed Mh)\n{RULE}")
-    _, _, _, mo, mw = ev_mean["size_gate_ms"]; _, _, _, ho, hw = ev_mean["size_gate_mh"]
+    _, _, _, mo, mw = ev_mean["size_gate_ms"]
+    _, _, _, ho, hw = ev_mean["size_gate_mh"]
     print(f"  {'mean':<13} {mo:>2}/15 {mw:>2}/15 | {ho:>2}/15 {hw:>2}/15")
     for name in merged:
         cm, ch = merged[name]["counts_ms"], merged[name]["counts_mh"]

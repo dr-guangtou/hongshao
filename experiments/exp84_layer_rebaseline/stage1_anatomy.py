@@ -89,7 +89,7 @@ def _smallest_sufficient(flat_grid_abs, ys_flat, l0):
     ok = finite & (ys_flat <= y_min + TOL * np.abs(l0))
     # rank: |delta| first, loss second
     order = np.argsort(flat_grid_abs, kind="stable")
-    ys_o, ok_o = ys_flat[order], ok[order]
+    ok_o = ok[order]
     first = np.argmax(ok_o, axis=0)                      # the first sufficient point in |delta| order
     return order[first], y_min
 
@@ -193,7 +193,7 @@ def main(smoke=False):
           f"({time.time() - t_start:.0f} s)")
     percentiles_table(dc, "delta_c (joint) [dex]")
     percentiles_table(de, "delta_e (joint) [dex]")
-    print(f"    per-epoch gain median: " + " ".join(f"{np.nanmedian(gain2[:, j]):5.1f}%" for j in range(5)))
+    print("    per-epoch gain median: " + " ".join(f"{np.nanmedian(gain2[:, j]):5.1f}%" for j in range(5)))
 
     # --- (c) the correlations ---------------------------------------------------
     print(f"\n{THIN}\n  (c) THE CORRELATION STRUCTURE of the joint deltas (Pearson, pairwise complete)\n{THIN}")
@@ -201,7 +201,7 @@ def main(smoke=False):
     corr10 = corr_pairwise(both)
     LC.print_matrix(corr10[:5, :5], f"delta_c across epochs (nearest-epoch mean {LC.nearest_epoch(corr10[:5, :5]):+.3f})")
     LC.print_matrix(corr10[5:, 5:], f"delta_e across epochs (nearest-epoch mean {LC.nearest_epoch(corr10[5:, 5:]):+.3f})")
-    print(f"    c x e at the same epoch: " + " ".join(f"{corr10[j, 5 + j]:+.3f}" for j in range(5)))
+    print("    c x e at the same epoch: " + " ".join(f"{corr10[j, 5 + j]:+.3f}" for j in range(5)))
     pers_c, pers_e = LC.persistence(dc), LC.persistence(de)
     print(f"\n  PERSISTENCE (Spearman, nearest-epoch mean): the anatomy's delta_c {LC.nearest_epoch(pers_c):+.3f}, "
           f"delta_e {LC.nearest_epoch(pers_e):+.3f}"
