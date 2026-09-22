@@ -3341,12 +3341,26 @@ observed epoch (age driven, `q_c`), with the halo-driven form
       `stage0_candidates.BOUNDS`; `selfcheck` + `selfcheck_compact_expansion`
       pass (LAW_DEFAULT nests bit for bit; q_c = 0.5 moves M(<5) by
       −0.10 at z = 0.4 and −0.04 at z = 2).
-- [ ] Stage 0 — the frozen probe (`stage0_probe.py`): (log_f_c, b_c)
-      re-tuned to the adopted median concentration at z = 0.4 and z = 2,
-      a0 re-centred; gates G1 (the decliner / non-decliner split of the
-      central change half way to the truth's 0.226 from 0.063), G2 (the
-      z = 0.4 concentration correlation halved), G3 (the non-decliners'
-      z = 2 median within 0.02).
-- [ ] Stage 1 — only on a passing probe: `queue.sh 2 PROBE`, `judge.sh
-      --best NAME --figures`, the residual check, the decliner split.
-- [ ] Verdict, README, lessons, handover.
+- [x] Stage 0 — the frozen probe (`stage0_probe.py`): (log_f_c, b_c)
+      re-tuned to the adopted median concentration at z = 0.4 and z = 2
+      (damped Newton; the raw step diverged), a0 re-centred; nine points
+      (q_c 0.1–0.8, q_ch 0.1–0.5). **Gate failed at every point**: the
+      split of the central change 0.054–0.066 vs the adopted 0.063 and
+      the truth's 0.227; G2's passes are the re-tune railing log_f_c.
+- [x] The anatomy (`stage0_anatomy.py`): the decliners' centres are 73 %
+      extended-channel mass; compact share 0.27 vs 0.33; the response
+      tracks the share (−0.99) and has the wrong sign against the truth's
+      decline (−0.42). Figure `figures/qa/exp85_probe_summary`.
+- [x] Stage 1 NOT run (the rule: fit only on a passing probe).
+- [x] Verdict (README), three lessons, C28, plan status, roadmap §9,
+      handover. Not adopted; the adopted mean stands. Not merged.
+
+### Review
+Half a day, no fit. The plan's gate did its job, and the anatomy — which
+took one minute and should have come first — explained the sign before
+the grid finished: the mechanism was aimed at a channel that holds a
+third of the decliners' centres. The re-tune taught the same lesson as
+exp61's Hessian: two constants that do the same thing have a flat valley,
+and a sub-gate that passes there is the valley, not the physics. What is
+left is a question about the model's channel split at the centre (C28),
+not another knob.

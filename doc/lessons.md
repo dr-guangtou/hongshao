@@ -3085,3 +3085,31 @@ session should not rediscover them:
   user asked for the goal, what was tried, what works and what does not, in
   plain language, with figures. Every verdict needs that version first — the
   jargon is the index, not the message.
+
+## exp85 — the compact channel's expansion (2026-09-23)
+
+- **Before building a lever on one channel, measure which channel carries
+  the target.** The age-driven compact expansion was the obvious mechanism
+  for the central decline, and the probe failed at every strength for a
+  reason a one-minute anatomy printed afterwards: in the adopted model the
+  decliners' centres are 73 per cent accreted-channel mass, so a knob on
+  the compact channel acts in proportion to a share that is SMALLER in the
+  galaxies that need it (per-galaxy response, rank correlation −0.99 with
+  the compact share, −0.42 with TNG's decline). exp83's lesson — "where
+  were the stars that carry the residual deposited?" — has a channel
+  version: which channel holds them. Run the anatomy first; it predicts
+  the probe's sign.
+- **A two-target re-tune of two collinear constants has a flat valley;
+  read its landing point before crediting a sub-gate.** Re-tuning
+  (log_f_c, b_c) to hold the population's concentration at two epochs
+  landed at log_f_c −0.2 and +1.4 for neighbouring probe values, and the
+  cells where the concentration correlation "halved" were the ones where
+  the compact deposits had shrunk to 0.03 of their size with b_c flipped —
+  a different model, not the mechanism. Cap and damp the Newton step, print
+  the re-tuned constants and the miss next to every reading, and treat a
+  railed constant as a failed probe.
+- **A control form that behaves identically is still informative.** The
+  halo-driven expansion (the exact analogue of q_e) tracked the age-driven
+  one within 0.003 dex at every strength: the failure is not about which
+  clock drives the expansion but about which stars it moves. One extra knob
+  in the same probe closed that question for free.

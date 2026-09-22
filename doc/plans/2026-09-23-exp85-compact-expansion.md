@@ -1,7 +1,9 @@
 # exp85 — the centre's mechanism: an age-driven expansion of the compact channel
 
-Status: IN PROGRESS 2026-09-23 (branch `exp85-compact-expansion` from master
-`aae792d`). Roadmap: `doc/plans/2026-09-12-roadmap-evidence-rethink.md` §8
+Status: CLOSED 2026-09-23 — Stage 0's gate failed at every probe value (the split of
+the central change 0.054–0.066 vs the truth's 0.227); Stage 1 not run; NOT adopted
+(`experiments/exp85_compact_expansion/README.md`; branch `exp85-compact-expansion`
+from master `aae792d`). Roadmap: `doc/plans/2026-09-12-roadmap-evidence-rethink.md` §8
 ("next: the centre's mechanism"); the open question left by exp83
 (`doc/open_questions.md`, "exp83 ... (a) and (c) stay open and are one
 question: a mechanism that moves mass outward in early-formed galaxies
