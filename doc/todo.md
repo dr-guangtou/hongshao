@@ -3327,3 +3327,26 @@ component the exp73 verdict asked for carries the whole gain. The two
 things that went wrong were both caught by reading the tables (an inflated
 anatomy width; a centring that helped at two radii and hurt at twenty) and
 one by reading a launch line (a packaging script that predated its variant).
+
+## 2026-09-23 — exp85, the centre's mechanism: the compact channel's post-deposition expansion (`exp85-compact-expansion`)
+
+Plan `doc/plans/2026-09-23-exp85-compact-expansion.md` (from the roadmap
+§8 "next: the centre's mechanism" and exp83's open question). The knob:
+a compact deposit made at t' has size s_c(t') × (t_obs / t')^q_c at the
+observed epoch (age driven, `q_c`), with the halo-driven form
+(R200c(t_obs) / R200c(t'))^q_ch as the control; both nest at zero.
+
+- [x] `size_law` knobs `q_c`, `q_ch` (the compact kernel per epoch when on;
+      exp84's `size_dev` composes; capped as exp84); bounds in
+      `stage0_candidates.BOUNDS`; `selfcheck` + `selfcheck_compact_expansion`
+      pass (LAW_DEFAULT nests bit for bit; q_c = 0.5 moves M(<5) by
+      −0.10 at z = 0.4 and −0.04 at z = 2).
+- [ ] Stage 0 — the frozen probe (`stage0_probe.py`): (log_f_c, b_c)
+      re-tuned to the adopted median concentration at z = 0.4 and z = 2,
+      a0 re-centred; gates G1 (the decliner / non-decliner split of the
+      central change half way to the truth's 0.226 from 0.063), G2 (the
+      z = 0.4 concentration correlation halved), G3 (the non-decliners'
+      z = 2 median within 0.02).
+- [ ] Stage 1 — only on a passing probe: `queue.sh 2 PROBE`, `judge.sh
+      --best NAME --figures`, the residual check, the decliner split.
+- [ ] Verdict, README, lessons, handover.

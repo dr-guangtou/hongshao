@@ -102,7 +102,9 @@ battery of the adopted models). Scripts set `FIGDIR = HERE / "figures/qa"`.
   exp82 (Claude; the delay + expansion exponent, branch
   `exp82-delay-expansion`), exp83 (Claude; the early-mass term, closed and
   not adopted 2026-09-22), exp84 (Claude; the layer re-baselined, branch
-  `exp84-layer-rebaseline`, 2026-09-22). exp85 is the next free id; check
+  `exp84-layer-rebaseline`, 2026-09-22), exp85 (Claude; the compact
+  channel's post-deposition expansion, the centre's mechanism, branch
+  `exp85-compact-expansion`, 2026-09-23). exp86 is the next free id; check
   before creating.
 - `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
   and conflict when both agents append; resolve by keeping both sides.
