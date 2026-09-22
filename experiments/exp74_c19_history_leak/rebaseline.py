@@ -123,6 +123,28 @@ def adopted_mean():
                         SL.predict_law(spec, th[:13], law, curves, R, epochs=epochs, nodes=nodes))
 
 
+#: THE ADOPTED STOCHASTIC LAYER (the user, 2026-09-23, after exp84): the
+#: two-component layer around `adopted_mean()` — a cross-epoch-correlated
+#: total-mass draw plus a per-galaxy, per-epoch draw of the extended deposit
+#: size with the anatomy's fitted correlation (the compact-size draw
+#: calibrated to zero). Validated held out in exp84 Stage 2; supersedes exp60's v1.
+ADOPTED_LAYER_NPZ = ROOT / "experiments/exp84_layer_rebaseline/outputs/hongshao_v2_layer.npz"
+
+
+def adopted_layer():
+    """dict(layer, draw_cogs, file): the frozen v2 layer and its draw function
+    `draw_cogs(pred, layer, rows, rng, n_draw)` (pred = an exp84 `Predictor`
+    over the adopted mean; see `experiments/exp84_layer_rebaseline/predictor.py`)."""
+    import importlib.util
+    e84 = ROOT / "experiments/exp84_layer_rebaseline"
+    if str(e84) not in sys.path:
+        sys.path.insert(0, str(e84))
+    spec_ = importlib.util.spec_from_file_location("exp84_stage3_adopt", e84 / "stage3_adopt.py")
+    S3 = importlib.util.module_from_spec(spec_)
+    spec_.loader.exec_module(S3)
+    return dict(layer=S3.load_layer(ADOPTED_LAYER_NPZ), draw_cogs=S3.draw_cogs, file=ADOPTED_LAYER_NPZ)
+
+
 def measured_mass_bins(recs, lmh_dm):
     """The binning variable of the adopted objective: the measured M200c at
     each epoch, the DiffMAH value where the catalog has none."""

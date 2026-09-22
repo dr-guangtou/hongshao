@@ -3037,3 +3037,51 @@ session should not rediscover them:
   rounding.** exp83's 15 / 0 against the adopted 14 / 1 was R20 at z = 2
   going +0.050 → +0.049 and a width of 0.80 on the 0.80 line in both
   models. Read the cells, not the tally.
+
+## exp84 — the layer re-baselined (2026-09-22)
+
+- **An anatomy's width is not a diversity until a gate wants it.** The
+  per-galaxy-epoch compact-size deviations had a 0.4–0.6 dex half-width —
+  and calibrated against R20's own width the axis's scale ran to zero. A
+  compact deposit pushed below the 2 kpc grid sits on a flat loss valley,
+  and a flat valley's argmin is noise with a wide distribution. Two rules
+  followed: read the deviation by the SMALLEST value within a tolerance of
+  the best (a plateau then resolves toward zero, not toward the edge), and
+  calibrate every drawn axis's scale against the gate that measures it
+  before believing the anatomy's width.
+- **A symmetric draw in a parameter is not a symmetric draw in the profile.**
+  A median-zero log-size deviation moved the drawn median profile by
+  0.03–0.05 dex (Jensen; exp60 had 0.058 inside 10 kpc and called it S3
+  outer/inner). Centring the median at two radii with per-epoch offsets
+  made it worse everywhere else (0.078) and shifted the size relation: the
+  shift is radius-structured. Shrinking the over-wide axis removed most of
+  it (0.012). Quote S3 as a max over all radii, and treat a residual as a
+  width problem before an offset problem.
+- **Two controls bracket a fitted correlation.** The per-epoch draw with the
+  anatomy's cross-epoch correlation reproduced the truth's size persistence
+  (0.67/0.61/0.57 vs 0.68/0.71/0.59); the identity control gave 0.19 and
+  the persistent-trait control 0.95. A structural choice like "per epoch
+  with a correlation" is only validated when both limits are run and both
+  miss.
+- **Two jobs, twelve gigabytes each: the build is the memory, not the call.**
+  One predict on 2356 galaxies is 1.2–2.4 s; the 11 GB is the data and the
+  references loaded by `rebaseline.build`. Measured before the batch, as
+  the rule says — and it made the whole experiment a foreground-scale job
+  (stages of 9–32 min) instead of a queue.
+- **A script written before a variant existed will silently package the
+  wrong thing.** Stage 3 was written for the one-scale samplers; launched
+  on the two-scale variant it would have frozen the layer with both scales
+  at one. Caught by reading the launch, not by any error. When a new
+  variant adds a calibration step, grep every consumer of the variant table
+  for that step before running it.
+- **An experiment's figures belong to the experiment (the user, 2026-09-23).**
+  exp84's battery and its three plain-language figures were written to the
+  repo-level `figures/qa/`, which holds the standard battery of the ADOPTED
+  models; the user moved them to `experiments/exp84_layer_rebaseline/figures/qa/`
+  and made it a rule in CLAUDE.md. Set `FIGDIR = HERE / "figures/qa"` in
+  every experiment script; the repo-level folder is not a scratch space.
+- **Say the result in the user's words before your own.** The first exp84
+  summary was a wall of gate names (S3, S5, C27, tier 2d, gauss-2scale); the
+  user asked for the goal, what was tried, what works and what does not, in
+  plain language, with figures. Every verdict needs that version first — the
+  jargon is the index, not the message.

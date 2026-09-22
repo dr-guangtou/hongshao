@@ -3284,3 +3284,46 @@ The fit confirmed what the frozen probe predicted, at a cost of two hours
 of machine time: the probe's loss column (+0.08 at −0.15, +0.66 at −0.3)
 already said the optimiser would stop near −0.1. The smoke run before the
 queue paid for itself within a minute.
+
+## 2026-09-22 — exp84, the stochastic layer re-baselined on the adopted mean (S4; `exp84-layer-rebaseline`)
+
+Plan `doc/plans/2026-09-22-exp84-layer-rebaseline.md` (approved by the user
+2026-09-22). Components: amplitude + compact size + extended size, per
+galaxy and per epoch with a fitted cross-epoch correlation; X3 dropped;
+decline targets reported, not gated.
+
+- [x] `size_law.predict_law(..., size_dev=)` — per-galaxy per-epoch
+      deviations of log s_c / log s_e; nests at None; selfcheck extended.
+- [x] `predictor.py` — the measured history + `adopted_mean()`; smoke
+      MEASURES one call's wall time and peak RSS (FIT / FULL nodes, with and
+      without a deviation) before any batch.
+- [x] Stage 0 — targets frozen on the adopted mean (S5, S3 reference, the
+      truth's size persistence, S1 for the record, the mean's 2d/2e null row).
+- [x] Stage 1 — the anatomy: per-galaxy-per-epoch δ_c, δ_e (1-D sweeps,
+      7×7 joint), the other twelve as control, correlations, edge fractions.
+- [x] `qa.evaluate_draws` — tier 2d/2e on drawn populations, demo checks.
+- [x] Stage 2 round 1 — held out, both swaps, 8 realizations; variants
+      a–d; the v1 row from exp73's record: widths 0/15 → 9/15, R80 5/5,
+      persistence reproduced by the fitted correlation; R20 over 1.4×, S3
+      0.03–0.04 (Jensen).
+- [x] Stage 2 round 2 — the two-scale (c on R20, e on R80) and
+      profile-centred variants: the compact draw calibrates to ZERO; the
+      two-scale layer (= amplitude + extended size) passes offsets 15/15 and
+      widths 12/15 (M*) / 15/15 (Mh), S5 exact, persistence matched, S3
+      0.012 / 0.031; centring harmful (S3 0.078, offsets 9/15).
+- [x] Stage 3 — `hongshao_v2_layer.npz` (gauss-2scale, full-sample
+      calibration), battery figures in the experiment's `figures/qa/`, README.
+- [x] Verdict, lessons (5), open question C27, handover.
+- [x] **Decision (the user, 2026-09-23)**: `gauss-2scale` ADOPTED as the v2
+      layer (`rebaseline.adopted_layer()`); figures moved into the
+      experiment's own `figures/qa/` (a rule now in CLAUDE.md); merged.
+
+### Review
+The rebuild took one session, not the half-day the roadmap allowed —
+because one predict call is two seconds and the anatomy trick made every
+per-galaxy-epoch refit a shared sweep. The result that mattered was not in
+the plan: the compact-size draw calibrates to nothing, and the outer
+component the exp73 verdict asked for carries the whole gain. The two
+things that went wrong were both caught by reading the tables (an inflated
+anatomy width; a centring that helped at two radii and hurt at twenty) and
+one by reading a launch line (a packaging script that predated its variant).
