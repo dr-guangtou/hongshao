@@ -3284,3 +3284,25 @@ The fit confirmed what the frozen probe predicted, at a cost of two hours
 of machine time: the probe's loss column (+0.08 at −0.15, +0.66 at −0.3)
 already said the optimiser would stop near −0.1. The smoke run before the
 queue paid for itself within a minute.
+
+## 2026-09-22 — exp84, the stochastic layer re-baselined on the adopted mean (S4; `exp84-layer-rebaseline`)
+
+Plan `doc/plans/2026-09-22-exp84-layer-rebaseline.md` (approved by the user
+2026-09-22). Components: amplitude + compact size + extended size, per
+galaxy and per epoch with a fitted cross-epoch correlation; X3 dropped;
+decline targets reported, not gated.
+
+- [ ] `size_law.predict_law(..., size_dev=)` — per-galaxy per-epoch
+      deviations of log s_c / log s_e; nests at None; selfcheck extended.
+- [ ] `predictor.py` — the measured history + `adopted_mean()`; smoke
+      MEASURES one call's wall time and peak RSS (FIT / FULL nodes, with and
+      without a deviation) before any batch.
+- [ ] Stage 0 — targets frozen on the adopted mean (S5, S3 reference, the
+      truth's size persistence, S1 for the record, the mean's 2d/2e null row).
+- [ ] Stage 1 — the anatomy: per-galaxy-per-epoch δ_c, δ_e (1-D sweeps,
+      7×7 joint), the other twelve as control, correlations, edge fractions.
+- [ ] `qa.evaluate_draws` — tier 2d/2e on drawn populations, demo checks.
+- [ ] Stage 2 — compose and judge held out, both swaps, 8 realizations;
+      variants a–d; the v1 row from exp73's saved numbers.
+- [ ] Stage 3 — package `hongshao_v2_layer.npz`, battery figures, README.
+- [ ] Verdict, lessons, handover; adoption is the user's call.
