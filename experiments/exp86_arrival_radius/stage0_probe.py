@@ -17,8 +17,8 @@ frozen), then a0 re-centred on the z = 0.4 median M(<103). Gates against the
 control (the plan): G1 the mh-complete 50-100 kpc shell deficit at z = 1.5
 AND z = 2 at least halved with the fitting sample's shell not pushed away
 from zero by more than 3 points; G2 the size-offset cells within 0.05 not
-fewer than the control's; G3 the future-dependence gate within 0.03 of the
-truth at no epoch worse than the control's by more than 0.01, and the z = 2
+fewer than the control's; G3 the future-dependence gate at no epoch farther
+from the truth than the control's by more than 0.01, and the z = 2
 recent-growth correlation <= 0.15.
 
 Run (one process; ~100 fit-node predictions per probe point):
@@ -243,11 +243,15 @@ def main(smoke=False, grid=None, retune=True):
     row("the same for the WHOLE extended channel arrived by the epoch", fac_all)
     row("mean delay of the shell's deposits, t_a - t' [Gyr]", delay_gyr, ".2f")
     for k in SHELL_EPOCHS:
-        c = complete[:, k]
-        res = np.log10((sh_c[:, k] + sh_e[:, k]) / sh_t[:, k])
-        print(f"  z={ANCHOR_Z[k]}: rank correlation of the shell residual with the arrival factor: all {spearmanr(res, fac[:, k])[0]:+.2f}, "
-              f"mh-complete {spearmanr(res[c], fac[c, k])[0]:+.2f}; the factor's difference, complete minus the rest: "
-              f"{np.nanmedian(fac[c, k]) - np.nanmedian(fac[~c, k]):+.3f} dex (what the knob can use)")
+        ok = np.isfinite(sh_t[:, k]) & (sh_t[:, k] > 0) & np.isfinite(fac[:, k])
+        c = complete[:, k] & ok
+        r_ = ~complete[:, k] & ok
+        res = np.full(n, np.nan)
+        res[ok] = np.log10((sh_c[ok, k] + sh_e[ok, k]) / sh_t[ok, k])
+        print(f"  z={ANCHOR_Z[k]}: rank correlation of the shell residual with the arrival factor: all {spearmanr(res[ok], fac[ok, k])[0]:+.2f}, "
+              f"mh-complete {spearmanr(res[c], fac[c, k])[0]:+.2f}, the rest {spearmanr(res[r_], fac[r_, k])[0]:+.2f}; the factor's median, complete minus the rest: "
+              f"{np.median(fac[c, k]) - np.median(fac[r_, k]):+.3f} dex (what the knob can use); the shell residual's median, complete vs the rest: "
+              f"{np.median(res[c]):+.3f} vs {np.median(res[r_]):+.3f} dex ({int((~ok).sum())} zero-shell truths dropped)")
 
     # ---- 2. the probe ---------------------------------------------------------- #
     print(f"\n{RULE}\n2. THE FROZEN-THETA PROBE — (log_f_e, b_e) re-tuned on the radius term (the control at w_arr = 0), a0 re-centred on M(<103) at z=0.4\n{RULE}")

@@ -3129,3 +3129,26 @@ session should not rediscover them:
   5 kpc; the extended channel's early deposits), and the user's reading that
   part of the "decline" is projection geometry. The population's central
   width belongs to the stochastic layer, as decided in August.
+
+## exp86 — the delayed deposits sized at arrival (2026-09-23)
+
+- **Measure the lever's DIFFERENTIAL between the groups a gate separates,
+  before the probe.** The 50–100 kpc shell at z ≥ 1.5 is −12 / −18 per cent
+  on the complete progenitors and +5 / +7 on the fitting sample; the
+  arrival factor the knob applies is 0.13 dex for everyone and differs
+  between the two groups by 0.013 dex. A one-minute anatomy said the knob
+  had a hundredth of the gap to work with; the probe then moved nothing.
+  The premise check is a number, not an argument: the lever's spread
+  between the groups against the residual's gap between them.
+- **A sample split with opposite-signed residuals is the selection until
+  proven otherwise.** C26(b) asked whether the delayed mass lands at the
+  wrong radius or the split is C18; the arrival-sizing probe answers "C18":
+  the complete progenitors at z ≥ 1.5 are the massive early haloes, the
+  rest are lighter, and one shared law sits between them. Carry such a
+  cost as a selection cost; do not aim a size law at it.
+- **The re-tuned control moves as much as the knob.** Re-tuning (log_f_e,
+  b_e) on the radius term alone shifted the z = 2 shell by 2 points and the
+  high-z M(<10) by 2; every probe value then sat within a point of that.
+  Without the control the knob would have been credited with the
+  re-tune's 2 points. exp80's device (credit a candidate only beyond the
+  re-tuned control) earned its keep again.

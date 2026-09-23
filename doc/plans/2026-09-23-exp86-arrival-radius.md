@@ -1,7 +1,9 @@
 # exp86 — where the delayed mass lands: sizing the delayed deposits by the halo at ARRIVAL
 
-Status: IN PROGRESS 2026-09-23 (branch `exp86-arrival-radius` from master
-`7215df2`). Source: open question C26(b) (`doc/open_questions.md`, exp81/82:
+Status: CLOSED 2026-09-23 — the anatomy gave the knob 0.013 dex of differential against a
+0.20 dex gap; the probe moved neither sample's shell at any strength; Stage 1 not run; NOT
+adopted; C26(b) answered (the split is the selection). `experiments/exp86_arrival_radius/README.md`;
+branch `exp86-arrival-radius` from master `7215df2`. Source: open question C26(b) (`doc/open_questions.md`, exp81/82:
 "the mh-complete progenitors' 50–100 kpc shell at z ≥ 1.5 is 14–19 per cent
 light while their cumulative M(<103) improves — is the delayed mass arriving
 at the wrong radius, or is this the completeness selection (C18)?"); the

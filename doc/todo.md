@@ -3364,3 +3364,38 @@ exp61's Hessian: two constants that do the same thing have a flat valley,
 and a sub-gate that passes there is the valley, not the physics. What is
 left is a question about the model's channel split at the centre (C28),
 not another knob.
+
+## 2026-09-23 — exp86, where the delayed mass lands: the delayed deposits sized at arrival (`exp86-arrival-radius`)
+
+Plan `doc/plans/2026-09-23-exp86-arrival-radius.md` (from C26(b) and the
+2026-09-23 review of the record; the user chose it). The knob `w_arr`
+moves the delayed extended deposit's size reference from the halo at
+accretion to the halo at arrival t' + tau_d / H(z'); nests at zero.
+
+- [x] `size_law` knob `w_arr` (`arrival_time`, `arrival_references`;
+      `sizes_at_nodes(arrival=)`); bounds; `selfcheck_arrival` passes
+      (w_arr = 1 raises the 52–103 kpc shell +0.08 → +0.12 dex from z = 0.4
+      to 2; the total conserved to 0.05 dex; w_arr = 0 nests bit for bit).
+- [x] Stage 0 — the anatomy first: the shell is 100 % extended-channel
+      mass; the arrival factor is 0.13 dex for everyone and differs between
+      the complete progenitors and the rest by 0.013 dex against a 0.20 dex
+      residual gap (the expected verdict stated before the probe).
+- [x] The frozen probe, w_arr ∈ {0.25, 0.5, 0.75, 1} with (log_f_e, b_e)
+      re-tuned on the radius term against the re-tuned control: **gate
+      failed at every strength** — the complete shell −11.7…−12.5 /
+      −18.5…−18.9 (control −12.2 / −19.6), the fitting sample +5, size
+      cells 10 → 9, the loss +0.01…+0.20. Figure `figures/qa/exp86_probe_summary`.
+- [x] Stage 1 NOT run (fit only on a passing probe). Not adopted.
+- [x] Verdict (README): C26(b) closed — the shell split is the selection
+      (C18); a new lead C29 (the outskirts under-respond to the growth
+      RATE; exp76's g re-read on the adopted mean). Three lessons,
+      plan status, roadmap §10, handover. Not merged.
+
+### Review
+Two hours, no fit. The anatomy-first rule from exp85 paid immediately:
+the lever's differential between the two samples (0.013 dex) against
+their residual gap (0.20 dex) predicted the null before the grid ran,
+and the re-tuned control showed that the two points the knob seemed to
+buy were the re-tune's. The question asked in C26(b) is answered, which
+is worth more than the knob: the −12 / −18 per cent shell is a selection
+cost to carry, not a defect to fix, and the record now says so.
