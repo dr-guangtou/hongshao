@@ -395,3 +395,20 @@ the in-situ share of the centre is too low, or the decline lives in the
 early-accreted deposits and a mechanism must act on the extended channel
 by deposit age. Next: S6, C27's levers, and a direct reading of TNG's
 in-situ fraction inside 5 kpc before any further centre knob.
+
+## 10. exp86's result (2026-09-23)
+
+The delayed deposits sized by the halo at ARRIVAL (`size_law` knob
+`w_arr`), the arrival-radius check exp82 listed and never ran, probed
+frozen on the adopted mean with the extended constants re-tuned against a
+re-tuned control (`experiments/exp86_arrival_radius/README.md`). **Gate
+failed at every strength; no fit; not adopted.** The complete progenitors'
+50–100 kpc shell at z ≥ 1.5 stays −12 / −19 per cent and the fitting
+sample's +5, both within a point of the control, because the arrival
+factor (0.13 dex for everyone) differs between the two samples by 0.013
+dex against a 0.20 dex residual gap. **C26(b) is closed: the shell split
+is the completeness selection (C18), carried as a cost.** New lead C29:
+inside each sample the shell residual falls with the halo's growth during
+the delay (−2 to −2.5 dex per dex), so the outskirts under-respond to the
+growth RATE — exp76's g, re-read on the adopted mean and chosen by the
+gates, is the probe. Next: C29 or S6 (B2, C22) and C27's levers.

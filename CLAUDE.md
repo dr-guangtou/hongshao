@@ -104,8 +104,9 @@ battery of the adopted models). Scripts set `FIGDIR = HERE / "figures/qa"`.
   not adopted 2026-09-22), exp84 (Claude; the layer re-baselined, branch
   `exp84-layer-rebaseline`, 2026-09-22), exp85 (Claude; the compact
   channel's post-deposition expansion, the centre's mechanism, branch
-  `exp85-compact-expansion`, 2026-09-23). exp86 is the next free id; check
-  before creating.
+  `exp85-compact-expansion`, 2026-09-23, closed and merged), exp86 (Claude;
+  the delayed deposits sized at arrival, branch `exp86-arrival-radius`,
+  2026-09-23). exp87 is the next free id; check before creating.
 - `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
   and conflict when both agents append; resolve by keeping both sides.
 

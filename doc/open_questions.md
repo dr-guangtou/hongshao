@@ -833,3 +833,19 @@ haloes and a mechanism must act on the EXTENDED channel by deposit age (q_e
 expands it uniformly with R200c); (c) the 4.9 kpc gate cannot see a 2.2 kpc
 deposit expand by ×1.5 — a 2 kpc reading of the decline split belongs next
 to it.
+
+## C26(b) CLOSED (exp86, 2026-09-23): the complete progenitors' light 50–100 kpc shell at z ≥ 1.5 is the selection, not the arrival radius
+
+Sizing the delayed extended deposits by the halo at arrival (`size_law`
+knob `w_arr`; the halo grows 0.13 dex in radius during a typical 0.5–1 Gyr
+delay) with the extended constants re-tuned on the radius term against
+the re-tuned control moves neither sample's shell by more than a point at
+any strength: the complete progenitors stay −12 / −19 per cent, the fitting
+sample +5. The arrival factor differs between the two samples by 0.013 dex
+against a 0.20 dex gap in their shell residuals; the split is C18 (who is
+in the complete sample at z ≥ 1.5), carried as a selection cost. Left
+open, as a new item: inside each sample the shell residual falls with the
+halo's growth during the delay (rank −0.23 to −0.29, slope −2 to −2.5 dex
+per dex), i.e. the outskirts under-respond to the growth RATE — exp76's
+split g re-read on the adopted mean and chosen by the gates is the probe
+that would test it (C29).
