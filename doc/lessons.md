@@ -3113,3 +3113,19 @@ session should not rediscover them:
   one within 0.003 dex at every strength: the failure is not about which
   clock drives the expansion but about which stars it moves. One extra knob
   in the same probe closed that question for free.
+- **The declining centre is CLOSED for per-deposit levers in this model
+  class (the user, 2026-09-23).** Three experiments have now aimed a
+  halo-conditioned, per-deposit change at the galaxies whose inner 4.9 kpc
+  loses mass from z = 2 to 0.4: conditioned efficiency and share (exp58/59,
+  disqualified at the gate), the early-mass term in efficiency, share and
+  compact size (exp83, the centre untouched), and the compact deposits'
+  post-deposition expansion by age or by halo growth (exp85, the split
+  unchanged, the sign wrong). Each failed for the same structural reason:
+  the decline is a redistribution of OLD stars in a subset of galaxies that
+  no halo-conditioned per-deposit rule can single out, and in this model the
+  decliners' centres are mostly accreted-channel mass. Do not spend another
+  experiment on a per-deposit centre knob. What is still open is a question
+  about the data and the model's structure (C28: TNG's in-situ share inside
+  5 kpc; the extended channel's early deposits), and the user's reading that
+  part of the "decline" is projection geometry. The population's central
+  width belongs to the stochastic layer, as decided in August.
