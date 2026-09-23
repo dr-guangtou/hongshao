@@ -83,7 +83,7 @@ BOUNDS = {"log_f_e": (-2.5, 0.0), "b_e": (-3.0, 3.0), "g_e": (-1.5, 1.5), "q_e":
           "early_kpc": (-0.5, 1.5), "early_b": (-3.0, 1.0), "z_sw": (0.3, 4.0),
           "b_e2": (-3.0, 3.0), "z_brk_e": (0.5, 5.0), "s_floor_kpc": (0.0, 20.0),
           "a_early": (-3.0, 3.0), "s_early": (-10.0, 10.0), "c_early": (-3.0, 3.0),
-          "q_c": (0.0, 1.5), "q_ch": (0.0, 1.5)}
+          "q_c": (0.0, 1.5), "q_ch": (0.0, 1.5), "w_arr": (0.0, 1.0)}
 #: the candidates: the knobs switched on (hand-set from the table), the
 #: constants the tune may move, and the extra parameters each would add to
 #: the twelve if fitted in Stage 1

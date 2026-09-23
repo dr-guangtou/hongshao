@@ -65,6 +65,16 @@ changes of the exp80 plan as named knobs, EVERY ONE NESTING AT THE BASELINE
                   either on the compact kernel is epoch dependent. The expanded
                   size is capped at the compact channel's truncation as in
                   exp84 (the cap never binds at the mean). Both nest at zero.
+  w_arr           (g) exp86, the delayed deposit sized by the halo at ARRIVAL.
+                  With a delay spec (tau_d > 0, step arrival at
+                  t_a = t' + tau_d / H(z')) the extended deposit's size and
+                  truncation reference the halo at accretion; w_arr in [0, 1]
+                  moves the reference toward arrival:
+                      log R_ref = (1 - w) log R200c(t') + w log R200c(t_a)
+                      log(1+z)_ref = (1 - w) log(1+z') + w log(1+z_a)
+                  so s_e = 10^log_f_e (1+z)_ref^b_e R_ref (R200c(t_obs)/R_ref)^q_e
+                  and r_trunc = C R_ref. Nests at zero; no effect without a
+                  delay (t_a = t').
 
 Parameter count: each knob used in a fit is one parameter (a break needs
 two: the exponent and the break redshift; (d) needs three).
@@ -92,7 +102,7 @@ import families                                          # noqa: E402
 
 LAW_DEFAULT = dict(g_e=0.0, g_c=0.0, q_e=0.0, b_e2=0.0, z_brk_e=2.0, b_c2=0.0, z_brk_c=2.0,
                    early_kpc=None, early_b=0.0, z_sw=2.0, s_floor_kpc=0.0, smooth_delay=False,
-                   a_early=0.0, s_early=0.0, c_early=0.0, q_c=0.0, q_ch=0.0)
+                   a_early=0.0, s_early=0.0, c_early=0.0, q_c=0.0, q_ch=0.0, w_arr=0.0)
 #: the reference time of the early-mass term (e): the mass assembled by 2 Gyr
 #: (z = 3.2), the variable of exp81's residual regressions
 T_EARLY_GYR = 2.0
@@ -154,18 +164,30 @@ def n_extra_parameters(law):
     n += law.get("c_early", 0.0) != 0.0
     n += law.get("q_c", 0.0) != 0.0
     n += law.get("q_ch", 0.0) != 0.0
+    n += law.get("w_arr", 0.0) != 0.0
     n += law.get("smooth_delay", False) and 0     # tau_d is the spec's parameter, not a knob
     return int(n)
 
 
-def sizes_at_nodes(spec2, p, law, lm, lz, r200, lr200_obs=None, phi=None):
+def sizes_at_nodes(spec2, p, law, lm, lz, r200, lr200_obs=None, phi=None, arrival=None):
     """(s_c, s_e) [kpc] at the nodes for one epoch, in model2's own arithmetic
     (the fraction's log clipped to (-8, 2), then multiplied by R200c) so the
     default law nests bit for bit. `lr200_obs` (n, 1) is log R200c at the
     observed epoch, needed only when q_e != 0; `phi` (n, N) the early-mass
-    variable, needed only when c_early != 0."""
+    variable, needed only when c_early != 0; `arrival` = (lz_a (N,), r200_a
+    (n, N)) the halo at the delayed deposits' arrival, needed only when
+    w_arr != 0 (exp86): the extended channel's z and R200c references are
+    blended toward them by w_arr."""
     dlm = lm - M2.LEVER_PIVOT_LOGM
-    lf_c = p["log_f_c"] + p["b_c"] * lz + p.get("g_c", 0.0) * dlm
+    lz_c = lz
+    w_arr = law.get("w_arr", 0.0)
+    if w_arr != 0.0:
+        if arrival is None:
+            raise ValueError("w_arr != 0 needs the arrival references (lz_a, r200_a)")
+        lz_a, r200_a = arrival
+        lz = (1.0 - w_arr) * lz + w_arr * lz_a
+        r200 = 10.0 ** ((1.0 - w_arr) * np.log10(r200) + w_arr * np.log10(r200_a))
+    lf_c = p["log_f_c"] + p["b_c"] * lz_c + p.get("g_c", 0.0) * dlm
     if law["g_c"] != 0.0:
         lf_c = lf_c + law["g_c"] * dlm
     if law.get("c_early", 0.0) != 0.0:
@@ -173,7 +195,7 @@ def sizes_at_nodes(spec2, p, law, lm, lz, r200, lr200_obs=None, phi=None):
             raise ValueError("c_early != 0 needs the early-mass variable phi")
         lf_c = lf_c + law["c_early"] * phi
     if law["b_c2"] != 0.0:
-        lf_c = lf_c + law["b_c2"] * np.maximum(lz - np.log10(1.0 + law["z_brk_c"]), 0.0)
+        lf_c = lf_c + law["b_c2"] * np.maximum(lz_c - np.log10(1.0 + law["z_brk_c"]), 0.0)
     s_c = 10.0 ** np.clip(lf_c, -8, 2) * (1.0 if spec2.compact_in_kpc else r200)
     lf_e = p["log_f_e"] + p["b_e"] * lz + p.get("g_e", 0.0) * dlm
     if law["g_e"] != 0.0:
@@ -261,6 +283,29 @@ def early_fraction(curves, lm, lt):
     return early_fraction_raw(curves, lm) - early_ref(lt)[None, :]
 
 
+def arrival_time(spec2, p, lt):
+    """log10 of the step arrival time t_a = t' + tau_d / H(z') of a deposit made
+    at the node (N,), clipped at the last epoch (nodes arriving later count in
+    no epoch); t' itself without a delay."""
+    lt = np.asarray(lt, float)
+    if not spec2.delay or p["tau_d"] <= 0.0:
+        return lt
+    t = 10.0 ** lt
+    t_a = t + p["tau_d"] / M2.hubble_gyr(E.z_of_t(t))
+    return np.log10(np.minimum(t_a, E.T_ANCHOR[0]))
+
+
+def arrival_references(spec2, p, law, curves, lt):
+    """(lz_a (N,), r200_a (n, N)) the halo at the delayed deposits' arrival,
+    for the w_arr knob (exp86); None when the knob is off."""
+    if law.get("w_arr", 0.0) == 0.0:
+        return None
+    lt_a = arrival_time(spec2, p, lt)
+    lz_a = np.log10(1.0 + E.z_of_t(10.0 ** lt_a))
+    r200_a = np.array([E.r200c_of(hc, lt_a, "analytic") for hc in curves])
+    return lz_a, r200_a
+
+
 def deposits_law(spec2, theta, law, curves, lt, epochs=(0, 1, 2, 3, 4)):
     """(dm_c, dm_e, s_c, s_e_by_epoch, r_trunc_by_epoch): (n, N) arrays; the
     by-epoch ones are {k: (n, N)} (one shared array when the law is not epoch
@@ -283,14 +328,15 @@ def deposits_law(spec2, theta, law, curves, lt, epochs=(0, 1, 2, 3, 4)):
     wc = M2.compact_share(p, lm, alpha=dm / 10.0 ** lm, lt_nodes=lt,
                           logit_extra=(s_early * phi if s_early != 0.0 else None))
     lz = np.log10(1.0 + z)
+    arrival = arrival_references(spec2, p, law, curves, lt)
     s_e, r_tr = {}, {}
     if epoch_dependent(law):
         lt_k = np.log10(E.T_ANCHOR)
         for k in epochs:
             lr_obs = np.array([np.log10(E.r200c_of(hc, lt_k[k], "analytic")) for hc in curves])[:, None]
-            s_c, s_e[k], r_tr[k] = sizes_at_nodes(spec2, p, law, lm, lz, r200, lr_obs, phi=phi)
+            s_c, s_e[k], r_tr[k] = sizes_at_nodes(spec2, p, law, lm, lz, r200, lr_obs, phi=phi, arrival=arrival)
     else:
-        s_c, shared, tr = sizes_at_nodes(spec2, p, law, lm, lz, r200, phi=phi)
+        s_c, shared, tr = sizes_at_nodes(spec2, p, law, lm, lz, r200, phi=phi, arrival=arrival)
         s_e = {k: shared for k in epochs}
         r_tr = {k: tr for k in epochs}
     return dmstar * wc, dmstar * (1.0 - wc), s_c, s_e, r_tr
@@ -427,6 +473,26 @@ def selfcheck_compact_expansion(spec2, theta, law, curves, R):
     print("  size_law selfcheck_compact_expansion OK")
 
 
+def selfcheck_arrival(spec2, theta, law, curves, R):
+    """exp86: with a delay spec, w_arr = 1 sizes the delayed deposits by the halo
+    at arrival — larger, so the mass inside 30 kpc falls and the 50-100 kpc
+    shell rises at z = 2 — while the grid-end total is conserved; w_arr = 0
+    nests; without a delay the knob does nothing."""
+    ref = predict_law(spec2, theta, law, curves, R)
+    got = predict_law(spec2, theta, with_law(**{**law, "w_arr": 1.0}), curves, R)
+    i30, i52, i103 = (int(np.argmin(np.abs(R - r))) for r in (30.0, 52.3, 103.45))
+    d30 = [float(np.median(np.log10(got[:, k, i30] / ref[:, k, i30]))) for k in range(5)]
+    sh_ref = ref[:, :, i103] - ref[:, :, i52]
+    sh_got = got[:, :, i103] - got[:, :, i52]
+    dsh = [float(np.median(np.log10(sh_got[:, k] / sh_ref[:, k]))) for k in range(5)]
+    end = float(np.max(np.abs(np.log10(got[:, :, -1] / ref[:, :, -1]))))
+    assert all(v < 0 for v in d30) and all(v > 0 for v in dsh), (d30, dsh)
+    print(f"    w_arr = 1: M(<30) moves (median) z=0.4..2 " + " / ".join(f"{v:+.3f}" for v in d30)
+          + "; the 52-103 kpc shell " + " / ".join(f"{v:+.3f}" for v in dsh) + f" dex; the grid-end total by at most {end:.3f} dex")
+    assert np.array_equal(predict_law(spec2, theta, with_law(**{**law, "w_arr": 0.0}), curves, R), ref), "w_arr = 0 does not nest"
+    print("  size_law selfcheck_arrival OK")
+
+
 if __name__ == "__main__":
     import halo as H
     import stage2_fit as S2F
@@ -444,3 +510,4 @@ if __name__ == "__main__":
     th_d = np.append(th, 0.15)                              # the adopted mean's structure: tau_d held, q_e on
     selfcheck_size_dev(spec_d, th_d, with_law(q_e=0.15), curves, F.R_GRID)
     selfcheck_compact_expansion(spec_d, th_d, with_law(q_e=0.15), curves, F.R_GRID)
+    selfcheck_arrival(spec_d, th_d, with_law(q_e=0.15), curves, F.R_GRID)
