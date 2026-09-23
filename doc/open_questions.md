@@ -813,3 +813,23 @@ with the compact draw already off — the extended draw and the amplitude
 alone over-disperse the inner sizes at low redshift; and the compact axis
 itself: the anatomy wants +0.14 dex larger compact deposits at z = 0.4 in
 the median (a mean-model residual the layer does not apply).
+
+## C28 (exp85, 2026-09-23): the centre's channel split — where does the decline live?
+
+The age-driven expansion of the compact deposits (s_c × (t_obs / t')^q_c;
+the halo-driven form as control) cannot separate the galaxies whose true
+M*(<4.9 kpc) declined from z = 2 to 0.4 from the rest: the split of the
+central change stays at 0.054–0.066 dex against TNG's 0.227 at every
+strength, with the compact constants re-tuned. The reason is the model's
+anatomy: at 4.9 kpc the adopted mean's centre is 67–73 per cent
+extended-channel (accreted) mass, and the decliners hold LESS compact mass
+than the rest (share 0.27 vs 0.33 at z = 0.4), so the knob acts on the
+wrong galaxies. Open: (a) the in-situ share of the centre — is 27–33 per
+cent at 4.9 kpc what TNG has (its in-situ fraction inside a few kpc for
+these masses), or is the model's channel split wrong there, in which case a
+compact expansion would have the leverage it lacks now; (b) if the split is
+right, the decline lives in the early-accreted deposits of early-formed
+haloes and a mechanism must act on the EXTENDED channel by deposit age (q_e
+expands it uniformly with R200c); (c) the 4.9 kpc gate cannot see a 2.2 kpc
+deposit expand by ×1.5 — a 2 kpc reading of the decline split belongs next
+to it.

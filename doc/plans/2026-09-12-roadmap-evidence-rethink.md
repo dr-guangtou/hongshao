@@ -378,3 +378,20 @@ identity and persistent-trait controls miss it by 0.4 either way). Costs:
 the drawn median profile shifts 0.012 / 0.031 dex (C27), inner sizes at
 z ≤ 1 over-dispersed 1.2×, the decline statistics unchanged (33 vs 42 per
 cent). Next: the centre's mechanism (its own id), S6, and C27's levers.
+
+## 9. exp85's result (2026-09-23)
+
+The centre's mechanism, first candidate: an age-driven expansion of the
+compact deposits (s_c × (t_obs / t')^q_c; a halo-driven form as control),
+probed frozen on the adopted mean with the compact constants re-tuned
+(`experiments/exp85_compact_expansion/README.md`). **Gate failed at every
+strength; no fit run; not adopted.** The split of the central change
+z = 2 → 0.4 between the galaxies whose centre declined and the rest never
+leaves 0.054–0.066 dex (truth 0.227), and the per-galaxy response has the
+wrong sign, because in the adopted model the decliners' centres are 73 per
+cent accreted-channel mass and hold LESS compact mass than the rest. The
+question moves to the model's channel split at the centre (C28): either
+the in-situ share of the centre is too low, or the decline lives in the
+early-accreted deposits and a mechanism must act on the extended channel
+by deposit age. Next: S6, C27's levers, and a direct reading of TNG's
+in-situ fraction inside 5 kpc before any further centre knob.

@@ -54,6 +54,17 @@ changes of the exp80 plan as named knobs, EVERY ONE NESTING AT THE BASELINE
                   the COMPACT deposit's size by 10^(c_early phi): c_early > 0
                   makes the deposits of haloes that grew more than typical
                   since 2 Gyr smaller. All three nest at zero.
+  q_c, q_ch       (f) exp85, the COMPACT channel's post-deposition expansion (the
+                  centre's mechanism). A compact deposit made at t' evaluated at
+                  the observed epoch t_obs is multiplied by (t_obs / t')^q_c — an
+                  AGE-driven expansion, the analogue of q_e for the in-situ
+                  stars, decoupled from the halo's growth — or, the control
+                  form, by (R200c(t_obs) / R200c(t'))^q_ch, coupled to it. The
+                  oldest deposits expand the most, and less so at z = 2 than at
+                  z = 0.4: a decline of the central mass at fixed total. With
+                  either on the compact kernel is epoch dependent. The expanded
+                  size is capped at the compact channel's truncation as in
+                  exp84 (the cap never binds at the mean). Both nest at zero.
 
 Parameter count: each knob used in a fit is one parameter (a break needs
 two: the exponent and the break redshift; (d) needs three).
@@ -81,7 +92,7 @@ import families                                          # noqa: E402
 
 LAW_DEFAULT = dict(g_e=0.0, g_c=0.0, q_e=0.0, b_e2=0.0, z_brk_e=2.0, b_c2=0.0, z_brk_c=2.0,
                    early_kpc=None, early_b=0.0, z_sw=2.0, s_floor_kpc=0.0, smooth_delay=False,
-                   a_early=0.0, s_early=0.0, c_early=0.0)
+                   a_early=0.0, s_early=0.0, c_early=0.0, q_c=0.0, q_ch=0.0)
 #: the reference time of the early-mass term (e): the mass assembled by 2 Gyr
 #: (z = 3.2), the variable of exp81's residual regressions
 T_EARLY_GYR = 2.0
@@ -141,6 +152,8 @@ def n_extra_parameters(law):
     n += law.get("a_early", 0.0) != 0.0
     n += law.get("s_early", 0.0) != 0.0
     n += law.get("c_early", 0.0) != 0.0
+    n += law.get("q_c", 0.0) != 0.0
+    n += law.get("q_ch", 0.0) != 0.0
     n += law.get("smooth_delay", False) and 0     # tau_d is the spec's parameter, not a knob
     return int(n)
 
@@ -191,6 +204,27 @@ def sizes_at_nodes(spec2, p, law, lm, lz, r200, lr200_obs=None, phi=None):
 
 def epoch_dependent(law):
     return law["q_e"] != 0.0
+
+
+def compact_epoch_dependent(law):
+    return law.get("q_c", 0.0) != 0.0 or law.get("q_ch", 0.0) != 0.0
+
+
+def compact_sizes_at_epoch(law, s_c, lt, k, r200_nodes, lr200_obs_k):
+    """exp85: the compact deposits' sizes at the observed epoch k, (n, N):
+    s_c(t') expanded by (t_k / t')^q_c (age driven) and by
+    (R200c(t_k) / R200c(t'))^q_ch (halo driven). Deposits after t_k (excluded
+    from the epoch's integral anyway) are left at s_c(t'). Uncapped here."""
+    q_c, q_ch = law.get("q_c", 0.0), law.get("q_ch", 0.0)
+    if q_c == 0.0 and q_ch == 0.0:
+        return s_c
+    lt_k = np.log10(E.T_ANCHOR[k])
+    lgrow = np.zeros_like(s_c)
+    if q_c != 0.0:
+        lgrow = lgrow + q_c * np.maximum(lt_k - np.asarray(lt, float), 0.0)[None, :]
+    if q_ch != 0.0:
+        lgrow = lgrow + q_ch * np.maximum(lr200_obs_k[:, None] - np.log10(r200_nodes), 0.0)
+    return s_c * 10.0 ** lgrow
 
 
 _EARLY_REF = {"lt": None, "phi": None}
@@ -285,14 +319,20 @@ def predict_law(spec2, theta, law, curves, R, epochs=(0, 1, 2, 3, 4), nodes=M2.F
         cv = curves[lo:lo + block]
         dm_c, dm_e, s_c, s_e, r_tr = deposits_law(spec2, theta, law, cv, lt, epochs)
         n, N = dm_c.shape
-        r_tr_c = spec2.trunc_C * np.array([E.r200c_of(hc, lt, "analytic") for hc in cv])
+        r200_nodes = np.array([E.r200c_of(hc, lt, "analytic") for hc in cv])
+        r_tr_c = spec2.trunc_C * r200_nodes
         dev_c = dev_e = None
         if size_dev is not None:
             dev_c = np.asarray(size_dev["c"], float)[lo:lo + n]
             dev_e = np.asarray(size_dev["e"], float)[lo:lo + n]
             assert dev_c.shape == dev_e.shape == (n, 5), (dev_c.shape, dev_e.shape, n)
+        expanding = compact_epoch_dependent(law)
+        lr200_obs = None
+        if law.get("q_ch", 0.0) != 0.0:
+            lt_k = np.log10(E.T_ANCHOR)
+            lr200_obs = {k: np.array([np.log10(E.r200c_of(hc, lt_k[k], "analytic")) for hc in cv]) for k in epochs}
         Bc_shared = None
-        if dev_c is None:
+        if dev_c is None and not expanding:
             Bc_shared = M.cog_truncated(M2.COMPACT_FAMILY, (p["n_c"],), s_c.ravel(), r_tr_c.ravel(), R).reshape(len(R), n, N)
         wc_ = dm_c * w[None, :]; we_ = dm_e * w[None, :]
         inc_e = arrival_weights(spec2, p, law, lt, include)
@@ -303,7 +343,10 @@ def predict_law(spec2, theta, law, curves, R, epochs=(0, 1, 2, 3, 4), nodes=M2.F
             else:
                 # the cap never goes below the mean's own size (the baseline does not
                 # cap the compact channel), so a zero deviation nests bit for bit
-                s_c_k = np.minimum(s_c * 10.0 ** dev_c[:, k][:, None], np.maximum(s_c, CAP_OF_TRUNCATION * r_tr_c))
+                s_c_k = compact_sizes_at_epoch(law, s_c, lt, k, r200_nodes, None if lr200_obs is None else lr200_obs[k])
+                if dev_c is not None:
+                    s_c_k = s_c_k * 10.0 ** dev_c[:, k][:, None]
+                s_c_k = np.minimum(s_c_k, np.maximum(s_c, CAP_OF_TRUNCATION * r_tr_c))
                 Bc = M.cog_truncated(M2.COMPACT_FAMILY, (p["n_c"],), s_c_k.ravel(), r_tr_c.ravel(), R).reshape(len(R), n, N)
             if Be_shared is None or epoch_dependent(law) or dev_e is not None:
                 s_e_k = s_e[k]
@@ -353,13 +396,35 @@ def selfcheck(spec2, theta, curves, R):
     assert np.array_equal(got, ref), "LAW_DEFAULT does not nest"
     for kw in (dict(g_e=-1.0 / 3.0), dict(g_c=-1.0 / 3.0), dict(q_e=1.0), dict(b_e2=0.5, z_brk_e=2.0),
                dict(b_c2=0.5, z_brk_c=2.0), dict(early_kpc=np.log10(4.0), early_b=0.0, z_sw=2.0), dict(s_floor_kpc=4.0),
-               dict(a_early=-0.5), dict(s_early=-2.0), dict(c_early=0.5)):
+               dict(a_early=-0.5), dict(s_early=-2.0), dict(c_early=0.5), dict(q_c=0.5), dict(q_ch=0.5)):
         d = predict_law(spec2, theta, with_law(**kw), curves, R)
         assert np.all(np.isfinite(d)) and np.all(np.diff(d, axis=2) >= -1e-9), kw
         moved = float(np.max(np.abs(np.log10(d / ref))))
         assert moved > 1e-4, (kw, moved)
         print(f"    knob {describe(with_law(**kw)):<44} moves the profile by up to {moved:.3f} dex; monotone in R")
     print("  size_law selfcheck OK: LAW_DEFAULT == model2.predict2 bit for bit")
+
+
+def selfcheck_compact_expansion(spec2, theta, law, curves, R):
+    """exp85: q_c lowers the mass inside 5 kpc at every epoch, MORE at z = 0.4
+    than at z = 2 (the same deposit is older there), and leaves the grid-end
+    total nearly unchanged; the halo form q_ch likewise. With a size_dev the
+    expansion and the deviation compose (a zero deviation nests)."""
+    ref = predict_law(spec2, theta, law, curves, R)
+    i5 = int(np.argmin(np.abs(R - 4.92)))
+    n = len(curves)
+    for knob in ("q_c", "q_ch"):
+        got = predict_law(spec2, theta, with_law(**{**{k: v for k, v in law.items() if k != knob}, knob: 0.5}), curves, R)
+        d5 = [float(np.median(np.log10(got[:, k, i5] / ref[:, k, i5]))) for k in range(5)]
+        end = float(np.max(np.abs(np.log10(got[:, :, -1] / ref[:, :, -1]))))
+        assert all(v < -1e-3 for v in d5), (knob, d5)
+        assert d5[0] < d5[4], (knob, "z=0.4 must expand more than z=2", d5)
+        print(f"    {knob} = 0.5: M(<5 kpc) moves (median) z=0.4..2 " + " / ".join(f"{v:+.3f}" for v in d5)
+              + f" dex; the grid-end total by at most {end:.3f} dex")
+        zero = dict(c=np.zeros((n, 5)), e=np.zeros((n, 5)))
+        law_on = with_law(**{**{k: v for k, v in law.items() if k != knob}, knob: 0.5})
+        assert np.array_equal(predict_law(spec2, theta, law_on, curves, R, size_dev=zero), got), (knob, "size_dev=0 does not nest")
+    print("  size_law selfcheck_compact_expansion OK")
 
 
 if __name__ == "__main__":
@@ -378,3 +443,4 @@ if __name__ == "__main__":
                       compact_in_kpc=spec2.compact_in_kpc)
     th_d = np.append(th, 0.15)                              # the adopted mean's structure: tau_d held, q_e on
     selfcheck_size_dev(spec_d, th_d, with_law(q_e=0.15), curves, F.R_GRID)
+    selfcheck_compact_expansion(spec_d, th_d, with_law(q_e=0.15), curves, F.R_GRID)
