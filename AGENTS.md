@@ -1,5 +1,48 @@
 # AGENTS.md — HongShao
 
+## Codex paper-planning isolation (user instructions, September 2026)
+
+- (2026-09-28, user decision) Prepare Paper 1 in the separate sibling
+  repository `ushmr1` (The Ultimate Stellar-Halo Mass Relation: I), not a
+  gitignored directory inside this public repository. Do not create a public
+  remote or publish unpublished results without explicit authorization.
+  The next phase is analysis, visualization, and Markdown evidence notes;
+  defer LaTeX manuscript drafting except figure captions.
+- Paper figures must be publication-ready, use LaTeX fonts for all text,
+  and have matching plotting scripts, saved figure data, provenance, and
+  `.tex` captions. Each script must regenerate its PNG/PDF without rerunning
+  fits or manual edits. Never silently fall back to non-LaTeX fonts or
+  overwrite edited captions on a plotting rerun.
+- Retain all qualifying centrals for Paper 1. Verify the original parent's
+  peak-mass selection from source evidence; user recollection and downstream
+  analysis masks alone do not certify the original query. Do not introduce
+  stellar-mass, morphology, or star-formation cuts.
+- (2026-09-27, user decision) Paper 1 concerns forward prediction of massive
+  centrals' projected 1-D stellar mass distributions, primarily in TNG300 at
+  z=0.4. Accurate individual-MAH recovery is not a project goal. A small
+  reverse test is optional supporting evidence, never a completion gate.
+- Anchor stellar mass at the native outer CoG aperture near 148 kpc, stating
+  its exact stored radius. Test information beyond stellar mass and separately
+  beyond mass plus size. Do not impose a figure or page limit.
+- Paper 1 has an approved epoch-relevant sample exception: do not reject
+  objects for unrelated multi-epoch history criteria. Predeclare applicable
+  quality cuts and retain the old strict selection as a sensitivity. Other
+  experiments' sample rules are unchanged.
+- Xu's collaboration data are the source, with Xu's satellite-particle
+  treatment, not Leidig's. Independent epoch fits may enter an appendix;
+  joint evolution is not required. An N-body application is a possible
+  forward-generation demonstration, not validation against stellar truth.
+- Work on the paper plan only in the dedicated Codex feature worktree. Do not
+  edit or switch Claude's main checkout, execute its code, or share writable
+  caches. Read settled artifacts only for verified private snapshots.
+- Keep this statistical-emulator paper plan distinct from Claude's physical
+  model experiments and from unfinished Exp79. A paper-planning request does
+  not adopt a statistical correction as the production physical framework.
+- Claude retains integration ownership. The September 28 user request
+  authorizes this planning branch's merge, but does not authorize changing
+  Claude's active checkout: coordinate that integration first. No push or
+  worktree deletion is included in this closeout.
+
 Orientation for AI agents (and humans) working in this repo.
 
 ## What this is
