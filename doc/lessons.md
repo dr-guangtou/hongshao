@@ -2,6 +2,54 @@
 
 Mistakes, gotchas, and decisions worth remembering. Review at session start.
 
+- **A peak-history recipe does not prove peak-selected membership
+  (September 28, 2026).** The original supplied format note appends the
+  snapshot-72 mass and constructs a running maximum. It does not state the
+  parent-catalog query. Project motivation notes explicitly describe peak
+  selection, supporting the user's memory, but publication needs the query
+  or source-owner confirmation. Preserve original IDs pending certification;
+  do not replace that uncertainty with a guessed present-mass cut.
+- **Paper reproducibility has two levels.** A figure script must reproduce
+  the figure directly from saved data, while a separate documented analysis
+  chain reproduces those data. Preserve captions, configuration, folds,
+  hashes, and negative controls alongside successful results. A gitignored
+  directory in a public repository is neither a privacy guarantee nor a backup.
+
+- **Do not turn a forward-prediction paper into an inverse-recovery project
+  (user clarification, September 27, 2026).** The goal is the statistical
+  stellar-profile distribution given halos and their histories. Individual-MAH
+  recovery is not a project goal; an optional reverse test cannot become a
+  completion gate. Judge measured/DiffMAH and PCA/analytic coordinates by
+  final held-out profile predictions, distinguishing compression quality from
+  predictability and generated-population fidelity. Record the approved
+  Paper 1 sample exception and 148-kpc anchor without changing other experiments.
+- **Use the confirmed measurement lineage when interpreting density gaps.**
+  Xu provided these profiles with Xu's satellite-particle treatment. The user
+  confirmed this on September 27; do not attribute the isophote/CoG difference
+  to satellites removed before either measurement, or equate clipping with
+  removing smooth ICL. This corrects the older blanket interpretation in SPEC.
+
+- **Paper claims need matched controls, not just successful old models
+  (September 26, 2026 paper-planning audit).** Normalizing a CoG by its stellar
+  mass removes amplitude but does not condition away mass-dependent shape.
+  Exp22's average-shape reference is not a flexible mass-conditioned profile
+  baseline; Exp62 Stage 7 supplies the stronger explicit-control starting
+  point. Separate gains in amplitude, size, and finer shape before claiming
+  information beyond the SHMR. A forward-prediction gain is not a measured
+  accuracy for inverse MAH recovery.
+- **Archive verification is not fit reproduction.** The copied early
+  experiment and Exp62 manifests record dirty source trees. Their scores and
+  figures can be verified as preserved bytes, but a source SHA alone cannot
+  reproduce those runs. Freeze one matched input/sample/fold/code record for
+  the paper. Fit MAH PCA inside training folds; Exp06/Exp08 learned that basis
+  before their historical cross-validation.
+- **Do not promote old explanations into publication facts.** The later
+  Exp28 mass-definition correction supersedes Exp27's median-based claim
+  that the official DiffMAH history is M200c. A clipped-isophote versus
+  aperture-density difference does not identify all differing light as ICL
+  or satellites. A regression plateau is not a proven intrinsic information
+  ceiling. See `doc/paper1_statistical/EVIDENCE_AUDIT.md` for the scoped audit.
+
 - **Archived synthetic checks must not expire with a science-run deadline.**
   The Exp77 held-out-label test stopped after September 8 despite unchanged
   mathematics. Isolate its synthetic calculation from the wall-clock guard;

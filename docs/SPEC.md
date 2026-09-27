@@ -1,5 +1,39 @@
 # HongShao architecture specification
 
+## Paper repository handoff (September 28, 2026)
+
+The approved destination is the independent sibling `ushmr1`, for mature
+Paper 1 analyses, reproducible publication figures, and Markdown evidence
+notes. No LaTeX manuscript is requested yet; matching `.tex` figure captions
+are required. All figure text uses LaTeX fonts, and each figure has a direct
+plotting script and saved input data. Creation/implementation belongs to the
+next session; this closeout changes documentation only. See
+`doc/paper1_statistical/USHMR1_LAUNCH_PLAN.md` for the execution contract and
+`SAMPLE_PROVENANCE.md` in the same directory for the unresolved parent-query
+evidence. Retain all qualifying centrals; no new stellar selection is approved.
+
+## Statistical-emulator paper planning (updated September 27, 2026)
+
+The user requests a first scientific-paper plan about additional halo-MAH
+information in massive-galaxy stellar profiles. This is a documentation and
+evidence-audit task, not a change to the prediction contract,
+library architecture, or physical-framework direction below. The dedicated
+record is `doc/paper1_statistical/`. Any proposed use of measured stellar mass
+or size as a statistical control is an explicitly labeled information audit,
+not an input to the halo-only forward emulator.
+
+The user approved a Paper 1-specific sample exception on September 27:
+use quality criteria relevant to z=0.4, not unrelated all-epoch stellar-history
+exclusions. Freeze exact criteria before implementation; compare the old
+strict selection as a sensitivity. Other experiments' sample rules remain
+unchanged. Anchor stellar mass at the native outer CoG radius near 148 kpc.
+Focus on forward prediction; accurate individual-MAH recovery is not a
+project goal. Independent epoch fits may enter an appendix without a joint
+evolution model. There is no fixed figure or text limit. Source data follow
+Xu's satellite-particle treatment. N-body population generation may demonstrate
+application but cannot validate stellar accuracy without stellar truth.
+No new fits are initiated by this planning update.
+
 ## Physical-framework direction (2026-09-09)
 
 Exp75/Exp77 are closed diagnostic experiments, not production components.
@@ -29,8 +63,8 @@ this contract; it changes no stable library interface. Its frozen design is in
 stellar-mass history are sane, at every epoch. Halo-mass completeness is not a
 fitting criterion.** The mh-complete subset — the progenitors above the
 per-epoch completeness cut — is an after-fit reporting check, scored with the
-fitted parameters frozen. This is the user's rule of 2026-08-30 and it applies
-to every experiment.
+fitted parameters frozen. This is the user's rule of 2026-08-30, subject to
+the Paper 1-specific exception above; physical-model experiments are unchanged.
 
 The rule is implemented once, in
 `experiments/exp54_unpinned_amplitude/selection.py::fitting_sample_mask`, and
@@ -69,12 +103,14 @@ Interface guarantees:
   other product in the repo, epoch 0..4 for z = 0.4, 0.7, 1.0, 1.5, 2.0.
 - `cog_provided` is the fitting target. `cog_from_density` and `annulus_mass`
   are other views of the same galaxies and must not silently replace it.
-- **The two densities are different measurements.** `sigma_shared` (the
-  fiducial one) is the sigma-clipped isophote density and excludes satellites
-  and intracluster light; `annulus_mass` is the CoG derivative and counts
-  everything in the aperture. They differ by up to 0.64 dex at z = 2 in the
-  outskirts. A result fitted to one is not comparable to a result fitted to the
-  other, and any experiment using either must say which.
+- **The two densities are different measurements.** `sigma_shared` is the
+  isophotal density; `annulus_mass` is the CoG derivative. The user confirmed
+  on September 27 that this drop uses Xu's satellite-particle treatment,
+  with bound satellite particles removed before measurement. Do not explain
+  their difference as all satellites/ICL being included in one and excluded
+  in the other, or infer removal of smooth ICL from sigma clipping. Results
+  fitted to the two measurements must state which is used and reconcile
+  their geometry and measurement procedures before direct comparison.
 - On the shared grid a density of exactly zero means NOT MEASURED. Every
   consumer must gate on `sigma_measured`. Beyond `r_outer_valid` the
   reconstructed curve of growth is flat by construction.

@@ -6,6 +6,45 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ## Status
 
+### Paper 1 — statistical assembly information (Codex planning only)
+
+- [x] Record September 28 approval of `ushmr1`, all qualifying centrals,
+  analysis/visualization-first work, and reproducible LaTeX-font figure packs.
+- [x] Trace parent-selection evidence to the original supplied format note;
+  distinguish support for peak selection from missing query certification.
+- [x] Prepare `paper1_statistical/USHMR1_LAUNCH_PLAN.md` with bounded stages,
+  restart records, evidence outputs, figure contracts, and stop conditions.
+- [ ] Coordinate the user-authorized planning merge with Claude; do not
+  change its protected `master` checkout or delete this worktree.
+- [ ] Next session: create the separate local `ushmr1` repository, transfer
+  curated notes/private evidence, and complete the pre-fit input certificate.
+- [x] Audit relevant existing results and source definitions, then prepare
+  evidence map, paper outline, confirmatory analysis plan, and user questions.
+- [x] Review scope and the sample-rule exception with the user (September 27).
+- [ ] Freeze exact epoch-relevant quality criteria and matched measured/DiffMAH
+  inputs; specify PCA/direct references and one cubic-logit alternative before
+  implementation. No fits, shared-checkout edits, or integration in this update.
+- Planning record: `paper1_statistical/README.md`; private Codex branch
+  `codex-paper1-statistical-plan-20260925` from frozen master `79bba59`.
+
+Review (September 26): paper outline, detailed confirmatory plan, evidence
+audit, targeted literature positioning, questions, and a hash-verified
+archive inventory are drafted. Strong historical evidence supports an
+assembly-dependent profile relation; the main remaining science is separating
+mass, size, and finer shape under matched definitions and selection. No fits,
+new figures, merges, or changes to another agent's work were made.
+
+September 27: focus confirmed as forward prediction, not individual-MAH
+recovery; native 148-kpc anchor and epoch-relevant sample approved. Xu's data
+lineage confirmed. Independent epoch appendix and an N-body generation example
+remain optional; no figure/page limit. See `paper1_statistical/DECISIONS_20260927.md`.
+
+September 28 review: closeout is documentation-only. Original peak selection
+is supported by project records, not yet independently certified by the
+original catalog query. No new sample count, fit, figure, or manuscript has
+been produced. The operational launch plan supersedes the earlier proposal
+to implement this paper as another HongShao experiment/worktree.
+
 ### Exp75 / Exp77 final closeout (September 9)
 
 - [x] Scientific work complete; retain all fits, sample membership and QA.
