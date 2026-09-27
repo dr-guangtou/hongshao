@@ -6,6 +6,18 @@ Cross-experiment plan. Mirrors the phase sequence in
 
 ## Status
 
+### September 28 worktree record preservation
+
+- [x] Merge the paper-planning and direction-review branches into an isolated
+  preservation branch; retain both sets of shared rules.
+- [x] Archive all three requested worktrees' filesystem records, including
+  ignored/untracked evidence; verify source-before/source-after/copy hashes.
+- [ ] Claude: integrate `codex-records-preservation-20260928` into master
+  when the shared checkout is available. Codex did not update master.
+- [ ] Recheck source changes and active processes before separately authorized
+  removal of the three original worktrees. Keep the private archive.
+- Record and recovery paths: `worktree_preservation_20260928.md`.
+
 ### Paper 1 — statistical assembly information (Codex planning only)
 
 - [x] Record September 28 approval of `ushmr1`, all qualifying centrals,
