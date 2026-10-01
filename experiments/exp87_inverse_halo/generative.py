@@ -110,6 +110,8 @@ def generative_methods(epoch, target="mh", box=True):
     out = [GenerativeInverse("gen-k3", k=3, epoch=epoch, target=target),
            GenerativeInverse("gen-k4", k=4, epoch=epoch, target=target),
            GenerativeInverse("gen-k6", k=6, epoch=epoch, target=target),
+           GenerativeInverse("gen-k12", k=12, epoch=epoch, target=target),
+           GenerativeInverse("gen-k24", k=24, epoch=epoch, target=target),
            GenerativeInverse("gen-k4-quad", k=4, degree=2, epoch=epoch, target=target),
            GenerativeInverse("gen-k4-t", k=4, student=True, epoch=epoch, target=target)]
     if box and target == "mh":

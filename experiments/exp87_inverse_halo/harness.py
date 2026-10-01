@@ -142,12 +142,29 @@ def run_cell(spec, method, force=False, smoke=False, verbose=True):
     tw = C.TW_THRESHOLD_LOGMH if spec["target"] == "mh" else None
     grid = S.target_grid("mh", cut) if tw is not None else None
     per, infos = oof_scores(method, X, y, fold, cut, t0=tw, grid=grid)
+    return write_cell(spec, cid, method.rung, per, y, fold, s.index, cut, X.shape[1], infos, time.time() - t0, smoke=smoke, verbose=verbose)
+
+
+def cell_setup(spec):
+    """(sample, rows used, cut, design, labels, target, fold) of a real-data cell: what `run_cell` scores on."""
+    s = get_sample(spec["sample"], spec["epoch"])
+    rows, cut = population_rows(s, spec["population"], spec["target"])
+    extra = spec.get("extra")
+    X, labels = build_design(s, spec["feature"], None if extra in (None, "none") else extra)
+    rows = rows & np.isfinite(X).all(1)
+    y = s.targets[spec["target"]]
+    fold = np.where(rows & ~s.lockbox, s.fold, -1)
+    return s, rows, cut, X, labels, y, fold
+
+
+def write_cell(spec, cid, rung, per, y, fold, index, cut, n_features, infos, seconds, smoke=False, verbose=True):
+    """Summarise per-galaxy scores, save the cell and append its scoreboard row."""
     used = fold >= 0
-    row = dict(spec, cell=cid, rung=method.rung, cut=cut, n_features=int(X.shape[1]), seconds=round(time.time() - t0, 2),
+    row = dict(spec, cell=cid, rung=rung, cut=cut, n_features=int(n_features), seconds=round(float(seconds), 2),
                config=C.config_hash(), **summarise_per(per, y, used))
     CELL_DIR.mkdir(parents=True, exist_ok=True)
-    np.savez(path, row=json.dumps(row), index=s.index, used=used, y=y, fold=fold, infos=json.dumps(infos, default=float),
-             **{k: per[k] for k in PER_KEYS})
+    np.savez(CELL_DIR / f"{cid}.npz", row=json.dumps(row), index=index, used=used, y=y, fold=fold,
+             infos=json.dumps(infos, default=float), **{k: per[k] for k in PER_KEYS})
     if not smoke:
         with open(SCOREBOARD, "a") as fh:
             fh.write(json.dumps(row) + "\n")

@@ -171,6 +171,66 @@ class LearnerHead(Method):
         return head.predict(f_test)
 
 
+class ResidualBoost(Method):
+    """L3 on top of the linear model: the truncated-likelihood linear fit on the
+    whole design first, then a point learner on what it missed (the pseudo-latent
+    residual), then one truncated-likelihood head on [linear latent mean, the
+    learner's out-of-fold residual prediction]. Unlike a learner fed the raw
+    design, this nests the linear model exactly (a zero residual prediction)."""
+
+    def __init__(self, name, rung, factory, ridge_grid=RIDGE_GRID):
+        super().__init__(name)
+        self.rung, self.factory, self.ridge_grid = rung, factory, ridge_grid
+
+    def fit_predict(self, X_train, y_train, X_test, cut):
+        X_train, X_test, y_train = np.asarray(X_train, float), np.asarray(X_test, float), np.asarray(y_train, float)
+        base = DirectLinear("base", "L1", ridge_grid=self.ridge_grid)
+        base_pred = base.fit_predict(X_train, y_train, X_test, cut)
+        Ds_tr = base._scale_design(X_train, X_train, y_train)[0]
+        m_tr, s_tr = base.model.latent(X_train, Ds_tr)
+        resid = H.mills_targets(y_train, m_tr, s_tr, cut) - m_tr
+        g_oof = np.empty(len(y_train))
+        for tr, te in inner_folds(len(y_train)):
+            g_oof[te] = self.factory().fit(X_train[tr], resid[tr]).predict(X_train[te])
+        g_test = self.factory().fit(X_train, resid).predict(X_test)
+        head = H.TruncLinear(cut).fit(np.column_stack([m_tr, g_oof]), y_train, m_tr[:, None])
+        self.info = dict(residual_r2=float(1.0 - np.mean((resid - g_oof) ** 2) / np.var(resid)), head_nll=head.nll)
+        return head.predict(np.column_stack([base_pred.m, g_test]), base_pred.m[:, None])
+
+
+class _LinearPlusQuadratic:
+    """The standardised design itself PLUS the pure second-order terms of its
+    first `k` principal components: curvature added on top of the full linear model."""
+
+    def __init__(self, k):
+        self.k = k
+
+    def fit_transform(self, X, y=None):
+        self.scaler = StandardScaler().fit(X)
+        Xs = self.scaler.transform(X)
+        self.pca = PCA(min(self.k, X.shape[1]), random_state=C.SEED).fit(Xs)
+        z = self.pca.transform(Xs)
+        self.z_scaler = StandardScaler().fit(z)
+        self.poly = PolynomialFeatures(2, include_bias=False).fit(self.z_scaler.transform(z))
+        return self.transform(X)
+
+    def transform(self, X):
+        Xs = self.scaler.transform(X)
+        z = self.z_scaler.transform(self.pca.transform(Xs))
+        quad = self.poly.transform(z)[:, z.shape[1]:]
+        return np.column_stack([Xs, quad])
+
+
+def augmented_methods():
+    """Curvature and flexible residuals ON TOP of the full linear model (added
+    2026-10-02 after the first ladder: the registered L2/L3 methods compress or
+    split the design and cannot reproduce the 24-point linear fit, so they could
+    not test for nonlinearity)."""
+    return [DirectLinear("linear+pca4-quad", "L2", transform=(lambda: _LinearPlusQuadratic(4)), ridge_grid=RIDGE_GRID),
+            DirectLinear("linear+pca6-quad", "L2", transform=(lambda: _LinearPlusQuadratic(6)), ridge_grid=RIDGE_GRID),
+            ResidualBoost("linear+gbm", "L3", _gbm)]
+
+
 # --------------------------------------------------------------------------- #
 # the registry                                                                  #
 # --------------------------------------------------------------------------- #
@@ -251,8 +311,8 @@ def flexible_methods(n_features, mills=True):
            LearnerHead("knn", "L3", _pca_scaled(k, lambda: KNeighborsRegressor(30, weights="distance"))),
            LearnerHead("gbm", "L3", _gbm),
            LearnerHead("forest", "L3", lambda: RandomForestRegressor(300, min_samples_leaf=10, n_jobs=1, random_state=C.SEED)),
-           LearnerHead("mlp", "L3", _scaled(lambda: MLPRegressor((64, 32), alpha=1e-2, max_iter=600, early_stopping=True,
-                                                               random_state=C.SEED))),
+           LearnerHead("mlp", "L3", _scaled(lambda: MLPRegressor(hidden_layer_sizes=(64, 32), alpha=1e-2, max_iter=600,
+                                                               early_stopping=True, random_state=C.SEED))),
            LearnerHead("gp", "L3", _pca_scaled(k, _gp), max_train=C.GP_MAX_POINTS)]
     if mills:
         out.append(LearnerHead("gbm-mills", "L3", _gbm, mills=True))

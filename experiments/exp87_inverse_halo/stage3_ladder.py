@@ -51,6 +51,7 @@ def full_ladder(sample, epoch, population, target, flexible=True, generative=Tru
     raw = spec(sample, epoch, population, target, "raw24")
     cells += [(raw, m) for m in M.linear_methods(24)]
     cells += [(raw, m) for m in M.nonlinear_direct_methods(24)]
+    cells += [(raw, m) for m in M.augmented_methods()]
     if flexible:
         cells += [(raw, m) for m in M.flexible_methods(24)]
     if generative:
@@ -68,6 +69,7 @@ def reduced_ladder(sample, epoch, population, target):
               (raw, M.DirectLinear("pca4-poly2", "L2", transform=M._pca_poly(4), ridge_grid=M.RIDGE_GRID)),
               (raw, M.LearnerHead("gbm", "L3", M._gbm)),
               (raw, G.GenerativeInverse("gen-k4", k=4, epoch=epoch, target=target))]
+    cells += [(raw, m) for m in M.augmented_methods()]
     return cells
 
 
@@ -80,7 +82,8 @@ def oracle_cells(sample, epoch, population, target):
             (spec(sample, epoch, population, target, "raw24", extra="mh"), M.DirectLinear("ridge", "L1", ridge_grid=M.RIDGE_GRID)),
             (spec(sample, epoch, population, target, "raw24", extra="mh"), M.LearnerHead("gbm", "L3", M._gbm)),
             (spec(sample, epoch, population, target, "raw24", extra="mh"),
-             M.DirectLinear("pca4-poly2", "L2", transform=M._pca_poly(5), ridge_grid=M.RIDGE_GRID))]
+             M.DirectLinear("pca4-poly2", "L2", transform=M._pca_poly(5), ridge_grid=M.RIDGE_GRID))] \
+        + [(spec(sample, epoch, population, target, "raw24", extra="mh"), m) for m in M.augmented_methods()]
 
 
 def blocks():
