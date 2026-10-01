@@ -121,10 +121,11 @@ def ladder():
     g = R.groups()
     rows = g[("parent", 0, "parent", "mh")]
     clim = R.find(rows, "mtot", "climatology")
-    pick = [("mtot", "line", "stellar mass\n$M_\\star$(<148)"), ("M(<10)", "line", "$M_\\star$(<10 kpc)"), ("M(50-100)", "line", "$M_\\star$(50-100)"),
-            ("M(>50)", "line", "$M_\\star$(>50 kpc)"), ("mass_size", "linear", "mass + sizes"), ("raw24", "pca4", "4 components"),
-            ("raw24", "linear", "24 points,\nlinear"), ("raw24", "linear+pca6-quad", "+ quadratic"), ("raw24", "linear+gbm", "+ boosted\nresidual"),
-            ("raw24", "gbm", "boosting\non 24 points"), ("raw24", "gp", "Gaussian\nprocess"), ("raw24", "gen-k24", "generative\ninverse")]
+    pick = [("mtot", "line", "stellar mass\n$M_\\star$(<148)"), ("M(<10)", "line", "$M_\\star$(<10 kpc)"), ("M(>50)", "line", "$M_\\star$(>50 kpc)"),
+            ("outer_shell", "line", "outer shell\n132-148 kpc"), ("mass_size", "linear", "mass + sizes"), ("mtot+outer_shell", "linear", "mass +\nouter shell"),
+            ("raw24", "linear", "24 cumulative\nmasses"), ("shells24", "ridge", "24 shell\nmasses"), ("shells24", "linear+pca6-quad", "shells +\nquadratic"),
+            ("shells24", "linear+gbm", "shells +\nboosting"), ("raw24", "gbm", "boosting on\ncumulative"), ("raw24", "gp", "Gaussian\nprocess"),
+            ("shells24", "gen-k24", "generative\ninverse")]
     fig, axes = plt.subplots(1, 2, figsize=(16.5, 5.6), gridspec_kw=dict(width_ratios=[1.35, 1]))
     ax = axes[0]
     for i, (feat, meth, lab) in enumerate(pick):
@@ -144,14 +145,14 @@ def ladder():
               frameon=False, ncol=5, loc="upper right", fontsize=8)
 
     ax = axes[1]
-    series = [("mtot", "line", C_GREY, "stellar mass alone"), ("mass_size", "linear", C_GREEN, "mass + sizes"),
-              ("raw24", "ridge", C_BLUE, "24-point profile, linear"), ("raw24", "linear+pca6-quad", C_RED, "+ quadratic")]
+    series = [("mtot", "line", C_GREY, "stellar mass alone"), ("mtot+outer_shell", "linear", C_GREEN, "mass + outer shell"),
+              ("shells24", "ridge", C_BLUE, "24 shell masses, linear"), ("shells24", "linear+pca6-quad", C_RED, "shells + quadratic")]
     for pop, ls, mk in (("asis", "-", "o"), ("complete", "--", "s")):
         for feat, meth, col, lab in series:
             xs, ys = [], []
             for k in range(5):
                 key = ("parent", 0, "parent", "mh") if (k == 0 and pop == "asis") else ("curated", k, pop if k else "complete", "mh")
-                r = R.find(g.get(key, []), feat, meth) or (R.find(g.get(key, []), feat, "linear") if meth == "ridge" else None)
+                r = R.find(g.get(key, []), feat, meth)
                 if r is not None:
                     xs.append(C.ANCHOR_Z[k])
                     ys.append(r["crps"])
@@ -288,7 +289,7 @@ def symbolic():
         print("no symbolic-regression verdicts yet")
         return
     cells = [json.loads(line) for line in path.read_text().splitlines()]
-    fig, ax = plt.subplots(1, 1, figsize=(12.5, 5.6))
+    fig, ax = plt.subplots(1, 1, figsize=(13.5, 6.4))
     x, ticks = 0, []
     for cell in cells:
         for st in cell["stages"]:
@@ -301,7 +302,7 @@ def symbolic():
     ax.axhline(0, color="k", lw=0.8)
     ax.axhline(100 * C.GAIN_FLOOR, color=C_RED, lw=0.8, ls=":")
     ax.set_xticks(range(x))
-    ax.set_xticklabels(ticks, fontsize=6.5)
+    ax.set_xticklabels(ticks, fontsize=6.5, rotation=40, ha="right", rotation_mode="anchor")
     ax.set_ylabel("CRPS gain over the linear model [" + qa._pct() + "], 95" + qa._pct() + " interval")
     ax.set_title("exp87: symbolic regression in latent space (purple = accepted: significant and recurring; blue = significant only)", fontsize=10.5)
     fig.tight_layout()

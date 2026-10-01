@@ -125,7 +125,11 @@ def feature_set(sample, name):
     if name in ("outer_shell", "mtot+outer_shell"):      # the mass between the grid's last two points (132-148 kpc)
         shell = aperture_logmass(x, radii, float(radii[-2]), None)[:, None]
         return (shell, ["logM(132-148)"]) if name == "outer_shell" else (np.column_stack([x[:, -1], shell]), ["logM148", "logM(132-148)"])
-    if name == "shells24":                               # the DIFFERENTIAL profile: log mass inside 2 kpc, then of each shell
+    if name == "shell7":                                 # total mass + six broad shells: the readable differential profile
+        edges = [(0.0, 10.0), (10.0, 30.0), (30.0, 50.0), (50.0, 100.0), (100.0, float(radii[-2])), (float(radii[-2]), None)]
+        return (np.column_stack([x[:, -1]] + [aperture_logmass(x, radii, lo, hi) for lo, hi in edges]),
+                ["logM148", "s0_10", "s10_30", "s30_50", "s50_100", "s100_132", "s132_148"])
+    if name == "shells24":                             # the DIFFERENTIAL profile: log mass inside 2 kpc, then of each shell
         cog = 10.0 ** x
         shells = np.column_stack([cog[:, 0], np.diff(cog, axis=1)])
         return np.log10(np.clip(shells, SHELL_FLOOR_MSUN, None)), ["logM(<2)"] + [f"sh{a:.0f}-{b:.0f}" for a, b in zip(radii[:-1], radii[1:])]

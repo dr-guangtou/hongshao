@@ -3450,3 +3450,46 @@ and the re-tuned control showed that the two points the knob seemed to
 buy were the re-tune's. The question asked in C26(b) is answered, which
 is worth more than the knob: the −12 / −18 per cent shell is a selection
 cost to carry, not a defect to fix, and the record now says so.
+
+## 2026-10-02 — exp87, the inverse problem: halo mass, concentration and accretion history FROM the curve of growth (`exp87-inverse-halo`)
+
+Plan `doc/plans/2026-10-02-exp87-inverse-halo.md` (approved by the user;
+an independent side study, no Paper-1 file or gate touched). Autopilot,
+seven stages, every decision in `outputs/decisions.jsonl`.
+
+- [x] Stage 0 — certificates (parent = the box above 10^13: 3388; CoG
+      identity; 0.178 / 0.140 dex reproduce) and the frozen split (one
+      galaxy in five to the lockbox; five folds by galaxy).
+- [x] Stage 1 — the synthetic mechanics gate, six checks passed (ordinary
+      fit +16.8% vs the oracle, double-counted +11.9%; slopes within 1.6%;
+      PIT uniform; delta = 1%; a 3% curvature detected 10/10).
+- [x] Stage 2 — the selection report (independence above the completeness
+      cuts: worst shift 0.030 forward scatters vs the 0.2 tolerance).
+- [x] Stage 3 — the ladder L0–L3 + L5 on halo mass (parent, curated
+      sensitivity, two high-z populations), concentration and formation
+      time with the oracle extension; the extras (truncation on real data,
+      the safe zone, the radius reading, projection, the prior).
+- [x] Stage 4 — symbolic regression, 20 configurations in five cells: no
+      formula accepted (none recurs); richer operators never beat the
+      polynomial stage.
+- [x] Stage 5 — the accretion history (vector to vector) at five epochs.
+- [x] Stage 6 — the lockbox, scored once: 1 of 76 outside its 99%
+      interval (0.8 expected), the headline numbers reproduced; figures,
+      README, lessons, C30, handover.
+- [ ] **Decision (user)**: merge `exp87-inverse-halo`; route the parent =
+      box finding to the Paper-1 sample provenance record; whether to
+      pursue C30 (b)/(e) (observational noise on the outer shell; a noisy
+      external mass).
+
+### Review
+The whole experiment ran in about three and a half hours of wall time
+against a fourteen-hour budget, because every stage was sub-minute to
+minutes except the symbolic searches. Three things the plan did not
+foresee carried the result: the truncated likelihood mattering more than
+the whole method ladder; the registered nonlinear methods being unable to
+nest the linear model (fixed on the way, recorded as a decision); and the
+shell-mass coordinate, which came from a radius table, removed the high-z
+nonlinearity, and reduced the profile's information to two numbers. The
+plan's rules held where they were tested: the gate caught a biased test
+statistic, the recurrence rule kept fourteen significant but fold-specific
+formulas out of the headline, and the lockbox agreed.

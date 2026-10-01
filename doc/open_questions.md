@@ -849,3 +849,35 @@ halo's growth during the delay (rank −0.23 to −0.29, slope −2 to −2.5 de
 per dex), i.e. the outskirts under-respond to the growth RATE — exp76's
 split g re-read on the adopted mean and chosen by the gates is the probe
 that would test it (C29).
+
+## C30 (exp87, 2026-10-02): the inverse problem's open ends
+
+exp87 (`experiments/exp87_inverse_halo/README.md`) measured what the
+stellar curve of growth knows about its halo. Settled there: the 24-point
+profile predicts halo mass with CRPS 0.0744 dex (RMSE 0.137) on the
+complete z = 0.4 population, 15% better than stellar mass; the gain is the
+outer envelope (total mass + the 132–148 kpc shell = the full model); the
+relation is linear in log shell masses; concentration and assembly need
+the halo mass as a second input. Open:
+(a) WHAT IS THE OUTER SHELL? Smooth intracluster light or satellites left
+in the map by the measurement's satellite treatment? Either traces the
+halo, but they mean different things for an observer, and the answer needs
+the measurement's lineage (Xu's maps), not this repository's data.
+(b) Does the outer-shell signal survive observational depth? The shell
+holds 1% of the stellar mass at a surface density that deep imaging
+reaches only in stacks; a noise model on the outer points would turn the
+0.0744 into the number an observer can have.
+(c) Beyond 148 kpc. The information rises monotonically toward the edge
+of the grid, so the best radius is at or beyond the last point; a profile
+to 300 kpc would say where it saturates.
+(d) The as-is progenitor samples keep 9–14% curvature in shells. Soft
+selection edge, or real physics of low-mass progenitors? A volume-complete
+high-z sample (not progenitors) would decide; the data drop has none.
+(e) The oracle result (profile + true Mh → concentration +21%, t50 +24%,
+history +26%) is a statement about a combined probe: how good must an
+EXTERNAL mass estimate (lensing, 0.2–0.3 dex) be before the profile's
+assembly information is usable? A noise-on-Mh sweep answers it with the
+existing cells.
+(f) The parent = box identity (3388 = 3388, lower edge exactly
+M200c(snap 72) = 10^13.000) bears on `doc/paper1_statistical/SAMPLE_PROVENANCE.md`;
+exp87 did not edit that file — for the user to route.

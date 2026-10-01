@@ -3200,3 +3200,60 @@ session should not rediscover them:
   Without the control the knob would have been credited with the
   re-tune's 2 points. exp80's device (credit a candidate only beyond the
   re-tuned control) earned its keep again.
+
+## exp87 — the inverse problem: halo properties from the curve of growth (2026-10-02)
+
+- **A sample cut on the TARGET does not bias a proper score; it breaks the
+  predictive family.** On the complete parent (every TNG300 central above
+  10^13 at z = 0.4) ordinary out-of-fold scores are unbiased for that
+  population. What fails is the ordinary normal: its mean bends near the
+  cut, its scatter is too small (0.182 vs 0.221 dex) and 9% of its mass
+  lies where no galaxy can be. The truncated-normal likelihood with LATENT
+  mean and scale gained 11–17% in CRPS, more than any method on the
+  ladder. Renormalising an ordinary fit above the cut counts the
+  truncation twice (it recovers 1 of the 17 points). Decide the predictive
+  family before the method ladder.
+- **Judge nonlinearity in latent space, and check the COORDINATES before
+  believing it.** The 24 log cumulative masses showed 2–6% "nonlinearity"
+  at z >= 1; written as 24 log SHELL masses the relation is linear and
+  curvature adds nothing (−0.2% to −1.8%). The log of a shell mass is a
+  curved function of log cumulative masses. A flexible model that gains
+  over a linear one may only be undoing a bad parametrisation: try the
+  differential form of a cumulative input first.
+- **A learner that cannot reproduce the linear model cannot test for
+  nonlinearity.** Boosting, a forest, a neural network, a Gaussian process
+  and PCA-4 + quadratic all scored WORSE than the 24-point linear fit
+  (0.085–0.090 vs 0.076): the signal is a fine linear combination (the
+  outer shell) that trees and four components cannot isolate. Put the
+  flexible part ON TOP of the full linear model (residual boosting, linear
+  + quadratic terms) so the linear model is nested; the first ladder's N
+  test was vacuous until this was done.
+- **Read where the information sits before climbing the ladder.** One
+  table (each radius alone / the profile inside R / the profile outside R)
+  showed that the two outermost points carry the profile's whole gain, and
+  that reading — not the symbolic search — produced the compact result
+  (total mass + the 132–148 kpc shell = the 24-point model). The search
+  then rediscovered the same variable as `square(m148 − m_R)` in every
+  fold, in forms that never recurred.
+- **A recurrence rule protects against quoting a fold-specific formula.**
+  Twenty symbolic configurations, fourteen with a significant gain, none
+  with the same skeleton in two folds. Without the pre-declared "same
+  skeleton in 4 of 5 folds" rule, any of them could have been reported as
+  "the formula". Richer operator sets never beat the polynomial stage.
+- **Selection that depends on the INPUT at fixed target is the one that
+  biases an inverse fit.** The curated forward-modelling samples drop
+  haloes whose stellar mass is high at fixed halo mass (+0.080 dex) and
+  the 0.5 dex outliers of the M*–Mh relation; for the inverse problem
+  that is a 4–11% optimism. A sample rule made for one direction of
+  prediction must be re-derived for the other.
+- **Assembly information is conditional.** Concentration and formation
+  time: 8–10% skill from the profile, 0% from the halo mass, 21–24% from
+  both. Report "X from A", "X from B" and "X from A and B" together;
+  either marginal alone would have read as a null.
+- **A mechanics gate with a synthetic truth catches a biased STATISTIC as
+  well as a biased estimator.** The smoke run failed check B on a
+  per-replicate direction cosine that noise biases below one; the plan's
+  criterion (slopes within 3%) was met. Fix the statistic, state the fix,
+  do not move the tolerance. And an autopilot's own bugs (a shadowed
+  variable, a positional argument sklearn no longer accepts) cost nothing
+  because every cell was idempotent and every search checkpointed per fold.
