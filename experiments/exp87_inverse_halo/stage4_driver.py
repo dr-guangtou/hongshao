@@ -95,9 +95,45 @@ def run_cell(name, smoke, t_start):
     return log
 
 
+def shell_pass(smoke, t_start):
+    """The SHELL-AWARE pass (exploratory, added after Stage 3 found the relation
+    linear in the log shell masses): the baseline is the ridge on the 24 shell
+    masses and the inputs are seven shell masses.
+
+      mh-parent     DIRECT mode, S1 then S2: is there a compact, readable
+                    formula for halo mass, and how far is it from the 24-point model?
+      mh-z2-asis    RESIDUAL mode, S1 -> S2 -> S3 by the same rule: the one
+                    population where curvature survives the shell representation
+    """
+    delta = float(json.loads((C.OUTDIR / "gate_mechanics.json").read_text())["delta"])
+    log = dict(cell="shell-pass", stages=[])
+    print(f"\n{RULE}\nSHELL-AWARE PASS (exploratory): baseline = ridge on the 24 log shell masses\n{RULE}", flush=True)
+    spec = CELLS["mh-parent"]
+    direct = [SR.run(st, "direct", "shell_summaries", spec, smoke=smoke, baseline="shells24") for st in ("S1", "S2")]
+    log["stages"].append(dict(stage="direct mh-parent", verdicts=direct))
+    spec = CELLS["mh-z2-asis"]
+    s1 = SR.run("S1", "residual", "shell_summaries", spec, smoke=smoke, baseline="shells24")
+    chain = [s1]
+    if time.time() - t_start <= C.BUDGET["stage4"]:
+        s2 = SR.run("S2", "residual", "shell_summaries", spec, smoke=smoke, baseline="shells24")
+        chain.append(s2)
+        ok, boot = better(s2["cell"], s1["cell"], delta)
+        print(f"  S2 over S1: {100 * -boot['rel']:+.2f}% {'SIGNIFICANT -> S3' if ok else 'not significant -> stop'}", flush=True)
+        if ok and time.time() - t_start <= C.BUDGET["stage4"]:
+            chain.append(SR.run("S3", "residual", "shell_summaries", spec, smoke=smoke, baseline="shells24"))
+    log["stages"].append(dict(stage="residual mh-z2-asis", verdicts=chain))
+    if not smoke:
+        with open(C.OUTDIR / "stage4_cells.jsonl", "a") as fh:
+            fh.write(json.dumps(log) + "\n")
+    return log
+
+
 if __name__ == "__main__":
     names = [a for a in sys.argv[1:] if not a.startswith("--")]
     t0 = time.time()
     for n in names:
-        run_cell(n, "--smoke" in sys.argv, t0)
+        if n == "shell-pass":
+            shell_pass("--smoke" in sys.argv, t0)
+        else:
+            run_cell(n, "--smoke" in sys.argv, t0)
     print(f"STAGE4 DRIVER DONE {names} in {time.time() - t0:.0f} s")

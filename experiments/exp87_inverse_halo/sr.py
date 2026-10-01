@@ -66,6 +66,10 @@ def sr_inputs(sample, name):
         cols = [x[:, -1], D.aperture_logmass(x, radii, 0.0, 10.0), D.aperture_logmass(x, radii, 0.0, 30.0),
                 D.aperture_logmass(x, radii, 50.0, 100.0), *(10.0 ** D.sizes(x, radii)).T]
         return np.column_stack(cols), ["m148", "m10", "m30", "m50_100", "r20", "r50", "r80"]
+    if name == "shell_summaries":                       # the differential profile in seven readable numbers
+        edges = [(0.0, 10.0), (10.0, 30.0), (30.0, 50.0), (50.0, 100.0), (100.0, float(radii[-2])), (float(radii[-2]), None)]
+        cols = [x[:, -1]] + [D.aperture_logmass(x, radii, lo, hi) for lo, hi in edges]
+        return np.column_stack(cols), ["m148", "s0_10", "s10_30", "s30_50", "s50_100", "s100_132", "s132_148"]
     if name == "raw24":
         return x.copy(), [f"m{int(round(r))}" if i not in (0, 1, 2) else f"m{r:.1f}".replace(".", "p") for i, r in enumerate(radii)]
     if name == "pca4":
@@ -111,9 +115,12 @@ def fold_search(stage, timeout, X_search, t_search, X_valid, t_valid, names, see
     return model, keep, table
 
 
-def run(stage, mode, inputs, spec, smoke=False, force=False):
+def run(stage, mode, inputs, spec, smoke=False, force=False, baseline="raw24"):
+    """`baseline`: the feature set of the linear model the search is read against
+    (and whose residual it fits in residual mode): "raw24" (the plan's) or
+    "shells24" (the differential profile, the better linear model)."""
     timeout = 12 if smoke else C.SR_STAGES[stage]["timeout"]
-    base_spec = dict(spec, feature="raw24", extra=None)
+    base_spec = dict(spec, feature=baseline, extra=None)
     s, rows, cut, X24, _, y, fold = HN.cell_setup(base_spec)
     Xin, names = sr_inputs(s, inputs)
     if smoke:
@@ -122,7 +129,8 @@ def run(stage, mode, inputs, spec, smoke=False, force=False):
         thin[keep_rows] = fold[keep_rows]
         fold = thin
     used = fold >= 0
-    tag = f"{spec['sample']}__{spec['epoch']}__{spec['population']}__{spec['target']}__{inputs}__sr-{stage}-{mode}" + ("__smoke" if smoke else "")
+    tag = f"{spec['sample']}__{spec['epoch']}__{spec['population']}__{spec['target']}__{inputs}__sr-{stage}-{mode}" \
+        + ("" if baseline == "raw24" else f"-vs-{baseline}") + ("__smoke" if smoke else "")
     SR_DIR.mkdir(parents=True, exist_ok=True)
     per = {k: np.full(len(y), np.nan) for k in HN.PER_KEYS}
     base_crps = np.full(len(y), np.nan)
@@ -134,12 +142,12 @@ def run(stage, mode, inputs, spec, smoke=False, force=False):
     for f in range(C.N_FOLDS):
         tr, te = used & (fold != f), fold == f
         ckpt = SR_DIR / f"{tag}__fold{f}.npz"
-        baseline = M.DirectLinear("ridge", "L1", ridge_grid=M.RIDGE_GRID)
-        base_pred = baseline.fit_predict(X24[tr], y[tr], X24[te], cut)
+        base_model = M.DirectLinear("ridge", "L1", ridge_grid=M.RIDGE_GRID)
+        base_pred = base_model.fit_predict(X24[tr], y[tr], X24[te], cut)
         base_crps[te] = base_pred.crps(y[te])
-        D_tr, _ = baseline._design(X24[tr], X24[tr], y[tr])
-        Ds_tr = baseline._scale_design(D_tr, D_tr, y[tr])[0]
-        m_tr, s_tr = baseline.model.latent(D_tr, Ds_tr)
+        D_tr, _ = base_model._design(X24[tr], X24[tr], y[tr])
+        Ds_tr = base_model._scale_design(D_tr, D_tr, y[tr])[0]
+        m_tr, s_tr = base_model.model.latent(D_tr, Ds_tr)
         m_te = base_pred.m
         pseudo = H.mills_targets(y[tr], m_tr, s_tr, cut)
         if inputs == "pca4":
@@ -193,11 +201,11 @@ def run(stage, mode, inputs, spec, smoke=False, force=False):
     delta = float(json.loads((C.OUTDIR / "gate_mechanics.json").read_text())["delta"])
     gain_ok, boot = S.significant_gain(per["crps"][used], base_crps[used], delta)
     recurs = bool(recurrence >= C.SR_MIN_FOLD_RECURRENCE or (np.isfinite(min_corr) and min_corr > 0.98))
-    verdict = dict(stage=stage, mode=mode, inputs=inputs, gain=-boot["rel"], gain_lo=-boot["rel_hi"], gain_hi=-boot["rel_lo"],
+    verdict = dict(stage=stage, mode=mode, inputs=inputs, baseline=baseline, gain=-boot["rel"], gain_lo=-boot["rel_hi"], gain_hi=-boot["rel_lo"],
                    significant=gain_ok, recurrence=int(recurrence), min_fold_correlation=min_corr, recurs=recurs,
                    accepted=bool(gain_ok and recurs), baseline_crps=float(np.mean(base_crps[used])),
                    equations=[i["equation"] for i in infos], complexities=[i["complexity"] for i in infos])
-    cell_spec = dict(spec, feature=inputs, extra="none", method=f"sr-{stage}-{mode}")
+    cell_spec = dict(spec, feature=inputs, extra="none", method=f"sr-{stage}-{mode}" + ("" if baseline == "raw24" else f"-vs-{baseline}"))
     row = HN.write_cell(cell_spec, tag, "L4", per, y, fold, s.index, cut, Z.shape[1], [verdict], time.time() - t_start, smoke=smoke)
     verdict["cell"], verdict["crps"] = tag, row["crps"]
     (SR_DIR / f"{tag}__verdict.json").write_text(json.dumps(dict(verdict, row=row), indent=1))
@@ -214,4 +222,5 @@ if __name__ == "__main__":
         return a[a.index(name) + 1] if name in a else default
     spec = dict(sample=arg("--sample", "parent"), epoch=int(arg("--epoch", 0)), population=arg("--population", "parent"),
                 target=arg("--target", "mh"))
-    run(arg("--stage", "S1"), arg("--mode", "residual"), arg("--inputs", "summaries"), spec, smoke="--smoke" in a, force="--force" in a)
+    run(arg("--stage", "S1"), arg("--mode", "residual"), arg("--inputs", "summaries"), spec, smoke="--smoke" in a, force="--force" in a,
+        baseline=arg("--baseline", "raw24"))

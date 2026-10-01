@@ -97,6 +97,12 @@ def blocks():
         out["conc"] += reduced_ladder("curated", k, "asis", "logc")[:8] + oracle_cells("curated", k, "asis", "logc")[:5]
     out["form"] = full_ladder("parent", 0, "parent", "t50", flexible=False, generative=False) \
         + [(spec("parent", 0, "parent", "t50", "raw24"), M.LearnerHead("gbm", "L3", M._gbm))] + oracle_cells("parent", 0, "parent", "t50")
+    out["form-extra"] = []
+    for target in ("t75", "t90"):
+        raw = spec("parent", 0, "parent", target, "raw24")
+        out["form-extra"] += reference_cells("parent", 0, "parent", target)[:2] \
+            + [(raw, M.DirectLinear("ridge", "L1", ridge_grid=M.RIDGE_GRID))] + [(raw, m) for m in M.augmented_methods()] \
+            + oracle_cells("parent", 0, "parent", target)
     return out
 
 

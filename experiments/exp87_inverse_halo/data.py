@@ -45,6 +45,8 @@ HS_NPZ = ROOT / "experiments/exp54_unpinned_amplitude/outputs/halo_structure_his
 SPLIT_NPZ = C.OUTDIR / "splits.npz"
 PRIOR_NPZ = C.OUTDIR / "box_prior.npz"
 SIZE_FRACTIONS = (0.2, 0.5, 0.8)
+#: a shell's mass is floored here before the log (non-monotone curves of growth, 0.8% of annuli at z = 2)
+SHELL_FLOOR_MSUN = 1e6
 
 
 def _selection_module():
@@ -120,6 +122,13 @@ def feature_set(sample, name):
     if name in C.APERTURES:
         lo, hi = C.APERTURES[name]
         return aperture_logmass(x, radii, lo, hi)[:, None], [name]
+    if name in ("outer_shell", "mtot+outer_shell"):      # the mass between the grid's last two points (132-148 kpc)
+        shell = aperture_logmass(x, radii, float(radii[-2]), None)[:, None]
+        return (shell, ["logM(132-148)"]) if name == "outer_shell" else (np.column_stack([x[:, -1], shell]), ["logM148", "logM(132-148)"])
+    if name == "shells24":                               # the DIFFERENTIAL profile: log mass inside 2 kpc, then of each shell
+        cog = 10.0 ** x
+        shells = np.column_stack([cog[:, 0], np.diff(cog, axis=1)])
+        return np.log10(np.clip(shells, SHELL_FLOOR_MSUN, None)), ["logM(<2)"] + [f"sh{a:.0f}-{b:.0f}" for a, b in zip(radii[:-1], radii[1:])]
     if name == "mass_size":
         return np.column_stack([x[:, -1], sizes(x, radii)]), ["logM148", "logR20", "logR50", "logR80"]
     if name == "raw24":
