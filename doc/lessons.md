@@ -3257,3 +3257,13 @@ session should not rediscover them:
   do not move the tolerance. And an autopilot's own bugs (a shadowed
   variable, a positional argument sklearn no longer accepts) cost nothing
   because every cell was idempotent and every search checkpointed per fold.
+- **"High redshift" has two axes: when the INPUT is observed and when the
+  TARGET is evaluated; report the off-diagonal (the user, 2026-10-02).**
+  exp87's first report scored only same-epoch pairs (the profile at z_k →
+  the halo mass at z_k) and missed the cross-epoch reading the user asked
+  for: the z = 0.4 profile predicts the progenitor's halo mass at z = 0.7
+  better than the z = 0.7 profile, beats the TRUE z = 0.4 halo mass as a
+  predictor at every earlier epoch, and its skill peaks 2.5 Gyr before
+  z = 0.4. When inputs and targets both carry a time index, lay out the
+  full (input epoch × target epoch) grid before writing the summary, and
+  scan the lag continuously: the peak was the result.

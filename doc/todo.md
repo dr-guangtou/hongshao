@@ -3476,6 +3476,12 @@ seven stages, every decision in `outputs/decisions.jsonl`.
 - [x] Stage 6 — the lockbox, scored once: 1 of 76 outside its 99%
       interval (0.8 expected), the headline numbers reproduced; figures,
       README, lessons, C30, handover.
+- [x] Stage 7 (added at the user's question, 2026-10-02) — CROSS-EPOCH: the
+      z = 0.4 profile → the progenitor's halo mass at z = 0.7–2, and the lag
+      scan. The z = 0.4 profile beats the z = 0.7 profile at z = 0.7
+      (0.0644 vs 0.0737), beats the TRUE z = 0.4 halo mass at every earlier
+      epoch (11–30%), and its skill peaks 2.5 Gyr before z = 0.4 (0.66 vs
+      0.59 at z = 0.4). The first report had covered only same-epoch pairs.
 - [ ] **Decision (user)**: merge `exp87-inverse-halo`; route the parent =
       box finding to the Paper-1 sample provenance record; whether to
       pursue C30 (b)/(e) (observational noise on the outer shell; a noisy

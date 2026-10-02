@@ -75,6 +75,14 @@ halo's growth curve is recovered 6 per cent better than from nothing at
 z = 0.4; with the true mass added, 21 per cent better; and the galaxy's
 own stellar history across epochs does as well as profile plus true mass.
 
+**The stars remember the halo as it was.** (Added after the first
+report, at the user's question.) The z = 0.4 profile predicts the halo's
+mass 2.5 Gyr EARLIER better than it predicts the halo's mass at z = 0.4
+itself, and at every earlier epoch it beats the true z = 0.4 halo mass as
+a predictor of the progenitor's mass. At z = 0.7 it even beats the
+z = 0.7 profile. Stellar content lags the halo by about 2.5 Gyr (figure
+`exp87_cross_epoch`).
+
 **What it means.** For a mass estimate, measure the outskirts: the
 stellar density near 140 kpc is the single best halo-mass proxy in the
 profile, and no machine learning is needed beyond a two-term formula and
@@ -248,6 +256,61 @@ curve, dex:
 - Linear is enough: boosting is 4–7% WORSE than ridge. Predicting the
   DiffMAH parameters and reading the curve is 5–9% worse than predicting
   the curve directly. Shell masses change nothing here (0.1552 vs 0.1545).
+
+## Across epochs: the z = 0.4 profile and the halo's EARLIER mass (Stage 7; `outputs/stage7_cross_epoch.log`)
+
+Added at the user's question after the first report (which covered only
+same-epoch predictions at high redshift). Target: the main progenitor's
+log M200c at z = 0.7 / 1.0 / 1.5 / 2.0 for the galaxies selected at z = 0.4
+(no cut on the target: a plain normal predictive; the curated sample;
+development folds; the lockbox untouched). CRPS / RMSE, dex; figure
+`exp87_cross_epoch`.
+
+| input | z = 0.7 | z = 1.0 | z = 1.5 | z = 2.0 |
+| --- | ---: | ---: | ---: | ---: |
+| nothing | 0.187 / 0.342 | 0.191 / 0.346 | 0.197 / 0.357 | 0.197 / 0.355 |
+| M*(<148) at z = 0.4 | 0.0796 / 0.143 | 0.0815 / 0.147 | 0.1127 / 0.203 | 0.1408 / 0.251 |
+| the TRUE halo mass at z = 0.4 | 0.0721 / 0.131 | 0.1006 / 0.179 | 0.1292 / 0.231 | 0.1472 / 0.263 |
+| the z = 0.4 profile (shells + quadratic) | **0.0644 / 0.117** | **0.0706 / 0.129** | 0.1029 / 0.187 | 0.1272 / 0.229 |
+| the profile at that epoch | 0.0737 / 0.134 | 0.0737 / 0.133 | **0.0735 / 0.135** | **0.0663 / 0.123** |
+| both profiles | 0.0636 / 0.115 | 0.0616 / 0.111 | 0.0661 / 0.121 | 0.0645 / 0.121 |
+| z = 0.4 profile + true Mh(z = 0.4) | 0.0536 / 0.099 | 0.0692 / 0.128 | 0.1027 / 0.187 | 0.1266 / 0.227 |
+
+1. **The z = 0.4 profile predicts the halo mass at z = 0.7 better than
+   the z = 0.7 profile does** (0.0644 vs 0.0737, RMSE 0.117 vs 0.134 dex),
+   matches it at z = 1.0, and loses to it at z >= 1.5 (0.103 vs 0.074,
+   0.127 vs 0.066), where most of the z = 0.4 stars had not yet formed or
+   arrived.
+2. **At every earlier epoch the z = 0.4 profile beats the TRUE z = 0.4 halo
+   mass as a predictor of the progenitor's mass** (by 11% at z = 0.7, 30%
+   at z = 1.0, 20% at z = 1.5, 14% at z = 2.0). The stars are a better
+   record of where the halo WAS than the halo's own present mass is.
+3. **The lag scan** (the halo's mass at t(z = 0.4) − tau from the z = 0.4
+   profile): the skill over knowing nothing rises from 0.59 at tau = 0
+   (the truncated-likelihood Stage 3 value) and 0.59 / 0.61 / 0.63 at
+   0.5 / 1 / 1.5 Gyr to a PEAK of 0.66 at tau = 2.5 Gyr (RMSE 0.115 dex),
+   then falls to 0.59 at 4 Gyr and 0.37 at 6 Gyr. Total stellar mass alone
+   peaks at the same lookback. The profile overtakes the true z = 0.4 halo
+   mass from tau = 2 Gyr on. Caveat: at tau <= 1.5 Gyr the target still has
+   a near-hard lower edge and the plain normal is somewhat misspecified, so
+   the rise between 0 and 2 Gyr is less certain than the peak itself (the
+   2.5 Gyr value exceeds the correctly-truncated tau = 0 value).
+4. **What it knows is the growth.** Added to the true z = 0.4 mass, the
+   z = 0.4 profile improves the z = 0.7 / 1.0 progenitor mass by 26% / 31%
+   (it knows how much the halo grew recently); at z >= 1.5 the true mass
+   adds nothing to the profile (0.1027 vs 0.1029).
+5. **Two epochs are better than one**: adding the z = 0.4 profile to the
+   same-epoch profile gains 14 / 17 / 10 / 3%; both together reach
+   0.062–0.066 dex at every epoch.
+
+Reading: the stellar content at z = 0.4 tracks the halo mass of about
+2.5 Gyr earlier (z ≈ 0.75), not the present one — the inverse-direction,
+model-free counterpart of the forward model's deposition delay (exp81/82:
+the data's stars lag the halo's growth; tau_d = 0.15 Hubble times), and of
+exp81's finding that the forward residual correlates with recent growth.
+It also re-reads the headline: part of the 0.137 dex error on the z = 0.4
+halo mass is not noise but recent halo growth that the stars have not yet
+recorded.
 
 ## Symbolic regression (Stage 4; `outputs/stage4_*.log`, `outputs/sr/`)
 

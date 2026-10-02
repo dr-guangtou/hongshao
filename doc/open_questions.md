@@ -881,3 +881,11 @@ existing cells.
 (f) The parent = box identity (3388 = 3388, lower edge exactly
 M200c(snap 72) = 10^13.000) bears on `doc/paper1_statistical/SAMPLE_PROVENANCE.md`;
 exp87 did not edit that file — for the user to route.
+(g) THE LAG (Stage 7, added 2026-10-02): the z = 0.4 profile's skill at the
+halo's mass peaks 2.5 Gyr before z = 0.4 (0.66 against 0.59 at z = 0.4) and
+beats the true z = 0.4 halo mass as a predictor of every earlier progenitor
+mass. Open: the same scan from the z = 0.7–2 profiles (does the lag scale
+with the Hubble time, as the forward model's tau_d = 0.15 assumes?); the
+scan per radius (do the outskirts lag less than the centre?); and whether
+the forward model's adopted delay reproduces this curve — a model-free
+target the forward model has never been asked to match.

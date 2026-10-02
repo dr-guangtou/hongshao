@@ -309,7 +309,41 @@ def symbolic():
     save(fig, "exp87_symbolic")
 
 
-FIGS = dict(truncation=truncation, ladder=ladder, radius=radius, assembly=assembly, calibration=calibration, symbolic=symbolic)
+def cross_epoch():
+    out = json.loads((C.OUTDIR / "stage7_cross_epoch.json").read_text())
+    zs = [z for z in out if z != "lag_scan"]
+    fig, axes = plt.subplots(1, 2, figsize=(14.5, 5.4))
+    ax = axes[0]
+    series = [("M*(<148) at z=0.4", C_GREY, "-", "o", "stellar mass at z = 0.4"), ("ORACLE true Mh(z=0.4)", "k", ":", "x", "the TRUE halo mass at z = 0.4"),
+              ("z=0.4 profile + quadratic", C_BLUE, "-", "o", "the z = 0.4 profile"), ("same-epoch profile + quadratic", C_RED, "-", "s", "the profile at that epoch"),
+              ("both profiles + quadratic", C_GREEN, "-", "^", "both profiles"), ("ORACLE true Mh(0.4) + profile + quad", C_PURPLE, "--", "o", "z = 0.4 profile + true Mh(z = 0.4)")]
+    for name, col, ls, mk, lab in series:
+        ax.plot([float(z) for z in zs], [out[z]["rows"][name]["crps"] for z in zs], color=col, ls=ls, marker=mk, lw=1.8, label=lab)
+    ax.set_xlabel("redshift of the halo mass being predicted")
+    ax.set_ylabel("CRPS [dex], out of fold")
+    ax.legend(frameon=False, loc="upper left")
+    ax.set_title("(a) the main progenitor's halo mass at earlier epochs", fontsize=11)
+    ax = axes[1]
+    scan = out["lag_scan"]
+    tau = [r["tau"] for r in scan]
+    for key, col, ls, lab in (("profile", C_BLUE, "-", "the z = 0.4 profile"), ("mtot", C_GREY, "-", "stellar mass at z = 0.4"), ("mh0", "k", ":", "the TRUE halo mass at z = 0.4")):
+        ax.plot(tau, [1 - r[key] / r["nothing"] for r in scan], color=col, ls=ls, marker="o", lw=1.8, label=lab)
+    g = R.groups()
+    now = R.find(g[("curated", 0, "complete", "mh")], "shells24", "ridge")
+    clim = R.find(g[("curated", 0, "complete", "mh")], "mtot", "climatology")
+    ax.scatter([0.0], [1 - now["crps"] / clim["crps"]], color=C_BLUE, marker="*", s=140, zorder=5, label="the z = 0.4 profile at z = 0.4 itself (truncated likelihood)")
+    ax.set_xlabel("lookback before z = 0.4 [Gyr]")
+    ax.set_ylabel("CRPS skill over knowing nothing")
+    ax.set_ylim(0.2, 0.9)
+    ax.legend(frameon=False, loc="upper right", fontsize=8.5)
+    ax.set_title("(b) the stars remember the halo as it was about 2.5 Gyr earlier", fontsize=11)
+    fig.suptitle("exp87: what the z = 0.4 curve of growth knows about the halo's EARLIER mass", fontsize=12)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    save(fig, "exp87_cross_epoch")
+
+
+FIGS = dict(truncation=truncation, ladder=ladder, radius=radius, assembly=assembly, calibration=calibration, symbolic=symbolic,
+            cross_epoch=cross_epoch)
 
 if __name__ == "__main__":
     style()

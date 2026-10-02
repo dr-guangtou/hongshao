@@ -62,3 +62,13 @@ approved 2026-10-02).
 - `experiments/exp87_inverse_halo/*` (new), `doc/plans/2026-10-02-exp87-inverse-halo.md`
   (new), `doc/todo.md`, `doc/lessons.md`, `doc/open_questions.md`,
   `CLAUDE.md`, this file. Nothing outside exp87 was changed in code.
+
+## Addendum (same day): Stage 7, the cross-epoch reading
+The user pointed out that the first report covered only same-epoch
+predictions at high redshift. `stage7_cross_epoch.py` (+ `--lag`): the
+z = 0.4 profile predicts the progenitor's halo mass at z = 0.7 better than
+the z = 0.7 profile (0.0644 vs 0.0737 dex CRPS), beats the true z = 0.4
+halo mass as a predictor at every earlier epoch, and its skill peaks
+2.5 Gyr before z = 0.4 (0.66 vs 0.59): the stars lag the halo. README
+section "Across epochs", figure `exp87_cross_epoch`, one lesson, C30(g).
+Development folds only; the lockbox was not touched again.
