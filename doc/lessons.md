@@ -3267,3 +3267,44 @@ session should not rediscover them:
   z = 0.4. When inputs and targets both carry a time index, lay out the
   full (input epoch × target epoch) grid before writing the summary, and
   scan the lag continuously: the peak was the result.
+
+### exp87 Stage 8 — exploratory symbolic regression across epochs (2026-10-02)
+
+- **Given freedom and time, a symbolic search confirms a linear reading; it
+  does not extend it.** 35 searches (900 s on four threads, 45 symbols,
+  `pow max min tanh exp log`), z = 0.4 stellar mass distribution to halo
+  mass at five epochs: the best formulas reach the linear + quadratic model
+  on the same inputs (within 1% refit, 0-4% worse on the strict fold) and
+  none beats the 24-shell reference. A search four times longer improved
+  the fit to the search folds (0.1314 to 0.1296) and left the held-out
+  error where it was (0.1367 both). Run the 4x-longer check once before
+  spending hours on length.
+- **Read the INGREDIENTS of the near-best formulas, not their forms.** The
+  forms differ from search to search; the variables do not. Counting which
+  inputs the formulas within 2% of the best use (the centre in 100% at
+  every epoch, the outermost annulus in 100% at z <= 1) and scoring each
+  annulus alone gave the result: the best single annulus of the z = 0.4
+  profile moves inward with the epoch asked about (132-148 kpc for the
+  halo at z = 0.4/0.7, 52-80 kpc at z = 1.0/1.5, inside 5 kpc at z = 2).
+  A nine-row table did what 1283 formulas illustrate.
+- **A fitted curve keeps what its family can express and nothing else.** A
+  Sersic or logistic fit to the curve of growth (rms 0.014 dex, a "good
+  fit") predicts the z = 0.4 halo mass barely better than total stellar
+  mass (0.0859 against 0.0875; nine annuli 0.0745), because the outermost
+  annulus that carries the information is 1% of the mass and a smooth fit
+  irons it out. Goodness of fit to the profile is not preservation of the
+  information in it; before parametrising, check where the information
+  sits and keep a parameter there (R80, an outer component).
+- **Ranking rich formulas on one fold selects poles.** With division and
+  `pow` allowed, a formula that divides by a quantity crossing zero can be
+  best on the ranking fold and fail on the next (fold-4 RMSE 0.345 against
+  0.196). Filter blow-ups explicitly (here: error above 1.1x a straight
+  line in total mass on either held-out score) and say the filter was
+  added after seeing them.
+- **PySR's sympy export is a failure point AFTER the search.** It overflowed
+  the recursion limit twice and hung once (50 minutes at full CPU) on deep
+  `pow` / `max` / `min` formulas; raising the recursion limit turned a
+  crash into a hang. The hall of fame is already on disk by then: skip the
+  export (`pysr.export.pysr2sympy` replaced by a raise), read
+  `hall_of_fame.csv`, parse the strings directly. And when two detached
+  jobs run old code in memory, a fix in the file does not reach them.

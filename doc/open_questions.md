@@ -889,3 +889,18 @@ with the Hubble time, as the forward model's tau_d = 0.15 assumes?); the
 scan per radius (do the outskirts lag less than the centre?); and whether
 the forward model's adopted delay reproduces this curve — a model-free
 target the forward model has never been asked to match.
+(h) THE LAG RESOLVED IN RADIUS (Stage 8, added 2026-10-02): of the z = 0.4
+profile's nine annuli taken one at a time, the best predictor of the halo's
+mass is the outermost (132-148 kpc) for the halo at z = 0.4 and 0.7, the
+52-80 kpc annulus at z = 1.0 and 1.5, and the innermost 5 kpc at z = 2
+(0.1423 against 0.151-0.161 for every other annulus). Open: is this the age
+gradient (old stars in the centre) or the in-situ / ex-situ split, which
+TNG's particle data can separate; the continuous version (the lag scan of
+Stage 7 per annulus: does each radius have its own look-back time of best
+skill?); and whether the forward model's two channels reproduce this
+radius-to-epoch map, a second model-free target next to C30(g). Also open
+from the same stage: an observer's parametrised profile (a single Sersic)
+loses nearly all the profile's halo-mass information at z = 0.4 (0.0859
+against 0.0745 from nine annuli, 0.0875 from total mass); which
+low-dimensional description keeps it (mass + R80 reaches 0.0793) and
+whether one exists that matches the annuli.

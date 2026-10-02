@@ -83,6 +83,25 @@ a predictor of the progenitor's mass. At z = 0.7 it even beats the
 z = 0.7 profile. Stellar content lags the halo by about 2.5 Gyr (figure
 `exp87_cross_epoch`).
 
+**Can a formula do it? (Stage 8, added at the user's request.)** With the
+robustness rule dropped on purpose, a longer and richer symbolic search was
+asked for the formulas that turn the z = 0.4 stellar mass distribution into
+the halo's mass at each of five epochs, with the distribution written two
+ways: as the mass in a central aperture and a series of annuli, and as the
+few parameters of a fitted curve of growth. Three things came out. (1) The
+search finds short formulas that are as good as the best linear models and
+no better: nothing in 35 searches beats the 24-shell reference at any
+epoch. (2) The annuli beat every parametrised curve at z <= 1 (by 6, 4 and 3
+per cent), because a smooth fit irons out the outermost annulus, and a
+Sersic fit is barely better than total stellar mass alone; by z >= 1.5 the
+two ways are equal. (3) Every good formula is built on the same two
+ingredients, the stellar mass inside 5 kpc and the mass in the outermost
+annulus, and the balance between them shifts with epoch: the outermost
+annulus is the best single predictor of the halo's mass at z = 0.4 and 0.7,
+the 52-80 kpc annulus at z = 1.0 and 1.5, and the innermost 5 kpc at z = 2.
+The centre of the z = 0.4 galaxy remembers the halo as it was at z = 2; the
+outskirts track the halo as it is now (figure `exp87_explore`).
+
 **What it means.** For a mass estimate, measure the outskirts: the
 stellar density near 140 kpc is the single best halo-mass proxy in the
 profile, and no machine learning is needed beyond a two-term formula and
@@ -312,6 +331,271 @@ It also re-reads the headline: part of the 0.137 dex error on the z = 0.4
 halo mass is not noise but recent halo growth that the stars have not yet
 recorded.
 
+## Exploratory formulas across epochs (Stage 8; `outputs/stage8_report.log`)
+
+Added at the user's request after Stage 7 (plan
+`doc/plans/2026-10-02-exp87-stage8-exploratory-sr.md`). **Exploratory by
+design**: Stage 4's rule that a formula must recur across folds is dropped,
+the searches are longer (900 s on four threads each, against Stage 4's 420 s
+on one) and richer (`+ - * / pow max min`, `square cube sqrt log exp tanh`,
+up to 45 symbols). Nothing here is an accepted formula in Stage 4's sense.
+
+**What goes in.** Always the z = 0.4 curve of growth, written two ways.
+Stellar masses are log10(M / 10^10 Msun), radii log10(R / kpc), and the
+target is h = log10(M200c / 10^13 Msun).
+
+| set | approach | variables |
+| --- | --- | --- |
+| `annuli6` | 1, the profile | `c10` (mass inside 10 kpc), `a10_30`, `a30_50`, `a50_100`, `a100_132`, `a132_148` (mass in each annulus, kpc) |
+| `annuli9` | 1, the profile | `c5` (inside 4.9 kpc), `a5_10`, `a10_19`, `a19_33`, `a33_52`, `a52_80`, `a80_103`, `a103_132`, `a132_148` |
+| `sersic` | 2, a fitted curve | one Sersic profile: `m_tot`, `lr_e` (effective radius), `n_ser` |
+| `hill` | 2 | a logistic in log R: `m_inf`, `lr_h` (half-mass radius), `a_hill` (steepness) |
+| `double` | 2 | inner Sersic + outer exponential: `m_tot`, `f_out` (outer mass fraction), `lr_in`, `n_in`, `lr_out` |
+| `logpoly` | 2 | a cubic in u = log10(R / 20 kpc): `m20` (mass inside 20 kpc), `a1` (slope), `a2`, `a3` |
+| `sizes` | 2 (not a fit) | `m148` (mass inside 148 kpc), `lr20`, `lr50`, `lr80` (radii enclosing 20, 50, 80 per cent) |
+
+How well the fitted curves describe a curve of growth (`cogparams.py`,
+figure `exp87_cog_families`): the median rms residual over the 24 radii is
+0.014 dex for the Sersic and the logistic, 0.007 for the cubic and 0.006
+for the two-component fit; 3.5 per cent of the Sersic indices sit at a
+bound.
+
+**What comes out, and how it is scored.** Targets as in Stage 7: z = 0.4 on
+the complete parent (truncated at 10^13, so the search runs on Stage 4's
+pseudo-latent response and the score is the truncated CRPS); z >= 0.7 is the
+main progenitor's mass on the curated sample. One search per input set and
+epoch, 35 in all. Folds 0-2 run the search, fold 3 ranks the formulas, fold
+4 scores them exactly as found (the strict number). The "refit" score keeps
+a formula's shape, refits its constants on four folds and scores the fifth,
+over all five folds: it is comparable with Stage 7's tables and mildly
+optimistic, because the shape was chosen on folds 0-3. "Three best" = the
+three lowest ranking-fold errors among formulas that are different functions
+(predictions differing by more than a quarter of the residual scatter), per
+epoch and approach; "compact" = the shortest formula within 2 per cent of
+the best. A formula with a pole inside the data (it divides by something
+that crosses zero, ranks well on one fold and fails on another) is not
+ranked. The test: its refit error or its fold-4 error exceeds 1.1 times
+that of a straight line in total stellar mass. It removes 8 of 380 formulas
+on the annuli and 96 of 903 on the fitted curves (the trivial one-to-three
+symbol formulas included); fold 4 is therefore used once, as a blow-up
+filter; every formula reported below is 3 to 19 per cent under that line.
+Development folds only; the lockbox was not touched.
+
+### The result in one table (CRPS, dex; refit / fold 4)
+
+| model | z = 0.4 | z = 0.7 | z = 1.0 | z = 1.5 | z = 2.0 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| stellar mass inside 148 kpc, a line | 0.0875 / 0.0852 | 0.0796 / 0.0744 | 0.0815 / 0.0795 | 0.1127 / 0.1105 | 0.1408 / 0.1401 |
+| 24 shell masses, linear | 0.0744 / 0.0743 | 0.0702 / 0.0669 | 0.0770 / 0.0732 | 0.1074 / 0.1047 | 0.1298 / 0.1332 |
+| 24 shell masses, linear + quadratic | 0.0744 / 0.0746 | **0.0644** / 0.0619 | **0.0706** / 0.0662 | **0.1029** / 0.1013 | **0.1272** / 0.1311 |
+| nine annuli, linear | 0.0747 / 0.0745 | 0.0708 / 0.0673 | 0.0775 / 0.0733 | 0.1094 / 0.1065 | 0.1321 / 0.1337 |
+| nine annuli, linear + quadratic | 0.0747 / 0.0740 | 0.0650 / 0.0613 | 0.0714 / 0.0661 | 0.1056 / 0.1035 | 0.1302 / 0.1324 |
+| **best formula on the annuli** | 0.0745 / 0.0741 | **0.0644** / 0.0624 | 0.0721 / 0.0688 | 0.1051 / 0.1049 | 0.1298 / 0.1342 |
+| its compact version | 0.0748 / 0.0741 | 0.0656 / 0.0626 | 0.0734 / 0.0699 | 0.1058 / 0.1047 | 0.1329 / 0.1351 |
+| best linear + quadratic on a fitted curve | 0.0797 / 0.0787 | 0.0677 / 0.0647 | 0.0741 / 0.0710 | 0.1045 / 0.1053 | 0.1289 / 0.1335 |
+| **best formula on a fitted curve** | 0.0793 / 0.0792 | 0.0671 / 0.0662 | 0.0744 / 0.0723 | 0.1054 / 0.1073 | 0.1304 / 0.1367 |
+| its compact version | 0.0796 / 0.0792 | 0.0695 / 0.0661 | 0.0757 / 0.0743 | 0.1073 / 0.1087 | 0.1322 / 0.1367 |
+
+1. **The formulas reach the linear + quadratic model on the same inputs and
+   stop there.** On the annuli the best formula is within 1 per cent of the
+   nine-annulus linear + quadratic model at every epoch on the refit score,
+   and 0 to 4 per cent WORSE than it on the strict fold-4 score. No formula
+   beats the 24-shell linear + quadratic reference anywhere; at z = 0.7 one
+   ties it (0.0644). At z = 0.4 the relation is a straight line and the
+   formulas say so: the best is 0.0745 against 0.0747 linear.
+2. **A dozen symbols is enough.** On the annuli the compact formulas (7 to
+   19 symbols) are within 2 per cent of the best ones on fold 4. Panels (a)
+   to (e) of the figure: the error stops falling at 10 to 20 symbols.
+3. **The annuli beat the fitted curves at z <= 1 and tie them above.** Best
+   formula, annuli against fitted curve: 0.0745 vs 0.0793 (6.4 per cent) at
+   z = 0.4, 0.0644 vs 0.0671 (4.2) at z = 0.7, 0.0721 vs 0.0744 (3.2) at
+   z = 1.0, then 0.1051 vs 0.1054 and 0.1298 vs 0.1304. A smooth fit irons
+   out the outermost annulus, which is where the low-redshift information
+   is (Stage 3). At z = 0.4 the Sersic and logistic fits (0.0859, 0.0870)
+   are barely better than total stellar mass (0.0875); the families that
+   keep the outer extent do better: mass + three radii 0.0793, the
+   two-component fit 0.0791, the cubic 0.0815.
+4. **A longer search does not help.** The nine-annulus search repeated at
+   3600 s instead of 900 s: at z = 0.4 the best formula scores 0.0746 /
+   0.0742 against 0.0745 / 0.0741; at z = 1.0, 0.0715 / 0.0691 against
+   0.0721 / 0.0688, with the same error on the ranking fold (0.1367 dex rms
+   both times) although the fit to the search folds improved (0.1314 to
+   0.1296). Extra search time buys a closer fit to the galaxies searched
+   on, not a better prediction. An earlier 60 s against 300 s check read
+   the same way.
+
+### The three best formulas per epoch
+
+`^` is a power; `tanh`, `sqrt`, `exp`, `log` (natural), `square`, `cube`,
+`max`, `min` as usual. Constants are the ones refitted on all development
+galaxies. Scores: refit CRPS / fold-4 CRPS, dex.
+
+**Halo mass at z = 0.4** (24 shells: 0.0744 / 0.0743)
+
+    profile, 1  [annuli9, 12 symbols, 0.0745 / 0.0741]
+        h = 0.7142 * (a132_148 + max(sqrt(c5 + max(0.211, a132_148)), a33_52))
+    profile, 2  [annuli6, 19 symbols, 0.0747 / 0.0743]
+        h = 0.8225 * (0.4928*c10 + 0.4097 + a132_148) - 0.2267 * (tanh(a100_132) - a50_100 + tanh(a30_50))
+    profile, 3  [annuli9, 6 symbols, 0.0754 / 0.0751]
+        h = tanh(c5) + 0.6285 * a132_148
+    profile, compact  [annuli9, 7 symbols, 0.0748 / 0.0741]
+        h = 0.7161 * a132_148 + tanh(sqrt(c5))
+
+    fitted, 1  [sizes, 24 symbols, 0.0793 / 0.0792]
+        h = cube(log(1.696^lr80 + m148 - sqrt(max(lr20 + min(lr50 - 0.4083, 0.6002), max(0.4621*lr80, lr50))))) - 0.6535
+    fitted, 2  [double, 39 symbols, 0.0791 / 0.0797]
+        h = max(-0.5492, min(3.377, (1.868 * min(max(0.5855*lr_out, lr_in), 0.971))^lr_out) * m_tot / (lr_out + 0.5351)
+                         + min(0.505^lr_out, min(f_out, 0.1502 / min(lr_in, m_tot)) * (f_out + 0.63)) - 1.444)
+    fitted, 3  [sizes, 8 symbols, 0.0798 / 0.0790]
+        h = (lr80 - 0.6416) * m148 - sqrt(lr50)
+    fitted, compact  [sizes, 16 symbols, 0.0796 / 0.0792]
+        h = cube(log(m148 + 1.696^lr80 - sqrt(max(0.4501*lr80, lr50)))) - 0.6678
+
+**Halo mass at z = 0.7** (24 shells + quadratic: 0.0644 / 0.0619)
+
+    profile, 1  [annuli9, 32 symbols, 0.0644 / 0.0624]
+        h = 0.2567 * (max(0.5375, exp(a132_148)) + c5
+                      + max(max(a132_148 - cube(0.4136 / c5), -1.193) + min(a52_80, min(a103_132 + 0.5013, a19_33)),
+                            cube((a132_148 - a5_10) / 0.612)))
+    profile, 2  [annuli6, 12 symbols, 0.0659 / 0.0632]
+        h = 0.1777 * a50_100 + 0.5361 * (c10 / 1.252 + tanh(a132_148))
+    profile, 3  [annuli6, 33 symbols, 0.0656 / 0.0636]
+        h = min(max(tanh(a132_148), 0.3085 * min(c10 * a50_100, a100_132 + 0.619) - 0.04435), 0.3159 * cube(a10_30))
+            + 0.3378 * (max(-0.8332, a132_148) + max(max(c10, 0.6425), a100_132 + 0.5793))
+    profile, compact  [annuli9, 13 symbols, 0.0656 / 0.0626]
+        h = 0.3822 * (exp(a132_148 + 0.2738) + tanh(c5 + a52_80 - 1.206))
+
+    fitted, 1  [sizes, 45 symbols, 0.0671 / 0.0662]
+        h = max((0.3735*m148 - 0.252) * lr80 * max(lr80, 1.455) - 1.026
+                    + 0.7237 / exp(max(square(tanh(lr20)), square(lr80 - 0.9992) - 0.3156)),
+                tanh(-1.546 / lr50 + cube(lr80 * lr20 / sqrt(m148))) / cube(lr80 / m148))
+    fitted, 2  [logpoly, 32 symbols, 0.0686 / 0.0661]
+        h = max(m20 * (tanh((a3 + cube(a2) + a2 + a1) / 0.6398) + min(cube(a2), max(cube(a3 / -0.5257), -0.06858)) + 0.7043) - 0.9291,
+                square(a1) + a2)
+    fitted, 3  [sizes, 12 symbols, 0.0686 / 0.0657]
+        h = (m148 * min(0.4586*lr80, lr50))^1.333 - tanh(lr50)
+    fitted, compact  [sizes, 10 symbols, 0.0695 / 0.0661]
+        h = (0.4569 * m148 * lr80)^1.345 - tanh(lr50)
+
+**Halo mass at z = 1.0** (24 shells + quadratic: 0.0706 / 0.0662)
+
+    profile, 1  [annuli9, 17 symbols, 0.0721 / 0.0688]
+        h = 0.3448 * (min(1.428 * min(a33_52, a19_33) - 0.9788, a132_148) + c5 + a52_80 * a10_19)
+    profile, 2  [annuli6, 13 symbols, 0.0746 / 0.0707]
+        h = 0.484 * (1.33^a132_148 * (min(a50_100, a30_50) + c10) - 0.9326)
+    profile, 3  [annuli9, 24 symbols, 0.0720 / 0.0687]
+        h = 0.3086 * (c5 + (a80_103 + 0.5075) * a19_33
+                      + min(a132_148, 1.385 * (min(a52_80, a19_33 - square(a103_132 - a52_80)) - 0.6138)))
+    profile, compact  [annuli9, 14 symbols, 0.0734 / 0.0699]
+        h = 0.3325 * (c5 + min(1.805*a33_52 - 1.027, a132_148) + square(a33_52))
+
+    fitted, 1  [sizes, 21 symbols, 0.0744 / 0.0723]
+        h = min((lr80 - 2.024) * lr20, -0.1642) + min(m148 / (lr80 - 0.4307), 0.6487*lr80) * (m148 - 1.042)
+    fitted, 2  [logpoly, 21 symbols, 0.0753 / 0.0735]
+        h = 1.168 * (tanh(cube(a2 - 0.4139) + a1 + min(0.1321, a3)) + 0.7375) * max(0.7905, m20) - 1.105
+    fitted, 3  [double, 36 symbols, 0.0756 / 0.0751]
+        h = -0.2912 * max(f_out, tanh(lr_in)) / n_in
+            + min(cube(0.911 * m_tot / lr_out), 0.2415*f_out + (log(m_tot / 2.227) - 0.6563 / max(min(lr_out, 1.625), 1.349)) * m_tot + m_tot)
+    fitted, compact  [sizes, 13 symbols, 0.0757 / 0.0743]
+        h = lr80 * (0.6673*m148 - 0.4749) - 0.2374*lr20 - 0.4535
+
+**Halo mass at z = 1.5** (24 shells + quadratic: 0.1029 / 0.1013)
+
+    profile, 1  [annuli9, 22 symbols, 0.1051 / 0.1049]
+        h = c5^0.4659 - 1.453 + 0.5702 * exp(min(a19_33 + min(a52_80 - a5_10 / tanh(c5), -0.4754), tanh(a103_132)))
+    profile, 2  [annuli6, 33 symbols, 0.1069 / 0.1057]
+        h = (min(c10, max(0.5578, 1.292 + (1.082 + c10) * (a100_132 - a50_100))) - 0.1827) * (max(a100_132, tanh(a100_132)) - 1.179)
+            + max(log(c10 + 0.5137), (c10 / 2.389) * a10_30)
+    profile, 3  [annuli9, 7 symbols, 0.1092 / 0.1064]
+        h = sqrt(exp(a80_103) * c5) - 0.9621
+    profile, compact  [annuli9, 19 symbols, 0.1058 / 0.1047]
+        h = c5^0.5173 - 1.409 + 0.5258 * exp(min(a19_33 - square(a52_80 - a5_10) - 0.4567, a103_132))
+
+    fitted, 1  [sizes, 34 symbols, 0.1054 / 0.1073]
+        h = tanh(lr80) * log(max(lr20, -0.4871 * (lr20 + 0.9273) / lr80 + m148))
+            * min(1.79, max(2.759 / max(square(lr50), 0.4877) * (lr20 - 0.1552), 0.7777) * max(lr50, m148))
+    fitted, 2  [logpoly, 23 symbols, 0.1048 / 0.1059]
+        h = 0.7403 * (cube(a2 - 0.5655) - 0.6029 - square(a3 / 0.468) + m20 * (0.3966*m20 + a3 + a1))
+    fitted, 3  [sersic, 22 symbols, 0.1055 / 0.1074]
+        h = square(m_tot) * (0.345 - square(exp(max(0.5665 / (m_tot * n_ser), 0.06805*lr_e) * lr_e) * 0.761 / m_tot))
+    fitted, compact  [sizes, 10 symbols, 0.1073 / 0.1087]
+        h = tanh(lr50) + (m148 - 2.101) * (lr20 + 0.6689)
+
+**Halo mass at z = 2.0** (24 shells + quadratic: 0.1272 / 0.1311)
+
+    profile, 1  [annuli9, 17 symbols, 0.1298 / 0.1342]
+        h = min(a103_132 * a19_33, c5 - 1.026 - (a5_10 - a10_19)) + 0.2218 * a132_148 * a10_19
+    profile, 2 and compact  [annuli9, 7 symbols, 0.1329 / 0.1351]
+        h = c5 - 0.7807^(a132_148 * c5)
+    profile, 3  [annuli6, 7 symbols, 0.1343 / 0.1359]
+        h = c10 / 0.8198^a132_148 - 1.209
+
+    fitted, 1  [logpoly, 12 symbols, 0.1304 / 0.1367]
+        h = 1.712^m20 - square(1.673 * a3) - 1.895 + a2
+    fitted, 2  [double, 14 symbols, 0.1299 / 0.1364]
+        h = 1.635^m_tot - 2.012 - max(cube(f_out), tanh(square(lr_in) / n_in))
+    fitted, 3  [sizes, 35 symbols, 0.1299 / 0.1364]
+        h = (max(0.4162*lr20, m148 - 1.734) + 0.5897)
+            * (min(max(lr50, tanh(m148)) + (lr50 / lr80 - lr20) / tanh(lr50), 1.145^lr80) * m148 - lr20 / lr80 - 1.757)
+    fitted, compact  [logpoly, 7 symbols, 0.1322 / 0.1367]
+        h = 1.729^m20 + a2 - 1.954
+
+At z = 2 no formula beats the plain linear model on fold 4 (nine annuli
+linear 0.1337, the cubic's four coefficients linear 0.1350).
+
+### What the formulas have in common
+
+The forms differ from epoch to epoch and from search to search, as Stage 4
+found, but their ingredients do not (figure `exp87_explore`, panels g, h).
+
+- **The centre and the outermost annulus, in every search on the annuli.**
+  `c5` is in 100 per cent of the near-best nine-annulus formulas at every
+  epoch; `a132_148` in 100 per cent at z <= 1.0, 45 per cent at z = 1.5
+  and 61 per cent at z = 2. The straight line in those two numbers alone
+  scores 0.0748 at z = 0.4 (all 24 shells: 0.0744) and 0.0732 at z = 0.7,
+  and with curvature 0.0678 at z = 0.7.
+- **The best single annulus moves inward with look-back time** (one annulus
+  alone, a straight line, CRPS):
+
+  | halo mass at | inside 5 kpc | 19-33 kpc | 52-80 kpc | 103-132 kpc | 132-148 kpc |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | z = 0.4 | 0.1242 | 0.0985 | 0.0876 | 0.0814 | **0.0784** |
+  | z = 0.7 | 0.1254 | 0.1045 | 0.0886 | 0.0839 | **0.0838** |
+  | z = 1.0 | 0.1267 | 0.1037 | **0.0934** | 0.0943 | 0.0960 |
+  | z = 1.5 | 0.1362 | 0.1320 | **0.1255** | 0.1265 | 0.1278 |
+  | z = 2.0 | **0.1423** | 0.1581 | 0.1524 | 0.1514 | 0.1515 |
+
+  At z = 2 the mass inside 5 kpc at z = 0.4 is the best single predictor of
+  the progenitor's halo mass and every annulus outside it is worse by 0.01
+  to 0.02 dex; at z = 0.4 the centre is the worst and the outermost annulus
+  the best. The inner stars are the old ones: they record the early halo.
+  The envelope records the present one. This is Stage 7's lag, resolved in
+  radius.
+- **Low redshift wants the outer annulus in linear units.** The z = 0.7 and
+  z = 1.0 formulas write `exp(a132_148)` or `1.33^a132_148`: a power of the
+  outer mass itself (exponent 0.43 and 0.12) inside a logarithmic relation.
+  That is the curvature the linear + quadratic model finds at z >= 0.7; at
+  z = 0.4 the same variable enters as a plain line.
+- **On the fitted curves the recurring term is mass times outer size.**
+  `m148 * lr80` (z = 0.4, 0.7, 1.0): total mass multiplied by the log of the
+  radius enclosing 80 per cent. At z = 2 the formulas switch to `m20` (the
+  mass inside 20 kpc) plus the curve's curvature `a2`.
+
+Reading: symbolic regression, given freedom and time, confirms Stage 3 and
+Stage 7 rather than extending them. The relation between the z = 0.4
+profile and the halo's mass is linear at z = 0.4 and gently curved before,
+it needs two to four numbers from the profile, and which numbers depends
+on the epoch asked about. The annulus table is the result to keep; the
+formulas are compact ways of writing it, not unique ones. For a profile
+described by a fitted curve, keep a parameter that measures the outer
+extent (R80, an outer component's scale): a single Sersic fit loses most
+of what the profile knows about the present-day halo.
+
+Not established: none of these formulas was required to recur across
+folds, the "three best" are ranked on one fold of about 370 to 540
+galaxies, and differences below 1 per cent are inside the noise level set
+by Stage 1's synthetic gate. One simulation, projected along one axis.
+
 ## Symbolic regression (Stage 4; `outputs/stage4_*.log`, `outputs/sr/`)
 
 PySR, nested in the folds, on the pseudo-latent response (so the search
@@ -392,7 +676,8 @@ the 68 / 90% intervals 0.71 / 0.90. Every claim above survives.
 `scoring.py`, `heads.py`, `methods.py`, `generative.py`, `harness.py`,
 `synthetic.py` (Stage 1), `stage0_setup.py`, `stage2_selection.py`,
 `stage3_ladder.py`, `stage3_extras.py`, `report.py`, `sr.py`,
-`stage4_driver.py`, `mah.py`, `lockbox.py`, `figures.py`. Outputs
+`stage4_driver.py`, `mah.py`, `lockbox.py`, `stage7_cross_epoch.py`,
+`cogparams.py` and `stage8_explore.py` (Stage 8), `figures.py`. Outputs
 (gitignored): `outputs/scoreboard.jsonl` (one row per cell),
 `outputs/cells/` (per-galaxy scores), `outputs/decisions.jsonl`, the stage
 logs, `outputs/formulas.json`.

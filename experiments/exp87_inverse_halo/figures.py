@@ -12,6 +12,11 @@ verdicts). Written to this experiment's `figures/qa/`.
                      true halo mass; the accretion history's error by lookback
   exp87_calibration  predicted against true, the PIT, development vs lockbox
   exp87_symbolic     the symbolic-regression verdicts per cell and stage
+  exp87_cross_epoch  the z = 0.4 profile against the halo's earlier mass
+  exp87_explore      Stage 8: the exploratory formulas per epoch and input set,
+                     one annulus alone, which annuli the formulas use
+  exp87_cog_families Stage 8: how well each few-parameter family fits a curve
+                     of growth
 
 Run:  PYTHONPATH=. uv run python -u experiments/exp87_inverse_halo/figures.py [name ...]
 """
@@ -342,8 +347,138 @@ def cross_epoch():
     save(fig, "exp87_cross_epoch")
 
 
+def explore():
+    """Stage 8: what formula size buys at each epoch, per input set; the best formulas against the linear
+    references; which annulus alone tracks the halo mass of each epoch; which annuli the formulas use."""
+    import stage8_explore as E
+    summary = json.loads((C.OUTDIR / "stage8_explore.json").read_text())
+    epochs = [str(z) for z in C.ANCHOR_Z]
+    colors = {"annuli6": C_BLUE, "annuli9": "#56B4E9", "sersic": C_RED, "hill": C_ORANGE, "double": C_PURPLE, "logpoly": C_GREEN, "sizes": "#8C564B"}
+    labels = {"annuli6": "profile, 6 bins", "annuli9": "profile, 9 bins", "sersic": "Sersic fit", "hill": "logistic fit",
+              "double": "two-component fit", "logpoly": "cubic in log R", "sizes": "mass + three radii"}
+    epoch_colors = ["#0072B2", "#009E73", "#E69F00", "#D55E00", "#CC79A7"]
+    fig, axes = plt.subplots(2, 4, figsize=(22.0, 9.8))
+    for k, ax in enumerate(axes.ravel()[:5]):
+        refs = summary[epochs[k]]["references"]
+        lowest = refs["24 shells + quad"]["cv_crps"]
+        for name, col in colors.items():
+            path = E.OUT / f"{name}__{C.EPOCH_TAG[k]}.json"
+            if not path.exists():
+                continue
+            members = sorted(E.stable(json.loads(path.read_text())["members"], refs["M*(<148)"]), key=lambda m: m["complexity"])
+            members = [m for m in members if m["complexity"] >= 3]
+            ax.plot([m["complexity"] for m in members], [m["cv_crps"] for m in members], color=col, lw=1.5, ls="-" if E.APPROACH[name] == 1 else "--",
+                    label=labels[name])
+            lowest = min(lowest, min(m["cv_crps"] for m in members))
+        ax.axhline(refs["M*(<148)"]["cv_crps"], color=C_GREY, lw=1.2, ls=":")
+        ax.axhline(refs["24 shells"]["cv_crps"], color="k", lw=1.0, ls="-.")
+        ax.axhline(refs["24 shells + quad"]["cv_crps"], color="k", lw=1.0, ls="-")
+        ax.set_ylim(lowest - 0.004, refs["M*(<148)"]["cv_crps"] + 0.012)
+        ax.set_xlim(2, E.EXPLORE["maxsize"] + 1)
+        ax.set_xlabel("size of the formula (number of symbols)")
+        ax.set_ylabel("CRPS [dex], constants refitted out of fold")
+        ax.set_title(f"({'abcde'[k]}) halo mass at z = {C.ANCHOR_Z[k]}", fontsize=11)
+        if k == 0:
+            ax.legend(frameon=False, ncol=2, loc="upper right", fontsize=8)
+    ax = axes[1, 1]
+    zs = [float(z) for z in epochs]
+    for key, col, ls, mk, lab in (("M*(<148)", C_GREY, ":", "o", "stellar mass inside 148 kpc (a line)"), ("24 shells", "k", "-.", "o", "24 shell masses, linear"),
+                                  ("24 shells + quad", "k", "-", "o", "24 shell masses, linear + quadratic")):
+        ax.plot(zs, [summary[z]["references"][key]["cv_crps"] for z in epochs], color=col, ls=ls, marker=mk, lw=1.4, label=lab)
+    for approach, col, lab in (("1", C_BLUE, "best formula on the profile (annuli)"), ("2", C_RED, "best formula on a parametrised curve of growth")):
+        ax.plot(zs, [summary[z]["approaches"][approach]["best"][0]["cv_crps"] for z in epochs], color=col, marker="s", lw=1.8, label=lab)
+        ax.plot(zs, [summary[z]["approaches"][approach]["compact"]["cv_crps"] for z in epochs], color=col, marker="^", lw=1.0, ls="--",
+                label="   its compact version")
+    ax.set_xlabel("redshift of the halo mass being predicted")
+    ax.set_ylabel("CRPS [dex], out of fold")
+    ax.legend(frameon=False, fontsize=8, loc="upper left")
+    ax.set_title("(f) the best formulas against the linear references", fontsize=11)
+
+    ax = axes[1, 2]
+    table = summary["single_annulus"]
+    names = list(table[epochs[0]]["alone"])
+    ticks = [n.replace("c", "0-").replace("a", "").replace("_", "-") for n in names]
+    for z, col in zip(epochs, epoch_colors):
+        nothing = summary[z]["references"]["nothing"]["cv_crps"]
+        ax.plot(range(len(names)), [1.0 - table[z]["alone"][n] / nothing for n in names], color=col, marker="o", lw=1.6, label=f"halo mass at z = {z}")
+        ax.axhline(1.0 - summary[z]["references"]["24 shells"]["cv_crps"] / nothing, color=col, lw=0.8, ls=":")
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(ticks, rotation=35, ha="right")
+    ax.set_xlabel("annulus of the z = 0.4 profile [kpc]")
+    ax.set_ylabel("skill of that one annulus (1 = perfect, 0 = knows nothing)")
+    ax.set_ylim(0.15, 0.78)
+    ax.legend(frameon=False, fontsize=8, loc="upper left", ncol=2)
+    ax.set_title("(g) one annulus alone (dotted: all 24 shells, linear)", fontsize=11)
+
+    ax = axes[1, 3]
+    use = np.array([[summary[z]["approaches"]["1"]["usage"]["annuli9"]["use"][n] for n in names] for z in epochs])
+    image = ax.imshow(use, cmap="Blues", vmin=0, vmax=1, aspect="auto")
+    ax.grid(False)
+    ax.minorticks_off()
+    for i in range(use.shape[0]):
+        for j in range(use.shape[1]):
+            ax.text(j, i, f"{use[i, j]:.2f}".lstrip("0") if use[i, j] < 1 else "1", ha="center", va="center", fontsize=8.5, color="w" if use[i, j] > 0.55 else "k")
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(ticks, rotation=35, ha="right")
+    ax.set_yticks(range(len(epochs)))
+    ax.set_yticklabels([f"z = {z}" for z in epochs])
+    ax.set_xlabel("annulus of the z = 0.4 profile [kpc]")
+    fig.colorbar(image, ax=ax, label="fraction of the near-best formulas that use it")
+    ax.set_title("(h) which annuli the near-best formulas use (9 bins)", fontsize=11)
+    fig.suptitle("exp87 Stage 8: formulas from the z = 0.4 stellar mass distribution to the halo mass at five epochs "
+                 "(a-e: solid = profile in annuli, dashed = parametrised fits;\nhorizontal lines: dotted = stellar mass alone, "
+                 "dash-dot = 24 shell masses linear, solid = 24 shell masses linear + quadratic)", fontsize=11)
+    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    save(fig, "exp87_explore")
+
+
+def cog_families():
+    """Stage 8: how well each few-parameter family describes a curve of growth."""
+    import cogparams as CP
+    import data as D
+    params = CP.fit_all()
+    parent = D.load_parent(verbose=False)
+    radii, logcog = parent.radii, parent.logcog
+    fig, axes = plt.subplots(1, 3, figsize=(16.5, 5.0))
+    residual = {name: np.array([fn(th, radii) for th in params[name]]) - logcog for name, fn in (("sersic", CP.model_sersic), ("hill", CP.model_hill))}
+    double = params["double"]
+    inner = double[:, 0] + np.log10(1.0 - double[:, 1])
+    outer = double[:, 0] + np.log10(double[:, 1])
+    residual["double"] = np.array([CP.model_double((a, r1, n1, b, r2), radii) for a, r1, n1, b, r2 in zip(inner, double[:, 2], double[:, 3], outer, double[:, 4])]) - logcog
+    residual["logpoly"] = np.vander(np.log10(radii / CP.PIVOT_KPC), 4, increasing=True) @ params["logpoly"].T
+    residual["logpoly"] = residual["logpoly"].T - logcog
+    styles = {"sersic": (C_RED, "Sersic (3 parameters)"), "hill": (C_ORANGE, "logistic in log R (3)"), "double": (C_PURPLE, "inner Sersic + outer exponential (5)"),
+              "logpoly": (C_GREEN, "cubic in log R (4)")}
+    ax = axes[0]
+    for name, (col, lab) in styles.items():
+        ax.plot(radii, np.median(residual[name], axis=0), color=col, lw=1.8, label=lab)
+        ax.fill_between(radii, *np.percentile(residual[name], [16, 84], axis=0), color=col, alpha=0.12)
+    ax.axhline(0, color="k", lw=0.6)
+    ax.set_xscale("log")
+    ax.set_xlabel("R [kpc]")
+    ax.set_ylabel(r"fit minus data, log $M_*(<R)$ [dex]")
+    ax.legend(frameon=False, loc="lower center", fontsize=8)
+    ax.set_title("(a) the residual of each family (median, 16th to 84th percentile)", fontsize=10.5)
+    ax = axes[1]
+    for name, (col, lab) in styles.items():
+        ax.hist(params[f"{name}_rms"], bins=np.linspace(0, 0.045, 46), histtype="step", color=col, lw=1.6, label=lab)
+    ax.set_xlabel("rms residual of the fit per galaxy [dex]")
+    ax.set_ylabel("galaxies")
+    ax.set_title("(b) how well each family describes a curve of growth", fontsize=10.5)
+    ax = axes[2]
+    mh = parent.targets["mh"]
+    sc = ax.scatter(params["sersic"][:, 1], params["sersic"][:, 2], c=mh, s=5, cmap="viridis", vmin=13.0, vmax=14.3, rasterized=True)
+    fig.colorbar(sc, ax=ax, label="log M200c at z = 0.4")
+    ax.set_xlabel(r"Sersic log $R_e$ [kpc]")
+    ax.set_ylabel("Sersic index n")
+    ax.set_title("(c) the Sersic parameters, coloured by halo mass", fontsize=10.5)
+    fig.suptitle(f"exp87 Stage 8: the z = 0.4 curve of growth written as a few parameters ({len(logcog)} parent galaxies)", fontsize=12)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    save(fig, "exp87_cog_families")
+
+
 FIGS = dict(truncation=truncation, ladder=ladder, radius=radius, assembly=assembly, calibration=calibration, symbolic=symbolic,
-            cross_epoch=cross_epoch)
+            cross_epoch=cross_epoch, explore=explore, cog_families=cog_families)
 
 if __name__ == "__main__":
     style()

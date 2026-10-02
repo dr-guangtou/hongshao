@@ -3499,3 +3499,36 @@ nonlinearity, and reduced the profile's information to two numbers. The
 plan's rules held where they were tested: the gate caught a biased test
 statistic, the recurrence rule kept fourteen significant but fold-specific
 formulas out of the headline, and the lockbox agreed.
+
+### exp87 Stage 8 (added 2026-10-02 at the user's request) — exploratory symbolic regression across epochs
+
+Plan `doc/plans/2026-10-02-exp87-stage8-exploratory-sr.md`. The robustness
+(recurrence) rule dropped on purpose; z = 0.4 stellar mass distribution to
+halo mass at z = 0.4 / 0.7 / 1.0 / 1.5 / 2.0; two ways of writing the
+distribution (annuli; fitted curves of growth).
+
+- [x] `cogparams.py`: Sersic, logistic, inner Sersic + outer exponential,
+      cubic in log R fitted per galaxy (median rms 0.014 / 0.014 / 0.006 /
+      0.007 dex); figure `exp87_cog_families`.
+- [x] `stage8_explore.py bench`: the linear and linear + quadratic models on
+      every input set and epoch.
+- [x] Smoke, then a 60 s / 300 s convergence check.
+- [x] 35 searches (7 input sets x 5 epochs, 900 s on 4 threads, 45 symbols).
+      Three were interrupted by PySR's sympy export and recovered from its
+      own saved files; the export is now bypassed.
+- [x] Report: three best + a compact formula per epoch and approach; each
+      annulus alone; which variables the near-best formulas use; a
+      3600 s convergence check at two epochs. Figure `exp87_explore`.
+- [x] README section, five lessons, C30(h), handover addendum. No merge.
+
+#### Review
+The searches match the linear + quadratic model on the same inputs and do
+not beat the 24-shell reference at any epoch; a dozen symbols suffice; four
+times the search time changes nothing held out. The annuli beat every
+fitted curve at z <= 1 (6 / 4 / 3 per cent) and tie above. The result worth
+keeping came from the plain reading added to interpret the formulas: the
+best single annulus moves inward with the epoch asked about, and at z = 2
+it is the innermost 5 kpc. 6 h 25 min of wall time from the first smoke
+search (14:27) to the end of the convergence check (20:52), of which about
+80 minutes were lost to PySR's export step (a crash at 16:29 relaunched at
+16:58; a hang from 17:59 to 18:49).

@@ -72,3 +72,32 @@ halo mass as a predictor at every earlier epoch, and its skill peaks
 2.5 Gyr before z = 0.4 (0.66 vs 0.59): the stars lag the halo. README
 section "Across epochs", figure `exp87_cross_epoch`, one lesson, C30(g).
 Development folds only; the lockbox was not touched again.
+
+## Addendum 2 (same day): Stage 8, exploratory symbolic regression across epochs
+The user asked for a further symbolic-regression pass with the robustness
+rule relaxed: the z = 0.4 stellar mass distribution to the halo mass at
+each of the five epochs, three best formulas per epoch, the distribution
+written (1) as a central aperture plus annuli and (2) as the parameters of
+a fitted curve of growth; longer runs and richer forms allowed. Plan
+`doc/plans/2026-10-02-exp87-stage8-exploratory-sr.md` (with the changes
+made on the way). Code `cogparams.py`, `stage8_explore.py`
+(`bench` / `search` / `annulus` / `report`), figures `exp87_explore` and
+`exp87_cog_families`; README section "Exploratory formulas across epochs"
+holds the formulas. Outputs in `outputs/stage8/`, `outputs/stage8_report.log`,
+`outputs/stage8_explore.json`.
+
+- 35 searches, 900 s on four threads each. The best formulas match the
+  linear + quadratic model on the same inputs and never beat the 24-shell
+  reference (CRPS refit, best formula on the annuli: 0.0745 / 0.0644 /
+  0.0721 / 0.1051 / 0.1298 at z = 0.4 / 0.7 / 1.0 / 1.5 / 2.0; on a fitted
+  curve 0.0793 / 0.0671 / 0.0744 / 0.1054 / 0.1304). A 3600 s search
+  changes nothing held out.
+- The annuli beat the fitted curves at z <= 1; a single Sersic fit is
+  barely better than total stellar mass at z = 0.4.
+- The best single annulus moves inward with the epoch asked about:
+  132-148 kpc (z = 0.4, 0.7), 52-80 kpc (z = 1.0, 1.5), inside 5 kpc
+  (z = 2). C30(h).
+- Ops: PySR's sympy export crashed two jobs and hung one after the search
+  had finished; the export is now skipped and the hall-of-fame file read
+  directly. Nothing is running. Development folds only; the lockbox was not
+  touched. Committed on `exp87-inverse-halo`, not merged.
