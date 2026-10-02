@@ -109,8 +109,8 @@ battery of the adopted models). Scripts set `FIGDIR = HERE / "figures/qa"`.
   2026-09-23, closed and merged), exp87 (Claude; the inverse problem —
   halo mass, concentration and accretion history FROM the curve of growth,
   branch `exp87-inverse-halo`, 2026-10-02; an independent side study, its
-  own sample rule: the complete parent at z = 0.4). exp88 is the next free
-  id; check before creating.
+  own sample rule: the complete parent at z = 0.4; closed and merged
+  2026-10-02). exp88 is the next free id; check before creating.
 - `doc/lessons.md`, `doc/todo.md`, `doc/open_questions.md` are append-only
   and conflict when both agents append; resolve by keeping both sides.
 

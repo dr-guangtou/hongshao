@@ -3532,3 +3532,8 @@ it is the innermost 5 kpc. 6 h 25 min of wall time from the first smoke
 search (14:27) to the end of the convergence check (20:52), of which about
 80 minutes were lost to PySR's export step (a crash at 16:29 relaunched at
 16:58; a hang from 17:59 to 18:49).
+
+- [x] **Decision (user, 2026-10-02)**: exp87 wrapped up; `exp87-inverse-halo`
+      merged into `master` and pushed. Still owed by the user: route the
+      parent = box finding to the Paper-1 sample provenance record; whether
+      to pursue C30 (b)/(e)/(g)/(h).

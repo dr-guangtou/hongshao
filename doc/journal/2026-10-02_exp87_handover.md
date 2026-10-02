@@ -101,3 +101,13 @@ holds the formulas. Outputs in `outputs/stage8/`, `outputs/stage8_report.log`,
   had finished; the export is now skipped and the hall-of-fame file read
   directly. Nothing is running. Development folds only; the lockbox was not
   touched. Committed on `exp87-inverse-halo`, not merged.
+
+## Addendum 3 (same day): wrapped up and merged
+The user closed the experiment after Stage 8: `exp87-inverse-halo` merged
+into `master` with a merge commit and pushed to `origin` (the push also
+carries the seven Codex record merges of 2026-09-28 that were waiting on
+`master`). The branch is deleted; nothing is running; exp88 is the next
+free id. Still the user's to decide: routing the parent = box finding to
+`doc/paper1_statistical/SAMPLE_PROVENANCE.md`, and whether to pursue C30
+(the outer shell under observational noise, a noisy external mass, the lag
+and its radial version).
