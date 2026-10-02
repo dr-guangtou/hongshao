@@ -3450,3 +3450,90 @@ and the re-tuned control showed that the two points the knob seemed to
 buy were the re-tune's. The question asked in C26(b) is answered, which
 is worth more than the knob: the −12 / −18 per cent shell is a selection
 cost to carry, not a defect to fix, and the record now says so.
+
+## 2026-10-02 — exp87, the inverse problem: halo mass, concentration and accretion history FROM the curve of growth (`exp87-inverse-halo`)
+
+Plan `doc/plans/2026-10-02-exp87-inverse-halo.md` (approved by the user;
+an independent side study, no Paper-1 file or gate touched). Autopilot,
+seven stages, every decision in `outputs/decisions.jsonl`.
+
+- [x] Stage 0 — certificates (parent = the box above 10^13: 3388; CoG
+      identity; 0.178 / 0.140 dex reproduce) and the frozen split (one
+      galaxy in five to the lockbox; five folds by galaxy).
+- [x] Stage 1 — the synthetic mechanics gate, six checks passed (ordinary
+      fit +16.8% vs the oracle, double-counted +11.9%; slopes within 1.6%;
+      PIT uniform; delta = 1%; a 3% curvature detected 10/10).
+- [x] Stage 2 — the selection report (independence above the completeness
+      cuts: worst shift 0.030 forward scatters vs the 0.2 tolerance).
+- [x] Stage 3 — the ladder L0–L3 + L5 on halo mass (parent, curated
+      sensitivity, two high-z populations), concentration and formation
+      time with the oracle extension; the extras (truncation on real data,
+      the safe zone, the radius reading, projection, the prior).
+- [x] Stage 4 — symbolic regression, 20 configurations in five cells: no
+      formula accepted (none recurs); richer operators never beat the
+      polynomial stage.
+- [x] Stage 5 — the accretion history (vector to vector) at five epochs.
+- [x] Stage 6 — the lockbox, scored once: 1 of 76 outside its 99%
+      interval (0.8 expected), the headline numbers reproduced; figures,
+      README, lessons, C30, handover.
+- [x] Stage 7 (added at the user's question, 2026-10-02) — CROSS-EPOCH: the
+      z = 0.4 profile → the progenitor's halo mass at z = 0.7–2, and the lag
+      scan. The z = 0.4 profile beats the z = 0.7 profile at z = 0.7
+      (0.0644 vs 0.0737), beats the TRUE z = 0.4 halo mass at every earlier
+      epoch (11–30%), and its skill peaks 2.5 Gyr before z = 0.4 (0.66 vs
+      0.59 at z = 0.4). The first report had covered only same-epoch pairs.
+- [ ] **Decision (user)**: merge `exp87-inverse-halo`; route the parent =
+      box finding to the Paper-1 sample provenance record; whether to
+      pursue C30 (b)/(e) (observational noise on the outer shell; a noisy
+      external mass).
+
+### Review
+The whole experiment ran in about three and a half hours of wall time
+against a fourteen-hour budget, because every stage was sub-minute to
+minutes except the symbolic searches. Three things the plan did not
+foresee carried the result: the truncated likelihood mattering more than
+the whole method ladder; the registered nonlinear methods being unable to
+nest the linear model (fixed on the way, recorded as a decision); and the
+shell-mass coordinate, which came from a radius table, removed the high-z
+nonlinearity, and reduced the profile's information to two numbers. The
+plan's rules held where they were tested: the gate caught a biased test
+statistic, the recurrence rule kept fourteen significant but fold-specific
+formulas out of the headline, and the lockbox agreed.
+
+### exp87 Stage 8 (added 2026-10-02 at the user's request) — exploratory symbolic regression across epochs
+
+Plan `doc/plans/2026-10-02-exp87-stage8-exploratory-sr.md`. The robustness
+(recurrence) rule dropped on purpose; z = 0.4 stellar mass distribution to
+halo mass at z = 0.4 / 0.7 / 1.0 / 1.5 / 2.0; two ways of writing the
+distribution (annuli; fitted curves of growth).
+
+- [x] `cogparams.py`: Sersic, logistic, inner Sersic + outer exponential,
+      cubic in log R fitted per galaxy (median rms 0.014 / 0.014 / 0.006 /
+      0.007 dex); figure `exp87_cog_families`.
+- [x] `stage8_explore.py bench`: the linear and linear + quadratic models on
+      every input set and epoch.
+- [x] Smoke, then a 60 s / 300 s convergence check.
+- [x] 35 searches (7 input sets x 5 epochs, 900 s on 4 threads, 45 symbols).
+      Three were interrupted by PySR's sympy export and recovered from its
+      own saved files; the export is now bypassed.
+- [x] Report: three best + a compact formula per epoch and approach; each
+      annulus alone; which variables the near-best formulas use; a
+      3600 s convergence check at two epochs. Figure `exp87_explore`.
+- [x] README section, five lessons, C30(h), handover addendum. No merge.
+
+#### Review
+The searches match the linear + quadratic model on the same inputs and do
+not beat the 24-shell reference at any epoch; a dozen symbols suffice; four
+times the search time changes nothing held out. The annuli beat every
+fitted curve at z <= 1 (6 / 4 / 3 per cent) and tie above. The result worth
+keeping came from the plain reading added to interpret the formulas: the
+best single annulus moves inward with the epoch asked about, and at z = 2
+it is the innermost 5 kpc. 6 h 25 min of wall time from the first smoke
+search (14:27) to the end of the convergence check (20:52), of which about
+80 minutes were lost to PySR's export step (a crash at 16:29 relaunched at
+16:58; a hang from 17:59 to 18:49).
+
+- [x] **Decision (user, 2026-10-02)**: exp87 wrapped up; `exp87-inverse-halo`
+      merged into `master` and pushed. Still owed by the user: route the
+      parent = box finding to the Paper-1 sample provenance record; whether
+      to pursue C30 (b)/(e)/(g)/(h).

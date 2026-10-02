@@ -849,3 +849,58 @@ halo's growth during the delay (rank −0.23 to −0.29, slope −2 to −2.5 de
 per dex), i.e. the outskirts under-respond to the growth RATE — exp76's
 split g re-read on the adopted mean and chosen by the gates is the probe
 that would test it (C29).
+
+## C30 (exp87, 2026-10-02): the inverse problem's open ends
+
+exp87 (`experiments/exp87_inverse_halo/README.md`) measured what the
+stellar curve of growth knows about its halo. Settled there: the 24-point
+profile predicts halo mass with CRPS 0.0744 dex (RMSE 0.137) on the
+complete z = 0.4 population, 15% better than stellar mass; the gain is the
+outer envelope (total mass + the 132–148 kpc shell = the full model); the
+relation is linear in log shell masses; concentration and assembly need
+the halo mass as a second input. Open:
+(a) WHAT IS THE OUTER SHELL? Smooth intracluster light or satellites left
+in the map by the measurement's satellite treatment? Either traces the
+halo, but they mean different things for an observer, and the answer needs
+the measurement's lineage (Xu's maps), not this repository's data.
+(b) Does the outer-shell signal survive observational depth? The shell
+holds 1% of the stellar mass at a surface density that deep imaging
+reaches only in stacks; a noise model on the outer points would turn the
+0.0744 into the number an observer can have.
+(c) Beyond 148 kpc. The information rises monotonically toward the edge
+of the grid, so the best radius is at or beyond the last point; a profile
+to 300 kpc would say where it saturates.
+(d) The as-is progenitor samples keep 9–14% curvature in shells. Soft
+selection edge, or real physics of low-mass progenitors? A volume-complete
+high-z sample (not progenitors) would decide; the data drop has none.
+(e) The oracle result (profile + true Mh → concentration +21%, t50 +24%,
+history +26%) is a statement about a combined probe: how good must an
+EXTERNAL mass estimate (lensing, 0.2–0.3 dex) be before the profile's
+assembly information is usable? A noise-on-Mh sweep answers it with the
+existing cells.
+(f) The parent = box identity (3388 = 3388, lower edge exactly
+M200c(snap 72) = 10^13.000) bears on `doc/paper1_statistical/SAMPLE_PROVENANCE.md`;
+exp87 did not edit that file — for the user to route.
+(g) THE LAG (Stage 7, added 2026-10-02): the z = 0.4 profile's skill at the
+halo's mass peaks 2.5 Gyr before z = 0.4 (0.66 against 0.59 at z = 0.4) and
+beats the true z = 0.4 halo mass as a predictor of every earlier progenitor
+mass. Open: the same scan from the z = 0.7–2 profiles (does the lag scale
+with the Hubble time, as the forward model's tau_d = 0.15 assumes?); the
+scan per radius (do the outskirts lag less than the centre?); and whether
+the forward model's adopted delay reproduces this curve — a model-free
+target the forward model has never been asked to match.
+(h) THE LAG RESOLVED IN RADIUS (Stage 8, added 2026-10-02): of the z = 0.4
+profile's nine annuli taken one at a time, the best predictor of the halo's
+mass is the outermost (132-148 kpc) for the halo at z = 0.4 and 0.7, the
+52-80 kpc annulus at z = 1.0 and 1.5, and the innermost 5 kpc at z = 2
+(0.1423 against 0.151-0.161 for every other annulus). Open: is this the age
+gradient (old stars in the centre) or the in-situ / ex-situ split, which
+TNG's particle data can separate; the continuous version (the lag scan of
+Stage 7 per annulus: does each radius have its own look-back time of best
+skill?); and whether the forward model's two channels reproduce this
+radius-to-epoch map, a second model-free target next to C30(g). Also open
+from the same stage: an observer's parametrised profile (a single Sersic)
+loses nearly all the profile's halo-mass information at z = 0.4 (0.0859
+against 0.0745 from nine annuli, 0.0875 from total mass); which
+low-dimensional description keeps it (mass + R80 reaches 0.0793) and
+whether one exists that matches the annuli.
